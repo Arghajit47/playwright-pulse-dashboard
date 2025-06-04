@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useTestData } from '@/hooks/useTestData';
@@ -6,6 +7,7 @@ import { LiveTestResults } from './LiveTestResults';
 import { TrendAnalysis } from './TrendAnalysis';
 import { FailurePatternAnalyzer } from './FailurePatternAnalyzer';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function PulseDashboard() {
   const { 
@@ -35,24 +37,34 @@ export function PulseDashboard() {
       
       <Separator className="my-8" />
 
-      <section aria-labelledby="live-results">
-        <h2 id="live-results" className="sr-only">Live Test Results</h2>
-        <LiveTestResults report={currentRun} loading={loadingCurrent} error={errorCurrent} />
-      </section>
+      <Tabs defaultValue="live-results" className="w-full">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
+          <TabsTrigger value="live-results">Live Test Results</TabsTrigger>
+          <TabsTrigger value="trend-analysis">Trend Analysis</TabsTrigger>
+          <TabsTrigger value="failure-analyzer">AI Failure Analysis</TabsTrigger>
+        </TabsList>
 
-      <Separator className="my-8" />
+        <TabsContent value="live-results">
+          <section aria-labelledby="live-results-tab">
+            <h2 id="live-results-tab" className="sr-only">Live Test Results</h2>
+            <LiveTestResults report={currentRun} loading={loadingCurrent} error={errorCurrent} />
+          </section>
+        </TabsContent>
 
-      <section aria-labelledby="trend-analysis">
-        <h2 id="trend-analysis" className="sr-only">Trend Analysis</h2>
-        <TrendAnalysis trends={historicalTrends} loading={loadingHistorical} error={errorHistorical} />
-      </section>
-
-      <Separator className="my-8" />
-
-      <section aria-labelledby="failure-analyzer">
-        <h2 id="failure-analyzer" className="sr-only">Failure Pattern Analyzer</h2>
-        <FailurePatternAnalyzer />
-      </section>
+        <TabsContent value="trend-analysis">
+          <section aria-labelledby="trend-analysis-tab">
+            <h2 id="trend-analysis-tab" className="sr-only">Trend Analysis</h2>
+            <TrendAnalysis trends={historicalTrends} loading={loadingHistorical} error={errorHistorical} />
+          </section>
+        </TabsContent>
+        
+        <TabsContent value="failure-analyzer">
+          <section aria-labelledby="failure-analyzer-tab">
+            <h2 id="failure-analyzer-tab" className="sr-only">Failure Pattern Analyzer</h2>
+            <FailurePatternAnalyzer />
+          </section>
+        </TabsContent>
+      </Tabs>
       
       <footer className="text-center mt-12 py-6 border-t">
         <p className="text-sm text-muted-foreground">
