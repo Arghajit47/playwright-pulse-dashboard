@@ -7,10 +7,15 @@ import { TestItem } from './TestItem';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, Info } from "lucide-react";
+import { Terminal, Info, ChevronDown, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 const testStatuses = ['all', 'passed', 'failed', 'skipped', 'timedOut', 'pending'] as const;
 export type TestStatusFilter = typeof testStatuses[number];
@@ -30,6 +35,9 @@ interface LiveTestResultsProps {
 export function LiveTestResults({ report, loading, error, initialFilter }: LiveTestResultsProps) {
   const [statusFilter, setStatusFilter] = useState<TestStatusFilter>(initialFilter || 'all');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [tagPopoverOpen, setTagPopoverOpen] = useState(false);
 
   useEffect(() => {
     if (initialFilter) {
@@ -37,14 +45,25 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     }
   }, [initialFilter]);
 
+  useEffect(() => {
+    if (report?.results) {
+      const uniqueTags = new Set<string>();
+      report.results.forEach(test => {
+        test.tags?.forEach(tag => uniqueTags.add(tag));
+      });
+      setAllTags(Array.from(uniqueTags).sort());
+    }
+  }, [report]);
 
   const groupedAndFilteredSuites = useMemo(() => {
     if (!report?.results) return [];
 
     const filteredTests = report.results.filter(test => {
       const statusMatch = statusFilter === 'all' || test.status === statusFilter;
-      const searchTermMatch = test.name.toLowerCase().includes(searchTerm.toLowerCase());
-      return statusMatch && searchTermMatch;
+      const searchTermMatch = test.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              test.suiteName.toLowerCase().includes(searchTerm.toLowerCase());
+      const tagMatch = selectedTags.length === 0 || (test.tags && test.tags.some(tag => selectedTags.includes(tag)));
+      return statusMatch && searchTermMatch && tagMatch;
     });
 
     const suitesMap = new Map<string, DetailedTestResult[]>();
@@ -55,11 +74,11 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     });
 
     return Array.from(suitesMap.entries()).map(([title, tests]) => ({ title, tests }));
-  }, [report, statusFilter, searchTerm]);
+  }, [report, statusFilter, searchTerm, selectedTags]);
 
   if (loading) {
     return (
-      <Card className="shadow-lg">
+      <Card className="shadow-xl">
         <CardHeader>
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-64 mt-1" />
@@ -68,6 +87,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
           <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 border rounded-lg">
             <Skeleton className="h-10 w-full sm:w-[180px]" />
             <Skeleton className="h-10 w-full flex-1" />
+            <Skeleton className="h-10 w-full sm:w-[180px]" /> {/* Skeleton for tag filter */}
           </div>
           {[...Array(3)].map((_, i) => (
             <div key={i} className="space-y-2 p-2 border rounded-md">
@@ -124,11 +144,11 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         )}
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 border rounded-lg bg-card/70 shadow-sm">
-          <div className="flex-1 space-y-1.5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 border rounded-lg bg-card/70 shadow-sm">
+          <div className="space-y-1.5">
             <Label htmlFor="status-filter" className="text-sm font-medium text-muted-foreground">Filter by Status</Label>
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as TestStatusFilter)}>
-              <SelectTrigger id="status-filter" className="w-full sm:w-[200px] bg-background shadow-inner">
+              <SelectTrigger id="status-filter" className="w-full bg-background shadow-inner">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -140,18 +160,84 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
               </SelectContent>
             </Select>
           </div>
-          <div className="flex-1 space-y-1.5">
-            <Label htmlFor="search-filter" className="text-sm font-medium text-muted-foreground">Search by Name</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="search-filter" className="text-sm font-medium text-muted-foreground">Search by Name/Suite</Label>
             <Input
               id="search-filter"
               type="text"
-              placeholder="Enter test name..."
+              placeholder="Enter test or suite name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-background shadow-inner"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium text-muted-foreground">Filter by Tags</Label>
+            <Popover open={tagPopoverOpen} onOpenChange={setTagPopoverOpen}>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full bg-background shadow-inner justify-between">
+                        {selectedTags.length > 0 ? `Tags (${selectedTags.length})` : "Select Tags"}
+                        <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[250px] p-0" align="start">
+                    <div className="p-2 border-b">
+                        <p className="text-sm font-medium">Filter by Tags</p>
+                    </div>
+                    <ScrollArea className="h-48">
+                        <div className="p-2 space-y-1">
+                        {allTags.length > 0 ? allTags.map(tag => (
+                            <Label key={tag} htmlFor={`tag-${tag}`} className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-accent cursor-pointer">
+                                <Checkbox
+                                    id={`tag-${tag}`}
+                                    checked={selectedTags.includes(tag)}
+                                    onCheckedChange={(checked) => {
+                                        setSelectedTags(prev =>
+                                            checked
+                                                ? [...prev, tag]
+                                                : prev.filter(t => t !== tag)
+                                        );
+                                    }}
+                                />
+                                <span>{tag}</span>
+                            </Label>
+                        )) : <p className="text-xs text-muted-foreground p-2">No tags available in this report.</p>}
+                        </div>
+                    </ScrollArea>
+                    {selectedTags.length > 0 && (
+                        <div className="p-2 border-t flex justify-end">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedTags([])}>Clear selected</Button>
+                        </div>
+                    )}
+                </PopoverContent>
+            </Popover>
+          </div>
         </div>
+        
+        {selectedTags.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-2 items-center">
+                <span className="text-sm text-muted-foreground">Active tags:</span>
+                {selectedTags.map(tag => (
+                    <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="flex items-center"
+                    >
+                        {tag}
+                        <button
+                            type="button"
+                            aria-label={`Remove ${tag} filter`}
+                            onClick={() => {
+                                setSelectedTags(prev => prev.filter(t => t !== tag));
+                            }}
+                            className="ml-1.5 p-0.5 rounded-full hover:bg-muted-foreground/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                        >
+                            <XCircle className="h-3.5 w-3.5" />
+                        </button>
+                    </Badge>
+                ))}
+            </div>
+        )}
 
         {groupedAndFilteredSuites.length > 0 ? (
           groupedAndFilteredSuites.map((suite: GroupedSuite, index: number) => (
@@ -171,11 +257,10 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         ) : (
            <div className="text-center py-8">
              <p className="text-muted-foreground text-lg">No test results match your current filters.</p>
-              <p className="text-sm text-muted-foreground mt-1">Try adjusting the status or search term.</p>
+              <p className="text-sm text-muted-foreground mt-1">Try adjusting the status, search term, or tag filters.</p>
            </div>
         )}
       </CardContent>
     </Card>
   );
 }
-
