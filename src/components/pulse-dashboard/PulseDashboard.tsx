@@ -7,7 +7,7 @@ import { SummaryMetrics } from './SummaryMetrics';
 import { LiveTestResults } from './LiveTestResults';
 import { TrendAnalysis } from './TrendAnalysis';
 import { FailurePatternAnalyzer } from './FailurePatternAnalyzer';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'; // Added this import
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -81,7 +81,7 @@ export function PulseDashboard() {
       </Sidebar>
       <SidebarInset>
         <div className="container mx-auto px-4 py-8 space-y-8 min-h-screen flex flex-col">
-          <header className="mb-0"> {/* Reduced mb from mb-8 */}
+          <header className="mb-0"> 
             <h1 className="text-3xl font-bold font-headline text-primary tracking-tight">
               {menuItems.find(item => item.id === activeView)?.label || "Pulse Dashboard"}
             </h1>
@@ -97,7 +97,7 @@ export function PulseDashboard() {
             {currentComponent}
           </main>
           
-          <footer className="text-center mt-8 py-4 border-t"> {/* Reduced mt from mt-12, py from py-6 */}
+          <footer className="text-center mt-8 py-4 border-t"> 
             <p className="text-sm text-muted-foreground">
               Pulse Dashboard &copy; {new Date().getFullYear()}
             </p>
@@ -107,4 +107,3 @@ export function PulseDashboard() {
     </SidebarProvider>
   );
 }
-
