@@ -32,7 +32,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 
-export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
+const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading, error }) => {
   if (loading) {
     return (
       <Card className="shadow-xl">
@@ -76,10 +76,14 @@ export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
   const formattedTrends = React.useMemo(() => {
     return trends.map(t => ({
       ...t,
-      date: new Date(t.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }), // Short date format
+      date: new Date(t.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }), 
       durationSeconds: parseFloat((t.duration / 1000).toFixed(2)),
       flakinessPercent: t.flakinessRate !== undefined && t.flakinessRate !== null ? parseFloat((t.flakinessRate * 100).toFixed(1)) : undefined,
-    })).sort((a,b) => new Date(trends.find(tr => tr.date === a.date)?.date || 0).getTime() - new Date(trends.find(tr => tr.date === b.date)?.date || 0).getTime());
+    })).sort((a,b) => {
+        const dateA = trends.find(tr => tr.date.includes(a.date.split(',')[1]?.trim()))?.date || 0; // More robust find
+        const dateB = trends.find(tr => tr.date.includes(b.date.split(',')[1]?.trim()))?.date || 0;
+        return new Date(dateA).getTime() - new Date(dateB).getTime();
+    });
   }, [trends]);
 
   return (
@@ -141,3 +145,6 @@ export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
     </Card>
   );
 }
+
+export const TrendAnalysis = React.memo(TrendAnalysisComponent);
+TrendAnalysis.displayName = 'TrendAnalysis';
