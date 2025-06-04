@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } from 'recharts';
-import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, BarChartHorizontalBig, AlertTriangle } from 'lucide-react';
+import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DashboardOverviewChartsProps {
@@ -145,11 +145,11 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         name: shortName.length > 50 ? shortName.substring(0, 47) + '...' : shortName,
         duration: test.duration,
         durationFormatted: formatDurationForChart(test.duration),
-        fullTestName: test.name, // For tooltip
+        fullTestName: test.name, 
       };
     })
     .sort((a,b) => b.duration - a.duration)
-    .slice(0, 10); // Show top 10 failed test durations
+    .slice(0, 10); 
 
   const testsPerSuite = currentRun.results.reduce((acc, test) => {
     const suite = test.suiteName || 'Default Suite';
@@ -168,10 +168,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     .map(test => {
       const shortName = formatTestNameForChart(test.name);
       return {
-        name: shortName, // Keep potentially longer name for dataKey, not displayed on axis
+        name: shortName, 
         duration: test.duration,
         durationFormatted: formatDurationForChart(test.duration),
-        fullTestName: test.name, // For tooltip
+        fullTestName: test.name, 
         status: test.status,
       };
     });
@@ -255,7 +255,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                             const data = payload[0].payload;
                             return (
                             <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-                                <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{data.fullTestName}</p>
+                                <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{formatTestNameForChart(data.fullTestName)}</p>
                                 <p className="text-xs" style={{ color: COLORS.failed }}>
                                 Duration: {formatDurationForChart(data.duration)}
                                 </p>
@@ -326,7 +326,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                             const data = payload[0].payload;
                             return (
                             <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-                                <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{data.fullTestName}</p>
+                                <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{formatTestNameForChart(data.fullTestName)}</p>
                                 <p className="text-xs" style={{ color: data.status === 'passed' ? COLORS.passed : data.status === 'failed' || data.status === 'timedOut' ? COLORS.failed : COLORS.skipped }}>
                                 Duration: {formatDurationForChart(data.duration)} (Status: {data.status})
                                 </p>
