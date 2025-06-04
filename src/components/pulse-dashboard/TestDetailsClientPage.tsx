@@ -1,20 +1,61 @@
 
 'use client';
 
-import { useRouter } from 'next/navigation'; // Keep useParams if needed for other things, but testId is a prop
+import { useRouter } from 'next/navigation'; 
 import { useTestData } from '@/hooks/useTestData';
-import type { DetailedTestResult, TestStep, ScreenshotAttachment } from '@/types/playwright';
+import type { DetailedTestResult, PlaywrightPulseReport, TestStep } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, Image as ImageIcon, FileText, ExternalLink, LineChart } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, Image as ImageIcon, FileText, LineChart, Info } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { TestStepItemRecursive } from './TestStepItemRecursive';
+import { getRawHistoricalReports } from '@/app/actions';
+import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, DotProps } from 'recharts';
+
+interface TestRunHistoryData {
+  date: string;
+  duration: number; // in ms
+  status: DetailedTestResult['status'];
+}
+
+interface CustomDotProps extends DotProps {
+  payload?: TestRunHistoryData;
+}
+
+const StatusDot = (props: CustomDotProps) => {
+  const { cx, cy, payload } = props;
+  if (!cx || !cy || !payload) return null;
+
+  let color = 'hsl(var(--muted-foreground))'; // Default color
+  if (payload.status === 'passed') color = 'hsl(var(--chart-3))'; // green
+  else if (payload.status === 'failed' || payload.status === 'timedOut') color = 'hsl(var(--destructive))'; // red
+  else if (payload.status === 'skipped') color = 'hsl(var(--accent))'; // orange
+
+  return <circle cx={cx} cy={cy} r={5} fill={color} stroke="hsl(var(--card))" strokeWidth={1}/>;
+};
+
+const HistoryTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload as TestRunHistoryData;
+    return (
+      <div className="bg-card p-3 border border-border rounded-md shadow-lg">
+        <p className="label text-sm font-semibold text-foreground">{`Date: ${new Date(data.date).toLocaleDateString()}`}</p>
+        <p className="text-xs text-foreground">{`Duration: ${formatDuration(data.duration)}`}</p>
+        <p className="text-xs" style={{ color: data.status === 'passed' ? 'hsl(var(--chart-3))' : data.status === 'failed' || data.status === 'timedOut' ? 'hsl(var(--destructive))' : 'hsl(var(--accent))' }}>
+          {`Status: ${data.status}`}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 
 function StatusIcon({ status }: { status: DetailedTestResult['status'] }) {
   switch (status) {
@@ -42,31 +83,58 @@ function formatDuration(ms: number): string {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
-function getAttachmentIcon(contentType?: string) {
-  if (contentType?.startsWith('image/')) return <ImageIcon className="h-5 w-5 text-primary" />;
-  if (contentType === 'application/zip' || contentType?.includes('trace')) return <Paperclip className="h-5 w-5 text-blue-500" />;
-  return <FileText className="h-5 w-5 text-muted-foreground" />;
-}
-
-
 export function TestDetailsClientPage({ testId }: { testId: string }) {
   const router = useRouter();
   const { currentRun, loadingCurrent, errorCurrent } = useTestData();
   const [test, setTest] = useState<DetailedTestResult | null>(null);
-  // suiteTitle is now directly on test object as suiteName
-
+  const [testHistory, setTestHistory] = useState<TestRunHistoryData[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [errorHistory, setErrorHistory] = useState<string | null>(null);
+  
   useEffect(() => {
     if (currentRun?.results) {
       const foundTest = currentRun.results.find(t => t.id === testId);
-      if (foundTest) {
-        setTest(foundTest);
-      } else {
-        setTest(null); // Explicitly set to null if not found
-      }
+      setTest(foundTest || null);
     }
   }, [currentRun, testId]);
 
-  if (loadingCurrent) {
+  useEffect(() => {
+    if (!testId) return;
+
+    const fetchTestHistory = async () => {
+      setLoadingHistory(true);
+      setErrorHistory(null);
+      try {
+        const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports();
+        const historyData: TestRunHistoryData[] = [];
+
+        rawReports.forEach(report => {
+          const historicalTest = report.results.find(r => r.id === testId); // Match by ID
+          if (historicalTest) {
+            historyData.push({
+              date: report.run.timestamp,
+              duration: historicalTest.duration,
+              status: historicalTest.status,
+            });
+          }
+        });
+        
+        // Sort by date, oldest first
+        historyData.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        setTestHistory(historyData);
+      } catch (error) {
+        console.error("Error fetching test history:", error);
+        setErrorHistory(error instanceof Error ? error.message : "Failed to load test history");
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+
+    fetchTestHistory();
+  }, [testId]);
+
+
+  if (loadingCurrent && !test) { // Show main loading skeleton if current test data hasn't loaded
     return (
       <div className="container mx-auto px-4 py-8 space-y-6">
         <Skeleton className="h-10 w-48 mb-4" />
@@ -76,8 +144,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <Skeleton className="h-4 w-1/2" />
           </CardHeader>
           <CardContent className="space-y-4">
-            <Skeleton className="h-10 w-1/4 mb-4" /> {/* For TabsList */}
-            <Skeleton className="h-40 w-full" /> {/* For TabContent */}
+            <Skeleton className="h-10 w-1/3 mb-4" /> 
+            <Skeleton className="h-40 w-full" /> 
           </CardContent>
         </Card>
       </div>
@@ -138,7 +206,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <div className="text-right flex-shrink-0">
                  <Badge variant={
                     test.status === 'passed' ? 'default' : 
-                    test.status === 'failed' ? 'destructive' :
+                    test.status === 'failed' || test.status === 'timedOut' ? 'destructive' :
                     test.status === 'skipped' ? 'secondary' :
                     'outline'
                   } className="capitalize text-sm px-3 py-1">
@@ -156,7 +224,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="steps" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 md:w-auto lg:w-[600px]">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-3 lg:w-[600px] mb-4">
               <TabsTrigger value="steps">Execution Steps ({test.steps?.length || 0})</TabsTrigger>
               <TabsTrigger value="screenshots">Screenshots ({imageScreenshots.length || 0})</TabsTrigger>
               <TabsTrigger value="history">Test Run History</TabsTrigger>
@@ -188,12 +256,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {imageScreenshots.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {imageScreenshots.map((att, index) => (
-                    <a key={`img-preview-${index}`} href={att.path.startsWith('http') ? att.path : `/${att.path}`} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
+                    <a key={`img-preview-${index}`} href={att.path.startsWith('http') || att.path.startsWith('/') ? att.path : `/${att.path}`} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
                       <Image 
-                        src={att.path.startsWith('http') ? att.path : `/${att.path}`}
+                        src={att.path.startsWith('http') || att.path.startsWith('/') ? att.path : `/${att.path}`}
                         alt={att.name || `screenshot ${index + 1}`}
-                        layout="fill" 
-                        objectFit="cover" 
+                        fill={true}
+                        style={{objectFit: "cover"}}
                         className="group-hover:scale-105 transition-transform duration-300"
                         data-ai-hint={att['data-ai-hint'] || 'screenshot test detail'}
                       />
@@ -219,18 +287,62 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <LineChart className="h-5 w-5 mr-2 text-primary"/>
                 Individual Test Run History
               </h3>
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Feature Under Development</AlertTitle>
-                <AlertDescription>
-                  Displaying a detailed duration trend line chart for this specific test (with passed runs as green dots, 
-                  failed as red, and skipped as yellow/orange) is planned for a future update. 
-                  This enhancement requires a more granular historical data source that tracks individual test results (status and duration) across multiple runs.
-                  The current historical data provides aggregated suite-level trends.
-                  <br/><br/>
-                  The "Trend Analysis" section on the main dashboard provides an overview of historical trends for the entire test suite.
-                </AlertDescription>
-              </Alert>
+              {loadingHistory && (
+                <div className="space-y-3">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-64 w-full" />
+                </div>
+              )}
+              {errorHistory && !loadingHistory && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error Loading History</AlertTitle>
+                  <AlertDescription>{errorHistory}</AlertDescription>
+                </Alert>
+              )}
+              {!loadingHistory && !errorHistory && testHistory.length === 0 && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>No Historical Data</AlertTitle>
+                  <AlertDescription>
+                    No historical run data found for this specific test (ID: {testId}). 
+                    Ensure `trend-*.json` files in `public/pulse-report/history/` contain results for this test ID.
+                  </AlertDescription>
+                </Alert>
+              )}
+              {!loadingHistory && !errorHistory && testHistory.length > 0 && (
+                <ResponsiveContainer width="100%" height={300}>
+                  <RechartsLineChart data={testHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+                    <XAxis 
+                      dataKey="date" 
+                      tickFormatter={(tick) => new Date(tick).toLocaleDateString('en-CA', {month: 'short', day: 'numeric'})} 
+                      stroke="hsl(var(--muted-foreground))" 
+                      tick={{ fontSize: 10 }}
+                      angle={-30}
+                      textAnchor="end"
+                      height={40}
+                    />
+                    <YAxis 
+                      tickFormatter={(tick) => formatDuration(tick)} 
+                      stroke="hsl(var(--muted-foreground))" 
+                      tick={{ fontSize: 10 }}
+                      width={80}
+                    />
+                    <Tooltip content={<HistoryTooltip />}/>
+                    <Legend wrapperStyle={{fontSize: "12px"}}/>
+                    <Line 
+                      type="monotone" 
+                      dataKey="duration" 
+                      name="Duration" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2} 
+                      dot={<StatusDot />} 
+                      activeDot={{ r: 7 }}
+                    />
+                  </RechartsLineChart>
+                </ResponsiveContainer>
+              )}
             </TabsContent>
 
           </Tabs>
@@ -239,3 +351,4 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
+
