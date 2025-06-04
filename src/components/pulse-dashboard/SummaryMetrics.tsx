@@ -1,16 +1,19 @@
 
 'use client';
 
-import type { RunMetadata } from '@/types/playwright';
+import type { RunMetadata, PlaywrightPulseReport } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, XCircle, SkipForward, AlertTriangle, Clock, Terminal } from 'lucide-react';
+import { CheckCircle, XCircle, SkipForward, AlertTriangle, Clock, Terminal, PieChart, BarChart3, ListFilter } from 'lucide-react';
+import { DashboardOverviewCharts } from './DashboardOverviewCharts';
+import type { TestStatusFilter } from './LiveTestResults'; // Assuming TestStatusFilter is exported
 
 interface SummaryMetricsProps {
-  runMetadata: RunMetadata | null;
+  currentRun: PlaywrightPulseReport | null;
   loading: boolean;
-  error: string | null; // Added error prop
+  error: string | null;
+  onMetricClick?: (filter: TestStatusFilter) => void;
 }
 
 function formatDuration(ms: number): string {
@@ -26,8 +29,10 @@ function formatDuration(ms: number): string {
   return formatted.trim() || '0s';
 }
 
-export function SummaryMetrics({ runMetadata, loading, error }: SummaryMetricsProps) {
-  if (error) {
+export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: SummaryMetricsProps) {
+  const runMetadata = currentRun?.run;
+
+  if (error && !runMetadata) { // Only show top-level error if no data at all
     return (
       <Alert variant="destructive" className="col-span-full md:col-span-2 lg:col-span-5">
         <Terminal className="h-4 w-4" />
@@ -37,7 +42,7 @@ export function SummaryMetrics({ runMetadata, loading, error }: SummaryMetricsPr
     );
   }
 
-  if (loading || !runMetadata) {
+  if (loading && !runMetadata) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {[...Array(5)].map((_, i) => (
@@ -55,33 +60,64 @@ export function SummaryMetrics({ runMetadata, loading, error }: SummaryMetricsPr
       </div>
     );
   }
+  
+  const metrics = runMetadata ? [
+    { title: 'Total Tests', value: runMetadata.totalTests.toString(), icon: <ListFilter className="h-5 w-5 text-muted-foreground" />, change: null, filterKey: null },
+    { title: 'Passed', value: runMetadata.passed.toString(), icon: <CheckCircle className="h-5 w-5 text-green-500" />, change: `${runMetadata.totalTests > 0 ? ((runMetadata.passed / runMetadata.totalTests) * 100).toFixed(1) : '0.0'}% pass rate`, filterKey: 'passed' as TestStatusFilter },
+    { title: 'Failed', value: runMetadata.failed.toString(), icon: <XCircle className="h-5 w-5 text-destructive" />, change: `${runMetadata.totalTests > 0 ? ((runMetadata.failed / runMetadata.totalTests) * 100).toFixed(1) : '0.0'}% fail rate`, filterKey: 'failed' as TestStatusFilter },
+    { title: 'Skipped', value: runMetadata.skipped.toString(), icon: <SkipForward className="h-5 w-5 text-accent" />, change: null, filterKey: 'skipped' as TestStatusFilter },
+    { title: 'Duration', value: formatDuration(runMetadata.duration), icon: <Clock className="h-5 w-5 text-primary" />, change: `Total execution time`, filterKey: null },
+  ] : [];
 
-  const { totalTests, passed, failed, skipped, duration } = runMetadata;
-  const passRate = totalTests > 0 ? ((passed / totalTests) * 100).toFixed(1) : '0.0';
-  const failRate = totalTests > 0 ? ((failed / totalTests) * 100).toFixed(1) : '0.0';
-
-  const metrics = [
-    { title: 'Total Tests', value: totalTests.toString(), icon: <AlertTriangle className="h-5 w-5 text-muted-foreground" />, change: null },
-    { title: 'Passed', value: passed.toString(), icon: <CheckCircle className="h-5 w-5 text-green-500" />, change: `${passRate}% pass rate` },
-    { title: 'Failed', value: failed.toString(), icon: <XCircle className="h-5 w-5 text-destructive" />, change: `${failRate}% fail rate` },
-    { title: 'Skipped', value: skipped.toString(), icon: <SkipForward className="h-5 w-5 text-accent" />, change: null },
-    { title: 'Duration', value: formatDuration(duration), icon: <Clock className="h-5 w-5 text-primary" />, change: `Total execution time` },
-  ];
+  const handleCardClick = (filterKey: TestStatusFilter | null) => {
+    if (filterKey && onMetricClick) {
+      onMetricClick(filterKey);
+    }
+  };
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-      {metrics.map(metric => (
-        <Card key={metric.title} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{metric.title}</CardTitle>
-            {metric.icon}
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-foreground">{metric.value}</div>
-            {metric.change && <p className="text-xs text-muted-foreground pt-1">{metric.change}</p>}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+        {metrics.map(metric => (
+          <Card 
+            key={metric.title} 
+            className={`shadow-lg hover:shadow-xl transition-shadow duration-300 ${metric.filterKey && onMetricClick ? 'cursor-pointer hover:ring-2 hover:ring-primary' : ''}`}
+            onClick={() => handleCardClick(metric.filterKey)}
+            tabIndex={metric.filterKey && onMetricClick ? 0 : -1}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && metric.filterKey && onMetricClick) {
+                handleCardClick(metric.filterKey);
+              }
+            }}
+            role={metric.filterKey && onMetricClick ? "button" : undefined}
+            aria-label={metric.filterKey && onMetricClick ? `View ${metric.filterKey} tests` : undefined}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{metric.title}</CardTitle>
+              {metric.icon}
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">{metric.value}</div>
+              {metric.change && <p className="text-xs text-muted-foreground pt-1">{metric.change}</p>}
+            </CardContent>
+          </Card>
+        ))}
+         {loading && runMetadata && ( // Show skeleton for cards if data is partially loaded
+          [...Array(5 - metrics.length)].map((_, i) => (
+            <Card key={`loading-${i}`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-6 w-6" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-4 w-32 mt-1" />
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+      <DashboardOverviewCharts currentRun={currentRun} loading={loading} error={error} />
+    </>
   );
 }

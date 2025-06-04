@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useTestData } from '@/hooks/useTestData';
 import { SummaryMetrics } from './SummaryMetrics';
-import { LiveTestResults } from './LiveTestResults';
+import { LiveTestResults, type TestStatusFilter } from './LiveTestResults';
 import { TrendAnalysis } from './TrendAnalysis';
 import { FailurePatternAnalyzer } from './FailurePatternAnalyzer';
 import { 
@@ -20,7 +20,9 @@ import {
   SidebarInset,
   SidebarFooter 
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, TrendingUp, Wand2 } from 'lucide-react';
+import { LayoutDashboard, ListChecks, TrendingUp, Wand2, TestTubeDiagonal } from 'lucide-react';
+import Link from 'next/link';
+
 
 type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'failure-analyzer';
 
@@ -35,12 +37,30 @@ export function PulseDashboard() {
   } = useTestData();
 
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
+  const [initialLiveResultsFilter, setInitialLiveResultsFilter] = useState<TestStatusFilter | undefined>(undefined);
+
+  const handleMetricCardClick = (filter: TestStatusFilter) => {
+    setInitialLiveResultsFilter(filter);
+    setActiveView('live-results');
+  };
+  
+  // Reset initial filter when navigating away from live-results or when it's consumed
+  // This is a bit tricky. For simplicity, we can clear it if activeView is not live-results.
+  // A more robust solution might involve `LiveTestResults` signaling back.
+  if (activeView !== 'live-results' && initialLiveResultsFilter) {
+    setInitialLiveResultsFilter(undefined);
+  }
+
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, component: <SummaryMetrics runMetadata={currentRun?.run || null} loading={loadingCurrent} error={errorCurrent} /> },
-    { id: 'live-results', label: 'Live Test Results', icon: ListChecks, component: <LiveTestResults report={currentRun} loading={loadingCurrent} error={errorCurrent} /> },
-    { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, component: <TrendAnalysis trends={historicalTrends} loading={loadingHistorical} error={errorHistorical} /> },
-    { id: 'failure-analyzer', label: 'AI Failure Analysis', icon: Wand2, component: <FailurePatternAnalyzer /> },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, 
+      component: <SummaryMetrics currentRun={currentRun} loading={loadingCurrent} error={errorCurrent} onMetricClick={handleMetricCardClick} /> },
+    { id: 'live-results', label: 'Live Test Results', icon: ListChecks, 
+      component: <LiveTestResults report={currentRun} loading={loadingCurrent} error={errorCurrent} initialFilter={initialLiveResultsFilter} /> },
+    { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, 
+      component: <TrendAnalysis trends={historicalTrends} loading={loadingHistorical} error={errorHistorical} /> },
+    { id: 'failure-analyzer', label: 'AI Failure Analysis', icon: Wand2, 
+      component: <FailurePatternAnalyzer /> },
   ];
 
   const currentComponent = menuItems.find(item => item.id === activeView)?.component;
@@ -49,15 +69,16 @@ export function PulseDashboard() {
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon" className="border-r">
         <SidebarHeader className="p-2 flex items-center justify-between">
-           <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
+           <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
             <Image
                 src="https://i.postimg.cc/XqVn1NhF/pulse.png" 
                 alt="Pulse Dashboard Logo"
                 width={32}
                 height={32}
+                className="rounded-sm"
             />
             <h2 className="font-semibold text-lg text-primary">Pulse</h2>
-          </div>
+          </Link>
           <SidebarTrigger className="md:hidden group-data-[collapsible=icon]:hidden" />
         </SidebarHeader>
         <SidebarContent>
@@ -65,7 +86,12 @@ export function PulseDashboard() {
             {menuItems.map(item => (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
-                  onClick={() => setActiveView(item.id as ActiveView)}
+                  onClick={() => {
+                    setActiveView(item.id as ActiveView);
+                    if (item.id !== 'live-results') { // Clear filter if not navigating to live results directly
+                       setInitialLiveResultsFilter(undefined);
+                    }
+                  }}
                   isActive={activeView === item.id}
                   tooltip={{children: item.label, side: 'right', align: 'center'}}
                 >
@@ -110,3 +136,4 @@ export function PulseDashboard() {
     </SidebarProvider>
   );
 }
+

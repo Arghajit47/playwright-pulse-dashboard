@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { PlaywrightPulseReport, DetailedTestResult } from '@/types/playwright';
 import { TestItem } from './TestItem';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,35 +12,41 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-interface LiveTestResultsProps {
-  report: PlaywrightPulseReport | null;
-  loading: boolean;
-  error: string | null;
-}
-
 const testStatuses = ['all', 'passed', 'failed', 'skipped', 'timedOut', 'pending'] as const;
-type TestStatusFilter = typeof testStatuses[number];
+export type TestStatusFilter = typeof testStatuses[number];
 
 interface GroupedSuite {
   title: string;
   tests: DetailedTestResult[];
 }
 
-export function LiveTestResults({ report, loading, error }: LiveTestResultsProps) {
-  const [statusFilter, setStatusFilter] = useState<TestStatusFilter>('all');
+interface LiveTestResultsProps {
+  report: PlaywrightPulseReport | null;
+  loading: boolean;
+  error: string | null;
+  initialFilter?: TestStatusFilter;
+}
+
+export function LiveTestResults({ report, loading, error, initialFilter }: LiveTestResultsProps) {
+  const [statusFilter, setStatusFilter] = useState<TestStatusFilter>(initialFilter || 'all');
   const [searchTerm, setSearchTerm] = useState<string>('');
+
+  useEffect(() => {
+    if (initialFilter) {
+      setStatusFilter(initialFilter);
+    }
+  }, [initialFilter]);
+
 
   const groupedAndFilteredSuites = useMemo(() => {
     if (!report?.results) return [];
 
-    // First, filter individual tests
     const filteredTests = report.results.filter(test => {
       const statusMatch = statusFilter === 'all' || test.status === statusFilter;
       const searchTermMatch = test.name.toLowerCase().includes(searchTerm.toLowerCase());
       return statusMatch && searchTermMatch;
     });
 
-    // Then, group them by suiteName
     const suitesMap = new Map<string, DetailedTestResult[]>();
     filteredTests.forEach(test => {
       const suiteTests = suitesMap.get(test.suiteName) || [];
@@ -168,3 +174,4 @@ export function LiveTestResults({ report, loading, error }: LiveTestResultsProps
     </Card>
   );
 }
+
