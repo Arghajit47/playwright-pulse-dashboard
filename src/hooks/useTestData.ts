@@ -26,29 +26,48 @@ export function useTestData() {
   });
 
   const fetchCurrentRun = useCallback(async () => {
-    // Only set loading if currentRun is null, to avoid flickering on poll
     if (!data.currentRun) {
       setData(prev => ({ ...prev, loadingCurrent: true }));
     }
     try {
       const response = await fetch('/api/current-run');
       if (!response.ok) {
-        throw new Error(`Failed to fetch current run: ${response.statusText}`);
+        let errorDetails = response.statusText; // Default to statusText
+        try {
+          // Attempt to get a more specific message from the JSON response body
+          const errorBody = await response.json();
+          if (errorBody && errorBody.message) {
+            errorDetails = errorBody.message;
+          }
+        } catch (e) {
+          // If the body isn't JSON or doesn't have a message, stick with statusText or a generic error
+          console.warn("Could not parse error response body as JSON:", e);
+        }
+        throw new Error(`Failed to fetch current run: ${errorDetails}`);
       }
       const result: PlaywrightPulseReport = await response.json();
       setData(prev => ({ ...prev, currentRun: result, loadingCurrent: false, errorCurrent: null }));
     } catch (error) {
-      console.error(error);
+      console.error(error); // This will log the full error object to the browser console
       setData(prev => ({ ...prev, loadingCurrent: false, errorCurrent: error instanceof Error ? error.message : String(error) }));
     }
-  }, [data.currentRun]); // Add data.currentRun to dependencies
+  }, [data.currentRun]);
 
   const fetchHistoricalTrends = useCallback(async () => {
     setData(prev => ({ ...prev, loadingHistorical: true }));
     try {
       const response = await fetch('/api/historical-trends');
       if (!response.ok) {
-        throw new Error(`Failed to fetch historical trends: ${response.statusText}`);
+        let errorDetails = response.statusText;
+        try {
+          const errorBody = await response.json();
+          if (errorBody && errorBody.message) {
+            errorDetails = errorBody.message;
+          }
+        } catch (e) {
+          console.warn("Could not parse historical trends error response body as JSON:", e);
+        }
+        throw new Error(`Failed to fetch historical trends: ${errorDetails}`);
       }
       const result: HistoricalTrend[] = await response.json();
       setData(prev => ({ ...prev, historicalTrends: result, loadingHistorical: false, errorHistorical: null }));
