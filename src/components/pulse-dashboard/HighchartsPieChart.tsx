@@ -30,24 +30,25 @@ const HighchartsPieChart: React.FC<HighchartsPieProps> = ({
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    // Explicitly clear previous content or chart instance
-    if (chartInstanceRef.current) {
-      chartInstanceRef.current.destroy();
-      chartInstanceRef.current = null;
-    }
-    chartContainerRef.current.innerHTML = ''; // Clear container
+    const total = data.reduce((sum, d) => sum + d.value, 0);
+    const shouldDisplayChart = data.length > 0 && total > 0;
 
-    if (!data || data.length === 0) {
-      chartContainerRef.current.innerHTML = '<div class="text-center text-muted-foreground p-4">No data available for chart.</div>';
-      return;
+    if (!shouldDisplayChart) {
+      // If chart exists, destroy it before showing "no data" message
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
+        chartInstanceRef.current = null;
+      }
+      const message = data.length === 0 ? "No data available for chart." : "No data for Test Distribution chart.";
+      chartContainerRef.current.innerHTML = `<div class="text-center text-muted-foreground p-4">${message}</div>`;
+      return; 
+    }
+
+    // If we are going to display a chart, ensure any "no data" message is cleared
+    if (chartContainerRef.current.firstChild && chartContainerRef.current.firstChild.textContent?.includes("No data")) {
+        chartContainerRef.current.innerHTML = '';
     }
     
-    const total = data.reduce((sum, d) => sum + d.value, 0);
-    if (total === 0) {
-      chartContainerRef.current.innerHTML = '<div class="text-center text-muted-foreground p-4">No data for Test Distribution chart.</div>';
-      return;
-    }
-
     const passedEntry = data.find((d) => d.name === "Passed");
     const passedPercentage = Math.round(
       ((passedEntry ? passedEntry.value : 0) / total) * 100
@@ -56,7 +57,7 @@ const HighchartsPieChart: React.FC<HighchartsPieProps> = ({
     const seriesData = [
       {
         name: "Tests",
-        type: 'pie',
+        type: 'pie' as const,
         data: data
           .filter((d) => d.value > 0)
           .map((d) => {
@@ -91,7 +92,7 @@ const HighchartsPieChart: React.FC<HighchartsPieProps> = ({
 
     const centerTitleFontSize = Math.max(12, Math.min(chartWidth, chartHeight) / 12) + "px";
     const centerSubtitleFontSize = Math.max(10, Math.min(chartWidth, chartHeight) / 18) + "px";
-    const numericChartHeight = chartHeight - 40; // Ensure this is a number
+    const numericChartHeight = chartHeight - 40; 
 
     const chartOptions: Highcharts.Options = {
       chart: {
@@ -145,16 +146,23 @@ const HighchartsPieChart: React.FC<HighchartsPieProps> = ({
       credits: { enabled: false }
     };
     
-    try {
-      chartInstanceRef.current = Highcharts.chart(chartContainerRef.current, chartOptions);
-    } catch (e) {
-      console.error("Highcharts rendering error:", e);
-      if (chartContainerRef.current) {
-        chartContainerRef.current.innerHTML = '<div class="text-center text-muted-foreground p-4">Error rendering chart. Check console.</div>';
+    if (chartInstanceRef.current) {
+      // Chart exists, update it
+      chartInstanceRef.current.update(chartOptions, true, true); // true for redraw, true for oneToOne
+    } else {
+      // Chart doesn't exist, create it
+      try {
+        chartInstanceRef.current = Highcharts.chart(chartContainerRef.current, chartOptions);
+      } catch (e) {
+        console.error("Highcharts rendering error:", e);
+        if (chartContainerRef.current) {
+          chartContainerRef.current.innerHTML = '<div class="text-center text-muted-foreground p-4">Error rendering chart. Check console.</div>';
+        }
       }
     }
 
-    // Cleanup function
+    // Cleanup function for when the component unmounts or dependencies change causing a re-render
+    // This was the original cleanup. It should be fine as useEffect will run this before the next effect execution.
     return () => {
       if (chartInstanceRef.current) {
         chartInstanceRef.current.destroy();
