@@ -1,16 +1,18 @@
+
 'use client';
 
-import type { ReportMetadata } from '@/types/playwright';
+import type { RunMetadata } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle, XCircle, SkipForward, AlertTriangle, Clock } from 'lucide-react';
 
 interface SummaryMetricsProps {
-  metadata: ReportMetadata | null;
+  runMetadata: RunMetadata | null; // Changed from metadata to runMetadata
   loading: boolean;
 }
 
 function formatDuration(ms: number): string {
+  if (ms === 0) return '0s';
   const seconds = Math.floor((ms / 1000) % 60);
   const minutes = Math.floor((ms / (1000 * 60)) % 60);
   const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
@@ -22,11 +24,11 @@ function formatDuration(ms: number): string {
   return formatted.trim() || '0s';
 }
 
-export function SummaryMetrics({ metadata, loading }: SummaryMetricsProps) {
-  if (loading || !metadata) {
+export function SummaryMetrics({ runMetadata, loading }: SummaryMetricsProps) {
+  if (loading || !runMetadata) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        {[...Array(5)].map((_, i) => ( // Changed to 5 to match metrics array length
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-5 w-24" />
@@ -42,7 +44,7 @@ export function SummaryMetrics({ metadata, loading }: SummaryMetricsProps) {
     );
   }
 
-  const { totalTests, passed, failed, skipped, duration } = metadata;
+  const { totalTests, passed, failed, skipped, duration } = runMetadata;
   const passRate = totalTests > 0 ? ((passed / totalTests) * 100).toFixed(1) : '0.0';
   const failRate = totalTests > 0 ? ((failed / totalTests) * 100).toFixed(1) : '0.0';
 

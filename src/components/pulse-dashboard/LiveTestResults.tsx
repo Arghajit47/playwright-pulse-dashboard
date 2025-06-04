@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { PlaywrightPulseReport, Suite, TestResult } from '@/types/playwright';
+import type { PlaywrightPulseReport, DetailedTestResult } from '@/types/playwright';
 import { TestItem } from './TestItem';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,21 +21,34 @@ interface LiveTestResultsProps {
 const testStatuses = ['all', 'passed', 'failed', 'skipped', 'timedOut', 'pending'] as const;
 type TestStatusFilter = typeof testStatuses[number];
 
+interface GroupedSuite {
+  title: string;
+  tests: DetailedTestResult[];
+}
+
 export function LiveTestResults({ report, loading, error }: LiveTestResultsProps) {
   const [statusFilter, setStatusFilter] = useState<TestStatusFilter>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-  const filteredSuites = useMemo(() => {
-    if (!report?.suites) return [];
-    
-    return report.suites.map(suite => ({
-      ...suite,
-      tests: suite.tests.filter(test => {
-        const statusMatch = statusFilter === 'all' || test.status === statusFilter;
-        const searchTermMatch = test.title.toLowerCase().includes(searchTerm.toLowerCase());
-        return statusMatch && searchTermMatch;
-      })
-    })).filter(suite => suite.tests.length > 0);
+  const groupedAndFilteredSuites = useMemo(() => {
+    if (!report?.results) return [];
+
+    // First, filter individual tests
+    const filteredTests = report.results.filter(test => {
+      const statusMatch = statusFilter === 'all' || test.status === statusFilter;
+      const searchTermMatch = test.name.toLowerCase().includes(searchTerm.toLowerCase());
+      return statusMatch && searchTermMatch;
+    });
+
+    // Then, group them by suiteName
+    const suitesMap = new Map<string, DetailedTestResult[]>();
+    filteredTests.forEach(test => {
+      const suiteTests = suitesMap.get(test.suiteName) || [];
+      suiteTests.push(test);
+      suitesMap.set(test.suiteName, suiteTests);
+    });
+
+    return Array.from(suitesMap.entries()).map(([title, tests]) => ({ title, tests }));
   }, [report, statusFilter, searchTerm]);
 
   if (loading) {
@@ -72,14 +85,14 @@ export function LiveTestResults({ report, loading, error }: LiveTestResultsProps
     );
   }
 
-  if (!report || !report.suites || report.suites.length === 0) {
+  if (!report || !report.results || report.results.length === 0) {
     return (
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
-           {report?.metadata && (
+           {(report?.metadata?.generatedAt || report?.run?.timestamp) && (
             <CardDescription>
-              Last updated: {new Date(report.metadata.reportGeneratedAt).toLocaleString()}
+              Last updated: {new Date(report.metadata.generatedAt || report.run.timestamp).toLocaleString()}
             </CardDescription>
           )}
         </CardHeader>
@@ -94,9 +107,9 @@ export function LiveTestResults({ report, loading, error }: LiveTestResultsProps
     <Card className="shadow-xl">
       <CardHeader>
         <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
-        {report.metadata && (
+        {(report.metadata.generatedAt || report.run.timestamp) && (
           <CardDescription>
-            Last updated: {new Date(report.metadata.reportGeneratedAt).toLocaleString()}
+            Last updated: {new Date(report.metadata.generatedAt || report.run.timestamp).toLocaleString()}
           </CardDescription>
         )}
       </CardHeader>
@@ -118,11 +131,11 @@ export function LiveTestResults({ report, loading, error }: LiveTestResultsProps
             </Select>
           </div>
           <div className="flex-1 space-y-1.5">
-            <Label htmlFor="search-filter" className="text-sm font-medium text-muted-foreground">Search by Title</Label>
+            <Label htmlFor="search-filter" className="text-sm font-medium text-muted-foreground">Search by Name</Label>
             <Input
               id="search-filter"
               type="text"
-              placeholder="Enter test title..."
+              placeholder="Enter test name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-background"
@@ -130,8 +143,8 @@ export function LiveTestResults({ report, loading, error }: LiveTestResultsProps
           </div>
         </div>
 
-        {filteredSuites.length > 0 ? (
-          filteredSuites.map((suite: Suite, index: number) => (
+        {groupedAndFilteredSuites.length > 0 ? (
+          groupedAndFilteredSuites.map((suite: GroupedSuite, index: number) => (
             <div key={index} className="mb-6">
               <h3 className="text-xl font-semibold text-foreground mb-3 pb-2 border-b-2 border-primary/30">{suite.title}</h3>
               {suite.tests.length > 0 ? (
@@ -141,6 +154,7 @@ export function LiveTestResults({ report, loading, error }: LiveTestResultsProps
                   ))}
                 </div>
               ) : (
+                // This case should ideally not be hit if outer filter handles empty suites
                 <p className="text-sm text-muted-foreground pl-4">No tests in this suite match the current filters.</p>
               )}
             </div>

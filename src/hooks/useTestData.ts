@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -25,6 +26,10 @@ export function useTestData() {
   });
 
   const fetchCurrentRun = useCallback(async () => {
+    // Only set loading if currentRun is null, to avoid flickering on poll
+    if (!data.currentRun) {
+      setData(prev => ({ ...prev, loadingCurrent: true }));
+    }
     try {
       const response = await fetch('/api/current-run');
       if (!response.ok) {
@@ -36,7 +41,7 @@ export function useTestData() {
       console.error(error);
       setData(prev => ({ ...prev, loadingCurrent: false, errorCurrent: error instanceof Error ? error.message : String(error) }));
     }
-  }, []);
+  }, [data.currentRun]); // Add data.currentRun to dependencies
 
   const fetchHistoricalTrends = useCallback(async () => {
     setData(prev => ({ ...prev, loadingHistorical: true }));
