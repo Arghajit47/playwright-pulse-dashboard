@@ -168,7 +168,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     .map(test => {
       const shortName = formatTestNameForChart(test.name);
       return {
-        name: shortName.length > 40 ? shortName.substring(0, 37) + '...' : shortName,
+        name: shortName, // Keep potentially longer name for dataKey, not displayed on axis
         duration: test.duration,
         durationFormatted: formatDurationForChart(test.duration),
         fullTestName: test.name, // For tooltip
@@ -306,14 +306,19 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
       <Card className="lg:col-span-1 xl:col-span-1 shadow-lg">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">Slowest Tests (Top 5)</CardTitle>
-           <CardDescription className="text-xs">Top 5 longest running tests in this run.</CardDescription>
+           <CardDescription className="text-xs">Top 5 longest running tests in this run. Full names in tooltip.</CardDescription>
         </CardHeader>
         <CardContent>
           {slowestTestsData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
-              <RechartsBarChart data={slowestTestsData} margin={{ top: 5, right: 5, left: 5, bottom: 70 }}>
+              <RechartsBarChart data={slowestTestsData} margin={{ top: 5, right: 5, left: 5, bottom: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} angle={-45} textAnchor="end" interval={0} />
+                <XAxis 
+                  dataKey="name" 
+                  tickLine={false} 
+                  tickFormatter={() => ''} 
+                  stroke="hsl(var(--muted-foreground))"
+                />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} unit="s" tickFormatter={(value) => formatDurationForChart(value)}/>
                 <Tooltip 
                     content={({ active, payload, label }) => {
@@ -322,7 +327,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                             return (
                             <div className="bg-card p-3 border border-border rounded-md shadow-lg">
                                 <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{data.fullTestName}</p>
-                                <p className="text-xs" style={{ color: data.status === 'passed' ? COLORS.passed : COLORS.failed }}>
+                                <p className="text-xs" style={{ color: data.status === 'passed' ? COLORS.passed : data.status === 'failed' || data.status === 'timedOut' ? COLORS.failed : COLORS.skipped }}>
                                 Duration: {formatDurationForChart(data.duration)} (Status: {data.status})
                                 </p>
                             </div>
@@ -349,3 +354,4 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </div>
   );
 }
+
