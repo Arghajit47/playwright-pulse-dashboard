@@ -7,7 +7,7 @@ import { TestItem } from './TestItem';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { Terminal, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -61,8 +61,8 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     return (
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle><Skeleton className="h-6 w-48" /></CardTitle>
-          <CardDescription><Skeleton className="h-4 w-64" /></CardDescription>
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-64 mt-1" />
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 border rounded-lg">
@@ -83,7 +83,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
 
   if (error) {
      return (
-      <Alert variant="destructive" className="mt-4">
+      <Alert variant="destructive" className="mt-4 shadow-md">
         <Terminal className="h-4 w-4" />
         <AlertTitle>Error Fetching Live Test Results</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
@@ -93,7 +93,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
 
   if (!report || !report.results || report.results.length === 0) {
     return (
-      <Card className="shadow-lg">
+      <Card className="shadow-xl">
         <CardHeader>
           <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
            {(report?.metadata?.generatedAt || report?.run?.timestamp) && (
@@ -103,7 +103,11 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
           )}
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No test results available or report is empty. Please ensure 'playwright-pulse-report.json' exists in the 'public/pulse-report' directory and is correctly formatted.</p>
+           <Alert className="shadow-sm">
+            <Info className="h-4 w-4" />
+            <AlertTitle>No Test Data</AlertTitle>
+            <AlertDescription>No test results available. Ensure 'playwright-pulse-report.json' exists in 'public/pulse-report/' and is correctly formatted, or that the data source is providing results.</AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     );
@@ -113,18 +117,18 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     <Card className="shadow-xl">
       <CardHeader>
         <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
-        {(report.metadata.generatedAt || report.run.timestamp) && (
+        {(report.metadata?.generatedAt || report.run?.timestamp) && (
           <CardDescription>
             Last updated: {new Date(report.metadata.generatedAt || report.run.timestamp).toLocaleString()}
           </CardDescription>
         )}
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 border rounded-lg bg-card/80 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 border rounded-lg bg-card/70 shadow-sm">
           <div className="flex-1 space-y-1.5">
             <Label htmlFor="status-filter" className="text-sm font-medium text-muted-foreground">Filter by Status</Label>
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as TestStatusFilter)}>
-              <SelectTrigger id="status-filter" className="w-full sm:w-[200px] bg-background">
+              <SelectTrigger id="status-filter" className="w-full sm:w-[200px] bg-background shadow-inner">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -144,7 +148,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
               placeholder="Enter test name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-background"
+              className="w-full bg-background shadow-inner"
             />
           </div>
         </div>
@@ -160,7 +164,6 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                   ))}
                 </div>
               ) : (
-                // This case should ideally not be hit if outer filter handles empty suites
                 <p className="text-sm text-muted-foreground pl-4">No tests in this suite match the current filters.</p>
               )}
             </div>
@@ -168,6 +171,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         ) : (
            <div className="text-center py-8">
              <p className="text-muted-foreground text-lg">No test results match your current filters.</p>
+              <p className="text-sm text-muted-foreground mt-1">Try adjusting the status or search term.</p>
            </div>
         )}
       </CardContent>

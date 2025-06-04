@@ -28,7 +28,7 @@ const COLORS = {
 };
 
 const RADIAN = Math.PI / 180;
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value }: any) => {
+const renderCustomizedPieLabel = ({ cx, cy, midAngle, innerRadius = 0, outerRadius = 0, percent, name, value }: any) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
@@ -36,7 +36,7 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   if (percent * 100 < 5) return null; // Don't render label for small slices
 
   return (
-    <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize="12px">
+    <text x={x} y={y} fill="hsl(var(--primary-foreground))" textAnchor="middle" dominantBaseline="central" fontSize="12px" fontWeight="medium">
       {`${name} (${value})`}
     </text>
   );
@@ -56,9 +56,13 @@ function formatTestNameForChart(fullName: string): string {
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const fullTestName = data.fullTestName || label; // For pie chart, label is the name
+    const formattedName = formatTestNameForChart(fullTestName);
+
     return (
       <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-        <p className="label text-sm font-semibold text-foreground">{label}</p>
+        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={fullTestName}>{formattedName}</p>
         {payload.map((entry: any, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color || entry.payload.fill }} className="text-xs">
             {`${entry.name}: ${entry.value.toLocaleString()}${entry.unit || ''}`}
@@ -83,7 +87,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
         {[...Array(4)].map((_, i) => (
-          <Card key={i}>
+          <Card key={i} className="shadow-md">
             <CardHeader>
               <Skeleton className="h-5 w-3/4" />
               <Skeleton className="h-4 w-1/2 mt-1" />
@@ -179,7 +183,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   return (
     <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 mt-8">
-      <Card className="lg:col-span-1 shadow-lg">
+      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
           <CardDescription className="text-xs">Passed, Failed, Skipped for the current run.</CardDescription>
@@ -192,20 +196,26 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={renderCustomizedLabel}
+                label={renderCustomizedPieLabel}
                 outerRadius={100}
+                innerRadius={55} // Makes it a donut chart
                 fill="#8884d8"
                 dataKey="value"
                 nameKey="name"
-              />
+                paddingAngle={2}
+              >
+                {testDistributionData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} stroke="hsl(var(--background))" strokeWidth={2} />
+                ))}
+              </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend iconSize={10} wrapperStyle={{fontSize: "12px"}}/>
+              <Legend iconSize={10} wrapperStyle={{fontSize: "12px", paddingTop: "10px"}}/>
             </RechartsPieChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-1 shadow-lg">
+      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">Tests by Browser</CardTitle>
           <CardDescription className="text-xs">Number of tests executed per browser.</CardDescription>
@@ -237,7 +247,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardContent>
       </Card>
       
-      <Card className="lg:col-span-1 shadow-lg">
+      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">Failed Tests Duration</CardTitle>
            <CardDescription className="text-xs">Duration of failed or timed out tests (Top 10).</CardDescription>
@@ -280,7 +290,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-1 xl:col-span-2 shadow-lg">
+      <Card className="lg:col-span-1 xl:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
           <CardDescription className="text-xs">Number of test cases in each suite.</CardDescription>
@@ -303,7 +313,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardContent>
       </Card>
       
-      <Card className="lg:col-span-1 xl:col-span-1 shadow-lg">
+      <Card className="lg:col-span-1 xl:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">Slowest Tests (Top 5)</CardTitle>
            <CardDescription className="text-xs">Top 5 longest running tests in this run. Full names in tooltip.</CardDescription>
