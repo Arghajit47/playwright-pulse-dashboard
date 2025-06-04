@@ -7,7 +7,7 @@ import { TestItem } from './TestItem';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, Info, ChevronDown, XCircle } from "lucide-react";
+import { Terminal, Info, ChevronDown, XCircle, FilterX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -67,6 +67,22 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     }
   }, [report]);
 
+  const isAnyFilterActive = useMemo(() => {
+    return statusFilter !== 'all' ||
+           searchTerm !== '' ||
+           selectedTags.length > 0 ||
+           selectedBrowser !== 'all' ||
+           selectedSuite !== 'all';
+  }, [statusFilter, searchTerm, selectedTags, selectedBrowser, selectedSuite]);
+
+  const handleClearAllFilters = () => {
+    setStatusFilter('all');
+    setSearchTerm('');
+    setSelectedTags([]);
+    setSelectedBrowser('all');
+    setSelectedSuite('all');
+  };
+
   const groupedAndFilteredSuites = useMemo(() => {
     if (!report?.results) return [];
 
@@ -105,6 +121,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" /> 
           </div>
           {[...Array(3)].map((_, i) => (
             <div key={i} className="space-y-2 p-2 border rounded-md">
@@ -161,104 +178,114 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         )}
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 mb-6 p-4 border rounded-lg bg-card/70 shadow-sm">
-          <div className="space-y-1.5">
-            <Label htmlFor="status-filter" className="text-sm font-medium text-muted-foreground">Filter by Status</Label>
-            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as TestStatusFilter)}>
-              <SelectTrigger id="status-filter" className="w-full bg-background shadow-inner">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {testStatuses.map(status => (
-                  <SelectItem key={status} value={status} className="capitalize">
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="p-4 border rounded-lg bg-card/70 shadow-sm space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="status-filter" className="text-sm font-medium text-muted-foreground">Filter by Status</Label>
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as TestStatusFilter)}>
+                <SelectTrigger id="status-filter" className="w-full bg-background shadow-inner">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {testStatuses.map(status => (
+                    <SelectItem key={status} value={status} className="capitalize">
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="search-filter" className="text-sm font-medium text-muted-foreground">Search by Name/Suite</Label>
+              <Input
+                id="search-filter"
+                type="text"
+                placeholder="Enter test or suite name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-background shadow-inner"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium text-muted-foreground">Filter by Tags</Label>
+              <Popover open={tagPopoverOpen} onOpenChange={setTagPopoverOpen}>
+                  <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full bg-background shadow-inner justify-between">
+                          {selectedTags.length > 0 ? `Tags (${selectedTags.length})` : "Select Tags"}
+                          <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                      </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                      <div className="p-2 border-b">
+                          <p className="text-sm font-medium">Filter by Tags</p>
+                      </div>
+                      <ScrollArea className="h-48">
+                          <div className="p-2 space-y-1">
+                          {allTags.length > 0 ? allTags.map(tag => (
+                              <Label key={tag} htmlFor={`tag-${tag}`} className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-accent/10 cursor-pointer">
+                                  <Checkbox
+                                      id={`tag-${tag}`}
+                                      checked={selectedTags.includes(tag)}
+                                      onCheckedChange={(checked) => {
+                                          setSelectedTags(prev =>
+                                              checked
+                                                  ? [...prev, tag]
+                                                  : prev.filter(t => t !== tag)
+                                          );
+                                      }}
+                                  />
+                                  <span>{tag}</span>
+                              </Label>
+                          )) : <p className="text-xs text-muted-foreground p-2">No tags available in this report.</p>}
+                          </div>
+                      </ScrollArea>
+                      {selectedTags.length > 0 && (
+                          <div className="p-2 border-t flex justify-end">
+                              <Button variant="ghost" size="sm" onClick={() => setSelectedTags([])}>Clear selected</Button>
+                          </div>
+                      )}
+                  </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="browser-filter" className="text-sm font-medium text-muted-foreground">Filter by Browser</Label>
+              <Select value={selectedBrowser} onValueChange={setSelectedBrowser}>
+                <SelectTrigger id="browser-filter" className="w-full bg-background shadow-inner">
+                  <SelectValue placeholder="Select browser" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allBrowsers.map(browser => (
+                    <SelectItem key={browser} value={browser} className="capitalize">
+                      {browser === 'all' ? 'All Browsers' : browser}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="suite-filter" className="text-sm font-medium text-muted-foreground">Filter by Test Suite</Label>
+              <Select value={selectedSuite} onValueChange={setSelectedSuite}>
+                <SelectTrigger id="suite-filter" className="w-full bg-background shadow-inner">
+                  <SelectValue placeholder="Select test suite" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allSuites.map(suite => (
+                    <SelectItem key={suite} value={suite} className="capitalize truncate">
+                      {suite === 'all' ? 'All Suites' : (suite.length > 40 ? suite.substring(0, 37) + '...' : suite)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="search-filter" className="text-sm font-medium text-muted-foreground">Search by Name/Suite</Label>
-            <Input
-              id="search-filter"
-              type="text"
-              placeholder="Enter test or suite name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-background shadow-inner"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-muted-foreground">Filter by Tags</Label>
-            <Popover open={tagPopoverOpen} onOpenChange={setTagPopoverOpen}>
-                <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full bg-background shadow-inner justify-between">
-                        {selectedTags.length > 0 ? `Tags (${selectedTags.length})` : "Select Tags"}
-                        <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                    <div className="p-2 border-b">
-                        <p className="text-sm font-medium">Filter by Tags</p>
-                    </div>
-                    <ScrollArea className="h-48">
-                        <div className="p-2 space-y-1">
-                        {allTags.length > 0 ? allTags.map(tag => (
-                            <Label key={tag} htmlFor={`tag-${tag}`} className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-accent/10 cursor-pointer">
-                                <Checkbox
-                                    id={`tag-${tag}`}
-                                    checked={selectedTags.includes(tag)}
-                                    onCheckedChange={(checked) => {
-                                        setSelectedTags(prev =>
-                                            checked
-                                                ? [...prev, tag]
-                                                : prev.filter(t => t !== tag)
-                                        );
-                                    }}
-                                />
-                                <span>{tag}</span>
-                            </Label>
-                        )) : <p className="text-xs text-muted-foreground p-2">No tags available in this report.</p>}
-                        </div>
-                    </ScrollArea>
-                    {selectedTags.length > 0 && (
-                        <div className="p-2 border-t flex justify-end">
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedTags([])}>Clear selected</Button>
-                        </div>
-                    )}
-                </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="browser-filter" className="text-sm font-medium text-muted-foreground">Filter by Browser</Label>
-            <Select value={selectedBrowser} onValueChange={setSelectedBrowser}>
-              <SelectTrigger id="browser-filter" className="w-full bg-background shadow-inner">
-                <SelectValue placeholder="Select browser" />
-              </SelectTrigger>
-              <SelectContent>
-                {allBrowsers.map(browser => (
-                  <SelectItem key={browser} value={browser} className="capitalize">
-                    {browser === 'all' ? 'All Browsers' : browser}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="suite-filter" className="text-sm font-medium text-muted-foreground">Filter by Test Suite</Label>
-            <Select value={selectedSuite} onValueChange={setSelectedSuite}>
-              <SelectTrigger id="suite-filter" className="w-full bg-background shadow-inner">
-                <SelectValue placeholder="Select test suite" />
-              </SelectTrigger>
-              <SelectContent>
-                {allSuites.map(suite => (
-                  <SelectItem key={suite} value={suite} className="capitalize truncate">
-                    {suite === 'all' ? 'All Suites' : (suite.length > 40 ? suite.substring(0, 37) + '...' : suite)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {isAnyFilterActive && (
+            <div className="mt-4 flex justify-end">
+              <Button variant="ghost" onClick={handleClearAllFilters} className="text-sm">
+                <FilterX className="mr-2 h-4 w-4" />
+                Clear All Filters
+              </Button>
+            </div>
+          )}
         </div>
         
         {selectedTags.length > 0 && (
