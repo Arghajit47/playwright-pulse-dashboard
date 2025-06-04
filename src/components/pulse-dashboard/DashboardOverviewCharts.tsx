@@ -1,13 +1,14 @@
 
 'use client';
 
-import type { PlaywrightPulseReport, DetailedTestResult } from '@/types/playwright';
+import type { PlaywrightPulseReport } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import HighchartsPieChart from './HighchartsPieChart'; // Import the new Highcharts Pie Chart
 
 interface DashboardOverviewChartsProps {
   currentRun: PlaywrightPulseReport | null;
@@ -16,6 +17,7 @@ interface DashboardOverviewChartsProps {
 }
 
 const COLORS = {
+  // Recharts specific colors, Highcharts uses CSS variables now for the pie chart
   passed: 'hsl(var(--chart-3))', // Green
   failed: 'hsl(var(--destructive))', // Red
   skipped: 'hsl(var(--accent))', // Orange
@@ -27,20 +29,6 @@ const COLORS = {
   default4: 'hsl(var(--chart-5))',
 };
 
-const RADIAN = Math.PI / 180;
-const renderCustomizedPieLabel = ({ cx, cy, midAngle, innerRadius = 0, outerRadius = 0, percent, name, value }: any) => {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-  if (percent * 100 < 5) return null; // Don't render label for small slices
-
-  return (
-    <text x={x} y={y} fill="hsl(var(--primary-foreground))" textAnchor="middle" dominantBaseline="central" fontSize="12px" fontWeight="medium">
-      {`${name} (${value})`}
-    </text>
-  );
-};
 
 function formatDurationForChart(ms: number): string {
   if (ms === 0) return '0s';
@@ -57,7 +45,7 @@ function formatTestNameForChart(fullName: string): string {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const fullTestName = data.fullTestName || label; // For pie chart, label is the name
+    const fullTestName = data.fullTestName || label; 
     const formattedName = formatTestNameForChart(fullTestName);
 
     return (
@@ -78,7 +66,7 @@ const BrowserIcon = ({ browserName, className }: { browserName: string, classNam
   const lowerBrowserName = browserName.toLowerCase();
   if (lowerBrowserName.includes('chrome')) return <Chrome className={cn("h-4 w-4", className)} />;
   if (lowerBrowserName.includes('safari') || lowerBrowserName.includes('webkit')) return <Compass className={cn("h-4 w-4", className)} />;
-  return <Globe className={cn("h-4 w-4", className)} />; // Default for Firefox and others
+  return <Globe className={cn("h-4 w-4", className)} />; 
 };
 
 
@@ -123,18 +111,21 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   const { passed, failed, skipped, timedOut = 0, pending = 0 } = currentRun.run;
   const testDistributionData = [
-    { name: 'Passed', value: passed, fill: COLORS.passed },
-    { name: 'Failed', value: failed, fill: COLORS.failed },
-    { name: 'Skipped', value: skipped, fill: COLORS.skipped },
-    ...(timedOut > 0 ? [{ name: 'Timed Out', value: timedOut, fill: COLORS.timedOut }] : []),
-    ...(pending > 0 ? [{ name: 'Pending', value: pending, fill: COLORS.pending }] : []),
+    // Data for HighchartsPieChart (maps to its 'data' prop structure)
+    { name: 'Passed', value: passed },
+    { name: 'Failed', value: failed },
+    { name: 'Skipped', value: skipped },
+    ...(timedOut > 0 ? [{ name: 'Timed Out', value: timedOut }] : []),
+    ...(pending > 0 ? [{ name: 'Pending', value: pending }] : []),
   ].filter(d => d.value > 0);
+
 
   const browserDistribution = currentRun.results.reduce((acc, test) => {
     const browser = test.browser || 'Unknown';
     acc[browser] = (acc[browser] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
+
   const browserChartData = Object.entries(browserDistribution).map(([name, value], index) => ({
     name,
     value,
@@ -188,30 +179,12 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
           <CardDescription className="text-xs">Passed, Failed, Skipped for the current run.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={250}>
-            <RechartsPieChart>
-              <Pie
-                data={testDistributionData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={renderCustomizedPieLabel}
-                outerRadius={100}
-                innerRadius={55} // Makes it a donut chart
-                fill="#8884d8"
-                dataKey="value"
-                nameKey="name"
-                paddingAngle={2}
-              >
-                {testDistributionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} stroke="hsl(var(--background))" strokeWidth={2} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend iconSize={10} wrapperStyle={{fontSize: "12px", paddingTop: "10px"}}/>
-            </RechartsPieChart>
-          </ResponsiveContainer>
+        <CardContent className="flex justify-center items-center min-h-[250px]">
+          {testDistributionData.length > 0 ? (
+            <HighchartsPieChart data={testDistributionData} chartWidth={260} chartHeight={290} />
+          ) : (
+             <div className="text-center text-muted-foreground">No test distribution data.</div>
+          )}
         </CardContent>
       </Card>
 
@@ -364,4 +337,3 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </div>
   );
 }
-

@@ -25,6 +25,8 @@ body {
 
     --primary: 200 67% 62%; /* #5DADE2 - Calm blue */
     --primary-foreground: 0 0% 100%; /* White for text on primary */
+    --primary-color: hsl(var(--primary)); /* Alias for Highcharts */
+
 
     --secondary: 200 40% 85%;
     --secondary-foreground: 210 20% 25%;
@@ -36,8 +38,6 @@ body {
     --destructive-foreground: 0 0% 98%;
 
     --ring: 200 67% 55%; /* Slightly darker/more saturated primary for focus */
-
-    --radius: 0.5rem;
 
     --chart-1: 200 67% 62%; /* Primary blue */
     --chart-2: 36 90% 51%; /* Accent orange */
@@ -54,6 +54,14 @@ body {
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 200 30% 85%;
     --sidebar-ring: 200 67% 55%;
+
+    /* Variables for Highcharts compatibility */
+    --success-color: hsl(var(--chart-3));
+    --danger-color: hsl(var(--destructive));
+    --warning-color: hsl(var(--accent));
+    --text-color-secondary: hsl(var(--muted-foreground));
+    --text-color: hsl(var(--foreground));
+    --card-background-color: hsl(var(--background)); /* For pie slice borders to blend with chart's transparent bg */
   }
 
   .dark {
@@ -75,6 +83,7 @@ body {
 
     --primary: 200 67% 62%;
     --primary-foreground: 0 0% 100%;
+    --primary-color: hsl(var(--primary));
 
     --secondary: 210 15% 30%;
     --secondary-foreground: 200 50% 90%;
@@ -101,6 +110,14 @@ body {
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 210 15% 25%;
     --sidebar-ring: 200 67% 55%;
+
+    /* Variables for Highcharts compatibility - Dark Theme */
+    --success-color: hsl(var(--chart-3));
+    --danger-color: hsl(var(--destructive));
+    --warning-color: hsl(var(--accent));
+    --text-color-secondary: hsl(var(--muted-foreground));
+    --text-color: hsl(var(--foreground));
+    --card-background-color: hsl(var(--background));
   }
 }
 
@@ -112,3 +129,20 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Highcharts specific styles for better theme integration */
+.highcharts-tooltip span {
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+  padding: 8px !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+.highcharts-legend-item text {
+  fill: hsl(var(--text-color)) !important;
+}
+.highcharts-title, .highcharts-subtitle {
+    /* Already handled by inline styles in chart options, but can add fallbacks or overrides here */
+}
+
