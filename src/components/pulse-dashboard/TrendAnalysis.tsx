@@ -58,7 +58,7 @@ export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
 
   if (!trends || trends.length === 0) {
     return (
-      <Card className="shadow-lg">
+      <Card className="shadow-xl">
         <CardHeader>
           <CardTitle className="flex items-center text-2xl font-headline text-primary">
             <TrendingUp className="h-7 w-7 mr-2" />
@@ -137,3 +137,4 @@ export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
     </Card>
   );
 }
+
