@@ -1,0 +1,9 @@
+{
+  "date": "2024-07-30",
+  "totalTests": 10,
+  "passed": 7,
+  "failed": 2,
+  "skipped": 1,
+  "duration": 35000,
+  "flakinessRate": 0.0
+}

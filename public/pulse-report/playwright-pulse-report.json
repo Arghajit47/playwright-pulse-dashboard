@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "reportGeneratedAt": "2024-07-30T12:00:00Z",
+    "totalTests": 10,
+    "passed": 7,
+    "failed": 2,
+    "skipped": 1,
+    "duration": 35000
+  },
+  "suites": [
+    {
+      "title": "User Authentication",
+      "tests": [
+        { "id": "auth-1", "title": "should login successfully", "status": "passed", "duration": 2500, "error": null, "attachments": [] },
+        { "id": "auth-2", "title": "should fail with wrong password", "status": "passed", "duration": 3000, "error": null, "attachments": [] },
+        { "id": "auth-3", "title": "should show password recovery link", "status": "failed", "duration": 1500, "error": "AssertionError: Expected recovery link to be visible", "attachments": [{"name": "screenshot_auth_3", "path": "https://placehold.co/600x400.png", "contentType": "image/png", "data-ai-hint": "error screen"}] }
+      ]
+    },
+    {
+      "title": "Product Management",
+      "tests": [
+        { "id": "prod-1", "title": "should add new product", "status": "passed", "duration": 5000, "error": null, "attachments": [] },
+        { "id": "prod-2", "title": "should edit existing product", "status": "passed", "duration": 4500, "error": null, "attachments": [] },
+        { "id": "prod-3", "title": "should delete product", "status": "failed", "duration": 3200, "error": "TimeoutError: Exceeded 3000ms while waiting for element", "attachments": [{"name": "screenshot_prod_3", "path": "https://placehold.co/600x400.png", "contentType": "image/png", "data-ai-hint": "timeout error"}] },
+        { "id": "prod-4", "title": "should view product details", "status": "passed", "duration": 2800, "error": null, "attachments": [] },
+        { "id": "prod-5", "title": "should list all products", "status": "passed", "duration": 6000, "error": null, "attachments": [] },
+        { "id": "prod-6", "title": "should handle empty product list (flaky)", "status": "passed", "duration": 3500, "error": null, "attachments": [] },
+        { "id": "prod-7", "title": "should search products", "status": "skipped", "duration": 0, "error": null, "attachments": [] }
+      ]
+    }
+  ]
+}
