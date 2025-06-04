@@ -5,14 +5,22 @@ import path from 'path';
 import type { HistoricalTrend, PlaywrightPulseReport } from '@/types/playwright';
 
 export async function GET() {
+  const historyDir = path.join(process.cwd(), 'public', 'pulse-report', 'history');
+  console.log('Attempting to read historical trends from directory:', historyDir);
   try {
-    const historyDir = path.join(process.cwd(), 'public', 'pulse-report', 'history');
     const files = await fs.readdir(historyDir);
     const trendFiles = files.filter(file => file.startsWith('trend-') && file.endsWith('.json'));
+    console.log('Found trend files:', trendFiles);
+
+    if (trendFiles.length === 0) {
+      console.log('No trend files found in', historyDir);
+      return NextResponse.json([]); // Return empty array if no files found
+    }
 
     const trends: HistoricalTrend[] = [];
     for (const file of trendFiles) {
       const filePath = path.join(historyDir, file);
+      console.log('Processing historical trend file:', filePath);
       try {
         const fileContent = await fs.readFile(filePath, 'utf-8');
         const reportData: PlaywrightPulseReport = JSON.parse(fileContent);
@@ -28,23 +36,21 @@ export async function GET() {
             // flakinessRate can be added here if available or calculated from reportData if needed
           });
         } else {
-          // Optionally log or handle files missing the 'run' object
-          // console.warn(`Historical data file ${file} is missing 'run' object.`);
+          console.warn(`Historical data file ${file} is missing 'run' object or has unexpected structure. Skipping.`);
         }
       } catch (fileError) {
-        // Log the error for the specific file and continue processing other files
-        console.error(`Error processing historical trend file ${file}:`, fileError);
-        // Continue to the next file
+        console.error(`Error processing historical trend file ${file} at ${filePath}:`, fileError);
+        // Continue to the next file, but perhaps log this occurrence
       }
     }
 
     // Sort by date, oldest first for chart consistency.
     trends.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
+    console.log('Successfully processed historical trends:', trends.length, 'items.');
     return NextResponse.json(trends);
   } catch (error) {
     console.error('Failed to read historical trends directory or encountered a critical error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Error fetching historical trends';
-    return NextResponse.json({ message: errorMessage }, { status: 500 });
+    return NextResponse.json({ message: `Error accessing or reading historical trends directory ${historyDir}: ${errorMessage}` }, { status: 500 });
   }
 }

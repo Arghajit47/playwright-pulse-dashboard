@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { HistoricalTrend } from '@/types/playwright';
@@ -47,9 +48,9 @@ export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
   
   if (error) {
      return (
-      <Alert variant="destructive">
+      <Alert variant="destructive" className="mt-4">
         <Terminal className="h-4 w-4" />
-        <AlertTitle>Error Fetching Trends</AlertTitle>
+        <AlertTitle>Error Fetching Historical Trends</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
@@ -59,13 +60,13 @@ export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
     return (
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <TrendingUp className="h-6 w-6 mr-2 text-primary" />
+          <CardTitle className="flex items-center text-2xl font-headline text-primary">
+            <TrendingUp className="h-7 w-7 mr-2" />
             Historical Trend Analysis
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No historical trend data available.</p>
+          <p className="text-muted-foreground">No historical trend data available. Ensure 'trend-*.json' files exist in 'public/pulse-report/history/' and are correctly formatted.</p>
         </CardContent>
       </Card>
     );

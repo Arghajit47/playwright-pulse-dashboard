@@ -77,9 +77,9 @@ export function LiveTestResults({ report, loading, error }: LiveTestResultsProps
 
   if (error) {
      return (
-      <Alert variant="destructive">
+      <Alert variant="destructive" className="mt-4">
         <Terminal className="h-4 w-4" />
-        <AlertTitle>Error Fetching Live Results</AlertTitle>
+        <AlertTitle>Error Fetching Live Test Results</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
@@ -92,12 +92,12 @@ export function LiveTestResults({ report, loading, error }: LiveTestResultsProps
           <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
            {(report?.metadata?.generatedAt || report?.run?.timestamp) && (
             <CardDescription>
-              Last updated: {new Date(report.metadata.generatedAt || report.run.timestamp).toLocaleString()}
+              Last updated: {new Date(report.metadata?.generatedAt || report.run?.timestamp || Date.now()).toLocaleString()}
             </CardDescription>
           )}
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No test results available or report is empty.</p>
+          <p className="text-muted-foreground">No test results available or report is empty. Please ensure 'playwright-pulse-report.json' exists in the 'public/pulse-report' directory and is correctly formatted.</p>
         </CardContent>
       </Card>
     );
