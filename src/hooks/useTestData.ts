@@ -13,7 +13,8 @@ interface TestDataState {
   errorHistorical: string | null;
 }
 
-const POLLING_INTERVAL = 5000; // 5 seconds
+// Polling has been removed. Data is fetched once on load.
+// const POLLING_INTERVAL = 5000; 
 
 export function useTestData() {
   const [data, setData] = useState<TestDataState>({
@@ -26,21 +27,21 @@ export function useTestData() {
   });
 
   const fetchCurrentRun = useCallback(async () => {
-    if (!data.currentRun) {
+    // Ensure loadingCurrent is true only if data isn't already loaded or an explicit refresh is intended.
+    // For this version, it's primarily for initial load.
+    if (!data.currentRun && !data.errorCurrent) {
       setData(prev => ({ ...prev, loadingCurrent: true }));
     }
     try {
       const response = await fetch('/api/current-run');
       if (!response.ok) {
-        let errorDetails = response.statusText; // Default to statusText
+        let errorDetails = response.statusText; 
         try {
-          // Attempt to get a more specific message from the JSON response body
           const errorBody = await response.json();
           if (errorBody && errorBody.message) {
             errorDetails = errorBody.message;
           }
         } catch (e) {
-          // If the body isn't JSON or doesn't have a message, stick with statusText or a generic error
           console.warn("Could not parse error response body as JSON:", e);
         }
         throw new Error(`Failed to fetch current run: ${errorDetails}`);
@@ -48,13 +49,16 @@ export function useTestData() {
       const result: PlaywrightPulseReport = await response.json();
       setData(prev => ({ ...prev, currentRun: result, loadingCurrent: false, errorCurrent: null }));
     } catch (error) {
-      console.error(error); // This will log the full error object to the browser console
+      console.error(error); 
       setData(prev => ({ ...prev, loadingCurrent: false, errorCurrent: error instanceof Error ? error.message : String(error) }));
     }
-  }, [data.currentRun]);
+  }, [data.currentRun, data.errorCurrent]); // Added dependencies to avoid stale closures if we reintroduce manual refresh
 
   const fetchHistoricalTrends = useCallback(async () => {
-    setData(prev => ({ ...prev, loadingHistorical: true }));
+    // Similar logic for loading state, primarily for initial load.
+    if (data.historicalTrends.length === 0 && !data.errorHistorical) {
+     setData(prev => ({ ...prev, loadingHistorical: true }));
+    }
     try {
       const response = await fetch('/api/historical-trends');
       if (!response.ok) {
@@ -75,15 +79,17 @@ export function useTestData() {
       console.error(error);
       setData(prev => ({ ...prev, loadingHistorical: false, errorHistorical: error instanceof Error ? error.message : String(error) }));
     }
-  }, []);
+  }, [data.historicalTrends.length, data.errorHistorical]); // Added dependencies
 
   useEffect(() => {
     fetchCurrentRun();
     fetchHistoricalTrends();
 
-    const intervalId = setInterval(fetchCurrentRun, POLLING_INTERVAL);
-    return () => clearInterval(intervalId);
+    // Polling interval has been removed.
+    // const intervalId = setInterval(fetchCurrentRun, POLLING_INTERVAL);
+    // return () => clearInterval(intervalId);
   }, [fetchCurrentRun, fetchHistoricalTrends]);
 
   return data;
 }
+

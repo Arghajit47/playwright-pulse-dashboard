@@ -87,7 +87,7 @@ const ActiveShape = (props: any) => {
 
   return (
     <g>
-      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} className="text-lg font-bold">
+      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={'hsl(var(--primary-foreground))'} className="text-lg font-bold">
         {payload.name}
       </text>
       <Sector
@@ -234,7 +234,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
 
   return (
-    <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 mt-6">
+    <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
@@ -284,10 +284,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={250}>
-            <RechartsBarChart data={browserChartData} layout="vertical" margin={{ top: 5, right: 20, left: 50, bottom: 5 }}>
+            <RechartsBarChart data={browserChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
               <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-              <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={100} tickFormatter={(value) => value.length > 15 ? value.substring(0,12) + '...' : value} />
+              <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={120} tickFormatter={(value) => value.length > 18 ? value.substring(0,15) + '...' : value} interval={0}/>
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{fontSize: "12px"}}/>
               <Bar dataKey="value" name="Tests" barSize={20}>
@@ -352,30 +352,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-1 xl:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
-          <CardDescription className="text-xs">Number of test cases in each suite.</CardDescription>
-        </CardHeader>
-        <CardContent className="max-h-[400px] overflow-y-auto">
-          <ResponsiveContainer width="100%" height={Math.max(250, testsPerSuiteChartData.length * 40 + 50)}>
-            <RechartsBarChart data={testsPerSuiteChartData} layout="vertical" margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
-              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-              <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={120} interval={0} tickFormatter={(value) => value.length > 20 ? value.substring(0,17) + '...' : value} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" name="Tests" barSize={15}>
-                {testsPerSuiteChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-                <LabelList dataKey="value" position="right" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }} />
-              </Bar>
-            </RechartsBarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-      
-      <Card className="lg:col-span-1 xl:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">Slowest Tests (Top 5)</CardTitle>
            <CardDescription className="text-xs">Top 5 longest running tests in this run. Full names in tooltip.</CardDescription>
@@ -422,7 +399,31 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           )}
         </CardContent>
       </Card>
+      
+      <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
+          <CardDescription className="text-xs">Number of test cases in each suite.</CardDescription>
+        </CardHeader>
+        <CardContent className="max-h-[400px] overflow-y-auto">
+          <ResponsiveContainer width="100%" height={Math.max(250, testsPerSuiteChartData.length * 35 + 60)}>
+            <RechartsBarChart data={testsPerSuiteChartData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+              <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} interval={0} tickFormatter={(value) => value.length > 25 ? value.substring(0,22) + '...' : value} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="value" name="Tests" barSize={15}>
+                {testsPerSuiteChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+                <LabelList dataKey="value" position="right" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }} />
+              </Bar>
+            </RechartsBarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
     </div>
   );
 }
+
