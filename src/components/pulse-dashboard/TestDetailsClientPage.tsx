@@ -4,14 +4,17 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useTestData } from '@/hooks/useTestData';
 import type { TestResult, Suite, TestAttachment } from '@/types/playwright';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, Image as ImageIcon, FileText, ExternalLink } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, Image as ImageIcon, FileText, ExternalLink, LineChart } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
+// Need to re-declare useState and useEffect here because they are not auto-imported by the Studio
+// and this component will be in its own file.
+import { useState, useEffect } from 'react';
 
 function StatusIcon({ status }: { status: TestResult['status'] }) {
   switch (status) {
@@ -75,8 +78,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <Skeleton className="h-4 w-1/2" />
           </CardHeader>
           <CardContent className="space-y-4">
-            <Skeleton className="h-10 w-1/4 mb-4" />
-            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-10 w-1/4 mb-4" /> {/* For TabsList */}
+            <Skeleton className="h-40 w-full" /> {/* For TabContent */}
           </CardContent>
         </Card>
       </div>
@@ -141,27 +144,33 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="steps" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
-              <TabsTrigger value="steps">Test Details</TabsTrigger>
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 md:w-auto lg:w-[600px]">
+              <TabsTrigger value="details">Execution Details</TabsTrigger>
               <TabsTrigger value="attachments">Attachments ({test.attachments?.length || 0})</TabsTrigger>
+              <TabsTrigger value="history">Test Run History</TabsTrigger>
             </TabsList>
-            <TabsContent value="steps" className="mt-4 p-4 border rounded-md bg-card">
-              <h3 className="text-lg font-semibold text-foreground mb-3">Execution Details</h3>
+            
+            <TabsContent value="details" className="mt-4 p-4 border rounded-md bg-card">
+              <h3 className="text-lg font-semibold text-foreground mb-3">Test Outcome &amp; Errors</h3>
               {test.error ? (
                 <div>
                   <h4 className="font-semibold text-md text-destructive mb-1">Error Message:</h4>
                   <pre className="bg-destructive/10 text-destructive text-sm p-4 rounded-md whitespace-pre-wrap break-all font-code overflow-x-auto">{test.error}</pre>
                 </div>
               ) : (
-                <p className="text-muted-foreground">No errors reported for this test.</p>
+                <p className="text-muted-foreground">No errors reported for this test. The test passed successfully.</p>
               )}
-              <div className="mt-4">
+              <div className="mt-6 p-3 bg-muted/50 rounded-md border">
                  <p className="text-sm text-muted-foreground">
-                    This section shows the primary outcome of the test. For more granular step-by-step execution, refer to Playwright's trace viewer if available (often included in attachments).
+                    This section shows the primary outcome and any errors from the test execution. 
+                    For a detailed step-by-step breakdown of actions performed during the test, please refer to 
+                    Playwright's <strong className="text-foreground">trace viewer</strong> file. If a trace was generated, 
+                    it should be available in the "Attachments" tab (often as a `.zip` file).
                  </p>
               </div>
             </TabsContent>
+
             <TabsContent value="attachments" className="mt-4 p-4 border rounded-md bg-card">
               <h3 className="text-lg font-semibold text-foreground mb-4">Associated Files</h3>
               {test.attachments && test.attachments.length > 0 ? (
@@ -211,6 +220,26 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </div>
               )}
             </TabsContent>
+
+            <TabsContent value="history" className="mt-4 p-4 border rounded-md bg-card">
+              <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+                <LineChart className="h-5 w-5 mr-2 text-primary"/>
+                Individual Test Run History
+              </h3>
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Feature Under Development</AlertTitle>
+                <AlertDescription>
+                  Displaying a detailed duration trend line chart for this specific test (with passed runs as green dots, 
+                  failed as red, and skipped as yellow/orange) is planned for a future update. 
+                  This enhancement requires a more granular historical data source for individual test results, 
+                  which is not yet available in the current system.
+                  <br/><br/>
+                  The "Trend Analysis" section on the main dashboard provides an overview of historical trends for the entire test suite.
+                </AlertDescription>
+              </Alert>
+            </TabsContent>
+
           </Tabs>
         </CardContent>
       </Card>
@@ -218,6 +247,3 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   );
 }
 
-// Need to re-declare useState and useEffect here because they are not auto-imported by the Studio
-// and this component will be in its own file.
-import { useState, useEffect } from 'react';
