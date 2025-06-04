@@ -2,12 +2,13 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image'; // Added import for Image
 import { useTestData } from '@/hooks/useTestData';
 import { SummaryMetrics } from './SummaryMetrics';
 import { LiveTestResults } from './LiveTestResults';
 import { TrendAnalysis } from './TrendAnalysis';
 import { FailurePatternAnalyzer } from './FailurePatternAnalyzer';
-import { Button } from '@/components/ui/button';
+// Removed Button import as it's no longer used for the logo icon
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -20,7 +21,7 @@ import {
   SidebarInset,
   SidebarFooter 
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, TrendingUp, Wand2, BarChartHorizontalBig } from 'lucide-react';
+import { LayoutDashboard, ListChecks, TrendingUp, Wand2 } from 'lucide-react'; // Removed BarChartHorizontalBig
 
 type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'failure-analyzer';
 
@@ -50,9 +51,13 @@ export function PulseDashboard() {
       <Sidebar collapsible="icon" className="border-r">
         <SidebarHeader className="p-2 flex items-center justify-between">
            <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary">
-                <BarChartHorizontalBig className="h-5 w-5" />
-            </Button>
+            <Image
+                src="https://placehold.co/32x32.png" // Placeholder for your logo
+                alt="Pulse Dashboard Logo"
+                width={32}
+                height={32}
+                data-ai-hint="logo"
+            />
             <h2 className="font-semibold text-lg text-primary">Pulse</h2>
           </div>
           <SidebarTrigger className="md:hidden group-data-[collapsible=icon]:hidden" />
