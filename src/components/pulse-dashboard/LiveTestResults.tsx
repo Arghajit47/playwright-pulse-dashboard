@@ -38,6 +38,10 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [tagPopoverOpen, setTagPopoverOpen] = useState(false);
+  const [selectedBrowser, setSelectedBrowser] = useState<string>('all');
+  const [allBrowsers, setAllBrowsers] = useState<string[]>(['all']);
+  const [selectedSuite, setSelectedSuite] = useState<string>('all');
+  const [allSuites, setAllSuites] = useState<string[]>(['all']);
 
   useEffect(() => {
     if (initialFilter) {
@@ -48,10 +52,18 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
   useEffect(() => {
     if (report?.results) {
       const uniqueTags = new Set<string>();
+      const uniqueBrowsers = new Set<string>();
+      const uniqueSuites = new Set<string>();
+
       report.results.forEach(test => {
         test.tags?.forEach(tag => uniqueTags.add(tag));
+        if (test.browser) uniqueBrowsers.add(test.browser);
+        if (test.suiteName) uniqueSuites.add(test.suiteName);
       });
+
       setAllTags(Array.from(uniqueTags).sort());
+      setAllBrowsers(['all', ...Array.from(uniqueBrowsers).sort()]);
+      setAllSuites(['all', ...Array.from(uniqueSuites).sort()]);
     }
   }, [report]);
 
@@ -63,7 +75,10 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
       const searchTermMatch = test.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                               test.suiteName.toLowerCase().includes(searchTerm.toLowerCase());
       const tagMatch = selectedTags.length === 0 || (test.tags && test.tags.some(tag => selectedTags.includes(tag)));
-      return statusMatch && searchTermMatch && tagMatch;
+      const browserMatch = selectedBrowser === 'all' || test.browser === selectedBrowser;
+      const suiteMatch = selectedSuite === 'all' || test.suiteName === selectedSuite;
+      
+      return statusMatch && searchTermMatch && tagMatch && browserMatch && suiteMatch;
     });
 
     const suitesMap = new Map<string, DetailedTestResult[]>();
@@ -74,7 +89,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     });
 
     return Array.from(suitesMap.entries()).map(([title, tests]) => ({ title, tests }));
-  }, [report, statusFilter, searchTerm, selectedTags]);
+  }, [report, statusFilter, searchTerm, selectedTags, selectedBrowser, selectedSuite]);
 
   if (loading) {
     return (
@@ -84,10 +99,12 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
           <Skeleton className="h-4 w-64 mt-1" />
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 border rounded-lg">
-            <Skeleton className="h-10 w-full sm:w-[180px]" />
-            <Skeleton className="h-10 w-full flex-1" />
-            <Skeleton className="h-10 w-full sm:w-[180px]" /> {/* Skeleton for tag filter */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 p-4 border rounded-lg">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
           </div>
           {[...Array(3)].map((_, i) => (
             <div key={i} className="space-y-2 p-2 border rounded-md">
@@ -144,7 +161,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         )}
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 border rounded-lg bg-card/70 shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 mb-6 p-4 border rounded-lg bg-card/70 shadow-sm">
           <div className="space-y-1.5">
             <Label htmlFor="status-filter" className="text-sm font-medium text-muted-foreground">Filter by Status</Label>
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as TestStatusFilter)}>
@@ -180,14 +197,14 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                         <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[250px] p-0" align="start">
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                     <div className="p-2 border-b">
                         <p className="text-sm font-medium">Filter by Tags</p>
                     </div>
                     <ScrollArea className="h-48">
                         <div className="p-2 space-y-1">
                         {allTags.length > 0 ? allTags.map(tag => (
-                            <Label key={tag} htmlFor={`tag-${tag}`} className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-accent cursor-pointer">
+                            <Label key={tag} htmlFor={`tag-${tag}`} className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-accent/10 cursor-pointer">
                                 <Checkbox
                                     id={`tag-${tag}`}
                                     checked={selectedTags.includes(tag)}
@@ -211,6 +228,36 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                     )}
                 </PopoverContent>
             </Popover>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="browser-filter" className="text-sm font-medium text-muted-foreground">Filter by Browser</Label>
+            <Select value={selectedBrowser} onValueChange={setSelectedBrowser}>
+              <SelectTrigger id="browser-filter" className="w-full bg-background shadow-inner">
+                <SelectValue placeholder="Select browser" />
+              </SelectTrigger>
+              <SelectContent>
+                {allBrowsers.map(browser => (
+                  <SelectItem key={browser} value={browser} className="capitalize">
+                    {browser === 'all' ? 'All Browsers' : browser}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="suite-filter" className="text-sm font-medium text-muted-foreground">Filter by Test Suite</Label>
+            <Select value={selectedSuite} onValueChange={setSelectedSuite}>
+              <SelectTrigger id="suite-filter" className="w-full bg-background shadow-inner">
+                <SelectValue placeholder="Select test suite" />
+              </SelectTrigger>
+              <SelectContent>
+                {allSuites.map(suite => (
+                  <SelectItem key={suite} value={suite} className="capitalize truncate">
+                    {suite === 'all' ? 'All Suites' : (suite.length > 40 ? suite.substring(0, 37) + '...' : suite)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         
