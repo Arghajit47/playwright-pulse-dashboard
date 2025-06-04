@@ -19,9 +19,9 @@ interface DashboardOverviewChartsProps {
 }
 
 const COLORS = {
-  passed: 'hsl(var(--chart-3))', // Green
-  failed: 'hsl(var(--destructive))', // Red
-  skipped: 'hsl(var(--accent))', // Orange
+  passed: 'hsl(var(--chart-3))', 
+  failed: 'hsl(var(--destructive))', 
+  skipped: 'hsl(var(--accent))', 
   timedOut: 'hsl(var(--destructive))',
   pending: 'hsl(var(--muted-foreground))',
   default1: 'hsl(var(--chart-1))',
@@ -46,8 +46,6 @@ function formatTestNameForChart(fullName: string): string {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    // For pie charts, payload[0].name is the label of the slice
-    // For bar charts, data.fullTestName or label (from XAxis) might be available
     const fullTestName = data.fullTestName || payload[0].name || label;
     const formattedName = formatTestNameForChart(fullTestName);
 
@@ -70,7 +68,6 @@ const BrowserIcon = ({ browserName, className }: { browserName: string, classNam
   const lowerBrowserName = browserName.toLowerCase();
   if (lowerBrowserName.includes('chrome')) return <Chrome className={cn("h-4 w-4", className)} />;
   if (lowerBrowserName.includes('safari') || lowerBrowserName.includes('webkit')) return <Compass className={cn("h-4 w-4", className)} />;
-  // Add other specific browser icons if available in lucide-react
   return <Globe className={cn("h-4 w-4", className)} />; 
 };
 
@@ -237,7 +234,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
 
   return (
-    <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 mt-8">
+    <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 mt-6">
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
@@ -360,8 +357,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
           <CardDescription className="text-xs">Number of test cases in each suite.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={testsPerSuiteChartData.length * 40 + 50 < 250 ? 250 : testsPerSuiteChartData.length * 40 + 50}>
+        <CardContent className="max-h-[400px] overflow-y-auto">
+          <ResponsiveContainer width="100%" height={Math.max(250, testsPerSuiteChartData.length * 40 + 50)}>
             <RechartsBarChart data={testsPerSuiteChartData} layout="vertical" margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
               <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
@@ -429,5 +426,3 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </div>
   );
 }
-
-    

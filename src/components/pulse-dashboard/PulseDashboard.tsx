@@ -20,7 +20,7 @@ import {
   SidebarInset,
   SidebarFooter 
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, TrendingUp, Wand2, TestTubeDiagonal } from 'lucide-react';
+import { LayoutDashboard, ListChecks, TrendingUp, Wand2 } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -44,9 +44,6 @@ export function PulseDashboard() {
     setActiveView('live-results');
   };
   
-  // Reset initial filter when navigating away from live-results or when it's consumed
-  // This is a bit tricky. For simplicity, we can clear it if activeView is not live-results.
-  // A more robust solution might involve `LiveTestResults` signaling back.
   if (activeView !== 'live-results' && initialLiveResultsFilter) {
     setInitialLiveResultsFilter(undefined);
   }
@@ -76,6 +73,7 @@ export function PulseDashboard() {
                 width={32}
                 height={32}
                 className="rounded-sm"
+                data-ai-hint="pulse logo"
             />
             <h2 className="font-semibold text-lg text-primary">Pulse</h2>
           </Link>
@@ -88,7 +86,7 @@ export function PulseDashboard() {
                 <SidebarMenuButton
                   onClick={() => {
                     setActiveView(item.id as ActiveView);
-                    if (item.id !== 'live-results') { // Clear filter if not navigating to live results directly
+                    if (item.id !== 'live-results') { 
                        setInitialLiveResultsFilter(undefined);
                     }
                   }}
@@ -109,7 +107,7 @@ export function PulseDashboard() {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <div className="container mx-auto px-4 py-8 space-y-8 min-h-screen flex flex-col">
+        <div className="container mx-auto px-4 py-6 space-y-6 min-h-screen flex flex-col">
           <header className="mb-0"> 
             <h1 className="text-3xl font-bold font-headline text-primary tracking-tight">
               {menuItems.find(item => item.id === activeView)?.label || "Pulse Dashboard"}
@@ -126,7 +124,7 @@ export function PulseDashboard() {
             {currentComponent}
           </main>
           
-          <footer className="text-center mt-8 py-4 border-t"> 
+          <footer className="text-center mt-auto py-3 border-t"> 
             <p className="text-sm text-muted-foreground">
               Pulse Dashboard &copy; {new Date().getFullYear()}
             </p>
@@ -136,4 +134,3 @@ export function PulseDashboard() {
     </SidebarProvider>
   );
 }
-
