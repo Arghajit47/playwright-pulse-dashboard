@@ -1,6 +1,7 @@
 
 'use client';
 
+import * as React from 'react';
 import type { HistoricalTrend } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,7 +22,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="label text-sm font-semibold text-foreground">{`Date: ${label}`}</p>
         {payload.map((entry: any, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color }} className="text-xs">
-            {`${entry.name}: ${entry.value.toLocaleString()}`}
+            {`${entry.name}: ${entry.value.toLocaleString()}${entry.name === 'Flakiness Rate (%)' ? '%' : ''}`}
           </p>
         ))}
       </div>
@@ -34,7 +35,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
   if (loading) {
     return (
-      <Card className="shadow-lg">
+      <Card className="shadow-xl">
         <CardHeader>
           <CardTitle><Skeleton className="h-6 w-40" /></CardTitle>
         </CardHeader>
@@ -48,7 +49,7 @@ export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
   
   if (error) {
      return (
-      <Alert variant="destructive" className="mt-4">
+      <Alert variant="destructive" className="mt-4 shadow-md">
         <Terminal className="h-4 w-4" />
         <AlertTitle>Error Fetching Historical Trends</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
@@ -72,11 +73,14 @@ export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
     );
   }
 
-  const formattedTrends = trends.map(t => ({
-    ...t,
-    date: new Date(t.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }), // Short date format
-    durationSeconds: parseFloat((t.duration / 1000).toFixed(2)),
-  })).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Ensure chronological for chart
+  const formattedTrends = React.useMemo(() => {
+    return trends.map(t => ({
+      ...t,
+      date: new Date(t.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }), // Short date format
+      durationSeconds: parseFloat((t.duration / 1000).toFixed(2)),
+      flakinessPercent: t.flakinessRate !== undefined && t.flakinessRate !== null ? parseFloat((t.flakinessRate * 100).toFixed(1)) : undefined,
+    })).sort((a,b) => new Date(trends.find(tr => tr.date === a.date)?.date || 0).getTime() - new Date(trends.find(tr => tr.date === b.date)?.date || 0).getTime());
+  }, [trends]);
 
   return (
     <Card className="shadow-xl">
@@ -117,11 +121,11 @@ export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
           </ResponsiveContainer>
         </div>
         
-        {trends.some(t => t.flakinessRate !== undefined && t.flakinessRate !== null) && (
+        {formattedTrends.some(t => t.flakinessPercent !== undefined) && (
            <div>
             <h4 className="text-lg font-semibold text-foreground mb-3">Flakiness Rate Over Time (%)</h4>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={formattedTrends.map(t => ({...t, flakinessPercent: (t.flakinessRate ?? 0) * 100 }))}>
+              <LineChart data={formattedTrends}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
                 <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} unit="%"/>
@@ -137,4 +141,3 @@ export function TrendAnalysis({ trends, loading, error }: TrendAnalysisProps) {
     </Card>
   );
 }
-
