@@ -83,6 +83,12 @@ function formatDuration(ms: number): string {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
+function formatTestName(fullName: string): string {
+  if (!fullName) return '';
+  const parts = fullName.split(" > ");
+  return parts[parts.length - 1] || fullName;
+}
+
 export function TestDetailsClientPage({ testId }: { testId: string }) {
   const router = useRouter();
   const { currentRun, loadingCurrent, errorCurrent } = useTestData();
@@ -181,6 +187,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   }
   
   const imageScreenshots = test.screenshots?.filter(s => s.contentType?.startsWith('image/')) || [];
+  const displayName = formatTestName(test.name);
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
@@ -192,9 +199,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-                <CardTitle className="text-2xl font-headline text-primary flex items-center">
+                <CardTitle className="text-2xl font-headline text-primary flex items-center" title={test.name}>
                 <StatusIcon status={test.status} />
-                <span className="ml-3">{test.name}</span>
+                <span className="ml-3">{displayName}</span>
                 </CardTitle>
                 {test.suiteName && <CardDescription className="mt-1 text-md">From suite: {test.suiteName}</CardDescription>}
                  <div className="mt-1 text-xs text-muted-foreground">

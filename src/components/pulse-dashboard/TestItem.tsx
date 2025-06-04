@@ -34,9 +34,16 @@ function formatDuration(ms: number): string {
   return `${(ms / 1000).toFixed(2)}s`;
 }
 
+function formatTestName(fullName: string): string {
+  if (!fullName) return '';
+  const parts = fullName.split(" > ");
+  return parts[parts.length - 1] || fullName;
+}
+
 export function TestItem({ test }: TestItemProps) {
   const imageAttachments = test.screenshots?.filter(att => att.contentType.startsWith('image/')) || [];
   const hasDetailsInAccordion = test.error || imageAttachments.length > 0;
+  const displayName = formatTestName(test.name);
 
   return (
     <div className="border-b border-border last:border-b-0 py-3 hover:bg-card/50 transition-colors duration-200 px-4 rounded-md mb-2 shadow-sm bg-card">
@@ -44,20 +51,20 @@ export function TestItem({ test }: TestItemProps) {
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <StatusIcon status={test.status} />
           <Link href={`/test/${test.id}`} className="font-medium text-foreground text-sm md:text-base hover:underline truncate" title={test.name}>
-            {test.name}
+            {displayName}
           </Link>
         </div>
         <div className="flex items-center space-x-3 ml-2 flex-shrink-0">
           <Badge variant={
             test.status === 'passed' ? 'default' : 
-            test.status === 'failed' ? 'destructive' :
+            test.status === 'failed' || test.status === 'timedOut' ? 'destructive' :
             test.status === 'skipped' ? 'secondary' :
             'outline'
           } className="capitalize text-xs px-2 py-0.5">
             {test.status}
           </Badge>
           <span className="text-sm text-muted-foreground w-20 text-right">{formatDuration(test.duration)}</span>
-           <Link href={`/test/${test.id}`} aria-label={`View details for ${test.name}`}>
+           <Link href={`/test/${test.id}`} aria-label={`View details for ${displayName}`}>
             <ChevronRight className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
           </Link>
         </div>
@@ -80,12 +87,12 @@ export function TestItem({ test }: TestItemProps) {
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
                     {imageAttachments.slice(0,4).map((att, index) => (
-                         <a key={`img-thumb-${index}`} href={att.path.startsWith('http') ? att.path : `/${att.path}`} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group">
+                         <a key={`img-thumb-${index}`} href={att.path.startsWith('http') || att.path.startsWith('/') ? att.path : `/${att.path}`} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group">
                             <Image 
-                                src={att.path.startsWith('http') ? att.path : `/${att.path}`}
+                                src={att.path.startsWith('http') || att.path.startsWith('/') ? att.path : `/${att.path}`}
                                 alt={att.name} 
-                                layout="fill" 
-                                objectFit="cover" 
+                                fill={true}
+                                style={{objectFit: "cover"}}
                                 className="group-hover:scale-105 transition-transform duration-300"
                                 data-ai-hint={att['data-ai-hint'] || 'screenshot test'}
                             />

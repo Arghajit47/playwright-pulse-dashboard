@@ -48,6 +48,12 @@ function formatDurationForChart(ms: number): string {
   return `${seconds}s`;
 }
 
+function formatTestNameForChart(fullName: string): string {
+  if (!fullName) return '';
+  const parts = fullName.split(" > ");
+  return parts[parts.length - 1] || fullName;
+}
+
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -67,7 +73,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const BrowserIcon = ({ browserName, className }: { browserName: string, className?: string }) => {
   const lowerBrowserName = browserName.toLowerCase();
   if (lowerBrowserName.includes('chrome')) return <Chrome className={cn("h-4 w-4", className)} />;
-  // Firefox will fall through to Globe
   if (lowerBrowserName.includes('safari') || lowerBrowserName.includes('webkit')) return <Compass className={cn("h-4 w-4", className)} />;
   return <Globe className={cn("h-4 w-4", className)} />; // Default for Firefox and others
 };
@@ -134,12 +139,15 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   const failedTestsDurationData = currentRun.results
     .filter(test => test.status === 'failed' || test.status === 'timedOut')
-    .map(test => ({
-      name: test.name.length > 50 ? test.name.substring(0, 47) + '...' : test.name,
-      duration: test.duration,
-      durationFormatted: formatDurationForChart(test.duration),
-      fullTestName: test.name, // For tooltip
-    }))
+    .map(test => {
+      const shortName = formatTestNameForChart(test.name);
+      return {
+        name: shortName.length > 50 ? shortName.substring(0, 47) + '...' : shortName,
+        duration: test.duration,
+        durationFormatted: formatDurationForChart(test.duration),
+        fullTestName: test.name, // For tooltip
+      };
+    })
     .sort((a,b) => b.duration - a.duration)
     .slice(0, 10); // Show top 10 failed test durations
 
@@ -157,13 +165,16 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const slowestTestsData = [...currentRun.results]
     .sort((a, b) => b.duration - a.duration)
     .slice(0, 5)
-    .map(test => ({
-      name: test.name.length > 40 ? test.name.substring(0, 37) + '...' : test.name,
-      duration: test.duration,
-      durationFormatted: formatDurationForChart(test.duration),
-      fullTestName: test.name, // For tooltip
-      status: test.status,
-    }));
+    .map(test => {
+      const shortName = formatTestNameForChart(test.name);
+      return {
+        name: shortName.length > 40 ? shortName.substring(0, 37) + '...' : shortName,
+        duration: test.duration,
+        durationFormatted: formatDurationForChart(test.duration),
+        fullTestName: test.name, // For tooltip
+        status: test.status,
+      };
+    });
 
 
   return (
@@ -244,7 +255,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                             const data = payload[0].payload;
                             return (
                             <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-                                <p className="label text-sm font-semibold text-foreground truncate max-w-xs">{data.fullTestName}</p>
+                                <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{data.fullTestName}</p>
                                 <p className="text-xs" style={{ color: COLORS.failed }}>
                                 Duration: {formatDurationForChart(data.duration)}
                                 </p>
@@ -310,7 +321,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                             const data = payload[0].payload;
                             return (
                             <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-                                <p className="label text-sm font-semibold text-foreground truncate max-w-xs">{data.fullTestName}</p>
+                                <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{data.fullTestName}</p>
                                 <p className="text-xs" style={{ color: data.status === 'passed' ? COLORS.passed : COLORS.failed }}>
                                 Duration: {formatDurationForChart(data.duration)} (Status: {data.status})
                                 </p>
@@ -338,8 +349,3 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </div>
   );
 }
-
-
-    
-
-    
