@@ -5,10 +5,12 @@ import type { PlaywrightPulseReport } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
+import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
 import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import HighchartsPieChart from './HighchartsPieChart'; // Import the new Highcharts Pie Chart
+import React from 'react';
+
 
 interface DashboardOverviewChartsProps {
   currentRun: PlaywrightPulseReport | null;
@@ -17,7 +19,6 @@ interface DashboardOverviewChartsProps {
 }
 
 const COLORS = {
-  // Recharts specific colors, Highcharts uses CSS variables now for the pie chart
   passed: 'hsl(var(--chart-3))', // Green
   failed: 'hsl(var(--destructive))', // Red
   skipped: 'hsl(var(--accent))', // Orange
@@ -45,7 +46,9 @@ function formatTestNameForChart(fullName: string): string {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const fullTestName = data.fullTestName || label; 
+    // For pie charts, payload[0].name is the label of the slice
+    // For bar charts, data.fullTestName or label (from XAxis) might be available
+    const fullTestName = data.fullTestName || payload[0].name || label;
     const formattedName = formatTestNameForChart(fullTestName);
 
     return (
@@ -54,6 +57,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         {payload.map((entry: any, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color || entry.payload.fill }} className="text-xs">
             {`${entry.name}: ${entry.value.toLocaleString()}${entry.unit || ''}`}
+            {entry.name === payload[0].name && payload[0].payload.percentage && ` (${payload[0].payload.percentage}%)`}
           </p>
         ))}
       </div>
@@ -66,11 +70,68 @@ const BrowserIcon = ({ browserName, className }: { browserName: string, classNam
   const lowerBrowserName = browserName.toLowerCase();
   if (lowerBrowserName.includes('chrome')) return <Chrome className={cn("h-4 w-4", className)} />;
   if (lowerBrowserName.includes('safari') || lowerBrowserName.includes('webkit')) return <Compass className={cn("h-4 w-4", className)} />;
+  // Add other specific browser icons if available in lucide-react
   return <Globe className={cn("h-4 w-4", className)} />; 
 };
 
 
+const ActiveShape = (props: any) => {
+  const RADIAN = Math.PI / 180;
+  const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+  const sin = Math.sin(-RADIAN * midAngle);
+  const cos = Math.cos(-RADIAN * midAngle);
+  const sx = cx + (outerRadius + 10) * cos;
+  const sy = cy + (outerRadius + 10) * sin;
+  const mx = cx + (outerRadius + 30) * cos;
+  const my = cy + (outerRadius + 30) * sin;
+  const ex = mx + (cos >= 0 ? 1 : -1) * 22;
+  const ey = my;
+  const textAnchor = cos >= 0 ? 'start' : 'end';
+
+  return (
+    <g>
+      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} className="text-lg font-bold">
+        {payload.name}
+      </text>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+      <Sector
+        cx={cx}
+        cy={cy}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        innerRadius={outerRadius + 6}
+        outerRadius={outerRadius + 10}
+        fill={fill}
+      />
+      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
+      <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="hsl(var(--foreground))" className="text-xs">{`${value}`}</text>
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="hsl(var(--muted-foreground))" className="text-xs">
+        {`(Rate ${(percent * 100).toFixed(2)}%)`}
+      </text>
+    </g>
+  );
+};
+
+
 export function DashboardOverviewCharts({ currentRun, loading, error }: DashboardOverviewChartsProps) {
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  const onPieEnter = React.useCallback(
+    (_: any, index: number) => {
+      setActiveIndex(index);
+    },
+    [setActiveIndex]
+  );
+  
   if (loading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
@@ -110,14 +171,17 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   }
 
   const { passed, failed, skipped, timedOut = 0, pending = 0 } = currentRun.run;
+  const totalTestsForPie = passed + failed + skipped + timedOut + pending;
+
   const testDistributionData = [
-    // Data for HighchartsPieChart (maps to its 'data' prop structure)
-    { name: 'Passed', value: passed },
-    { name: 'Failed', value: failed },
-    { name: 'Skipped', value: skipped },
-    ...(timedOut > 0 ? [{ name: 'Timed Out', value: timedOut }] : []),
-    ...(pending > 0 ? [{ name: 'Pending', value: pending }] : []),
-  ].filter(d => d.value > 0);
+    { name: 'Passed', value: passed, fill: COLORS.passed },
+    { name: 'Failed', value: failed, fill: COLORS.failed },
+    { name: 'Skipped', value: skipped, fill: COLORS.skipped },
+    ...(timedOut > 0 ? [{ name: 'Timed Out', value: timedOut, fill: COLORS.timedOut }] : []),
+    ...(pending > 0 ? [{ name: 'Pending', value: pending, fill: COLORS.pending }] : []),
+  ]
+  .filter(d => d.value > 0)
+  .map(d => ({ ...d, percentage: totalTestsForPie > 0 ? ((d.value / totalTestsForPie) * 100).toFixed(1) : '0.0' }));
 
 
   const browserDistribution = currentRun.results.reduce((acc, test) => {
@@ -179,9 +243,37 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
           <CardDescription className="text-xs">Passed, Failed, Skipped for the current run.</CardDescription>
         </CardHeader>
-        <CardContent className="flex justify-center items-center min-h-[250px]">
+        <CardContent className="flex justify-center items-center min-h-[280px]">
           {testDistributionData.length > 0 ? (
-            <HighchartsPieChart data={testDistributionData} chartWidth={260} chartHeight={290} />
+            <ResponsiveContainer width="100%" height={280}>
+              <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                <Pie
+                  activeIndex={activeIndex}
+                  activeShape={ActiveShape}
+                  data={testDistributionData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  dataKey="value"
+                  onMouseEnter={onPieEnter}
+                  paddingAngle={2}
+                  stroke="hsl(var(--card))"
+                >
+                  {testDistributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend 
+                  iconSize={10} 
+                  layout="horizontal" 
+                  verticalAlign="bottom" 
+                  align="center"
+                  wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
+                />
+              </RechartsPieChart>
+            </ResponsiveContainer>
           ) : (
              <div className="text-center text-muted-foreground">No test distribution data.</div>
           )}
@@ -337,3 +429,5 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </div>
   );
 }
+
+    
