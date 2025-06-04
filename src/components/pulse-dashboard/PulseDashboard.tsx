@@ -37,7 +37,7 @@ export function PulseDashboard() {
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, component: <SummaryMetrics runMetadata={currentRun?.run || null} loading={loadingCurrent} /> },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, component: <SummaryMetrics runMetadata={currentRun?.run || null} loading={loadingCurrent} error={errorCurrent} /> },
     { id: 'live-results', label: 'Live Test Results', icon: ListChecks, component: <LiveTestResults report={currentRun} loading={loadingCurrent} error={errorCurrent} /> },
     { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, component: <TrendAnalysis trends={historicalTrends} loading={loadingHistorical} error={errorHistorical} /> },
     { id: 'failure-analyzer', label: 'AI Failure Analysis', icon: Wand2, component: <FailurePatternAnalyzer /> },

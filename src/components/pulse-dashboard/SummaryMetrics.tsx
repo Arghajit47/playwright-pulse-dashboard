@@ -4,11 +4,13 @@
 import type { RunMetadata } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle, XCircle, SkipForward, AlertTriangle, Clock } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle, XCircle, SkipForward, AlertTriangle, Clock, Terminal } from 'lucide-react';
 
 interface SummaryMetricsProps {
-  runMetadata: RunMetadata | null; // Changed from metadata to runMetadata
+  runMetadata: RunMetadata | null;
   loading: boolean;
+  error: string | null; // Added error prop
 }
 
 function formatDuration(ms: number): string {
@@ -24,11 +26,21 @@ function formatDuration(ms: number): string {
   return formatted.trim() || '0s';
 }
 
-export function SummaryMetrics({ runMetadata, loading }: SummaryMetricsProps) {
+export function SummaryMetrics({ runMetadata, loading, error }: SummaryMetricsProps) {
+  if (error) {
+    return (
+      <Alert variant="destructive" className="col-span-full md:col-span-2 lg:col-span-5">
+        <Terminal className="h-4 w-4" />
+        <AlertTitle>Error Fetching Summary Metrics</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
   if (loading || !runMetadata) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        {[...Array(5)].map((_, i) => ( // Changed to 5 to match metrics array length
+        {[...Array(5)].map((_, i) => (
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-5 w-24" />
