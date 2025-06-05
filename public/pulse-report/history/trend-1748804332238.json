@@ -1,0 +1,864 @@
+{
+  "run": {
+    "id": "run-1748804332238-6d512e59-a693-4301-8676-88b63262a12e",
+    "timestamp": "2025-06-01T18:58:52.238Z",
+    "totalTests": 4,
+    "passed": 0,
+    "failed": 4,
+    "skipped": 0,
+    "duration": 68689
+  },
+  "results": [
+    {
+      "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc",
+      "runId": "run-1748804332238-6d512e59-a693-4301-8676-88b63262a12e",
+      "name": " > Chrome Project > new-test.spec.js > Search for \"Playwright\" returns results",
+      "suiteName": "Chrome Project",
+      "status": "failed",
+      "duration": 30595,
+      "startTime": "2025-06-01T18:59:25.350Z",
+      "endTime": "2025-06-01T18:59:55.945Z",
+      "browser": "chromium",
+      "retries": 1,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:25.357Z-478-eb814b05-50ef-4e9e-840e-18a46bfbfec4",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 478,
+          "startTime": "2025-06-01T18:59:25.357Z",
+          "endTime": "2025-06-01T18:59:25.835Z",
+          "browser": "chromium",
+          "isHook": true,
+          "hookType": "before",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:25.368Z-274-4bc2668c-a3d0-41d2-a7f9-f8376585aedb",
+              "title": "fixture: browser",
+              "status": "passed",
+              "duration": 274,
+              "startTime": "2025-06-01T18:59:25.368Z",
+              "endTime": "2025-06-01T18:59:25.642Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:25.370Z-271-8675b33e-e06a-4d4d-ab20-74e1b49efb0a",
+                  "title": "browserType.launch",
+                  "status": "passed",
+                  "duration": 271,
+                  "startTime": "2025-06-01T18:59:25.370Z",
+                  "endTime": "2025-06-01T18:59:25.641Z",
+                  "browser": "chromium",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            },
+            {
+              "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:25.642Z-38-f1d64eb7-9a2c-48cc-8180-ebc238b77d5d",
+              "title": "fixture: context",
+              "status": "passed",
+              "duration": 38,
+              "startTime": "2025-06-01T18:59:25.642Z",
+              "endTime": "2025-06-01T18:59:25.680Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:25.649Z-12-c5c09133-f92d-42e0-8176-b19d776e78be",
+                  "title": "browser.newContext",
+                  "status": "passed",
+                  "duration": 12,
+                  "startTime": "2025-06-01T18:59:25.649Z",
+                  "endTime": "2025-06-01T18:59:25.661Z",
+                  "browser": "chromium",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            },
+            {
+              "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:25.683Z-152-b2491d8b-66dd-430c-b550-7d9ae3c0ef12",
+              "title": "fixture: page",
+              "status": "passed",
+              "duration": 152,
+              "startTime": "2025-06-01T18:59:25.683Z",
+              "endTime": "2025-06-01T18:59:25.835Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:25.690Z-144-062790b1-588f-4934-a7ce-02642f01af75",
+                  "title": "browserContext.newPage",
+                  "status": "passed",
+                  "duration": 144,
+                  "startTime": "2025-06-01T18:59:25.690Z",
+                  "endTime": "2025-06-01T18:59:25.834Z",
+                  "browser": "chromium",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:25.839Z-701-58b66d49-9a28-4909-bd2c-9d4dc6510f8d",
+          "title": "page.goto(https://www.wikipedia.org)",
+          "status": "passed",
+          "duration": 701,
+          "startTime": "2025-06-01T18:59:25.839Z",
+          "endTime": "2025-06-01T18:59:26.540Z",
+          "browser": "chromium",
+          "codeLocation": "new-test.spec.js:12:14",
+          "isHook": false,
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:26.547Z-29622-ea2853f7-7d3b-4a6c-93f2-cdaa82f24042",
+          "title": "locator.getByPlaceholder('Search Wikipedia').fill",
+          "status": "failed",
+          "duration": 29622,
+          "startTime": "2025-06-01T18:59:26.547Z",
+          "endTime": "2025-06-01T18:59:56.169Z",
+          "browser": "chromium",
+          "errorMessage": "Error: locator.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByPlaceholder('Search Wikipedia')\u001b[22m\n",
+          "stackTrace": "Error: locator.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByPlaceholder('Search Wikipedia')\u001b[22m\n\n    at /Users/arghajitsingha/juliaHub/tests/new-test.spec.js:13:51",
+          "codeLocation": "new-test.spec.js:13:51",
+          "isHook": false,
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:55.640Z-598-88f0de31-8111-4e1a-950b-fd7221c77ddb",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 598,
+          "startTime": "2025-06-01T18:59:55.640Z",
+          "endTime": "2025-06-01T18:59:56.238Z",
+          "browser": "chromium",
+          "isHook": true,
+          "hookType": "after",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:55.642Z-128-6782ee5c-afec-4932-9e6b-14399c996279",
+              "title": "page.screenshot",
+              "status": "passed",
+              "duration": 128,
+              "startTime": "2025-06-01T18:59:55.642Z",
+              "endTime": "2025-06-01T18:59:55.770Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:55.772Z-0-11df6bcc-6a1e-4814-bd5f-bb15dcf284aa",
+              "title": "fixture: page",
+              "status": "passed",
+              "duration": 0,
+              "startTime": "2025-06-01T18:59:55.772Z",
+              "endTime": "2025-06-01T18:59:55.772Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:55.772Z-0-48b862d9-0958-4a35-9982-8d1b51d8e6f1",
+              "title": "fixture: context",
+              "status": "passed",
+              "duration": 0,
+              "startTime": "2025-06-01T18:59:55.772Z",
+              "endTime": "2025-06-01T18:59:55.772Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:56.230Z-3-362db957-381f-41d6-8de8-082ba8c11c39",
+              "title": "video.saveAs",
+              "status": "passed",
+              "duration": 3,
+              "startTime": "2025-06-01T18:59:56.230Z",
+              "endTime": "2025-06-01T18:59:56.233Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": []
+            }
+          ]
+        },
+        {
+          "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:56.238Z-42-7885e3fa-ab78-4c90-b30a-1ff1ca8dd935",
+          "title": "Worker Cleanup",
+          "status": "passed",
+          "duration": 42,
+          "startTime": "2025-06-01T18:59:56.238Z",
+          "endTime": "2025-06-01T18:59:56.280Z",
+          "browser": "chromium",
+          "isHook": true,
+          "hookType": "after",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc_step_2025-06-01T18:59:56.239Z-40-2201893e-7933-42d1-a4b8-d73650e2cd37",
+              "title": "fixture: browser",
+              "status": "passed",
+              "duration": 40,
+              "startTime": "2025-06-01T18:59:56.239Z",
+              "endTime": "2025-06-01T18:59:56.279Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": []
+            }
+          ]
+        }
+      ],
+      "errorMessage": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+      "stackTrace": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+      "codeSnippet": "Test defined at: new-test.spec.js:11:6",
+      "tags": [],
+      "screenshots": [
+        { "name": "test-failed-1", "path": "attachments/f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc/test-failed-1_1748804396513.png", "contentType": "image/png", "data-ai-hint": "test failure" }
+      ],
+      "videoPath": "attachments/f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc/video_1748804396514.webm",
+      "tracePath": "attachments/f01bc06c38d4ececee44-a52c9d88aa3c9fdedbfc/trace_1748804396515.zip"
+    },
+    {
+      "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139",
+      "runId": "run-1748804332238-6d512e59-a693-4301-8676-88b63262a12e",
+      "name": " > Edge Project > new-test.spec.js > Search for \"Playwright\" returns results",
+      "suiteName": "Edge Project",
+      "status": "failed",
+      "duration": 30591,
+      "startTime": "2025-06-01T18:59:25.346Z",
+      "endTime": "2025-06-01T18:59:55.937Z",
+      "browser": "chromium",
+      "retries": 1,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:25.352Z-487-96bdfacd-d683-4e81-b20b-a5738608ca9b",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 487,
+          "startTime": "2025-06-01T18:59:25.352Z",
+          "endTime": "2025-06-01T18:59:25.839Z",
+          "browser": "chromium",
+          "isHook": true,
+          "hookType": "before",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:25.364Z-278-52162613-e330-4f07-a39b-e58673c92613",
+              "title": "fixture: browser",
+              "status": "passed",
+              "duration": 278,
+              "startTime": "2025-06-01T18:59:25.364Z",
+              "endTime": "2025-06-01T18:59:25.642Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:25.366Z-276-c58c4b07-be0b-4b0e-b542-6da5dffa5eb2",
+                  "title": "browserType.launch",
+                  "status": "passed",
+                  "duration": 276,
+                  "startTime": "2025-06-01T18:59:25.366Z",
+                  "endTime": "2025-06-01T18:59:25.642Z",
+                  "browser": "chromium",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            },
+            {
+              "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:25.644Z-38-0c56e83b-8c04-4c03-a4c4-2870c5a9aab1",
+              "title": "fixture: context",
+              "status": "passed",
+              "duration": 38,
+              "startTime": "2025-06-01T18:59:25.644Z",
+              "endTime": "2025-06-01T18:59:25.682Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:25.646Z-16-4a4f464c-12c8-4721-a34b-347b95d77a40",
+                  "title": "browser.newContext",
+                  "status": "passed",
+                  "duration": 16,
+                  "startTime": "2025-06-01T18:59:25.646Z",
+                  "endTime": "2025-06-01T18:59:25.662Z",
+                  "browser": "chromium",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            },
+            {
+              "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:25.684Z-155-7bd3f71a-c2d2-4fa7-acd9-2a4e553b5d7b",
+              "title": "fixture: page",
+              "status": "passed",
+              "duration": 155,
+              "startTime": "2025-06-01T18:59:25.684Z",
+              "endTime": "2025-06-01T18:59:25.839Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:25.686Z-153-27eb7f36-1dea-490f-b04d-fd155a5aa37a",
+                  "title": "browserContext.newPage",
+                  "status": "passed",
+                  "duration": 153,
+                  "startTime": "2025-06-01T18:59:25.686Z",
+                  "endTime": "2025-06-01T18:59:25.839Z",
+                  "browser": "chromium",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:25.841Z-691-c1ae843d-378e-440b-8bd0-89978b0520b7",
+          "title": "page.goto(https://www.wikipedia.org)",
+          "status": "passed",
+          "duration": 691,
+          "startTime": "2025-06-01T18:59:25.841Z",
+          "endTime": "2025-06-01T18:59:26.532Z",
+          "browser": "chromium",
+          "codeLocation": "new-test.spec.js:12:14",
+          "isHook": false,
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:26.539Z-29631-0ca3366f-06e5-4939-aa1e-6f2e19bef367",
+          "title": "locator.getByPlaceholder('Search Wikipedia').fill",
+          "status": "failed",
+          "duration": 29631,
+          "startTime": "2025-06-01T18:59:26.539Z",
+          "endTime": "2025-06-01T18:59:56.170Z",
+          "browser": "chromium",
+          "errorMessage": "Error: locator.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByPlaceholder('Search Wikipedia')\u001b[22m\n",
+          "stackTrace": "Error: locator.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByPlaceholder('Search Wikipedia')\u001b[22m\n\n    at /Users/arghajitsingha/juliaHub/tests/new-test.spec.js:13:51",
+          "codeLocation": "new-test.spec.js:13:51",
+          "isHook": false,
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:55.640Z-594-b868780d-55d7-4a11-9ccd-86c5c652ed5e",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 594,
+          "startTime": "2025-06-01T18:59:55.640Z",
+          "endTime": "2025-06-01T18:59:56.234Z",
+          "browser": "chromium",
+          "isHook": true,
+          "hookType": "after",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:55.642Z-128-b2a74a58-8cd9-4912-bafc-596d8b27fbd6",
+              "title": "page.screenshot",
+              "status": "passed",
+              "duration": 128,
+              "startTime": "2025-06-01T18:59:55.642Z",
+              "endTime": "2025-06-01T18:59:55.770Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:55.772Z-0-e5aca89f-223b-45a8-aadd-264b6c528e65",
+              "title": "fixture: page",
+              "status": "passed",
+              "duration": 0,
+              "startTime": "2025-06-01T18:59:55.772Z",
+              "endTime": "2025-06-01T18:59:55.772Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:55.772Z-0-92ce81db-ab3b-40ff-a4fb-3c3c911da1c6",
+              "title": "fixture: context",
+              "status": "passed",
+              "duration": 0,
+              "startTime": "2025-06-01T18:59:55.772Z",
+              "endTime": "2025-06-01T18:59:55.772Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:56.226Z-2-790cd1f2-e51b-4e0b-8e8d-925264bff3b3",
+              "title": "video.saveAs",
+              "status": "passed",
+              "duration": 2,
+              "startTime": "2025-06-01T18:59:56.226Z",
+              "endTime": "2025-06-01T18:59:56.228Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": []
+            }
+          ]
+        },
+        {
+          "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:56.234Z-46-cdfb15fe-ac89-425c-acc1-9c609ef04083",
+          "title": "Worker Cleanup",
+          "status": "passed",
+          "duration": 46,
+          "startTime": "2025-06-01T18:59:56.234Z",
+          "endTime": "2025-06-01T18:59:56.280Z",
+          "browser": "chromium",
+          "isHook": true,
+          "hookType": "after",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-dfeb320edb0b58533139_step_2025-06-01T18:59:56.234Z-45-6b851373-964f-455b-8fd9-aaa440bee2e3",
+              "title": "fixture: browser",
+              "status": "passed",
+              "duration": 45,
+              "startTime": "2025-06-01T18:59:56.234Z",
+              "endTime": "2025-06-01T18:59:56.279Z",
+              "browser": "chromium",
+              "isHook": false,
+              "steps": []
+            }
+          ]
+        }
+      ],
+      "errorMessage": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+      "stackTrace": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+      "codeSnippet": "Test defined at: new-test.spec.js:11:6",
+      "tags": [],
+      "screenshots": [
+        { "name": "test-failed-1", "path": "attachments/f01bc06c38d4ececee44-dfeb320edb0b58533139/test-failed-1_1748804396505.png", "contentType": "image/png", "data-ai-hint": "test failure" }
+      ],
+      "videoPath": "attachments/f01bc06c38d4ececee44-dfeb320edb0b58533139/video_1748804396505.webm",
+      "tracePath": "attachments/f01bc06c38d4ececee44-dfeb320edb0b58533139/trace_1748804396506.zip"
+    },
+    {
+      "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c",
+      "runId": "run-1748804332238-6d512e59-a693-4301-8676-88b63262a12e",
+      "name": " > Webkit Project > new-test.spec.js > Search for \"Playwright\" returns results",
+      "suiteName": "Webkit Project",
+      "status": "failed",
+      "duration": 30590,
+      "startTime": "2025-06-01T18:59:26.197Z",
+      "endTime": "2025-06-01T18:59:56.787Z",
+      "browser": "webkit",
+      "retries": 1,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:26.200Z-1842-8760afb0-629e-469a-9c95-d4a47ab8494a",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 1842,
+          "startTime": "2025-06-01T18:59:26.200Z",
+          "endTime": "2025-06-01T18:59:28.042Z",
+          "browser": "webkit",
+          "isHook": true,
+          "hookType": "before",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:26.205Z-1033-483d20d7-8545-4ef0-ad98-551dc9a17879",
+              "title": "fixture: browser",
+              "status": "passed",
+              "duration": 1033,
+              "startTime": "2025-06-01T18:59:26.205Z",
+              "endTime": "2025-06-01T18:59:27.238Z",
+              "browser": "webkit",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:26.207Z-1030-96a4290b-a29a-4a36-9f3a-8758da61cbc1",
+                  "title": "browserType.launch",
+                  "status": "passed",
+                  "duration": 1030,
+                  "startTime": "2025-06-01T18:59:26.207Z",
+                  "endTime": "2025-06-01T18:59:27.237Z",
+                  "browser": "webkit",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            },
+            {
+              "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:27.238Z-103-506ea716-c771-44e6-85a2-60935374d957",
+              "title": "fixture: context",
+              "status": "passed",
+              "duration": 103,
+              "startTime": "2025-06-01T18:59:27.238Z",
+              "endTime": "2025-06-01T18:59:27.341Z",
+              "browser": "webkit",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:27.240Z-96-3bd994e5-550f-46b3-b41c-4ebe0523f952",
+                  "title": "browser.newContext",
+                  "status": "passed",
+                  "duration": 96,
+                  "startTime": "2025-06-01T18:59:27.240Z",
+                  "endTime": "2025-06-01T18:59:27.336Z",
+                  "browser": "webkit",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            },
+            {
+              "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:27.341Z-701-28ff0f7b-51d9-43e8-9dca-8b3dac3f565f",
+              "title": "fixture: page",
+              "status": "passed",
+              "duration": 701,
+              "startTime": "2025-06-01T18:59:27.341Z",
+              "endTime": "2025-06-01T18:59:28.042Z",
+              "browser": "webkit",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:27.342Z-700-24c18206-7ba3-4aeb-b1d7-15650fa784b2",
+                  "title": "browserContext.newPage",
+                  "status": "passed",
+                  "duration": 700,
+                  "startTime": "2025-06-01T18:59:27.342Z",
+                  "endTime": "2025-06-01T18:59:28.042Z",
+                  "browser": "webkit",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:28.045Z-922-d59810a5-bdec-461b-91cf-593abdff4d9c",
+          "title": "page.goto(https://www.wikipedia.org)",
+          "status": "passed",
+          "duration": 922,
+          "startTime": "2025-06-01T18:59:28.045Z",
+          "endTime": "2025-06-01T18:59:28.967Z",
+          "browser": "webkit",
+          "codeLocation": "new-test.spec.js:12:14",
+          "isHook": false,
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:28.976Z-28826-f4e2d301-06d3-4c3d-ae29-3b6dbe7ccbfc",
+          "title": "locator.getByPlaceholder('Search Wikipedia').fill",
+          "status": "failed",
+          "duration": 28826,
+          "startTime": "2025-06-01T18:59:28.976Z",
+          "endTime": "2025-06-01T18:59:57.802Z",
+          "browser": "webkit",
+          "errorMessage": "Error: locator.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByPlaceholder('Search Wikipedia')\u001b[22m\n",
+          "stackTrace": "Error: locator.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByPlaceholder('Search Wikipedia')\u001b[22m\n\n    at /Users/arghajitsingha/juliaHub/tests/new-test.spec.js:13:51",
+          "codeLocation": "new-test.spec.js:13:51",
+          "isHook": false,
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:57.236Z-592-32f20bd6-5703-4b6f-8dc3-48f0292d4335",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 592,
+          "startTime": "2025-06-01T18:59:57.236Z",
+          "endTime": "2025-06-01T18:59:57.828Z",
+          "browser": "webkit",
+          "isHook": true,
+          "hookType": "after",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:57.239Z-258-11f04aab-b46b-4709-ad1c-d0e2106e36eb",
+              "title": "page.screenshot",
+              "status": "passed",
+              "duration": 258,
+              "startTime": "2025-06-01T18:59:57.239Z",
+              "endTime": "2025-06-01T18:59:57.497Z",
+              "browser": "webkit",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:57.499Z-0-56a9e786-4ce9-475d-9ffb-055aefa2dea4",
+              "title": "fixture: page",
+              "status": "passed",
+              "duration": 0,
+              "startTime": "2025-06-01T18:59:57.499Z",
+              "endTime": "2025-06-01T18:59:57.499Z",
+              "browser": "webkit",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:57.499Z-0-2a2c3694-0d4a-4f69-9b92-9f344a9fe4a1",
+              "title": "fixture: context",
+              "status": "passed",
+              "duration": 0,
+              "startTime": "2025-06-01T18:59:57.499Z",
+              "endTime": "2025-06-01T18:59:57.499Z",
+              "browser": "webkit",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:57.823Z-2-8c5011f5-7d58-483d-924c-4047df0a0fe5",
+              "title": "video.saveAs",
+              "status": "passed",
+              "duration": 2,
+              "startTime": "2025-06-01T18:59:57.823Z",
+              "endTime": "2025-06-01T18:59:57.825Z",
+              "browser": "webkit",
+              "isHook": false,
+              "steps": []
+            }
+          ]
+        },
+        {
+          "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:57.828Z-19-67b4bbf6-30e8-47f1-a2a3-cc8b921f6d01",
+          "title": "Worker Cleanup",
+          "status": "passed",
+          "duration": 19,
+          "startTime": "2025-06-01T18:59:57.828Z",
+          "endTime": "2025-06-01T18:59:57.847Z",
+          "browser": "webkit",
+          "isHook": true,
+          "hookType": "after",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-d9d25eff3d59d5384e1c_step_2025-06-01T18:59:57.828Z-18-779d2ad0-3c72-4ccf-a249-77c3a992035c",
+              "title": "fixture: browser",
+              "status": "passed",
+              "duration": 18,
+              "startTime": "2025-06-01T18:59:57.828Z",
+              "endTime": "2025-06-01T18:59:57.846Z",
+              "browser": "webkit",
+              "isHook": false,
+              "steps": []
+            }
+          ]
+        }
+      ],
+      "errorMessage": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+      "stackTrace": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+      "codeSnippet": "Test defined at: new-test.spec.js:11:6",
+      "tags": [],
+      "screenshots": [
+        { "name": "test-failed-1", "path": "attachments/f01bc06c38d4ececee44-d9d25eff3d59d5384e1c/test-failed-1_1748804398131.png", "contentType": "image/png", "data-ai-hint": "test failure" }
+      ],
+      "videoPath": "attachments/f01bc06c38d4ececee44-d9d25eff3d59d5384e1c/video_1748804398132.webm",
+      "tracePath": "attachments/f01bc06c38d4ececee44-d9d25eff3d59d5384e1c/trace_1748804398133.zip"
+    },
+    {
+      "id": "f01bc06c38d4ececee44-9771118582e263c01783",
+      "runId": "run-1748804332238-6d512e59-a693-4301-8676-88b63262a12e",
+      "name": " > Firefox Project > new-test.spec.js > Search for \"Playwright\" returns results",
+      "suiteName": "Firefox Project",
+      "status": "failed",
+      "duration": 30427,
+      "startTime": "2025-06-01T18:59:28.457Z",
+      "endTime": "2025-06-01T18:59:58.884Z",
+      "browser": "firefox",
+      "retries": 1,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:28.460Z-2778-82040cbd-8566-4477-8ebe-9cc1a4a36897",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 2778,
+          "startTime": "2025-06-01T18:59:28.460Z",
+          "endTime": "2025-06-01T18:59:31.238Z",
+          "browser": "firefox",
+          "isHook": true,
+          "hookType": "before",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:28.467Z-1233-79ebc1c9-89f4-4745-8df0-e5936826291b",
+              "title": "fixture: browser",
+              "status": "passed",
+              "duration": 1233,
+              "startTime": "2025-06-01T18:59:28.467Z",
+              "endTime": "2025-06-01T18:59:29.700Z",
+              "browser": "firefox",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:28.468Z-1232-b75d9ac8-90e6-46f0-86ad-79dd9e16567c",
+                  "title": "browserType.launch",
+                  "status": "passed",
+                  "duration": 1232,
+                  "startTime": "2025-06-01T18:59:28.468Z",
+                  "endTime": "2025-06-01T18:59:29.700Z",
+                  "browser": "firefox",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            },
+            {
+              "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:29.701Z-424-0d514928-bc2e-42a0-bde4-addd1e4b707d",
+              "title": "fixture: context",
+              "status": "passed",
+              "duration": 424,
+              "startTime": "2025-06-01T18:59:29.701Z",
+              "endTime": "2025-06-01T18:59:30.125Z",
+              "browser": "firefox",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:29.703Z-359-852d80ec-d723-41b4-9f49-d72844590290",
+                  "title": "browser.newContext",
+                  "status": "passed",
+                  "duration": 359,
+                  "startTime": "2025-06-01T18:59:29.703Z",
+                  "endTime": "2025-06-01T18:59:30.062Z",
+                  "browser": "firefox",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            },
+            {
+              "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:30.125Z-1113-6624eaa3-a35c-4783-ae28-924417e5688c",
+              "title": "fixture: page",
+              "status": "passed",
+              "duration": 1113,
+              "startTime": "2025-06-01T18:59:30.125Z",
+              "endTime": "2025-06-01T18:59:31.238Z",
+              "browser": "firefox",
+              "isHook": false,
+              "steps": [
+                {
+                  "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:30.126Z-1112-b302c282-9d01-4b53-87ce-fcdc06ad7c7e",
+                  "title": "browserContext.newPage",
+                  "status": "passed",
+                  "duration": 1112,
+                  "startTime": "2025-06-01T18:59:30.126Z",
+                  "endTime": "2025-06-01T18:59:31.238Z",
+                  "browser": "firefox",
+                  "isHook": false,
+                  "steps": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:31.241Z-1540-ee9d0ab6-32ff-4696-8292-7aa09d051c82",
+          "title": "page.goto(https://www.wikipedia.org)",
+          "status": "passed",
+          "duration": 1540,
+          "startTime": "2025-06-01T18:59:31.241Z",
+          "endTime": "2025-06-01T18:59:32.781Z",
+          "browser": "firefox",
+          "codeLocation": "new-test.spec.js:12:14",
+          "isHook": false,
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:32.789Z-27307-247a60f2-a3e5-4616-a3cb-93617eb3add7",
+          "title": "locator.getByPlaceholder('Search Wikipedia').fill",
+          "status": "failed",
+          "duration": 27307,
+          "startTime": "2025-06-01T18:59:32.789Z",
+          "endTime": "2025-06-01T19:00:00.096Z",
+          "browser": "firefox",
+          "errorMessage": "Error: locator.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByPlaceholder('Search Wikipedia')\u001b[22m\n",
+          "stackTrace": "Error: locator.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByPlaceholder('Search Wikipedia')\u001b[22m\n\n    at /Users/arghajitsingha/juliaHub/tests/new-test.spec.js:13:51",
+          "codeLocation": "new-test.spec.js:13:51",
+          "isHook": false,
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:59.701Z-428-a3c2746d-c44f-4669-8070-4e31ed6be7ac",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 428,
+          "startTime": "2025-06-01T18:59:59.701Z",
+          "endTime": "2025-06-01T19:00:00.129Z",
+          "browser": "firefox",
+          "isHook": true,
+          "hookType": "after",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:59.705Z-80-0003bb95-8ef4-49c5-9804-4fcca3de7e64",
+              "title": "page.screenshot",
+              "status": "passed",
+              "duration": 80,
+              "startTime": "2025-06-01T18:59:59.705Z",
+              "endTime": "2025-06-01T18:59:59.785Z",
+              "browser": "firefox",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:59.786Z-0-5810e001-445f-4e63-88e4-119d6cb5eff0",
+              "title": "fixture: page",
+              "status": "passed",
+              "duration": 0,
+              "startTime": "2025-06-01T18:59:59.786Z",
+              "endTime": "2025-06-01T18:59:59.786Z",
+              "browser": "firefox",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T18:59:59.787Z-0-0934a329-1f67-4086-a5db-77f56896e7c8",
+              "title": "fixture: context",
+              "status": "passed",
+              "duration": 0,
+              "startTime": "2025-06-01T18:59:59.787Z",
+              "endTime": "2025-06-01T18:59:59.787Z",
+              "browser": "firefox",
+              "isHook": false,
+              "steps": []
+            },
+            {
+              "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T19:00:00.124Z-2-5894a15f-3a49-413c-b32a-a103855a58bc",
+              "title": "video.saveAs",
+              "status": "passed",
+              "duration": 2,
+              "startTime": "2025-06-01T19:00:00.124Z",
+              "endTime": "2025-06-01T19:00:00.126Z",
+              "browser": "firefox",
+              "isHook": false,
+              "steps": []
+            }
+          ]
+        },
+        {
+          "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T19:00:00.129Z-449-ac53a27a-828d-411b-99c1-601e70338510",
+          "title": "Worker Cleanup",
+          "status": "passed",
+          "duration": 449,
+          "startTime": "2025-06-01T19:00:00.129Z",
+          "endTime": "2025-06-01T19:00:00.578Z",
+          "browser": "firefox",
+          "isHook": true,
+          "hookType": "after",
+          "steps": [
+            {
+              "id": "f01bc06c38d4ececee44-9771118582e263c01783_step_2025-06-01T19:00:00.129Z-449-d8c8752f-1b39-40cb-8596-6a32af673a66",
+              "title": "fixture: browser",
+              "status": "passed",
+              "duration": 449,
+              "startTime": "2025-06-01T19:00:00.129Z",
+              "endTime": "2025-06-01T19:00:00.578Z",
+              "browser": "firefox",
+              "isHook": false,
+              "steps": []
+            }
+          ]
+        }
+      ],
+      "errorMessage": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+      "stackTrace": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+      "codeSnippet": "Test defined at: new-test.spec.js:11:6",
+      "tags": [],
+      "screenshots": [
+        { "name": "test-failed-1", "path": "attachments/f01bc06c38d4ececee44-9771118582e263c01783/test-failed-1_1748804400818.png", "contentType": "image/png", "data-ai-hint": "test failure" }
+      ],
+      "videoPath": "attachments/f01bc06c38d4ececee44-9771118582e263c01783/video_1748804400818.webm",
+      "tracePath": "attachments/f01bc06c38d4ececee44-9771118582e263c01783/trace_1748804400819.zip"
+    }
+  ],
+  "metadata": {
+    "generatedAt": "2025-06-01T19:00:00.929Z"
+  }
+}
