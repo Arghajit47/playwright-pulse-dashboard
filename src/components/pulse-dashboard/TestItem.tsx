@@ -1,12 +1,13 @@
 
 'use client';
 
-import type { DetailedTestResult, ScreenshotAttachment } from '@/types/playwright';
+import type { DetailedTestResult } from '@/types/playwright';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle2, XCircle, AlertCircle, Clock, Eye, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface TestItemProps {
   test: DetailedTestResult;
@@ -40,8 +41,24 @@ function formatTestName(fullName: string): string {
   return parts[parts.length - 1] || fullName;
 }
 
+function getStatusBadgeClass(status: DetailedTestResult['status']): string {
+  switch (status) {
+    case 'passed':
+      return 'bg-[hsl(var(--chart-3))] text-primary-foreground hover:bg-[hsl(var(--chart-3))]';
+    case 'failed':
+    case 'timedOut':
+      return 'bg-destructive text-destructive-foreground hover:bg-destructive/90';
+    case 'skipped':
+      return 'bg-[hsl(var(--accent))] text-accent-foreground hover:bg-[hsl(var(--accent))]';
+    case 'pending':
+      return 'bg-primary text-primary-foreground hover:bg-primary/90';
+    default:
+      return 'bg-muted text-muted-foreground';
+  }
+}
+
 export function TestItem({ test }: TestItemProps) {
-  const imageAttachments = test.screenshots?.filter(att => att.contentType.startsWith('image/')) || [];
+  const imageAttachments = test.screenshots?.filter(att => att.contentType?.startsWith('image/')) || [];
   const hasDetailsInAccordion = test.error || imageAttachments.length > 0;
   const displayName = formatTestName(test.name);
 
@@ -55,12 +72,12 @@ export function TestItem({ test }: TestItemProps) {
           </Link>
         </div>
         <div className="flex items-center space-x-3 ml-2 flex-shrink-0">
-          <Badge variant={
-            test.status === 'passed' ? 'default' : 
-            test.status === 'failed' || test.status === 'timedOut' ? 'destructive' :
-            test.status === 'skipped' ? 'secondary' :
-            'outline'
-          } className="capitalize text-xs px-2 py-0.5">
+          <Badge 
+            className={cn(
+              "capitalize text-xs px-2 py-0.5 border-transparent",
+              getStatusBadgeClass(test.status)
+            )}
+          >
             {test.status}
           </Badge>
           <span className="text-sm text-muted-foreground w-20 text-right">{formatDuration(test.duration)}</span>
@@ -114,4 +131,3 @@ export function TestItem({ test }: TestItemProps) {
     </div>
   );
 }
-

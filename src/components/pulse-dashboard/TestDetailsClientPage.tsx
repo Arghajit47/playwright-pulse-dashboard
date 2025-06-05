@@ -17,6 +17,7 @@ import { useState, useEffect } from 'react';
 import { TestStepItemRecursive } from './TestStepItemRecursive';
 import { getRawHistoricalReports } from '@/app/actions';
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, DotProps } from 'recharts';
+import { cn } from '@/lib/utils';
 
 interface TestRunHistoryData {
   date: string;
@@ -89,6 +90,22 @@ function formatTestName(fullName: string): string {
   return parts[parts.length - 1] || fullName;
 }
 
+function getStatusBadgeClass(status: DetailedTestResult['status']): string {
+  switch (status) {
+    case 'passed':
+      return 'bg-[hsl(var(--chart-3))] text-primary-foreground hover:bg-[hsl(var(--chart-3))]';
+    case 'failed':
+    case 'timedOut':
+      return 'bg-destructive text-destructive-foreground hover:bg-destructive/90';
+    case 'skipped':
+      return 'bg-[hsl(var(--accent))] text-accent-foreground hover:bg-[hsl(var(--accent))]';
+    case 'pending':
+      return 'bg-primary text-primary-foreground hover:bg-primary/90';
+    default:
+      return 'bg-muted text-muted-foreground';
+  }
+}
+
 export function TestDetailsClientPage({ testId }: { testId: string }) {
   const router = useRouter();
   const { currentRun, loadingCurrent, errorCurrent } = useTestData();
@@ -125,7 +142,6 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
           }
         });
         
-        // Sort by date, oldest first
         historyData.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         setTestHistory(historyData);
       } catch (error) {
@@ -140,7 +156,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   }, [testId]);
 
 
-  if (loadingCurrent && !test) { // Show main loading skeleton if current test data hasn't loaded
+  if (loadingCurrent && !test) { 
     return (
       <div className="container mx-auto px-4 py-8 space-y-6">
         <Skeleton className="h-10 w-48 mb-4" />
@@ -211,12 +227,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                  </div>
             </div>
             <div className="text-right flex-shrink-0">
-                 <Badge variant={
-                    test.status === 'passed' ? 'default' : 
-                    test.status === 'failed' || test.status === 'timedOut' ? 'destructive' :
-                    test.status === 'skipped' ? 'secondary' :
-                    'outline'
-                  } className="capitalize text-sm px-3 py-1">
+                 <Badge 
+                    className={cn(
+                      "capitalize text-sm px-3 py-1 border-transparent",
+                      getStatusBadgeClass(test.status)
+                    )}
+                  >
                     {test.status}
                   </Badge>
                 <p className="text-sm text-muted-foreground mt-1">Duration: {formatDuration(test.duration)}</p>
@@ -358,4 +374,3 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
-

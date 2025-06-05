@@ -1,13 +1,14 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTestData } from '@/hooks/useTestData';
 import { SummaryMetrics } from './SummaryMetrics';
 import { LiveTestResults, type TestStatusFilter } from './LiveTestResults';
 import { TrendAnalysis } from './TrendAnalysis';
 import { FailurePatternAnalyzer } from './FailurePatternAnalyzer';
+import { SettingsView } from './SettingsView'; 
 import {
   SidebarProvider,
   Sidebar,
@@ -20,11 +21,11 @@ import {
   SidebarInset,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, TrendingUp, Wand2 } from 'lucide-react';
+import { LayoutDashboard, ListChecks, TrendingUp, Wand2, Settings } from 'lucide-react';
 import Link from 'next/link';
 
 
-type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'failure-analyzer';
+type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'failure-analyzer' | 'settings';
 
 interface MenuItem {
   id: ActiveView;
@@ -50,17 +51,19 @@ export function PulseDashboard() {
     setInitialLiveResultsFilter(filter);
     setActiveView('live-results');
   };
-
-  // Clear initial filter if navigating away from live results
-  if (activeView !== 'live-results' && initialLiveResultsFilter) {
-    setInitialLiveResultsFilter(undefined);
-  }
+  
+  useEffect(() => {
+    if (activeView !== 'live-results' && initialLiveResultsFilter) {
+      setInitialLiveResultsFilter(undefined);
+    }
+  }, [activeView, initialLiveResultsFilter]);
 
   const menuItemsConfig: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: "Real-time Playwright Test Execution Monitoring & Analysis Overview" },
     { id: 'live-results', label: 'Live Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters." },
     { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance." },
     { id: 'failure-analyzer', label: 'AI Failure Analysis', icon: Wand2, description: "AI-powered analysis of test failure patterns." },
+    { id: 'settings', label: 'Settings', icon: Settings, description: "Configure dashboard appearance and preferences." },
   ];
 
   const activeMenuItem = menuItemsConfig.find(item => item.id === activeView);
@@ -78,6 +81,9 @@ export function PulseDashboard() {
       break;
     case 'failure-analyzer':
       componentToRender = <FailurePatternAnalyzer />;
+      break;
+    case 'settings':
+      componentToRender = <SettingsView />;
       break;
     default:
       componentToRender = <SummaryMetrics currentRun={currentRun} loading={loadingCurrent} error={errorCurrent} onMetricClick={handleMetricCardClick} />;
@@ -107,9 +113,6 @@ export function PulseDashboard() {
                 <SidebarMenuButton
                   onClick={() => {
                     setActiveView(item.id);
-                    if (item.id !== 'live-results') {
-                       setInitialLiveResultsFilter(undefined);
-                    }
                   }}
                   isActive={activeView === item.id}
                   tooltip={{children: item.label, side: 'right', align: 'center'}}
