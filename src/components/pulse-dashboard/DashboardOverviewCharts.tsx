@@ -85,9 +85,11 @@ const ActiveShape = (props: any) => {
   const ey = my;
   const textAnchor = cos >= 0 ? 'start' : 'end';
 
+  const centerNameTextFill = payload.name === 'Passed' ? COLORS.passed : 'hsl(var(--foreground))';
+
   return (
     <g>
-      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={'hsl(var(--primary-foreground))'} className="text-lg font-bold">
+      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={centerNameTextFill} className="text-lg font-bold">
         {payload.name}
       </text>
       <Sector
