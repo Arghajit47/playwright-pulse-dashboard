@@ -4,10 +4,12 @@
 import * as React from 'react';
 import type { HistoricalTrend } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { TrendingUp, Terminal } from 'lucide-react';
+import { TrendingUp, Terminal, Download } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 interface TrendAnalysisProps {
   trends: HistoricalTrend[];
@@ -33,6 +35,32 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 
 const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading, error }) => {
+  const outcomesChartRef = React.useRef<HTMLDivElement>(null);
+  const durationChartRef = React.useRef<HTMLDivElement>(null);
+  const flakinessChartRef = React.useRef<HTMLDivElement>(null);
+
+  const handleDownloadChart = async (chartRef: React.RefObject<HTMLDivElement>, fileName: string) => {
+    if (chartRef.current) {
+      try {
+        const canvas = await html2canvas(chartRef.current, {
+          backgroundColor: null,
+          logging: false,
+          useCORS: true,
+          scale: 2,
+        });
+        const image = canvas.toDataURL('image/png', 1.0);
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error('Error downloading chart:', err);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <Card className="shadow-xl">
@@ -80,9 +108,11 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
       durationSeconds: parseFloat((t.duration / 1000).toFixed(2)),
       flakinessPercent: t.flakinessRate !== undefined && t.flakinessRate !== null ? parseFloat((t.flakinessRate * 100).toFixed(1)) : undefined,
     })).sort((a,b) => {
-        const dateA = trends.find(tr => tr.date.includes(a.date.split(',')[1]?.trim()))?.date || 0; // More robust find
-        const dateB = trends.find(tr => tr.date.includes(b.date.split(',')[1]?.trim()))?.date || 0;
-        return new Date(dateA).getTime() - new Date(dateB).getTime();
+        const dateAItem = trends.find(tr => new Date(tr.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) === a.date);
+        const dateBItem = trends.find(tr => new Date(tr.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) === b.date);
+        const dateA = dateAItem ? new Date(dateAItem.date).getTime() : 0;
+        const dateB = dateBItem ? new Date(dateBItem.date).getTime() : 0;
+        return dateA - dateB;
     });
   }, [trends]);
 
@@ -96,48 +126,69 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
       </CardHeader>
       <CardContent className="space-y-8">
         <div>
-          <h4 className="text-lg font-semibold text-foreground mb-3">Test Outcomes Over Time</h4>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={formattedTrends}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-              <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }} />
-              <Legend wrapperStyle={{fontSize: "12px"}} />
-              <Line type="monotone" dataKey="passed" name="Passed" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-              <Line type="monotone" dataKey="failed" name="Failed" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-              <Line type="monotone" dataKey="skipped" name="Skipped" stroke="hsl(var(--accent))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="flex justify-between items-center mb-3">
+            <h4 className="text-lg font-semibold text-foreground">Test Outcomes Over Time</h4>
+            <Button variant="outline" size="icon" onClick={() => handleDownloadChart(outcomesChartRef, 'test-outcomes-trend.png')} aria-label="Download Test Outcomes Chart">
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+          <div ref={outcomesChartRef} className="w-full h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={formattedTrends}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }} />
+                <Legend wrapperStyle={{fontSize: "12px"}} />
+                <Line type="monotone" dataKey="passed" name="Passed" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="failed" name="Failed" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="skipped" name="Skipped" stroke="hsl(var(--accent))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         <div>
-          <h4 className="text-lg font-semibold text-foreground mb-3">Test Duration Over Time (Seconds)</h4>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={formattedTrends}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-              <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
-              <Legend wrapperStyle={{fontSize: "12px"}} />
-              <Bar dataKey="durationSeconds" name="Duration (s)" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="flex justify-between items-center mb-3">
+            <h4 className="text-lg font-semibold text-foreground">Test Duration Over Time (Seconds)</h4>
+            <Button variant="outline" size="icon" onClick={() => handleDownloadChart(durationChartRef, 'test-duration-trend.png')} aria-label="Download Test Duration Chart">
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+          <div ref={durationChartRef} className="w-full h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={formattedTrends}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
+                <Legend wrapperStyle={{fontSize: "12px"}} />
+                <Bar dataKey="durationSeconds" name="Duration (s)" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
         
         {formattedTrends.some(t => t.flakinessPercent !== undefined) && (
            <div>
-            <h4 className="text-lg font-semibold text-foreground mb-3">Flakiness Rate Over Time (%)</h4>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={formattedTrends}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} unit="%"/>
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }} />
-                <Legend wrapperStyle={{fontSize: "12px"}} />
-                <Line type="monotone" dataKey="flakinessPercent" name="Flakiness Rate (%)" stroke="hsl(var(--chart-5))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="text-lg font-semibold text-foreground">Flakiness Rate Over Time (%)</h4>
+              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(flakinessChartRef, 'flakiness-rate-trend.png')} aria-label="Download Flakiness Rate Chart">
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+            <div ref={flakinessChartRef} className="w-full h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={formattedTrends}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} unit="%"/>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }} />
+                  <Legend wrapperStyle={{fontSize: "12px"}} />
+                  <Line type="monotone" dataKey="flakinessPercent" name="Flakiness Rate (%)" stroke="hsl(var(--chart-5))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
 
@@ -148,3 +199,4 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
 
 export const TrendAnalysis = React.memo(TrendAnalysisComponent);
 TrendAnalysis.displayName = 'TrendAnalysis';
+

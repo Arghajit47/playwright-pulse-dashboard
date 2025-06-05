@@ -10,14 +10,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, Image as ImageIcon, FileText, LineChart, Info } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, Image as ImageIcon, FileText, LineChart, Info, Download } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TestStepItemRecursive } from './TestStepItemRecursive';
 import { getRawHistoricalReports } from '@/app/actions';
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, DotProps } from 'recharts';
 import { cn } from '@/lib/utils';
+import html2canvas from 'html2canvas';
 
 interface TestRunHistoryData {
   date: string;
@@ -113,6 +114,29 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   const [testHistory, setTestHistory] = useState<TestRunHistoryData[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [errorHistory, setErrorHistory] = useState<string | null>(null);
+  const historyChartRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadChart = async (chartRef: React.RefObject<HTMLDivElement>, fileName: string) => {
+    if (chartRef.current) {
+      try {
+        const canvas = await html2canvas(chartRef.current, {
+          backgroundColor: null,
+          logging: false,
+          useCORS: true,
+          scale: 2,
+        });
+        const image = canvas.toDataURL('image/png', 1.0);
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error('Error downloading chart:', err);
+      }
+    }
+  };
   
   useEffect(() => {
     if (currentRun?.results) {
@@ -306,10 +330,15 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             </TabsContent>
 
             <TabsContent value="history" className="mt-4 p-4 border rounded-md bg-card">
-              <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
-                <LineChart className="h-5 w-5 mr-2 text-primary"/>
-                Individual Test Run History
-              </h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-semibold text-foreground flex items-center">
+                  <LineChart className="h-5 w-5 mr-2 text-primary"/>
+                  Individual Test Run History
+                </h3>
+                <Button variant="outline" size="icon" onClick={() => handleDownloadChart(historyChartRef, `test-history-${testId}.png`)} aria-label="Download Test History Chart">
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
               {loadingHistory && (
                 <div className="space-y-3">
                   <Skeleton className="h-6 w-3/4" />
@@ -334,37 +363,39 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </Alert>
               )}
               {!loadingHistory && !errorHistory && testHistory.length > 0 && (
-                <ResponsiveContainer width="100%" height={300}>
-                  <RechartsLineChart data={testHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
-                    <XAxis 
-                      dataKey="date" 
-                      tickFormatter={(tick) => new Date(tick).toLocaleDateString('en-CA', {month: 'short', day: 'numeric'})} 
-                      stroke="hsl(var(--muted-foreground))" 
-                      tick={{ fontSize: 10 }}
-                      angle={-30}
-                      textAnchor="end"
-                      height={40}
-                    />
-                    <YAxis 
-                      tickFormatter={(tick) => formatDuration(tick)} 
-                      stroke="hsl(var(--muted-foreground))" 
-                      tick={{ fontSize: 10 }}
-                      width={80}
-                    />
-                    <Tooltip content={<HistoryTooltip />}/>
-                    <Legend wrapperStyle={{fontSize: "12px"}}/>
-                    <Line 
-                      type="monotone" 
-                      dataKey="duration" 
-                      name="Duration" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={2} 
-                      dot={<StatusDot />} 
-                      activeDot={{ r: 7 }}
-                    />
-                  </RechartsLineChart>
-                </ResponsiveContainer>
+                <div ref={historyChartRef} className="w-full h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsLineChart data={testHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+                      <XAxis 
+                        dataKey="date" 
+                        tickFormatter={(tick) => new Date(tick).toLocaleDateString('en-CA', {month: 'short', day: 'numeric'})} 
+                        stroke="hsl(var(--muted-foreground))" 
+                        tick={{ fontSize: 10 }}
+                        angle={-30}
+                        textAnchor="end"
+                        height={40}
+                      />
+                      <YAxis 
+                        tickFormatter={(tick) => formatDuration(tick)} 
+                        stroke="hsl(var(--muted-foreground))" 
+                        tick={{ fontSize: 10 }}
+                        width={80}
+                      />
+                      <Tooltip content={<HistoryTooltip />}/>
+                      <Legend wrapperStyle={{fontSize: "12px"}}/>
+                      <Line 
+                        type="monotone" 
+                        dataKey="duration" 
+                        name="Duration" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2} 
+                        dot={<StatusDot />} 
+                        activeDot={{ r: 7 }}
+                      />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                </div>
               )}
             </TabsContent>
 
@@ -374,3 +405,4 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
+

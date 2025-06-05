@@ -3,13 +3,15 @@
 
 import type { PlaywrightPulseReport } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
-import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle } from 'lucide-react';
+import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import React from 'react';
+import React, { useRef } from 'react';
+import html2canvas from 'html2canvas';
 
 
 interface DashboardOverviewChartsProps {
@@ -123,6 +125,36 @@ const ActiveShape = (props: any) => {
 
 export function DashboardOverviewCharts({ currentRun, loading, error }: DashboardOverviewChartsProps) {
   const [activeIndex, setActiveIndex] = React.useState(0);
+
+  const testDistributionChartRef = useRef<HTMLDivElement>(null);
+  const browserChartRef = useRef<HTMLDivElement>(null);
+  const failedDurationChartRef = useRef<HTMLDivElement>(null);
+  const slowestTestsChartRef = useRef<HTMLDivElement>(null);
+  const testsPerSuiteChartRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadChart = async (chartRef: React.RefObject<HTMLDivElement>, fileName: string) => {
+    if (chartRef.current) {
+      try {
+        const canvas = await html2canvas(chartRef.current, {
+          backgroundColor: null, // Use null for transparent background if elements have their own
+          logging: false,
+          useCORS: true, // If images are from external sources
+          scale: 2, // Increase scale for better resolution
+        });
+        const image = canvas.toDataURL('image/png', 1.0);
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error('Error downloading chart:', err);
+        // You could add a toast notification here for the user
+      }
+    }
+  };
+
 
   const onPieEnter = React.useCallback(
     (_: any, index: number) => {
@@ -238,68 +270,82 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   return (
     <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
-          <CardDescription className="text-xs">Passed, Failed, Skipped for the current run.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
+            <CardDescription className="text-xs">Passed, Failed, Skipped for the current run.</CardDescription>
+          </div>
+          <Button variant="outline" size="icon" onClick={() => handleDownloadChart(testDistributionChartRef, 'test-distribution.png')} aria-label="Download Test Distribution Chart">
+            <Download className="h-4 w-4" />
+          </Button>
         </CardHeader>
         <CardContent className="flex justify-center items-center min-h-[280px]">
-          {testDistributionData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                <Pie
-                  activeIndex={activeIndex}
-                  activeShape={ActiveShape}
-                  data={testDistributionData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  dataKey="value"
-                  onMouseEnter={onPieEnter}
-                  paddingAngle={2}
-                  stroke="hsl(var(--card))"
-                >
-                  {testDistributionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  iconSize={10} 
-                  layout="horizontal" 
-                  verticalAlign="bottom" 
-                  align="center"
-                  wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
-                />
-              </RechartsPieChart>
-            </ResponsiveContainer>
-          ) : (
-             <div className="text-center text-muted-foreground">No test distribution data.</div>
-          )}
+          <div ref={testDistributionChartRef} className="w-full h-[280px]">
+            {testDistributionData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                  <Pie
+                    activeIndex={activeIndex}
+                    activeShape={ActiveShape}
+                    data={testDistributionData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    dataKey="value"
+                    onMouseEnter={onPieEnter}
+                    paddingAngle={2}
+                    stroke="hsl(var(--card))"
+                  >
+                    {testDistributionData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend 
+                    iconSize={10} 
+                    layout="horizontal" 
+                    verticalAlign="bottom" 
+                    align="center"
+                    wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
+                  />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            ) : (
+               <div className="text-center text-muted-foreground">No test distribution data.</div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-foreground">Tests by Browser</CardTitle>
-          <CardDescription className="text-xs">Number of tests executed per browser.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg font-semibold text-foreground">Tests by Browser</CardTitle>
+            <CardDescription className="text-xs">Number of tests executed per browser.</CardDescription>
+          </div>
+          <Button variant="outline" size="icon" onClick={() => handleDownloadChart(browserChartRef, 'tests-by-browser.png')} aria-label="Download Tests by Browser Chart">
+            <Download className="h-4 w-4" />
+          </Button>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={250}>
-            <RechartsBarChart data={browserChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
-              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-              <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={120} tickFormatter={(value) => value.length > 18 ? value.substring(0,15) + '...' : value} interval={0}/>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{fontSize: "12px"}}/>
-              <Bar dataKey="value" name="Tests" barSize={20}>
-                {browserChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-                 <LabelList dataKey="value" position="right" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }} />
-              </Bar>
-            </RechartsBarChart>
-          </ResponsiveContainer>
+          <div ref={browserChartRef} className="w-full h-[250px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsBarChart data={browserChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={120} tickFormatter={(value) => value.length > 18 ? value.substring(0,15) + '...' : value} interval={0}/>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{fontSize: "12px"}}/>
+                <Bar dataKey="value" name="Tests" barSize={20}>
+                  {browserChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                   <LabelList dataKey="value" position="right" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }} />
+                </Bar>
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          </div>
            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-xs text-muted-foreground">
             {browserChartData.map(b => (
                 <div key={b.name} className="flex items-center gap-1">
@@ -312,116 +358,137 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
       </Card>
       
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-foreground">Failed Tests Duration</CardTitle>
-           <CardDescription className="text-xs">Duration of failed or timed out tests (Top 10).</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg font-semibold text-foreground">Failed Tests Duration</CardTitle>
+            <CardDescription className="text-xs">Duration of failed or timed out tests (Top 10).</CardDescription>
+          </div>
+          <Button variant="outline" size="icon" onClick={() => handleDownloadChart(failedDurationChartRef, 'failed-tests-duration.png')} aria-label="Download Failed Tests Duration Chart">
+            <Download className="h-4 w-4" />
+          </Button>
         </CardHeader>
         <CardContent>
-          {failedTestsDurationData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <RechartsBarChart data={failedTestsDurationData} margin={{ top: 5, right: 5, left: 5, bottom: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} angle={-40} textAnchor="end" interval={0} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} unit="s" tickFormatter={(value) => formatDurationForChart(value)}/>
-                <Tooltip 
-                    content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            return (
-                            <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-                                <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{formatTestNameForChart(data.fullTestName)}</p>
-                                <p className="text-xs" style={{ color: COLORS.failed }}>
-                                Duration: {formatDurationForChart(data.duration)}
-                                </p>
-                            </div>
-                            );
-                        }
-                        return null;
-                    }}
-                    cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}
-                />
-                <Bar dataKey="duration" name="Duration" fill={COLORS.failed} barSize={20}>
-                    <LabelList dataKey="durationFormatted" position="top" style={{ fontSize: '10px', fill: 'hsl(var(--destructive))' }} />
-                </Bar>
-              </RechartsBarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-[250px] text-center">
-                <CheckCircle className="h-12 w-12 text-green-500 mb-2"/>
-                <p className="text-muted-foreground">No failed tests in this run!</p>
-            </div>
-          )}
+          <div ref={failedDurationChartRef} className="w-full h-[250px]">
+            {failedTestsDurationData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsBarChart data={failedTestsDurationData} margin={{ top: 5, right: 5, left: 5, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} angle={-40} textAnchor="end" interval={0} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} unit="s" tickFormatter={(value) => formatDurationForChart(value)}/>
+                  <Tooltip 
+                      content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return (
+                              <div className="bg-card p-3 border border-border rounded-md shadow-lg">
+                                  <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{formatTestNameForChart(data.fullTestName)}</p>
+                                  <p className="text-xs" style={{ color: COLORS.failed }}>
+                                  Duration: {formatDurationForChart(data.duration)}
+                                  </p>
+                              </div>
+                              );
+                          }
+                          return null;
+                      }}
+                      cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}
+                  />
+                  <Bar dataKey="duration" name="Duration" fill={COLORS.failed} barSize={20}>
+                      <LabelList dataKey="durationFormatted" position="top" style={{ fontSize: '10px', fill: 'hsl(var(--destructive))' }} />
+                  </Bar>
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[250px] text-center">
+                  <CheckCircle className="h-12 w-12 text-green-500 mb-2"/>
+                  <p className="text-muted-foreground">No failed tests in this run!</p>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-foreground">Slowest Tests (Top 5)</CardTitle>
-           <CardDescription className="text-xs">Top 5 longest running tests in this run. Full names in tooltip.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg font-semibold text-foreground">Slowest Tests (Top 5)</CardTitle>
+            <CardDescription className="text-xs">Top 5 longest running tests in this run. Full names in tooltip.</CardDescription>
+          </div>
+          <Button variant="outline" size="icon" onClick={() => handleDownloadChart(slowestTestsChartRef, 'slowest-tests.png')} aria-label="Download Slowest Tests Chart">
+            <Download className="h-4 w-4" />
+          </Button>
         </CardHeader>
         <CardContent>
-          {slowestTestsData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <RechartsBarChart data={slowestTestsData} margin={{ top: 5, right: 5, left: 5, bottom: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
-                <XAxis 
-                  dataKey="name" 
-                  tickLine={false} 
-                  tickFormatter={() => ''} 
-                  stroke="hsl(var(--muted-foreground))"
-                />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} unit="s" tickFormatter={(value) => formatDurationForChart(value)}/>
-                <Tooltip 
-                    content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            return (
-                            <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-                                <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{formatTestNameForChart(data.fullTestName)}</p>
-                                <p className="text-xs" style={{ color: data.status === 'passed' ? COLORS.passed : data.status === 'failed' || data.status === 'timedOut' ? COLORS.failed : COLORS.skipped }}>
-                                Duration: {formatDurationForChart(data.duration)} (Status: {data.status})
-                                </p>
-                            </div>
-                            );
-                        }
-                        return null;
-                    }}
-                    cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}
-                />
-                <Bar dataKey="duration" name="Duration" barSize={20}>
-                    {slowestTestsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.status === 'passed' ? COLORS.passed : entry.status === 'failed' || entry.status === 'timedOut' ? COLORS.failed : COLORS.skipped } />
-                    ))}
-                    <LabelList dataKey="durationFormatted" position="top" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }} />
-                </Bar>
-              </RechartsBarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-muted-foreground h-[250px] flex items-center justify-center">No test data to display for slowest tests.</p>
-          )}
+          <div ref={slowestTestsChartRef} className="w-full h-[250px]">
+            {slowestTestsData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsBarChart data={slowestTestsData} margin={{ top: 5, right: 5, left: 5, bottom: 30 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+                  <XAxis 
+                    dataKey="name" 
+                    tickLine={false} 
+                    tickFormatter={() => ''} 
+                    stroke="hsl(var(--muted-foreground))"
+                  />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} unit="s" tickFormatter={(value) => formatDurationForChart(value)}/>
+                  <Tooltip 
+                      content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return (
+                              <div className="bg-card p-3 border border-border rounded-md shadow-lg">
+                                  <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{formatTestNameForChart(data.fullTestName)}</p>
+                                  <p className="text-xs" style={{ color: data.status === 'passed' ? COLORS.passed : data.status === 'failed' || data.status === 'timedOut' ? COLORS.failed : COLORS.skipped }}>
+                                  Duration: {formatDurationForChart(data.duration)} (Status: {data.status})
+                                  </p>
+                              </div>
+                              );
+                          }
+                          return null;
+                      }}
+                      cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}
+                  />
+                  <Bar dataKey="duration" name="Duration" barSize={20}>
+                      {slowestTestsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.status === 'passed' ? COLORS.passed : entry.status === 'failed' || entry.status === 'timedOut' ? COLORS.failed : COLORS.skipped } />
+                      ))}
+                      <LabelList dataKey="durationFormatted" position="top" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }} />
+                  </Bar>
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-muted-foreground h-[250px] flex items-center justify-center">No test data to display for slowest tests.</p>
+            )}
+          </div>
         </CardContent>
       </Card>
       
       <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
-          <CardDescription className="text-xs">Number of test cases in each suite.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
+            <CardDescription className="text-xs">Number of test cases in each suite.</CardDescription>
+          </div>
+          <Button variant="outline" size="icon" onClick={() => handleDownloadChart(testsPerSuiteChartRef, 'tests-per-suite.png')} aria-label="Download Tests per Suite Chart">
+            <Download className="h-4 w-4" />
+          </Button>
         </CardHeader>
         <CardContent className="max-h-[400px] overflow-y-auto">
-          <ResponsiveContainer width="100%" height={Math.max(250, testsPerSuiteChartData.length * 35 + 60)}>
-            <RechartsBarChart data={testsPerSuiteChartData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
-              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-              <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} interval={0} tickFormatter={(value) => value.length > 25 ? value.substring(0,22) + '...' : value} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" name="Tests" barSize={15}>
-                {testsPerSuiteChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-                <LabelList dataKey="value" position="right" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }} />
-              </Bar>
-            </RechartsBarChart>
-          </ResponsiveContainer>
+          <div ref={testsPerSuiteChartRef} className="w-full" style={{ height: Math.max(250, testsPerSuiteChartData.length * 35 + 60) }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsBarChart data={testsPerSuiteChartData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} interval={0} tickFormatter={(value) => value.length > 25 ? value.substring(0,22) + '...' : value} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" name="Tests" barSize={15}>
+                  {testsPerSuiteChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                  <LabelList dataKey="value" position="right" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }} />
+                </Bar>
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
 
