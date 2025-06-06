@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { TrendingUp, Terminal, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TrendAnalysisProps {
   trends: HistoricalTrend[];
@@ -74,7 +75,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
       </Card>
     );
   }
-  
+
   if (error) {
      return (
       <Alert variant="destructive" className="mt-4 shadow-md">
@@ -104,7 +105,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
   const formattedTrends = React.useMemo(() => {
     return trends.map(t => ({
       ...t,
-      date: new Date(t.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }), 
+      date: new Date(t.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }),
       durationSeconds: parseFloat((t.duration / 1000).toFixed(2)),
       flakinessPercent: t.flakinessRate !== undefined && t.flakinessRate !== null ? parseFloat((t.flakinessRate * 100).toFixed(1)) : undefined,
     })).sort((a,b) => {
@@ -128,9 +129,16 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
         <div>
           <div className="flex justify-between items-center mb-3">
             <h4 className="text-lg font-semibold text-foreground">Test Outcomes Over Time</h4>
-            <Button variant="outline" size="icon" onClick={() => handleDownloadChart(outcomesChartRef, 'test-outcomes-trend.png')} aria-label="Download Test Outcomes Chart">
-              <Download className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" onClick={() => handleDownloadChart(outcomesChartRef, 'test-outcomes-trend.png')} aria-label="Download Test Outcomes Chart">
+                  <Download className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Download as PNG</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <div ref={outcomesChartRef} className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -138,7 +146,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
                 <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }} />
+                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }} />
                 <Legend wrapperStyle={{fontSize: "12px"}} />
                 <Line type="monotone" dataKey="passed" name="Passed" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                 <Line type="monotone" dataKey="failed" name="Failed" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
@@ -151,9 +159,16 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
         <div>
           <div className="flex justify-between items-center mb-3">
             <h4 className="text-lg font-semibold text-foreground">Test Duration Over Time (Seconds)</h4>
-            <Button variant="outline" size="icon" onClick={() => handleDownloadChart(durationChartRef, 'test-duration-trend.png')} aria-label="Download Test Duration Chart">
-              <Download className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" onClick={() => handleDownloadChart(durationChartRef, 'test-duration-trend.png')} aria-label="Download Test Duration Chart">
+                  <Download className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Download as PNG</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <div ref={durationChartRef} className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -161,21 +176,28 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
                 <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
+                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
                 <Legend wrapperStyle={{fontSize: "12px"}} />
                 <Bar dataKey="durationSeconds" name="Duration (s)" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
-        
+
         {formattedTrends.some(t => t.flakinessPercent !== undefined) && (
            <div>
             <div className="flex justify-between items-center mb-3">
               <h4 className="text-lg font-semibold text-foreground">Flakiness Rate Over Time (%)</h4>
-              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(flakinessChartRef, 'flakiness-rate-trend.png')} aria-label="Download Flakiness Rate Chart">
-                <Download className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" onClick={() => handleDownloadChart(flakinessChartRef, 'flakiness-rate-trend.png')} aria-label="Download Flakiness Rate Chart">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Download as PNG</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <div ref={flakinessChartRef} className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -183,7 +205,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
                   <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} unit="%"/>
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }} />
+                  <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }} />
                   <Legend wrapperStyle={{fontSize: "12px"}} />
                   <Line type="monotone" dataKey="flakinessPercent" name="Flakiness Rate (%)" stroke="hsl(var(--chart-5))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                 </LineChart>
@@ -199,4 +221,3 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
 
 export const TrendAnalysis = React.memo(TrendAnalysisComponent);
 TrendAnalysis.displayName = 'TrendAnalysis';
-

@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
+import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
 import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
 import html2canvas from 'html2canvas';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 interface DashboardOverviewChartsProps {
@@ -21,9 +22,9 @@ interface DashboardOverviewChartsProps {
 }
 
 const COLORS = {
-  passed: 'hsl(var(--chart-3))', 
-  failed: 'hsl(var(--destructive))', 
-  skipped: 'hsl(var(--accent))', 
+  passed: 'hsl(var(--chart-3))',
+  failed: 'hsl(var(--destructive))',
+  skipped: 'hsl(var(--accent))',
   timedOut: 'hsl(var(--destructive))',
   pending: 'hsl(var(--muted-foreground))',
   default1: 'hsl(var(--chart-1))',
@@ -70,7 +71,7 @@ const BrowserIcon = ({ browserName, className }: { browserName: string, classNam
   const lowerBrowserName = browserName.toLowerCase();
   if (lowerBrowserName.includes('chrome')) return <Chrome className={cn("h-4 w-4", className)} />;
   if (lowerBrowserName.includes('safari') || lowerBrowserName.includes('webkit')) return <Compass className={cn("h-4 w-4", className)} />;
-  return <Globe className={cn("h-4 w-4", className)} />; 
+  return <Globe className={cn("h-4 w-4", className)} />;
 };
 
 
@@ -136,10 +137,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     if (chartRef.current) {
       try {
         const canvas = await html2canvas(chartRef.current, {
-          backgroundColor: null, // Use null for transparent background if elements have their own
+          backgroundColor: null, 
           logging: false,
-          useCORS: true, // If images are from external sources
-          scale: 2, // Increase scale for better resolution
+          useCORS: true, 
+          scale: 2, 
         });
         const image = canvas.toDataURL('image/png', 1.0);
         const link = document.createElement('a');
@@ -150,7 +151,6 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         document.body.removeChild(link);
       } catch (err) {
         console.error('Error downloading chart:', err);
-        // You could add a toast notification here for the user
       }
     }
   };
@@ -162,7 +162,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     },
     [setActiveIndex]
   );
-  
+
   if (loading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
@@ -235,11 +235,11 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         name: shortName.length > 50 ? shortName.substring(0, 47) + '...' : shortName,
         duration: test.duration,
         durationFormatted: formatDurationForChart(test.duration),
-        fullTestName: test.name, 
+        fullTestName: test.name,
       };
     })
     .sort((a,b) => b.duration - a.duration)
-    .slice(0, 10); 
+    .slice(0, 10);
 
   const testsPerSuite = currentRun.results.reduce((acc, test) => {
     const suite = test.suiteName || 'Default Suite';
@@ -251,17 +251,17 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     value,
     fill: [COLORS.default1, COLORS.default2, COLORS.default3, COLORS.default4][index % 4]
   }));
-  
+
   const slowestTestsData = [...currentRun.results]
     .sort((a, b) => b.duration - a.duration)
     .slice(0, 5)
     .map(test => {
       const shortName = formatTestNameForChart(test.name);
       return {
-        name: shortName, 
+        name: shortName,
         duration: test.duration,
         durationFormatted: formatDurationForChart(test.duration),
-        fullTestName: test.name, 
+        fullTestName: test.name,
         status: test.status,
       };
     });
@@ -275,9 +275,16 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
             <CardDescription className="text-xs">Passed, Failed, Skipped for the current run.</CardDescription>
           </div>
-          <Button variant="outline" size="icon" onClick={() => handleDownloadChart(testDistributionChartRef, 'test-distribution.png')} aria-label="Download Test Distribution Chart">
-            <Download className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(testDistributionChartRef, 'test-distribution.png')} aria-label="Download Test Distribution Chart">
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Download as PNG</p>
+            </TooltipContent>
+          </Tooltip>
         </CardHeader>
         <CardContent className="flex justify-center items-center min-h-[280px]">
           <div ref={testDistributionChartRef} className="w-full h-[280px]">
@@ -301,11 +308,11 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend 
-                    iconSize={10} 
-                    layout="horizontal" 
-                    verticalAlign="bottom" 
+                  <RechartsTooltip content={<CustomTooltip />} />
+                  <Legend
+                    iconSize={10}
+                    layout="horizontal"
+                    verticalAlign="bottom"
                     align="center"
                     wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
                   />
@@ -324,9 +331,16 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Tests by Browser</CardTitle>
             <CardDescription className="text-xs">Number of tests executed per browser.</CardDescription>
           </div>
-          <Button variant="outline" size="icon" onClick={() => handleDownloadChart(browserChartRef, 'tests-by-browser.png')} aria-label="Download Tests by Browser Chart">
-            <Download className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(browserChartRef, 'tests-by-browser.png')} aria-label="Download Tests by Browser Chart">
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Download as PNG</p>
+            </TooltipContent>
+          </Tooltip>
         </CardHeader>
         <CardContent>
           <div ref={browserChartRef} className="w-full h-[250px]">
@@ -335,7 +349,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
                 <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={120} tickFormatter={(value) => value.length > 18 ? value.substring(0,15) + '...' : value} interval={0}/>
-                <Tooltip content={<CustomTooltip />} />
+                <RechartsTooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{fontSize: "12px"}}/>
                 <Bar dataKey="value" name="Tests" barSize={20}>
                   {browserChartData.map((entry, index) => (
@@ -356,16 +370,23 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <p className="text-xs text-muted-foreground mt-2">Note: Icons are representative. Specific logos may vary.</p>
         </CardContent>
       </Card>
-      
+
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">Failed Tests Duration</CardTitle>
             <CardDescription className="text-xs">Duration of failed or timed out tests (Top 10).</CardDescription>
           </div>
-          <Button variant="outline" size="icon" onClick={() => handleDownloadChart(failedDurationChartRef, 'failed-tests-duration.png')} aria-label="Download Failed Tests Duration Chart">
-            <Download className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(failedDurationChartRef, 'failed-tests-duration.png')} aria-label="Download Failed Tests Duration Chart">
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Download as PNG</p>
+            </TooltipContent>
+          </Tooltip>
         </CardHeader>
         <CardContent>
           <div ref={failedDurationChartRef} className="w-full h-[250px]">
@@ -375,7 +396,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                   <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} angle={-40} textAnchor="end" interval={0} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} unit="s" tickFormatter={(value) => formatDurationForChart(value)}/>
-                  <Tooltip 
+                  <RechartsTooltip
                       content={({ active, payload, label }) => {
                           if (active && payload && payload.length) {
                               const data = payload[0].payload;
@@ -413,9 +434,16 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Slowest Tests (Top 5)</CardTitle>
             <CardDescription className="text-xs">Top 5 longest running tests in this run. Full names in tooltip.</CardDescription>
           </div>
-          <Button variant="outline" size="icon" onClick={() => handleDownloadChart(slowestTestsChartRef, 'slowest-tests.png')} aria-label="Download Slowest Tests Chart">
-            <Download className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(slowestTestsChartRef, 'slowest-tests.png')} aria-label="Download Slowest Tests Chart">
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Download as PNG</p>
+            </TooltipContent>
+          </Tooltip>
         </CardHeader>
         <CardContent>
           <div ref={slowestTestsChartRef} className="w-full h-[250px]">
@@ -423,14 +451,14 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsBarChart data={slowestTestsData} margin={{ top: 5, right: 5, left: 5, bottom: 30 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
-                  <XAxis 
-                    dataKey="name" 
-                    tickLine={false} 
-                    tickFormatter={() => ''} 
+                  <XAxis
+                    dataKey="name"
+                    tickLine={false}
+                    tickFormatter={() => ''}
                     stroke="hsl(var(--muted-foreground))"
                   />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} unit="s" tickFormatter={(value) => formatDurationForChart(value)}/>
-                  <Tooltip 
+                  <RechartsTooltip
                       content={({ active, payload, label }) => {
                           if (active && payload && payload.length) {
                               const data = payload[0].payload;
@@ -461,16 +489,23 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           </div>
         </CardContent>
       </Card>
-      
+
       <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
             <CardDescription className="text-xs">Number of test cases in each suite.</CardDescription>
           </div>
-          <Button variant="outline" size="icon" onClick={() => handleDownloadChart(testsPerSuiteChartRef, 'tests-per-suite.png')} aria-label="Download Tests per Suite Chart">
-            <Download className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(testsPerSuiteChartRef, 'tests-per-suite.png')} aria-label="Download Tests per Suite Chart">
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Download as PNG</p>
+            </TooltipContent>
+          </Tooltip>
         </CardHeader>
         <CardContent className="max-h-[400px] overflow-y-auto">
           <div ref={testsPerSuiteChartRef} className="w-full" style={{ height: Math.max(250, testsPerSuiteChartData.length * 35 + 60) }}>
@@ -479,7 +514,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
                 <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} interval={0} tickFormatter={(value) => value.length > 25 ? value.substring(0,22) + '...' : value} />
-                <Tooltip content={<CustomTooltip />} />
+                <RechartsTooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" name="Tests" barSize={15}>
                   {testsPerSuiteChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -495,4 +530,3 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </div>
   );
 }
-
