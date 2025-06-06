@@ -10,7 +10,7 @@ import { TrendAnalysis } from './TrendAnalysis';
 import { FailurePatternAnalyzer } from './FailurePatternAnalyzer';
 import { FlakyTestsWidget } from './FlakyTestsWidget';
 import { SettingsView } from './SettingsView';
-import { FailureCategorizationView } from './FailureCategorizationView'; // New Import
+import { FailureCategorizationView } from './FailureCategorizationView';
 import {
   SidebarProvider,
   Sidebar,
@@ -23,11 +23,11 @@ import {
   SidebarInset,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, TrendingUp, Wand2, Settings, Repeat, ListX } from 'lucide-react'; // ListX icon added
+import { LayoutDashboard, ListChecks, TrendingUp, Wand2, Settings, Repeat, ListX } from 'lucide-react';
 import Link from 'next/link';
 
 
-type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'failure-analyzer' | 'flaky-tests' | 'settings' | 'failure-categorization'; // Added 'failure-categorization'
+type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'failure-analyzer' | 'flaky-tests' | 'settings' | 'failure-categorization';
 
 interface MenuItem {
   id: ActiveView;
@@ -66,7 +66,7 @@ export function PulseDashboard() {
     { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance." },
     { id: 'flaky-tests', label: 'Flaky Tests', icon: Repeat, description: "Analysis of historically flaky tests." },
     { id: 'failure-analyzer', label: 'AI Failure Analysis', icon: Wand2, description: "AI-powered analysis of test failure patterns." },
-    { id: 'failure-categorization', label: 'Failure Categorization', icon: ListX, description: "Categorize and view common failure types." }, // New Menu Item
+    { id: 'failure-categorization', label: 'Failure Categorization', icon: ListX, description: "Categorize and view common failure types." },
     { id: 'settings', label: 'Settings', icon: Settings, description: "Configure dashboard appearance and preferences." },
   ];
 
@@ -89,7 +89,7 @@ export function PulseDashboard() {
     case 'failure-analyzer':
       componentToRender = <FailurePatternAnalyzer />;
       break;
-    case 'failure-categorization': // New Case
+    case 'failure-categorization':
       componentToRender = <FailureCategorizationView />;
       break;
     case 'settings':
@@ -102,7 +102,7 @@ export function PulseDashboard() {
   return (
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon" className="border-r">
-        <SidebarHeader className="p-2 flex items-center justify-between">
+        <SidebarHeader className="p-4 flex items-center justify-between border-b border-sidebar-border">
            <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
             <Image
                 src="https://i.postimg.cc/XqVn1NhF/pulse.png"
