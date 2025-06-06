@@ -70,3 +70,22 @@ export interface HistoricalTrend {
   duration: number;
   flakinessRate?: number;
 }
+
+export interface FlakyTestOccurrence {
+  runTimestamp: string;
+  status: DetailedTestResult['status'];
+}
+
+export interface FlakyTestDetail {
+  id: string;
+  name: string;
+  suiteName: string;
+  occurrences: FlakyTestOccurrence[]; // Chronologically sorted
+  passedCount: number;
+  failedCount: number; // includes timedOut
+  skippedCount: number;
+  pendingCount: number;
+  totalRuns: number;
+  firstSeen: string;
+  lastSeen: string;
+}

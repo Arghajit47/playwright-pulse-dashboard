@@ -8,6 +8,7 @@ import { SummaryMetrics } from './SummaryMetrics';
 import { LiveTestResults, type TestStatusFilter } from './LiveTestResults';
 import { TrendAnalysis } from './TrendAnalysis';
 import { FailurePatternAnalyzer } from './FailurePatternAnalyzer';
+import { FlakyTestsWidget } from './FlakyTestsWidget'; // New Import
 import { SettingsView } from './SettingsView'; 
 import {
   SidebarProvider,
@@ -21,11 +22,11 @@ import {
   SidebarInset,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, TrendingUp, Wand2, Settings } from 'lucide-react';
+import { LayoutDashboard, ListChecks, TrendingUp, Wand2, Settings, Repeat } from 'lucide-react'; // Repeat icon added
 import Link from 'next/link';
 
 
-type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'failure-analyzer' | 'settings';
+type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'failure-analyzer' | 'flaky-tests' | 'settings'; // Added 'flaky-tests'
 
 interface MenuItem {
   id: ActiveView;
@@ -62,6 +63,7 @@ export function PulseDashboard() {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: "Real-time Playwright Test Execution Monitoring & Analysis Overview" },
     { id: 'live-results', label: 'Live Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters." },
     { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance." },
+    { id: 'flaky-tests', label: 'Flaky Tests', icon: Repeat, description: "Analysis of historically flaky tests." }, // New Menu Item
     { id: 'failure-analyzer', label: 'AI Failure Analysis', icon: Wand2, description: "AI-powered analysis of test failure patterns." },
     { id: 'settings', label: 'Settings', icon: Settings, description: "Configure dashboard appearance and preferences." },
   ];
@@ -78,6 +80,9 @@ export function PulseDashboard() {
       break;
     case 'trend-analysis':
       componentToRender = <TrendAnalysis trends={historicalTrends} loading={loadingHistorical} error={errorHistorical} />;
+      break;
+    case 'flaky-tests': // New Case
+      componentToRender = <FlakyTestsWidget />;
       break;
     case 'failure-analyzer':
       componentToRender = <FailurePatternAnalyzer />;
