@@ -40,6 +40,21 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
   const durationChartRef = React.useRef<HTMLDivElement>(null);
   const flakinessChartRef = React.useRef<HTMLDivElement>(null);
 
+  const formattedTrends = React.useMemo(() => {
+    if (!trends || trends.length === 0) {
+      return [];
+    }
+    // Assuming `trends` prop is already sorted by date from the API
+    return trends.map(t => ({
+      ...t,
+      date: new Date(t.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }),
+      durationSeconds: parseFloat((t.duration / 1000).toFixed(2)),
+      flakinessPercent: t.flakinessRate !== undefined && t.flakinessRate !== null 
+        ? parseFloat((t.flakinessRate * 100).toFixed(1)) 
+        : undefined,
+    }));
+  }, [trends]);
+
   const handleDownloadChart = async (chartRef: React.RefObject<HTMLDivElement>, fileName: string) => {
     if (chartRef.current) {
       try {
@@ -86,7 +101,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
     );
   }
 
-  if (!trends || trends.length === 0) {
+  if (!trends || trends.length === 0) { // This check handles when original trends data is empty
     return (
       <Card className="shadow-xl">
         <CardHeader>
@@ -102,20 +117,6 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
     );
   }
 
-  const formattedTrends = React.useMemo(() => {
-    return trends.map(t => ({
-      ...t,
-      date: new Date(t.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }),
-      durationSeconds: parseFloat((t.duration / 1000).toFixed(2)),
-      flakinessPercent: t.flakinessRate !== undefined && t.flakinessRate !== null ? parseFloat((t.flakinessRate * 100).toFixed(1)) : undefined,
-    })).sort((a,b) => {
-        const dateAItem = trends.find(tr => new Date(tr.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) === a.date);
-        const dateBItem = trends.find(tr => new Date(tr.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) === b.date);
-        const dateA = dateAItem ? new Date(dateAItem.date).getTime() : 0;
-        const dateB = dateBItem ? new Date(dateBItem.date).getTime() : 0;
-        return dateA - dateB;
-    });
-  }, [trends]);
 
   return (
     <Card className="shadow-xl">
