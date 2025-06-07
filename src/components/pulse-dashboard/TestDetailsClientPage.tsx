@@ -413,7 +413,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </h3>
                 <ScrollArea className="h-48 w-full rounded-md border p-3 bg-muted/30">
                     <pre className="text-sm text-foreground whitespace-pre-wrap break-words">
-                        {typeof test.stdout === 'string' && test.stdout.trim() !== '' ? test.stdout : "No standard output logs captured for this test."}
+                        {Array.isArray(test.stdout) && test.stdout.length > 0
+                            ? test.stdout.join('\n')
+                            : "No standard output logs captured for this test."}
                     </pre>
                 </ScrollArea>
               </div>
