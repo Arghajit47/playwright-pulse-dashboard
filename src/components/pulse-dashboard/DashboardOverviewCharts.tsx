@@ -78,7 +78,6 @@ function normalizeBrowserName(rawBrowserName: string | undefined): string {
   if (lowerName.includes('safari') && lowerName.includes('mobile')) {
     return 'Mobile Safari';
   }
-
   if (lowerName.includes('chrome') || lowerName.includes('chromium')) {
     return 'Chrome';
   }
@@ -88,7 +87,7 @@ function normalizeBrowserName(rawBrowserName: string | undefined): string {
   if (lowerName.includes('msedge') || lowerName.includes('edge')) {
     return 'Edge';
   }
-  if (lowerName.includes('safari') || lowerName.includes('webkit')) { 
+  if (lowerName.includes('safari') || lowerName.includes('webkit')) {
     return 'Safari';
   }
   
@@ -104,7 +103,7 @@ const BrowserIcon = ({ browserName, className }: { browserName: string, classNam
   if (lowerNormalizedName === 'safari' || lowerNormalizedName === 'mobile safari') {
     return <Compass className={cn("h-4 w-4", className)} />; 
   }
-  // For Firefox, Edge, and Unknown, use Globe as Firefox icon caused build issues.
+  // For Firefox, Edge, and Unknown, use Globe as specific icons are not always available or cause build issues.
   return <Globe className={cn("h-4 w-4", className)} />;
 };
 
