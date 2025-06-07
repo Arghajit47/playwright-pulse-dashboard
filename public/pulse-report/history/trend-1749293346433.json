@@ -1,0 +1,324 @@
+{
+  "run": {
+    "id": "run-1749293346433-bb49003b-21f2-4011-af78-8d125960fdd0",
+    "timestamp": "2025-06-07T10:49:06.433Z",
+    "totalTests": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "duration": 1720
+  },
+  "results": [
+    {
+      "id": "f01bc06c38d4ececee44-ac68783233828bb3d534",
+      "runId": "run-1749293346433-bb49003b-21f2-4011-af78-8d125960fdd0",
+      "name": " > Webkit Project > new-test.spec.js > Log browser info",
+      "suiteName": "Webkit Project",
+      "status": "passed",
+      "duration": 19,
+      "startTime": "2025-06-07T10:49:07.356Z",
+      "endTime": "2025-06-07T10:49:07.375Z",
+      "browser": "Safari v18 on macOS 10",
+      "retries": 0,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-ac68783233828bb3d534_step_2025-06-07T10:49:07.361Z-10-e583823d-c643-4c75-9d63-04f427eb59f6",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 10,
+          "startTime": "2025-06-07T10:49:07.361Z",
+          "endTime": "2025-06-07T10:49:07.371Z",
+          "browser": "Safari v18 on macOS 10",
+          "isHook": true,
+          "hookType": "before",
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-ac68783233828bb3d534_step_2025-06-07T10:49:07.382Z-3-1169ad35-5987-46cc-8c7f-13e4910fb05b",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 3,
+          "startTime": "2025-06-07T10:49:07.382Z",
+          "endTime": "2025-06-07T10:49:07.385Z",
+          "browser": "Safari v18 on macOS 10",
+          "isHook": true,
+          "hookType": "after",
+          "steps": []
+        }
+      ],
+      "codeSnippet": "Test defined at: new-test.spec.js:111:6",
+      "tags": [],
+      "screenshots": [],
+      "stdout": [
+        "Safari v18 on macOS 10\n"
+      ]
+    },
+    {
+      "id": "f01bc06c38d4ececee44-63a305eff2594c058cb1",
+      "runId": "run-1749293346433-bb49003b-21f2-4011-af78-8d125960fdd0",
+      "name": " > Edge Project > new-test.spec.js > Log browser info",
+      "suiteName": "Edge Project",
+      "status": "passed",
+      "duration": 23,
+      "startTime": "2025-06-07T10:49:07.358Z",
+      "endTime": "2025-06-07T10:49:07.381Z",
+      "browser": "Edge v134 on Windows 10",
+      "retries": 0,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-63a305eff2594c058cb1_step_2025-06-07T10:49:07.363Z-9-4d1cac50-a831-43d9-8c33-ad0be08e2d05",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 9,
+          "startTime": "2025-06-07T10:49:07.363Z",
+          "endTime": "2025-06-07T10:49:07.372Z",
+          "browser": "Edge v134 on Windows 10",
+          "isHook": true,
+          "hookType": "before",
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-63a305eff2594c058cb1_step_2025-06-07T10:49:07.388Z-4-06d8bba6-cce2-49ef-b3bf-c669cbf980ef",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 4,
+          "startTime": "2025-06-07T10:49:07.388Z",
+          "endTime": "2025-06-07T10:49:07.392Z",
+          "browser": "Edge v134 on Windows 10",
+          "isHook": true,
+          "hookType": "after",
+          "steps": []
+        }
+      ],
+      "codeSnippet": "Test defined at: new-test.spec.js:111:6",
+      "tags": [],
+      "screenshots": [],
+      "stdout": [
+        "Edge v134 on Windows 10\n"
+      ]
+    },
+    {
+      "id": "f01bc06c38d4ececee44-49500bc85768e64fc634",
+      "runId": "run-1749293346433-bb49003b-21f2-4011-af78-8d125960fdd0",
+      "name": " > Firefox Project > new-test.spec.js > Log browser info",
+      "suiteName": "Firefox Project",
+      "status": "passed",
+      "duration": 29,
+      "startTime": "2025-06-07T10:49:07.352Z",
+      "endTime": "2025-06-07T10:49:07.381Z",
+      "browser": "Firefox v135 on Windows 10",
+      "retries": 0,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-49500bc85768e64fc634_step_2025-06-07T10:49:07.357Z-11-a290d310-26fb-49d3-8443-29d98587ddd3",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 11,
+          "startTime": "2025-06-07T10:49:07.357Z",
+          "endTime": "2025-06-07T10:49:07.368Z",
+          "browser": "Firefox v135 on Windows 10",
+          "isHook": true,
+          "hookType": "before",
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-49500bc85768e64fc634_step_2025-06-07T10:49:07.388Z-4-6fd1b91c-f395-454d-adf8-6db769746629",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 4,
+          "startTime": "2025-06-07T10:49:07.388Z",
+          "endTime": "2025-06-07T10:49:07.392Z",
+          "browser": "Firefox v135 on Windows 10",
+          "isHook": true,
+          "hookType": "after",
+          "steps": []
+        }
+      ],
+      "codeSnippet": "Test defined at: new-test.spec.js:111:6",
+      "tags": [],
+      "screenshots": [],
+      "stdout": [
+        "Firefox v135 on Windows 10\n"
+      ]
+    },
+    {
+      "id": "f01bc06c38d4ececee44-c13a08eb00e6f305b06b",
+      "runId": "run-1749293346433-bb49003b-21f2-4011-af78-8d125960fdd0",
+      "name": " > Chrome Project > new-test.spec.js > Log browser info",
+      "suiteName": "Chrome Project",
+      "status": "passed",
+      "duration": 26,
+      "startTime": "2025-06-07T10:49:07.361Z",
+      "endTime": "2025-06-07T10:49:07.387Z",
+      "browser": "Chrome v134 on Windows 10",
+      "retries": 0,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-c13a08eb00e6f305b06b_step_2025-06-07T10:49:07.365Z-10-8ff688a6-d304-453a-b16b-149ebda211ea",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 10,
+          "startTime": "2025-06-07T10:49:07.365Z",
+          "endTime": "2025-06-07T10:49:07.375Z",
+          "browser": "Chrome v134 on Windows 10",
+          "isHook": true,
+          "hookType": "before",
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-c13a08eb00e6f305b06b_step_2025-06-07T10:49:07.394Z-2-d05c2a7d-ef62-4b0b-a256-ef9970db095a",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 2,
+          "startTime": "2025-06-07T10:49:07.394Z",
+          "endTime": "2025-06-07T10:49:07.396Z",
+          "browser": "Chrome v134 on Windows 10",
+          "isHook": true,
+          "hookType": "after",
+          "steps": []
+        }
+      ],
+      "codeSnippet": "Test defined at: new-test.spec.js:111:6",
+      "tags": [],
+      "screenshots": [],
+      "stdout": [
+        "Chrome v134 on Windows 10\n"
+      ]
+    },
+    {
+      "id": "f01bc06c38d4ececee44-325617dad9f69623049c",
+      "runId": "run-1749293346433-bb49003b-21f2-4011-af78-8d125960fdd0",
+      "name": " > Mobile Webkit Project > new-test.spec.js > Log browser info",
+      "suiteName": "Mobile Webkit Project",
+      "status": "passed",
+      "duration": 13,
+      "startTime": "2025-06-07T10:49:08.087Z",
+      "endTime": "2025-06-07T10:49:08.100Z",
+      "browser": "Mobile Safari v18 on iOS 16",
+      "retries": 0,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-325617dad9f69623049c_step_2025-06-07T10:49:08.091Z-7-df7f90b7-f4a0-4684-8032-c025a023d4b2",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 7,
+          "startTime": "2025-06-07T10:49:08.091Z",
+          "endTime": "2025-06-07T10:49:08.098Z",
+          "browser": "Mobile Safari v18 on iOS 16",
+          "isHook": true,
+          "hookType": "before",
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-325617dad9f69623049c_step_2025-06-07T10:49:08.106Z-2-69e5beb3-b651-4c25-bc6c-fb8d214fc8ba",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 2,
+          "startTime": "2025-06-07T10:49:08.106Z",
+          "endTime": "2025-06-07T10:49:08.108Z",
+          "browser": "Mobile Safari v18 on iOS 16",
+          "isHook": true,
+          "hookType": "after",
+          "steps": []
+        }
+      ],
+      "codeSnippet": "Test defined at: new-test.spec.js:111:6",
+      "tags": [],
+      "screenshots": [],
+      "stdout": [
+        "Mobile Safari v18 on iOS 16\n"
+      ]
+    },
+    {
+      "id": "f01bc06c38d4ececee44-b2bbe0e133db5d29ad91",
+      "runId": "run-1749293346433-bb49003b-21f2-4011-af78-8d125960fdd0",
+      "name": " > Mobile Chrome Project > new-test.spec.js > Log browser info",
+      "suiteName": "Mobile Chrome Project",
+      "status": "passed",
+      "duration": 18,
+      "startTime": "2025-06-07T10:49:08.085Z",
+      "endTime": "2025-06-07T10:49:08.103Z",
+      "browser": "Chrome Mobile v134 on Android 11",
+      "retries": 0,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-b2bbe0e133db5d29ad91_step_2025-06-07T10:49:08.089Z-8-6b96b69f-6c90-4a32-a6c3-14e1e91e7bca",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 8,
+          "startTime": "2025-06-07T10:49:08.089Z",
+          "endTime": "2025-06-07T10:49:08.097Z",
+          "browser": "Chrome Mobile v134 on Android 11",
+          "isHook": true,
+          "hookType": "before",
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-b2bbe0e133db5d29ad91_step_2025-06-07T10:49:08.109Z-2-8a53a090-84db-4551-ad3b-c967f9f5a911",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 2,
+          "startTime": "2025-06-07T10:49:08.109Z",
+          "endTime": "2025-06-07T10:49:08.111Z",
+          "browser": "Chrome Mobile v134 on Android 11",
+          "isHook": true,
+          "hookType": "after",
+          "steps": []
+        }
+      ],
+      "codeSnippet": "Test defined at: new-test.spec.js:111:6",
+      "tags": [],
+      "screenshots": [],
+      "stdout": [
+        "Mobile Chrome v134 on Android 11\n"
+      ]
+    },
+    {
+      "id": "f01bc06c38d4ececee44-755dbc256baafd897363",
+      "runId": "run-1749293346433-bb49003b-21f2-4011-af78-8d125960fdd0",
+      "name": " > Chromium Project > new-test.spec.js > Log browser info",
+      "suiteName": "Chromium Project",
+      "status": "passed",
+      "duration": 27,
+      "startTime": "2025-06-07T10:49:08.091Z",
+      "endTime": "2025-06-07T10:49:08.118Z",
+      "browser": "undefined",
+      "retries": 0,
+      "steps": [
+        {
+          "id": "f01bc06c38d4ececee44-755dbc256baafd897363_step_2025-06-07T10:49:08.095Z-8-65db339e-2c47-43e7-b30f-5d4bdf6ebe77",
+          "title": "Before Hooks",
+          "status": "passed",
+          "duration": 8,
+          "startTime": "2025-06-07T10:49:08.095Z",
+          "endTime": "2025-06-07T10:49:08.103Z",
+          "browser": "undefined",
+          "isHook": true,
+          "hookType": "before",
+          "steps": []
+        },
+        {
+          "id": "f01bc06c38d4ececee44-755dbc256baafd897363_step_2025-06-07T10:49:08.124Z-2-46449caf-e9ef-4b66-b3aa-2a30e6b437d7",
+          "title": "After Hooks",
+          "status": "passed",
+          "duration": 2,
+          "startTime": "2025-06-07T10:49:08.124Z",
+          "endTime": "2025-06-07T10:49:08.126Z",
+          "browser": "undefined",
+          "isHook": true,
+          "hookType": "after",
+          "steps": []
+        }
+      ],
+      "codeSnippet": "Test defined at: new-test.spec.js:111:6",
+      "tags": [],
+      "screenshots": [],
+      "stdout": [
+        "chromium\n"
+      ]
+    }
+  ],
+  "metadata": {
+    "generatedAt": "2025-06-07T10:49:08.154Z"
+  }
+}
