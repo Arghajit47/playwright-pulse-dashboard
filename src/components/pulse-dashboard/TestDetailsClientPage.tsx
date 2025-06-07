@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, ImageIcon, FileText, LineChart, Info, Download, Film, FileZip } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, ImageIcon, FileText, LineChart, Info, Download, Film, Archive } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef } from 'react';
@@ -318,7 +318,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     Video {hasVideo ? '(1)' : '(0)'}
                   </TabsTrigger>
                   <TabsTrigger value="sub-trace" disabled={!hasTrace}>
-                    <FileZip className="h-4 w-4 mr-2" />
+                    <Archive className="h-4 w-4 mr-2" />
                     Trace {hasTrace ? '(1)' : '(0)'}
                   </TabsTrigger>
                 </TabsList>
