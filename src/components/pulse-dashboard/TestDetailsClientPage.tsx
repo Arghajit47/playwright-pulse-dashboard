@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, ImageIcon, FileText, LineChart, Info, Download, Film, Archive, Terminal } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, ImageIcon, FileText, LineChart, Info, Download, Film, Archive, Terminal } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef } from 'react';
@@ -411,13 +411,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
                   <Terminal className="h-5 w-5 mr-2 text-primary"/>Console Logs / Standard Output
                 </h3>
-                {/* Placeholder for stdout. Actual implementation would display test.stdout if available. */}
                 <ScrollArea className="h-48 w-full rounded-md border p-3 bg-muted/30">
-                    <pre className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
-                        No standard output logs captured for this test.
-                        {/* Example of how logs might be displayed if available:
-                        {test.stdout ? test.stdout : "No standard output logs captured for this test."}
-                        */}
+                    <pre className="text-sm text-foreground whitespace-pre-wrap break-words">
+                        {test.stdout && test.stdout.trim() !== '' ? test.stdout : "No standard output logs captured for this test."}
                     </pre>
                 </ScrollArea>
               </div>
@@ -522,4 +518,3 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
-
