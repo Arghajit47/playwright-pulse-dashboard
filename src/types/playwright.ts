@@ -15,7 +15,7 @@ export interface TestStep {
 }
 
 export interface ScreenshotAttachment {
-  name: string; 
+  name: string;
   path: string;
   contentType: string; // e.g., 'image/png'
   'data-ai-hint'?: string;
@@ -24,35 +24,38 @@ export interface ScreenshotAttachment {
 export interface DetailedTestResult {
   id: string;
   runId: string;
-  name: string; 
+  name: string;
   suiteName: string;
   status: 'passed' | 'failed' | 'skipped' | 'timedOut' | 'pending';
   duration: number;
   startTime: string;
   endTime: string;
   browser: string;
+  browserVersion?: string; // Added for browser version
   retries: number;
   steps: TestStep[];
-  error?: string | null; 
+  error?: string | null;
   codeSnippet: string;
   tags: string[];
-  screenshots: ScreenshotAttachment[]; 
+  screenshots: ScreenshotAttachment[];
+  videoPath?: string;
+  tracePath?: string;
 }
 
 export interface RunMetadata {
   id: string;
-  timestamp: string; 
+  timestamp: string;
   totalTests: number;
   passed: number;
   failed: number;
   skipped: number;
-  duration: number; 
+  duration: number;
   timedOut?: number; // Optional, if your data source provides it
   pending?: number; // Optional
 }
 
 export interface ReportFileMetadata {
-  generatedAt: string; 
+  generatedAt: string;
 }
 
 export interface PlaywrightPulseReport {

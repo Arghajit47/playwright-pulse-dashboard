@@ -52,6 +52,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const data = payload[0].payload;
     const fullTestName = data.fullTestName || payload[0].name || label;
     const formattedName = formatTestNameForChart(fullTestName);
+    const versions = data.versions ? Array.from(data.versions).join(', ') : null;
 
     return (
       <div className="bg-card p-3 border border-border rounded-md shadow-lg">
@@ -62,6 +63,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             {entry.name === payload[0].name && payload[0].payload.percentage && ` (${payload[0].payload.percentage}%)`}
           </p>
         ))}
+        {versions && <p className="text-xs text-muted-foreground mt-1">Versions: {versions}</p>}
       </div>
     );
   }
@@ -72,7 +74,7 @@ function normalizeBrowserName(rawBrowserName: string | undefined): string {
   if (!rawBrowserName) return 'Unknown';
   const lowerName = rawBrowserName.toLowerCase();
 
-  if (lowerName.includes('chrome') && (lowerName.includes('mobile') || lowerName.includes('android'))) {
+  if ((lowerName.includes('chrome') || lowerName.includes('chromium')) && (lowerName.includes('mobile') || lowerName.includes('android'))) {
     return 'Chrome Mobile';
   }
   if (lowerName.includes('safari') && lowerName.includes('mobile')) {
@@ -101,7 +103,7 @@ const BrowserIcon = ({ browserName, className }: { browserName: string, classNam
     return <Chrome className={cn("h-4 w-4", className)} />;
   }
   if (lowerNormalizedName === 'safari' || lowerNormalizedName === 'mobile safari') {
-    return <Compass className={cn("h-4 w-4", className)} />; 
+    return <Compass className={cn("h-4 w-4", className)} />;
   }
   // For Firefox, Edge, and Unknown, use Globe as specific icons are not always available or cause build issues.
   return <Globe className={cn("h-4 w-4", className)} />;
@@ -170,10 +172,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     if (chartRef.current) {
       try {
         const canvas = await html2canvas(chartRef.current, {
-          backgroundColor: null, 
+          backgroundColor: null,
           logging: false,
-          useCORS: true, 
-          scale: 2, 
+          useCORS: true,
+          scale: 2,
         });
         const image = canvas.toDataURL('image/png', 1.0);
         const link = document.createElement('a');
@@ -250,13 +252,21 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   const browserDistribution = currentRun.results.reduce((acc, test) => {
     const normalizedBrowser = normalizeBrowserName(test.browser);
-    acc[normalizedBrowser] = (acc[normalizedBrowser] || 0) + 1;
+    if (!acc[normalizedBrowser]) {
+      acc[normalizedBrowser] = { count: 0, versions: new Set<string>() };
+    }
+    acc[normalizedBrowser].count += 1;
+    if (test.browserVersion) {
+      acc[normalizedBrowser].versions.add(test.browserVersion);
+    }
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, { count: number; versions: Set<string> }>);
 
-  const browserChartData = Object.entries(browserDistribution).map(([name, value], index) => ({
-    name, 
-    value,
+
+  const browserChartData = Object.entries(browserDistribution).map(([name, data], index) => ({
+    name,
+    value: data.count,
+    versions: data.versions, // Keep versions for display below chart
     fill: [COLORS.default1, COLORS.default2, COLORS.default3, COLORS.default4, COLORS.default5][index % 5]
   }));
 
@@ -385,7 +395,6 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
                 <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={120} tickFormatter={(value) => value.length > 18 ? value.substring(0,15) + '...' : value} interval={0}/>
                 <RechartsTooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{fontSize: "12px"}}/>
                 <Bar dataKey="value" name="Tests" barSize={20}>
                   {browserChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -398,11 +407,15 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-xs text-muted-foreground">
             {browserChartData.map(b => (
                 <div key={b.name} className="flex items-center gap-1">
-                    <BrowserIcon browserName={b.name} /> {b.name}
+                    <BrowserIcon browserName={b.name} className="mr-1"/>
+                    {b.name}
+                    {b.versions && b.versions.size > 0 && (
+                      <span className="text-xs ml-1">({Array.from(b.versions).join(', ')})</span>
+                    )}
                 </div>
             ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Note: Icons are representative. Specific logos may vary.</p>
+            <p className="text-xs text-muted-foreground mt-2">Note: Icons are representative. If browser versions are not shown, they might not be present in the report data.</p>
         </CardContent>
       </Card>
 
@@ -489,7 +502,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                   <XAxis
                     dataKey="name"
                     tickLine={false}
-                    tickFormatter={() => ''}
+                    tickFormatter={() => ''} // Hide X-axis labels for this chart to save space
                     stroke="hsl(var(--muted-foreground))"
                   />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} unit="s" tickFormatter={(value) => formatDurationForChart(value)}/>
