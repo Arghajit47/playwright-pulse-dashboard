@@ -74,17 +74,17 @@ export function FailureCategorizationView() {
     const categoriesMap = new Map<string, { tests: DetailedTestResult[], exampleErrorMessages: string[] }>();
 
     failedTests.forEach(test => {
-      const errorMessage = stripAnsiCodes(test.error || 'Unknown error').toLowerCase();
+      const currentErrorMessage = stripAnsiCodes(test.errorMessage || 'Unknown error').toLowerCase();
       let assignedCategory = false;
 
       for (const category of CATEGORIES_CONFIG) {
-        if (category.keywords.some(keyword => errorMessage.includes(keyword.toLowerCase()))) {
+        if (category.keywords.some(keyword => currentErrorMessage.includes(keyword.toLowerCase()))) {
           if (!categoriesMap.has(category.name)) {
             categoriesMap.set(category.name, { tests: [], exampleErrorMessages: [] });
           }
           categoriesMap.get(category.name)!.tests.push(test);
-          if (categoriesMap.get(category.name)!.exampleErrorMessages.length < 3 && test.error) {
-             categoriesMap.get(category.name)!.exampleErrorMessages.push(stripAnsiCodes(test.error));
+          if (categoriesMap.get(category.name)!.exampleErrorMessages.length < 3 && test.errorMessage) {
+             categoriesMap.get(category.name)!.exampleErrorMessages.push(stripAnsiCodes(test.errorMessage));
           }
           assignedCategory = true;
           break; 
@@ -96,8 +96,8 @@ export function FailureCategorizationView() {
           categoriesMap.set(OTHER_ERRORS_CATEGORY, { tests: [], exampleErrorMessages: [] });
         }
         categoriesMap.get(OTHER_ERRORS_CATEGORY)!.tests.push(test);
-         if (categoriesMap.get(OTHER_ERRORS_CATEGORY)!.exampleErrorMessages.length < 3 && test.error) {
-            categoriesMap.get(OTHER_ERRORS_CATEGORY)!.exampleErrorMessages.push(stripAnsiCodes(test.error));
+         if (categoriesMap.get(OTHER_ERRORS_CATEGORY)!.exampleErrorMessages.length < 3 && test.errorMessage) {
+            categoriesMap.get(OTHER_ERRORS_CATEGORY)!.exampleErrorMessages.push(stripAnsiCodes(test.errorMessage));
          }
       }
     });
@@ -221,7 +221,7 @@ export function FailureCategorizationView() {
                         <h5 className="text-xs font-semibold text-muted-foreground mb-1">Error Message:</h5>
                         <ScrollArea className="max-h-32 w-full">
                           <pre className="text-xs whitespace-pre-wrap break-words font-code bg-muted/30 p-2 rounded-sm text-destructive">
-                            {stripAnsiCodes(test.error || 'No error message captured.')}
+                            {stripAnsiCodes(test.errorMessage || 'No error message captured.')}
                           </pre>
                         </ScrollArea>
                       </AccordionContent>

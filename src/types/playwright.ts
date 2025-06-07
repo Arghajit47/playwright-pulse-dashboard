@@ -11,7 +11,7 @@ export interface TestStep {
   isHook?: boolean;
   hookType?: 'before' | 'after' | string;
   steps: TestStep[];
-  error?: string | null; // Added for steps that might fail
+  errorMessage?: string | null; // Changed from error to errorMessage
 }
 
 export interface ScreenshotAttachment {
@@ -30,11 +30,11 @@ export interface DetailedTestResult {
   duration: number;
   startTime: string;
   endTime: string;
-  browser: string; 
+  browser: string;
   retries: number;
   steps: TestStep[];
-  error?: string | null;
-  stdout?: string | null; // Added standard output
+  errorMessage?: string | null; // Changed from error to errorMessage
+  stdout?: string | null;
   codeSnippet: string;
   tags: string[];
   screenshots: ScreenshotAttachment[];

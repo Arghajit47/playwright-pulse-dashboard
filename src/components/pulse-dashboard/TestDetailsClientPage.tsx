@@ -288,10 +288,10 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
             <TabsContent value="steps" className="mt-4 p-1 md:p-4 border rounded-md bg-card">
               <h3 className="text-lg font-semibold text-foreground mb-3 px-3 md:px-0">Test Execution Steps</h3>
-              {test.error && (
+              {test.errorMessage && (
                  <div className="mb-4 p-3 md:p-0">
                   <h4 className="font-semibold text-md text-destructive mb-1">Overall Test Error:</h4>
-                  <pre className="bg-destructive/10 text-destructive text-sm p-4 rounded-md whitespace-pre-wrap break-all font-code overflow-x-auto">{test.error}</pre>
+                  <pre className="bg-destructive/10 text-destructive text-sm p-4 rounded-md whitespace-pre-wrap break-all font-code overflow-x-auto">{test.errorMessage}</pre>
                 </div>
               )}
               {test.steps && test.steps.length > 0 ? (
@@ -421,10 +421,10 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
                   <AlertCircle className="h-5 w-5 mr-2 text-destructive"/>Error Messages / Standard Error
                 </h3>
-                {test.error ? (
+                {test.errorMessage ? (
                   <ScrollArea className="h-48 w-full rounded-md border bg-destructive/5">
                     <pre className="text-sm text-destructive p-3 whitespace-pre-wrap break-all font-code">
-                      {test.error}
+                      {test.errorMessage}
                     </pre>
                   </ScrollArea>
                 ) : (

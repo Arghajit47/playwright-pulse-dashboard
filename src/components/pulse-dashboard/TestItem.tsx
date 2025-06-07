@@ -59,7 +59,7 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 
 export function TestItem({ test }: TestItemProps) {
   const imageAttachments = test.screenshots?.filter(att => att.contentType?.startsWith('image/')) || [];
-  const hasDetailsInAccordion = test.error || imageAttachments.length > 0;
+  const hasDetailsInAccordion = test.errorMessage || imageAttachments.length > 0;
   const displayName = formatTestName(test.name);
 
   return (
@@ -93,10 +93,10 @@ export function TestItem({ test }: TestItemProps) {
                 Quick Look
             </AccordionTrigger>
             <AccordionContent className="pt-2 pl-2 pr-2 pb-1 bg-muted/20 rounded-md">
-              {test.error && (
+              {test.errorMessage && (
                 <div className="mb-3">
                   <h4 className="font-semibold text-xs text-destructive mb-1">Error:</h4>
-                  <pre className="bg-destructive/10 text-destructive text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">{test.error}</pre>
+                  <pre className="bg-destructive/10 text-destructive text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">{test.errorMessage}</pre>
                 </div>
               )}
               {imageAttachments.length > 0 && (
@@ -121,7 +121,7 @@ export function TestItem({ test }: TestItemProps) {
                     </div>
                 </div>
               )}
-               {(!test.error && imageAttachments.length === 0) && (
+               {(!test.errorMessage && imageAttachments.length === 0) && (
                   <p className="text-xs text-muted-foreground">No error or screenshots for quick look. Click to view full details.</p>
                )}
             </AccordionContent>
