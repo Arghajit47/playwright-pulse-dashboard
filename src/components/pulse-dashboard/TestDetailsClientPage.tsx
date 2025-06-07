@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, ImageIcon, FileText, LineChart, Info, Download, Film, Archive } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Paperclip, ImageIcon, FileText, LineChart, Info, Download, Film, Archive, Terminal } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef } from 'react';
@@ -279,9 +279,10 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="steps" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-3 lg:w-[600px] mb-4">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
               <TabsTrigger value="steps">Execution Steps ({test.steps?.length || 0})</TabsTrigger>
               <TabsTrigger value="attachments">Attachments ({totalAttachmentsCount})</TabsTrigger>
+              <TabsTrigger value="logs"><FileText className="h-4 w-4 mr-2"/>Logs</TabsTrigger>
               <TabsTrigger value="history">Test Run History</TabsTrigger>
             </TabsList>
 
@@ -405,6 +406,36 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               </Tabs>
             </TabsContent>
 
+            <TabsContent value="logs" className="mt-4 p-4 border rounded-md bg-card space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+                  <Terminal className="h-5 w-5 mr-2 text-primary"/>Console Logs / Standard Output
+                </h3>
+                {/* Placeholder for stdout. Actual implementation would display test.stdout if available. */}
+                <ScrollArea className="h-48 w-full rounded-md border p-3 bg-muted/30">
+                    <pre className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                        No standard output logs captured for this test.
+                        {/* Example of how logs might be displayed if available:
+                        {test.stdout ? test.stdout : "No standard output logs captured for this test."}
+                        */}
+                    </pre>
+                </ScrollArea>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-2 text-destructive"/>Error Messages / Standard Error
+                </h3>
+                {test.error ? (
+                  <ScrollArea className="h-48 w-full rounded-md border bg-destructive/5">
+                    <pre className="text-sm text-destructive p-3 whitespace-pre-wrap break-all font-code">
+                      {test.error}
+                    </pre>
+                  </ScrollArea>
+                ) : (
+                  <p className="text-muted-foreground p-3">No errors captured for this test.</p>
+                )}
+              </div>
+            </TabsContent>
 
             <TabsContent value="history" className="mt-4 p-4 border rounded-md bg-card">
              <TooltipProvider>
