@@ -19,7 +19,7 @@ import { getRawHistoricalReports } from '@/app/actions';
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, DotProps } from 'recharts';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TestRunHistoryData {
   date: string;
@@ -336,16 +336,18 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   <LineChart className="h-5 w-5 mr-2 text-primary"/>
                   Individual Test Run History
                 </h3>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" onClick={() => handleDownloadChart(historyChartRef, `test-history-${testId}.png`)} aria-label="Download Test History Chart">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Download as PNG</p>
-                  </TooltipContent>
-                </Tooltip>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" size="icon" onClick={() => handleDownloadChart(historyChartRef, `test-history-${testId}.png`)} aria-label="Download Test History Chart">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Download as PNG</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               {loadingHistory && (
                 <div className="space-y-3">
@@ -413,3 +415,4 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
+

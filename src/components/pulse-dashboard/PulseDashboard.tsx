@@ -62,7 +62,7 @@ export function PulseDashboard() {
 
   const menuItemsConfig: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: "Real-time Playwright Test Execution Monitoring & Analysis Overview" },
-    { id: 'live-results', label: 'Live Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters." },
+    { id: 'live-results', label: 'Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters." },
     { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance." },
     { id: 'flaky-tests', label: 'Flaky Tests', icon: Repeat, description: "Analysis of historically flaky tests." },
     { id: 'failure-analyzer', label: 'AI Failure Analysis', icon: Wand2, description: "AI-powered analysis of test failure patterns." },
