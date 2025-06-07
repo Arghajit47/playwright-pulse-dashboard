@@ -30,8 +30,8 @@ export interface DetailedTestResult {
   duration: number;
   startTime: string;
   endTime: string;
-  browser: string;
-  browserVersion?: string; // Added for browser version
+  browser: string; // This string might contain the version, e.g., "chrome-121.0"
+  // browserVersion?: string; // Removed as per user feedback
   retries: number;
   steps: TestStep[];
   error?: string | null;

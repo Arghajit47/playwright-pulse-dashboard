@@ -50,27 +50,29 @@ function formatTestNameForChart(fullName: string): string {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const fullTestName = data.fullTestName || payload[0].name || label;
-    const formattedName = formatTestNameForChart(fullTestName);
-    const versions = data.versions ? Array.from(data.versions).join(', ') : null;
+    // For browser chart, 'label' (or payload[0].name) is the full browser string.
+    // For other charts, it might be fullTestName or a pre-formatted name.
+    const displayName = data.fullTestName ? formatTestNameForChart(data.fullTestName) : (payload[0].name || label);
+    const titleText = data.fullTestName || payload[0].name || label;
+
 
     return (
       <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={fullTestName}>{formattedName}</p>
+        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>{displayName}</p>
         {payload.map((entry: any, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color || entry.payload.fill }} className="text-xs">
             {`${entry.name}: ${entry.value.toLocaleString()}${entry.unit || ''}`}
             {entry.name === payload[0].name && payload[0].payload.percentage && ` (${payload[0].payload.percentage}%)`}
           </p>
         ))}
-        {versions && <p className="text-xs text-muted-foreground mt-1">Versions: {versions}</p>}
       </div>
     );
   }
   return null;
 };
 
-function normalizeBrowserName(rawBrowserName: string | undefined): string {
+// This function normalizes for ICON display only. Chart labels will use the raw browser string.
+function normalizeBrowserNameForIcon(rawBrowserName: string | undefined): string {
   if (!rawBrowserName) return 'Unknown';
   const lowerName = rawBrowserName.toLowerCase();
 
@@ -97,12 +99,12 @@ function normalizeBrowserName(rawBrowserName: string | undefined): string {
 }
 
 const BrowserIcon = ({ browserName, className }: { browserName: string, className?: string }) => {
-  const lowerNormalizedName = browserName.toLowerCase();
+  const normalizedForIcon = normalizeBrowserNameForIcon(browserName); // Use the original full browser name for icon normalization
 
-  if (lowerNormalizedName === 'chrome' || lowerNormalizedName === 'chrome mobile') {
+  if (normalizedForIcon === 'Chrome' || normalizedForIcon === 'Chrome Mobile') {
     return <Chrome className={cn("h-4 w-4", className)} />;
   }
-  if (lowerNormalizedName === 'safari' || lowerNormalizedName === 'mobile safari') {
+  if (normalizedForIcon === 'Safari' || normalizedForIcon === 'Mobile Safari') {
     return <Compass className={cn("h-4 w-4", className)} />;
   }
   // For Firefox, Edge, and Unknown, use Globe as specific icons are not always available or cause build issues.
@@ -251,22 +253,18 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
 
   const browserDistribution = currentRun.results.reduce((acc, test) => {
-    const normalizedBrowser = normalizeBrowserName(test.browser);
-    if (!acc[normalizedBrowser]) {
-      acc[normalizedBrowser] = { count: 0, versions: new Set<string>() };
+    const browserName = test.browser || 'Unknown'; // Use the raw browser string
+    if (!acc[browserName]) {
+      acc[browserName] = { count: 0 };
     }
-    acc[normalizedBrowser].count += 1;
-    if (test.browserVersion) {
-      acc[normalizedBrowser].versions.add(test.browserVersion);
-    }
+    acc[browserName].count += 1;
     return acc;
-  }, {} as Record<string, { count: number; versions: Set<string> }>);
+  }, {} as Record<string, { count: number }>);
 
 
   const browserChartData = Object.entries(browserDistribution).map(([name, data], index) => ({
-    name,
+    name, // Full browser string (e.g., "chrome-121.0.0")
     value: data.count,
-    versions: data.versions, // Keep versions for display below chart
     fill: [COLORS.default1, COLORS.default2, COLORS.default3, COLORS.default4, COLORS.default5][index % 5]
   }));
 
@@ -393,7 +391,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
               <RechartsBarChart data={browserChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={120} tickFormatter={(value) => value.length > 18 ? value.substring(0,15) + '...' : value} interval={0}/>
+                <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} tickFormatter={(value) => value.length > 20 ? value.substring(0,17) + '...' : value} interval={0} />
                 <RechartsTooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" name="Tests" barSize={20}>
                   {browserChartData.map((entry, index) => (
@@ -406,16 +404,13 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           </div>
            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-xs text-muted-foreground">
             {browserChartData.map(b => (
-                <div key={b.name} className="flex items-center gap-1">
+                <div key={b.name} className="flex items-center gap-1" title={b.name}>
                     <BrowserIcon browserName={b.name} className="mr-1"/>
-                    {b.name}
-                    {b.versions && b.versions.size > 0 && (
-                      <span className="text-xs ml-1">({Array.from(b.versions).join(', ')})</span>
-                    )}
+                    <span className="truncate max-w-[150px]">{b.name}</span>
                 </div>
             ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Note: Icons are representative. If browser versions are not shown, they might not be present in the report data.</p>
+            <p className="text-xs text-muted-foreground mt-2">Note: Icons are representative. Full browser name (including version) is shown.</p>
         </CardContent>
       </Card>
 
@@ -579,4 +574,3 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </TooltipProvider>
   );
 }
-
