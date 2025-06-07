@@ -49,8 +49,16 @@ export function useTestData() {
       const result: PlaywrightPulseReport = await response.json();
       setData(prev => ({ ...prev, currentRun: result, loadingCurrent: false, errorCurrent: null }));
     } catch (error) {
-      console.error(error); 
-      setData(prev => ({ ...prev, loadingCurrent: false, errorCurrent: error instanceof Error ? error.message : String(error) }));
+      console.error("PulseDashboard Fetch Error (currentRun):", error); 
+      let detailedErrorMessage = "An unknown error occurred while fetching current run data.";
+      if (error instanceof TypeError && error.message.toLowerCase() === 'failed to fetch') {
+        detailedErrorMessage = "Network error: Could not connect to the server to fetch current run data. Please check your network connection and ensure the server is running and the API endpoint '/api/current-run' is accessible.";
+      } else if (error instanceof Error) {
+        detailedErrorMessage = error.message;
+      } else {
+        detailedErrorMessage = String(error);
+      }
+      setData(prev => ({ ...prev, loadingCurrent: false, errorCurrent: detailedErrorMessage }));
     }
   }, [data.currentRun, data.errorCurrent]); // Added dependencies to avoid stale closures if we reintroduce manual refresh
 
@@ -76,8 +84,16 @@ export function useTestData() {
       const result: HistoricalTrend[] = await response.json();
       setData(prev => ({ ...prev, historicalTrends: result, loadingHistorical: false, errorHistorical: null }));
     } catch (error) {
-      console.error(error);
-      setData(prev => ({ ...prev, loadingHistorical: false, errorHistorical: error instanceof Error ? error.message : String(error) }));
+      console.error("PulseDashboard Fetch Error (historicalTrends):", error);
+      let detailedErrorMessage = "An unknown error occurred while fetching historical trends.";
+      if (error instanceof TypeError && error.message.toLowerCase() === 'failed to fetch') {
+        detailedErrorMessage = "Network error: Could not connect to the server to fetch historical trends. Please check your network connection and ensure the server is running and the API endpoint '/api/historical-trends' is accessible.";
+      } else if (error instanceof Error) {
+        detailedErrorMessage = error.message;
+      } else {
+        detailedErrorMessage = String(error);
+      }
+      setData(prev => ({ ...prev, loadingHistorical: false, errorHistorical: detailedErrorMessage }));
     }
   }, [data.historicalTrends.length, data.errorHistorical]); // Added dependencies
 
