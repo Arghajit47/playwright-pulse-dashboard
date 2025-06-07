@@ -12,7 +12,7 @@ import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compa
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 
 interface DashboardOverviewChartsProps {
@@ -31,6 +31,7 @@ const COLORS = {
   default2: 'hsl(var(--chart-2))',
   default3: 'hsl(var(--chart-4))',
   default4: 'hsl(var(--chart-5))',
+  default5: 'hsl(var(--chart-3))',
 };
 
 
@@ -67,10 +68,43 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+function normalizeBrowserName(rawBrowserName: string | undefined): string {
+  if (!rawBrowserName) return 'Unknown';
+  const lowerName = rawBrowserName.toLowerCase();
+
+  if (lowerName.includes('chrome') && (lowerName.includes('mobile') || lowerName.includes('android'))) {
+    return 'Chrome Mobile';
+  }
+  if (lowerName.includes('safari') && lowerName.includes('mobile')) {
+    return 'Mobile Safari';
+  }
+
+  if (lowerName.includes('chrome') || lowerName.includes('chromium')) {
+    return 'Chrome';
+  }
+  if (lowerName.includes('firefox')) {
+    return 'Firefox';
+  }
+  if (lowerName.includes('msedge') || lowerName.includes('edge')) {
+    return 'Edge';
+  }
+  if (lowerName.includes('safari') || lowerName.includes('webkit')) { 
+    return 'Safari';
+  }
+  
+  return 'Unknown';
+}
+
 const BrowserIcon = ({ browserName, className }: { browserName: string, className?: string }) => {
-  const lowerBrowserName = browserName.toLowerCase();
-  if (lowerBrowserName.includes('chrome')) return <Chrome className={cn("h-4 w-4", className)} />;
-  if (lowerBrowserName.includes('safari') || lowerBrowserName.includes('webkit')) return <Compass className={cn("h-4 w-4", className)} />;
+  const lowerNormalizedName = browserName.toLowerCase();
+
+  if (lowerNormalizedName === 'chrome' || lowerNormalizedName === 'chrome mobile') {
+    return <Chrome className={cn("h-4 w-4", className)} />;
+  }
+  if (lowerNormalizedName === 'safari' || lowerNormalizedName === 'mobile safari') {
+    return <Compass className={cn("h-4 w-4", className)} />; 
+  }
+  // For Firefox, Edge, and Unknown, use Globe as Firefox icon caused build issues.
   return <Globe className={cn("h-4 w-4", className)} />;
 };
 
@@ -216,15 +250,15 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
 
   const browserDistribution = currentRun.results.reduce((acc, test) => {
-    const browser = test.browser || 'Unknown';
-    acc[browser] = (acc[browser] || 0) + 1;
+    const normalizedBrowser = normalizeBrowserName(test.browser);
+    acc[normalizedBrowser] = (acc[normalizedBrowser] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const browserChartData = Object.entries(browserDistribution).map(([name, value], index) => ({
-    name,
+    name, 
     value,
-    fill: [COLORS.default1, COLORS.default2, COLORS.default3, COLORS.default4][index % 4]
+    fill: [COLORS.default1, COLORS.default2, COLORS.default3, COLORS.default4, COLORS.default5][index % 5]
   }));
 
   const failedTestsDurationData = currentRun.results
@@ -246,10 +280,11 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     acc[suite] = (acc[suite] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
+
   const testsPerSuiteChartData = Object.entries(testsPerSuite).map(([name, value], index) => ({
     name,
     value,
-    fill: [COLORS.default1, COLORS.default2, COLORS.default3, COLORS.default4][index % 4]
+    fill: [COLORS.default1, COLORS.default2, COLORS.default3, COLORS.default4, COLORS.default5][index % 5]
   }));
 
   const slowestTestsData = [...currentRun.results]
@@ -268,6 +303,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
 
   return (
+    <TooltipProvider>
     <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader className="flex flex-row items-center justify-between">
@@ -528,5 +564,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
       </Card>
 
     </div>
+    </TooltipProvider>
   );
 }
+
