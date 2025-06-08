@@ -7,7 +7,7 @@ import { TestItem } from './TestItem';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, Info, ChevronDown, XCircle, FilterX } from "lucide-react";
+import { Terminal, Info, ChevronDown, XCircle, FilterX, Repeat1 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
   const [allBrowsers, setAllBrowsers] = useState<string[]>(['all']);
   const [selectedSuite, setSelectedSuite] = useState<string>('all');
   const [allSuites, setAllSuites] = useState<string[]>(['all']);
+  const [showRetriesOnly, setShowRetriesOnly] = useState<boolean>(false);
 
   useEffect(() => {
     if (initialFilter) {
@@ -72,8 +73,9 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
            searchTerm !== '' ||
            selectedTags.length > 0 ||
            selectedBrowser !== 'all' ||
-           selectedSuite !== 'all';
-  }, [statusFilter, searchTerm, selectedTags, selectedBrowser, selectedSuite]);
+           selectedSuite !== 'all' ||
+           showRetriesOnly;
+  }, [statusFilter, searchTerm, selectedTags, selectedBrowser, selectedSuite, showRetriesOnly]);
 
   const handleClearAllFilters = () => {
     setStatusFilter('all');
@@ -81,6 +83,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     setSelectedTags([]);
     setSelectedBrowser('all');
     setSelectedSuite('all');
+    setShowRetriesOnly(false);
   };
 
   const groupedAndFilteredSuites = useMemo(() => {
@@ -93,8 +96,9 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
       const tagMatch = selectedTags.length === 0 || (test.tags && test.tags.some(tag => selectedTags.includes(tag)));
       const browserMatch = selectedBrowser === 'all' || test.browser === selectedBrowser;
       const suiteMatch = selectedSuite === 'all' || test.suiteName === selectedSuite;
+      const retriesMatch = !showRetriesOnly || (showRetriesOnly && test.retries > 0);
       
-      return statusMatch && searchTermMatch && tagMatch && browserMatch && suiteMatch;
+      return statusMatch && searchTermMatch && tagMatch && browserMatch && suiteMatch && retriesMatch;
     });
 
     const suitesMap = new Map<string, DetailedTestResult[]>();
@@ -105,7 +109,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     });
 
     return Array.from(suitesMap.entries()).map(([title, tests]) => ({ title, tests }));
-  }, [report, statusFilter, searchTerm, selectedTags, selectedBrowser, selectedSuite]);
+  }, [report, statusFilter, searchTerm, selectedTags, selectedBrowser, selectedSuite, showRetriesOnly]);
 
   if (loading) {
     return (
@@ -122,6 +126,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" /> 
+            <Skeleton className="h-10 w-full" />
           </div>
           {[...Array(3)].map((_, i) => (
             <div key={i} className="space-y-2 p-2 border rounded-md">
@@ -277,6 +282,17 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex items-center space-x-2 pt-5"> {/* Adjusted pt- for alignment */}
+              <Checkbox
+                id="retries-filter"
+                checked={showRetriesOnly}
+                onCheckedChange={(checked) => setShowRetriesOnly(Boolean(checked))}
+              />
+              <Label htmlFor="retries-filter" className="text-sm font-medium text-muted-foreground cursor-pointer flex items-center">
+                <Repeat1 className="h-4 w-4 mr-1.5 text-muted-foreground"/>
+                Retries Only
+              </Label>
+            </div>
           </div>
           {isAnyFilterActive && (
             <div className="mt-4 flex justify-end">
@@ -338,3 +354,4 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     </Card>
   );
 }
+
