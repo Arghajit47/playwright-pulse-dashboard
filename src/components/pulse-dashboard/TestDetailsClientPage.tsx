@@ -110,15 +110,15 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 
 function getAssetPath(relativePath: string | undefined | null): string {
   if (!relativePath) return '#';
-  if (relativePath.startsWith('http')) { // Absolute URL
+  if (relativePath.startsWith('http')) { // Absolute external URL
     return relativePath;
   }
-  if (relativePath.startsWith('/')) { // Already an absolute path from web root (e.g. /pulse-report/...)
+  if (relativePath.startsWith('/')) { // Already an absolute path from web root
     return relativePath;
   }
-  // Assumed to be relative to the /pulse-report/ directory
-  // e.g., "attachments/run123/image.png"
-  return `/pulse-report/${relativePath}`;
+  // Path is relative, e.g., "attachments/run123/image.png"
+  // Prepend / to make it absolute from web root.
+  return `/${relativePath}`;
 }
 
 
