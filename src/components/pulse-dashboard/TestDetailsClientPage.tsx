@@ -109,7 +109,7 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 }
 
 function getAssetPath(relativePath: string | undefined | null): string {
-  if (!relativePath) return '#';
+  if (!relativePath || typeof relativePath !== 'string' || relativePath.trim() === '') return '#';
   if (relativePath.startsWith('http')) {
     return relativePath;
   }
@@ -239,12 +239,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     );
   }
 
-  const currentScreenshots = test.screenshots || [];
+  const validScreenshots = (test.screenshots || []).filter(p => typeof p === 'string' && p.trim() !== '');
   const displayName = formatTestName(test.name);
   const hasVideo = !!test.videoPath;
   const hasTrace = !!test.tracePath;
 
-  let totalAttachmentsCount = currentScreenshots.length;
+  let totalAttachmentsCount = validScreenshots.length;
   if (hasVideo) totalAttachmentsCount++;
   if (hasTrace) totalAttachmentsCount++;
 
@@ -324,7 +324,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <TabsList className="grid w-full grid-cols-3 mb-4">
                   <TabsTrigger value="sub-screenshots">
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    Screenshots ({currentScreenshots.length})
+                    Screenshots ({validScreenshots.length})
                   </TabsTrigger>
                   <TabsTrigger value="sub-video" disabled={!hasVideo}>
                     <Film className="h-4 w-4 mr-2" />
@@ -338,22 +338,27 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                 <TabsContent value="sub-screenshots" className="mt-4">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
-                  {currentScreenshots.length > 0 ? (
+                  {validScreenshots.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {currentScreenshots.map((path, index) => (
-                        <a key={`img-preview-${index}`} href={getAssetPath(path)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
-                          <Image
-                            src={getAssetPath(path)}
-                            alt={`Screenshot ${index + 1}`}
-                            fill={true}
-                            style={{objectFit: "cover"}}
-                            className="group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2">
-                            <p className="text-white text-xs text-center break-all">{`Screenshot ${index + 1}`}</p>
-                          </div>
-                        </a>
-                      ))}
+                      {validScreenshots.map((path, index) => {
+                        const imageSrc = getAssetPath(path);
+                        // Ensure imageSrc is valid for <Image> to prevent errors
+                        if (imageSrc === '#') return null; 
+                        return (
+                          <a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
+                            <Image
+                              src={imageSrc}
+                              alt={`Screenshot ${index + 1}`}
+                              fill={true}
+                              style={{objectFit: "cover"}}
+                              className="group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2">
+                              <p className="text-white text-xs text-center break-all">{`Screenshot ${index + 1}`}</p>
+                            </div>
+                          </a>
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className="text-muted-foreground">No screenshots available for this test.</p>

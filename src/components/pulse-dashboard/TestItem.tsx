@@ -58,7 +58,7 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 }
 
 function getAssetPath(relativePath: string | undefined | null): string {
-  if (!relativePath) return '#';
+  if (!relativePath || typeof relativePath !== 'string' || relativePath.trim() === '') return '#';
   if (relativePath.startsWith('http')) {
     return relativePath;
   }
@@ -69,8 +69,8 @@ function getAssetPath(relativePath: string | undefined | null): string {
 }
 
 export function TestItem({ test }: TestItemProps) {
-  const currentScreenshots = test.screenshots || [];
-  const hasDetailsInAccordion = test.errorMessage || currentScreenshots.length > 0;
+  const validScreenshots = (test.screenshots || []).filter(p => typeof p === 'string' && p.trim() !== '');
+  const hasDetailsInAccordion = test.errorMessage || validScreenshots.length > 0;
   const displayName = formatTestName(test.name);
 
   return (
@@ -110,14 +110,17 @@ export function TestItem({ test }: TestItemProps) {
                   <pre className="bg-destructive/10 text-destructive text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">{test.errorMessage}</pre>
                 </div>
               )}
-              {currentScreenshots.length > 0 && (
+              {validScreenshots.length > 0 && (
                 <div>
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
-                    {currentScreenshots.slice(0,4).map((path, index) => (
-                         <a key={`img-thumb-${index}`} href={getAssetPath(path)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group border hover:border-primary">
+                    {validScreenshots.slice(0,4).map((path, index) => {
+                        const imageSrc = getAssetPath(path);
+                        if (imageSrc === '#') return null;
+                        return (
+                         <a key={`img-thumb-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group border hover:border-primary">
                             <Image 
-                                src={getAssetPath(path)}
+                                src={imageSrc}
                                 alt={`Screenshot ${index + 1}`} 
                                 fill={true}
                                 style={{objectFit: "cover"}}
@@ -127,11 +130,12 @@ export function TestItem({ test }: TestItemProps) {
                                 <Eye className="h-6 w-6 text-white"/>
                             </div>
                          </a>
-                    ))}
+                        );
+                    })}
                     </div>
                 </div>
               )}
-               {(!test.errorMessage && currentScreenshots.length === 0) && (
+               {(!test.errorMessage && validScreenshots.length === 0) && (
                   <p className="text-xs text-muted-foreground">No error or screenshots for quick look. Click to view full details.</p>
                )}
             </AccordionContent>
