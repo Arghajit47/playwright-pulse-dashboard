@@ -110,14 +110,12 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 
 function getAssetPath(relativePath: string | undefined | null): string {
   if (!relativePath) return '#';
-  if (relativePath.startsWith('http')) { // Absolute external URL
+  if (relativePath.startsWith('http')) {
     return relativePath;
   }
-  if (relativePath.startsWith('/')) { // Already an absolute path from web root
+  if (relativePath.startsWith('/')) {
     return relativePath;
   }
-  // Path is relative, e.g., "attachments/run123/image.png"
-  // Prepend / to make it absolute from web root.
   return `/${relativePath}`;
 }
 
@@ -241,12 +239,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     );
   }
 
-  const imageScreenshots = test.screenshots?.filter(s => s.contentType?.startsWith('image/')) || [];
+  const currentScreenshots = test.screenshots || [];
   const displayName = formatTestName(test.name);
   const hasVideo = !!test.videoPath;
   const hasTrace = !!test.tracePath;
 
-  let totalAttachmentsCount = imageScreenshots.length;
+  let totalAttachmentsCount = currentScreenshots.length;
   if (hasVideo) totalAttachmentsCount++;
   if (hasTrace) totalAttachmentsCount++;
 
@@ -326,7 +324,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <TabsList className="grid w-full grid-cols-3 mb-4">
                   <TabsTrigger value="sub-screenshots">
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    Screenshots ({imageScreenshots.length || 0})
+                    Screenshots ({currentScreenshots.length})
                   </TabsTrigger>
                   <TabsTrigger value="sub-video" disabled={!hasVideo}>
                     <Film className="h-4 w-4 mr-2" />
@@ -340,20 +338,19 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                 <TabsContent value="sub-screenshots" className="mt-4">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
-                  {imageScreenshots.length > 0 ? (
+                  {currentScreenshots.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {imageScreenshots.map((att, index) => (
-                        <a key={`img-preview-${index}`} href={getAssetPath(att.path)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
+                      {currentScreenshots.map((path, index) => (
+                        <a key={`img-preview-${index}`} href={getAssetPath(path)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
                           <Image
-                            src={getAssetPath(att.path)}
-                            alt={att.name || `screenshot ${index + 1}`}
+                            src={getAssetPath(path)}
+                            alt={`Screenshot ${index + 1}`}
                             fill={true}
                             style={{objectFit: "cover"}}
                             className="group-hover:scale-105 transition-transform duration-300"
-                            data-ai-hint={att['data-ai-hint'] || 'screenshot test detail'}
                           />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2">
-                            <p className="text-white text-xs text-center break-all">{att.name || `Screenshot ${index + 1}`}</p>
+                            <p className="text-white text-xs text-center break-all">{`Screenshot ${index + 1}`}</p>
                           </div>
                         </a>
                       ))}
@@ -427,7 +424,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </h3>
                 <ScrollArea className="h-48 w-full rounded-md border p-3 bg-muted/30">
                   <pre className="text-sm text-foreground whitespace-pre-wrap break-words">
-                    {(test.stdout && Array.isArray(test.stdout) && test.stdout.length > 0)
+                    {(test.stdout && test.stdout.length > 0)
                       ? test.stdout.join('\n')
                       : "No standard output logs captured for this test."}
                   </pre>
@@ -534,4 +531,3 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
-

@@ -34,10 +34,10 @@ export interface DetailedTestResult {
   retries: number;
   steps: TestStep[];
   errorMessage?: string | null;
-  stdout?: string[] | null; // Updated to string array
+  stdout?: string[] | null;
   codeSnippet: string;
   tags: string[];
-  screenshots: ScreenshotAttachment[];
+  screenshots: string[]; // Changed from ScreenshotAttachment[]
   videoPath?: string;
   tracePath?: string;
 }

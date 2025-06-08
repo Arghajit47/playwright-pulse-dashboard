@@ -59,20 +59,18 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 
 function getAssetPath(relativePath: string | undefined | null): string {
   if (!relativePath) return '#';
-  if (relativePath.startsWith('http')) { // Absolute external URL
+  if (relativePath.startsWith('http')) {
     return relativePath;
   }
-  if (relativePath.startsWith('/')) { // Already an absolute path from web root
+  if (relativePath.startsWith('/')) {
     return relativePath;
   }
-  // Path is relative, e.g., "attachments/run123/image.png"
-  // Prepend / to make it absolute from web root.
   return `/${relativePath}`;
 }
 
 export function TestItem({ test }: TestItemProps) {
-  const imageAttachments = test.screenshots?.filter(att => att.contentType?.startsWith('image/')) || [];
-  const hasDetailsInAccordion = test.errorMessage || imageAttachments.length > 0;
+  const currentScreenshots = test.screenshots || [];
+  const hasDetailsInAccordion = test.errorMessage || currentScreenshots.length > 0;
   const displayName = formatTestName(test.name);
 
   return (
@@ -112,19 +110,18 @@ export function TestItem({ test }: TestItemProps) {
                   <pre className="bg-destructive/10 text-destructive text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">{test.errorMessage}</pre>
                 </div>
               )}
-              {imageAttachments.length > 0 && (
+              {currentScreenshots.length > 0 && (
                 <div>
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
-                    {imageAttachments.slice(0,4).map((att, index) => (
-                         <a key={`img-thumb-${index}`} href={getAssetPath(att.path)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group border hover:border-primary">
+                    {currentScreenshots.slice(0,4).map((path, index) => (
+                         <a key={`img-thumb-${index}`} href={getAssetPath(path)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group border hover:border-primary">
                             <Image 
-                                src={getAssetPath(att.path)}
-                                alt={att.name} 
+                                src={getAssetPath(path)}
+                                alt={`Screenshot ${index + 1}`} 
                                 fill={true}
                                 style={{objectFit: "cover"}}
                                 className="group-hover:scale-105 transition-transform duration-300"
-                                data-ai-hint={att['data-ai-hint'] || 'screenshot test'}
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                 <Eye className="h-6 w-6 text-white"/>
@@ -134,7 +131,7 @@ export function TestItem({ test }: TestItemProps) {
                     </div>
                 </div>
               )}
-               {(!test.errorMessage && imageAttachments.length === 0) && (
+               {(!test.errorMessage && currentScreenshots.length === 0) && (
                   <p className="text-xs text-muted-foreground">No error or screenshots for quick look. Click to view full details.</p>
                )}
             </AccordionContent>
@@ -144,4 +141,3 @@ export function TestItem({ test }: TestItemProps) {
     </div>
   );
 }
-
