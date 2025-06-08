@@ -28,7 +28,7 @@ export async function getFailurePatternAnalysis(): Promise<{ success: boolean; a
 }
 
 export async function getRawHistoricalReports(): Promise<PlaywrightPulseReport[]> {
-  const historyDir = path.join(process.cwd(), 'public', 'pulse-report', 'history');
+  const historyDir = path.join(process.cwd(), 'pulse-report', 'history');
   try {
     const trendFileNames = (await fs.readdir(historyDir)).filter(file => file.startsWith('trend-') && file.endsWith('.json'));
     

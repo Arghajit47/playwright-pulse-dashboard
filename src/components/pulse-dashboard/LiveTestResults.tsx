@@ -165,7 +165,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
            <Alert className="shadow-sm">
             <Info className="h-4 w-4" />
             <AlertTitle>No Test Data</AlertTitle>
-            <AlertDescription>No test results available. Ensure 'playwright-pulse-report.json' exists in 'public/pulse-report/' and is correctly formatted, or that the data source is providing results.</AlertDescription>
+            <AlertDescription>No test results available. Ensure 'playwright-pulse-report.json' exists in 'pulse-report/' and is correctly formatted, or that the data source is providing results.</AlertDescription>
           </Alert>
         </CardContent>
       </Card>

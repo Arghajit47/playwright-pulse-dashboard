@@ -111,7 +111,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No historical trend data available. Ensure 'trend-*.json' files exist in 'public/pulse-report/history/' and are correctly formatted.</p>
+          <p className="text-muted-foreground">No historical trend data available. Ensure 'trend-*.json' files exist in 'pulse-report/history/' and are correctly formatted.</p>
         </CardContent>
       </Card>
     );

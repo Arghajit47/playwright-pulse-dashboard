@@ -7,7 +7,6 @@ import { useTestData } from '@/hooks/useTestData';
 import { SummaryMetrics } from './SummaryMetrics';
 import { LiveTestResults, type TestStatusFilter } from './LiveTestResults';
 import { TrendAnalysis } from './TrendAnalysis';
-import { FailurePatternAnalyzer } from './FailurePatternAnalyzer';
 import { FlakyTestsWidget } from './FlakyTestsWidget';
 import { SettingsView } from './SettingsView';
 import { FailureCategorizationView } from './FailureCategorizationView';
@@ -27,7 +26,7 @@ import { LayoutDashboard, ListChecks, TrendingUp, Wand2, Settings, Repeat, ListX
 import Link from 'next/link';
 
 
-type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'failure-analyzer' | 'flaky-tests' | 'settings' | 'failure-categorization';
+type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'flaky-tests' | 'settings' | 'failure-categorization';
 
 interface MenuItem {
   id: ActiveView;
@@ -65,7 +64,6 @@ export function PulseDashboard() {
     { id: 'live-results', label: 'Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters." },
     { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance." },
     { id: 'flaky-tests', label: 'Flaky Tests', icon: Repeat, description: "Analysis of historically flaky tests." },
-    { id: 'failure-analyzer', label: 'AI Failure Analysis', icon: Wand2, description: "AI-powered analysis of test failure patterns." },
     { id: 'failure-categorization', label: 'Failure Categorization', icon: ListX, description: "Categorize and view common failure types." },
     { id: 'settings', label: 'Settings', icon: Settings, description: "Configure dashboard appearance and preferences." },
   ];
@@ -85,9 +83,6 @@ export function PulseDashboard() {
       break;
     case 'flaky-tests':
       componentToRender = <FlakyTestsWidget />;
-      break;
-    case 'failure-analyzer':
-      componentToRender = <FailurePatternAnalyzer />;
       break;
     case 'failure-categorization':
       componentToRender = <FailureCategorizationView />;

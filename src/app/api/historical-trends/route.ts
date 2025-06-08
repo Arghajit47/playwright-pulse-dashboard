@@ -5,7 +5,7 @@ import path from 'path';
 import type { HistoricalTrend, PlaywrightPulseReport } from '@/types/playwright';
 
 export async function GET() {
-  const historyDir = path.join(process.cwd(), 'public', 'pulse-report', 'history');
+  const historyDir = path.join(process.cwd(), 'pulse-report', 'history');
   console.log('Attempting to read historical trends from directory:', historyDir);
   try {
     const files = await fs.readdir(historyDir);

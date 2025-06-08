@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 export async function GET() {
-  const filePath = path.join(process.cwd(), 'public', 'pulse-report', 'playwright-pulse-report.json');
+  const filePath = path.join(process.cwd(), 'pulse-report', 'playwright-pulse-report.json');
   console.log('Attempting to read current run report from:', filePath);
   try {
     const data = await fs.readFile(filePath, 'utf-8');

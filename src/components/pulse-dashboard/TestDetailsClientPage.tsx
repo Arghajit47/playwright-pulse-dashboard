@@ -127,7 +127,7 @@ function getAssetPath(jsonPath: string | undefined | null): string {
   }
 
   // Handle relative file paths like "attachments/RUN_ID/image.png" or "RUN_ID/image.png"
-  // These are assumed relative to "public/pulse-report/"
+  // These are assumed relative to "pulse-report/"
   // So, prepend "/pulse-report/"
   // Basic normalization: remove empty segments, join with '/'
   const normalizedRelativePath = trimmedPath
@@ -511,7 +511,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   <AlertTitle>No Historical Data</AlertTitle>
                   <AlertDescription>
                     No historical run data found for this specific test (ID: {testId}).
-                    Ensure `trend-*.json` files in `public/pulse-report/history/` contain results for this test ID.
+                    Ensure `trend-*.json` files in `pulse-report/history/` contain results for this test ID.
                   </AlertDescription>
                 </Alert>
               )}

@@ -75,7 +75,7 @@ function getAssetPath(jsonPath: string | undefined | null): string {
   }
 
   // Handle relative file paths like "attachments/RUN_ID/image.png"
-  // These are assumed relative to "public/pulse-report/"
+  // These are assumed relative to "pulse-report/"
   const normalizedRelativePath = trimmedPath
     .split('/')
     .filter(part => part && part !== '.')
