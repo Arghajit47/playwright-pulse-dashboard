@@ -6,6 +6,13 @@ import { Toaster } from "@/components/ui/toaster"
 export const metadata: Metadata = {
   title: 'Pulse Dashboard',
   description: 'Real-time Playwright test execution dashboard',
+  icons: {
+    icon: {
+      url: "https://i.postimg.cc/XqVn1NhF/pulse.png",
+      sizes: "48x48",
+      type: "image/x-icon",
+    },
+  },
 };
 
 export default function RootLayout({
