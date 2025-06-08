@@ -97,17 +97,17 @@ export function PulseDashboard() {
   return (
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon" className="border-r">
-        <SidebarHeader className="p-4 flex items-center justify-between border-b border-sidebar-border">
-           <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
+        <SidebarHeader className="p-4 flex items-start justify-between border-b border-sidebar-border">
+           <Link href="/" className="flex items-start gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
             <Image
-                src="https://i.postimg.cc/XqVn1NhF/pulse.png"
+                src="https://i.postimg.cc/wxw3b8gW/pulse.png"
                 alt="Pulse Dashboard Logo"
-                width={32}
-                height={32}
+                width={50}
+                height={50}
                 className="rounded-sm"
                 data-ai-hint="pulse logo"
             />
-            <h2 className="font-semibold text-lg text-primary">Pulse</h2>
+            <h2 className="font-bold text-lg text-primary">Pulse Dashboard</h2>
           </Link>
           <SidebarTrigger className="md:hidden group-data-[collapsible=icon]:hidden" />
         </SidebarHeader>

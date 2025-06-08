@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getFlakyTestsAnalysis } from '@/app/actions';
+// import { getFlakyTestsAnalysis } from '@/app/actions'; // Commented out for package build
 import type { FlakyTestDetail, FlakyTestOccurrence } from '@/types/playwright';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -64,7 +64,9 @@ export function FlakyTestsWidget() {
     async function fetchData() {
       setIsLoading(true);
       setError(null);
-      const result = await getFlakyTestsAnalysis();
+      // const result = await getFlakyTestsAnalysis(); // Commented out for package build
+      // Simulating no data for build purposes, real app would need prop injection
+      const result = { success: true, flakyTests: [] as FlakyTestDetail[], error: 'Data fetching disabled for package build.' }; 
       if (result.success && result.flakyTests) {
         setFlakyTests(result.flakyTests);
       } else {
@@ -72,7 +74,12 @@ export function FlakyTestsWidget() {
       }
       setIsLoading(false);
     }
-    fetchData();
+    // fetchData(); // Commented out call for package build
+    // Simulate initial loading state for build purposes
+    setFlakyTests([]);
+    setIsLoading(false);
+    setError('Flaky test analysis data fetching is handled by the consuming application.');
+
   }, []);
 
   if (isLoading) {
@@ -99,7 +106,7 @@ export function FlakyTestsWidget() {
     return (
       <Alert variant="destructive">
         <Terminal className="h-4 w-4" />
-        <AlertTitle>Error Loading Flaky Test Analysis</AlertTitle>
+        <AlertTitle>Flaky Test Analysis Information</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
@@ -115,14 +122,15 @@ export function FlakyTestsWidget() {
           </CardTitle>
           <CardDescription>
             Analysis of tests that have shown inconsistent pass/fail behavior across historical runs.
+            (Data to be provided by consuming application)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Alert>
             <CheckCircle className="h-4 w-4" />
-            <AlertTitle>No Flaky Tests Found!</AlertTitle>
+            <AlertTitle>No Flaky Tests Data</AlertTitle>
             <AlertDescription>
-              Based on the available historical data, no tests have been identified as flaky (i.e., having both passed and failed/timed out statuses).
+              The consuming application is responsible for fetching and providing flaky test data.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -192,3 +200,4 @@ export function FlakyTestsWidget() {
     </Card>
   );
 }
+

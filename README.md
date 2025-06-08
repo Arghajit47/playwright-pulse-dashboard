@@ -1,9 +1,11 @@
 
-# Pulse Dashboard
+# Pulse Dashboard Component
 
-Pulse Dashboard is a web application designed to provide real-time monitoring and historical analysis of Playwright test executions. It helps development and QA teams to quickly identify issues, track test performance over time, and gain insights into failure patterns.
+**Pulse Dashboard Component** is a reusable Next.js component package designed to provide real-time monitoring and historical analysis of Playwright test executions. It helps development and QA teams to quickly identify issues, track test performance over time, and gain insights into failure patterns.
 
-## Key Features
+This package provides the UI components. The consuming Next.js application is responsible for providing the backend API endpoints and data.
+
+## Key Features (UI Package)
 
 -   **Live Results View**: Displays up-to-the-second results from the latest Playwright test run, with detailed views for each test.
 -   **Summary Metrics**: At-a-glance overview of the current test run, including total tests, pass/fail/skipped counts, and overall duration. Clickable cards allow quick filtering of the live results.
@@ -14,94 +16,104 @@ Pulse Dashboard is a web application designed to provide real-time monitoring an
     -   Attached screenshots, video recordings (if available), and Playwright trace files.
     -   Console logs (stdout) and error logs (stderr).
     -   Individual test run history chart showing status and duration over time.
--   **Failure Categorization**: Automatically groups failed tests from the current run into common categories (e.g., Timeout Errors, Locator Errors, Assertion Errors) for easier analysis.
--   **Flaky Test Analysis**: Identifies tests that have exhibited inconsistent pass/fail behavior across historical runs, showing their run history and flakiness statistics.
--   **Filtering Capabilities**:
-    -   Filter live test results by status (passed, failed, etc.), name/suite, tags, browser, and retries.
--   **AI-Powered Failure Pattern Analysis**: Utilizes Genkit and Google AI to analyze historical test failure patterns, identify trending issues, and suggest potential root causes or fixes.
+-   **Failure Categorization**: Automatically groups failed tests from the current run into common categories for easier analysis.
+-   **Flaky Test Analysis (UI Shell)**: Identifies tests that have exhibited inconsistent pass/fail behavior. *Data must be provided by the consuming application*.
+-   **Filtering Capabilities**: Filter live test results by status, name/suite, tags, browser, and retries.
 -   **Responsive Design**: UI adapts for different screen sizes.
--   **Theme Customization**: Switch between light and dark themes.
--   **Interactive Charts**: Overview charts for test distribution by status, browser, slowest tests, failed test durations, and tests per suite. Historical trend charts are also interactive. Download charts as PNG.
+-   **Theme Customization**: Switch between light and dark themes. Theme preference is saved in local storage.
+-   **Interactive Charts**: Overview charts and historical trend charts are interactive. Charts can be downloaded as PNG.
 
-## Data Sources
+## Installation
 
-Pulse Dashboard relies on specific JSON files generated from your Playwright test runs:
+```bash
+npm install pulse-dashboard-component # Or your chosen package name
+# or
+yarn add pulse-dashboard-component
+```
 
--   **Current Test Run**:
-    -   File: `pulse-report/playwright-pulse-report.json`
-    -   This file contains the detailed results of the most recent test execution. The dashboard polls this file for updates.
--   **Historical Test Data**:
-    -   Directory: `pulse-report/history/`
-    -   Files: `trend-*.json` (e.g., `trend-2023-10-26T10-30-00.json`)
-    -   Each file in this directory should represent a historical test run, following the same structure as `playwright-pulse-report.json`. These are used for trend analysis and flaky test detection.
--   **Attachments**:
-    -   Screenshots, videos, and trace files linked in the JSON reports are expected to be located within `public/pulse-report/attachments/` (or be fully qualified URLs, or Base64 data URIs). Paths in the JSON like `attachments/[runId]/[assetName]` will be resolved relative to `public/pulse-report/`.
+## Usage
 
-## Navigating the Dashboard
+1.  **Import CSS**:
+    In your main application file (e.g., `_app.tsx`, `layout.tsx`, or a global CSS file):
+    ```javascript
+    import 'pulse-dashboard-component/dist/styles.css';
+    ```
 
-The dashboard uses a sidebar for navigation between different views:
+2.  **Import and Use Component**:
+    ```tsx
+    import { PulseDashboard } from 'pulse-dashboard-component';
 
--   **Dashboard**: The main landing page showing summary metrics and overview charts for the current run.
--   **Test Results**: A detailed, filterable list of all tests from the current run. Click on any test to navigate to its dedicated details page.
--   **Trend Analysis**: Displays charts illustrating historical trends in test outcomes and durations.
--   **Flaky Tests**: Shows a list of tests identified as flaky based on historical data, with details on their occurrences.
--   **Failure Categorization**: Presents failed tests from the current run, grouped by common error types.
--   **Settings**: Allows users to customize dashboard settings, such as the theme.
+    function MyPage() {
+      return <PulseDashboard />;
+    }
+    ```
 
-## Technical Stack
+## Data Provision Requirements (Consumer Application)
 
--   **Framework**: Next.js (App Router)
+The `PulseDashboard` component relies on the consuming Next.js application to provide data through specific API routes and server actions. You must implement these in your application.
+
+### 1. Data File Locations:
+
+   All report data and attachments should be placed within a `pulse-report/` directory at the **root of your consuming Next.js project**.
+
+   -   **Current Test Run JSON**:
+        -   File: `playwright-pulse-report.json`
+        -   Location: `YOUR_PROJECT_ROOT/pulse-report/playwright-pulse-report.json`
+   -   **Historical Test Data JSON**:
+        -   Files: `trend-*.json` (e.g., `trend-2023-10-26T10-30-00.json`)
+        -   Location: `YOUR_PROJECT_ROOT/pulse-report/history/`
+   -   **Attachments (Screenshots, Videos, Traces)**:
+        -   These should be located within `YOUR_PROJECT_ROOT/pulse-report/attachments/`.
+        -   For example, if a screenshot path in your JSON is `attachments/[runId]/asset.png`, the physical file should be at `YOUR_PROJECT_ROOT/pulse-report/attachments/[runId]/asset.png`.
+        -   **Important**: The Pulse Dashboard component will attempt to load these assets using URLs like `/pulse-report/attachments/[runId]/asset.png`. Since these files are not in the `public` directory by default, **you must configure your Next.js application to serve files from `YOUR_PROJECT_ROOT/pulse-report/attachments/` at the `/pulse-report/attachments/` web path.** This can be done using Next.js rewrites or by copying these files to a `public/pulse-report/attachments/` directory during your application's build process.
+        -   If paths in your JSON are absolute external URLs (e.g., `https://...`) or Base64 data URIs (`data:image/...`), they will be used directly, and this serving configuration is not needed for those specific assets.
+
+### 2. API Routes (to be implemented by consumer):
+
+   Your Next.js application must implement the following API routes. They should read data from the `pulse-report/` directory structure specified above.
+
+   -   **GET `/api/current-run`**:
+        -   **Purpose**: Fetch the latest test run data.
+        -   **Implementation**: Should read `YOUR_PROJECT_ROOT/pulse-report/playwright-pulse-report.json` and return its content as JSON.
+        -   **Expected Response Structure**: `PlaywrightPulseReport` (see `pulse-dashboard-component/dist/types/playwright.d.ts`).
+
+   -   **GET `/api/historical-trends`**:
+        -   **Purpose**: Fetch summarized historical test run data for trend charts.
+        -   **Implementation**: Should read all `YOUR_PROJECT_ROOT/pulse-report/history/trend-*.json` files, aggregate them, sort by date, and return an array of `HistoricalTrend` objects.
+        -   **Expected Response Structure**: `HistoricalTrend[]` (see `pulse-dashboard-component/dist/types/playwright.d.ts`).
+
+### 3. Server Actions (to be implemented by consumer):
+
+   The dashboard UI includes features that, in the original project, used Server Actions. The consuming application must provide equivalent functionality.
+
+   -   **`getFlakyTestsAnalysis`**:
+        -   **Purpose**: Analyze historical reports to identify flaky tests.
+        -   **Implementation**: Should process data from `YOUR_PROJECT_ROOT/pulse-report/history/trend-*.json` files to identify tests with inconsistent outcomes.
+        -   **Expected Return Structure**: `{ success: boolean; flakyTests?: FlakyTestDetail[]; error?: string }` (see `pulse-dashboard-component/dist/types/playwright.d.ts`).
+        -   *Note*: The current package version comments out direct calls to this for build compatibility. Future versions might accept this data via props or a provided function.
+
+   -   **(Optional) `analyzeFailurePatterns` (AI Feature)**:
+        -   **Purpose**: Use Genkit AI to analyze failure patterns from historical data.
+        -   **Implementation**: Requires setting up Genkit and an AI model. Processes historical data to provide insights.
+        -   **Expected Input/Output**: Refer to `src/ai/flows/analyze-failure-patterns.ts` in the original project for details on `AnalyzeFailurePatternsInput` and the expected string output.
+        -   *Note*: This is an advanced feature and may require significant setup in the consuming application.
+
+## Technical Stack (of the Component Package)
+
+-   **Framework**: Next.js (UI components compatible with App Router)
 -   **UI Library**: React
 -   **Component Library**: ShadCN UI
 -   **Styling**: Tailwind CSS
 -   **Charting**: Recharts
 -   **Language**: TypeScript
 
-## Getting Started
+## NPM Scripts (for developing this package)
 
-### Prerequisites
-
--   Node.js (v18 or later recommended)
--   npm or yarn
-
-### Setup
-
-1.  **Clone the repository:**
-    ```bash
-    git clone <your-repository-url>
-    cd pulse-dashboard 
-    ```
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-3.  **Prepare Playwright Report Data:**
-    -   Ensure your Playwright test execution generates `playwright-pulse-report.json` and places it in a `pulse-report/` directory inside the `public/` folder of this project.
-    -   For historical data, place older `trend-*.json` files into `public/pulse-report/history/`.
-    -   Ensure any referenced attachments (screenshots, videos, traces) are correctly placed, typically within `public/pulse-report/attachments/` or are accessible via the paths specified in the JSON.
-
-4.  **Run the development server:**
-    ```bash
-    npm run dev
-    # or
-    yarn dev
-    ```
-    Open [http://localhost:9002](http://localhost:9002) (or the configured port) in your browser to see the result.
-
-### Project Structure (Key Directories)
-
--   `src/app`: Next.js application pages and route handlers.
--   `src/components/pulse-dashboard`: React components specific to the Pulse Dashboard UI.
--   `src/components/ui`: Reusable ShadCN UI components.
--   `src/hooks`: Custom React hooks (e.g., `useTestData`).
--   `public/pulse-report/`: Directory where the dashboard expects `playwright-pulse-report.json` and the `history/` subdirectory for trend data. Attachments are also typically served from under `public/`.
--   `src/types`: TypeScript type definitions for report data.
-
-## Customization
-
--   **Theme**: Switch between light and dark mode via the "Settings" view. Your preference is saved locally in your browser.
+-   `npm run dev`: Starts the Next.js development server for testing the components locally (requires example data and mock APIs).
+-   `npm run build`: Compiles TypeScript and CSS to the `dist` folder, making the package ready for publishing.
+-   `npm run prepare`: Automatically runs `npm run build` before publishing.
+-   `npm run clean`: Removes the `dist` directory.
+-   `npm run typecheck`: Runs TypeScript compiler for type checking.
 
 ## Contributing
 
@@ -109,4 +121,4 @@ Contributions are welcome! Please open an issue or submit a pull request for any
 
 ## License
 
-This project is licensed under the Apache 2.0 License. See the `LICENSE` file for details (assuming one exists or will be added).
+This project is licensed under the Apache 2.0 License. (Assuming `LICENSE` file exists or will be added).

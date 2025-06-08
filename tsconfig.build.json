@@ -1,0 +1,40 @@
+
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src", 
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "module": "ESNext", 
+    "moduleResolution": "Bundler", // or NodeNext
+    "noEmit": false, 
+    "jsx": "react-jsx",
+    "isolatedModules": false, 
+    "target": "ES2020", // Or newer, align with Node.js LTS versions for broader compatibility
+    // Ensure all paths used by included files are resolvable
+    "baseUrl": "./", // Keep baseUrl consistent with main tsconfig
+    "paths": {
+      "@/*": ["./src/*"] // Keep paths alias consistent
+    }
+  },
+  "include": [
+    "src/index.ts",
+    "src/components/ui/**/*.tsx",
+    "src/components/ui/**/*.ts",
+    "src/components/pulse-dashboard/**/*.tsx",
+    "src/components/pulse-dashboard/**/*.ts",
+    "src/hooks/**/*.tsx",
+    "src/hooks/**/*.ts",
+    "src/lib/**/*.ts",
+    "src/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".next",
+    "src/app", // Exclude Next.js app-specific directory (pages, layouts, app-router specific api routes)
+    "src/ai"   // Exclude AI flows as they are server-side logic specific to this application's backend
+  ]
+}

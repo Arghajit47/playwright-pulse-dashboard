@@ -1,11 +1,14 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
   darkMode: ['class'],
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    // Ensure Tailwind scans the components that will be part of your NPM package
+    './src/components/ui/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/pulse-dashboard/**/*.{js,ts,jsx,tsx,mdx}',
+    // If you have other src directories with components/JSX, include them here.
+    // Avoid including ./src/app or ./src/pages if they are not part of the package.
   ],
   theme: {
     extend: {

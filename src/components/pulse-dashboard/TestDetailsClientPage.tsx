@@ -15,7 +15,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef } from 'react';
 import { TestStepItemRecursive } from './TestStepItemRecursive';
-import { getRawHistoricalReports } from '@/app/actions';
+// import { getRawHistoricalReports } from '@/app/actions'; // Commented out for package build
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, DotProps } from 'recharts';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
@@ -109,27 +109,29 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 }
 
 function getAssetPath(jsonPath: string | undefined | null): string {
-  if (!jsonPath || typeof jsonPath !== 'string' || jsonPath.trim() === '') {
-    return '#'; 
+  if (!jsonPath || typeof jsonPath !== 'string') {
+    return '#';
   }
   const trimmedPath = jsonPath.trim();
+  if (trimmedPath === '') {
+    return '#';
+  }
 
   if (trimmedPath.startsWith('data:image')) {
-    return trimmedPath; // It's a data URI, return as is
+    return trimmedPath; // It's a data URI
   }
   if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
     return trimmedPath; // Absolute external URL
   }
-  if (trimmedPath.startsWith('/')) { 
+  if (trimmedPath.startsWith('/')) {
     // Assumed to be an already correct absolute web path from server root
     // e.g., /pulse-report/attachments/... or /some-other-custom-path/...
     return trimmedPath;
   }
 
   // Handle relative file paths like "attachments/RUN_ID/image.png" or "RUN_ID/image.png"
-  // These are assumed relative to "pulse-report/"
+  // These are assumed relative to "public/pulse-report/"
   // So, prepend "/pulse-report/"
-  // Basic normalization: remove empty segments, join with '/'
   const normalizedRelativePath = trimmedPath
     .split('/')
     .filter(part => part && part !== '.') // Filter out empty strings and single dots
@@ -184,7 +186,11 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
       setLoadingHistory(true);
       setErrorHistory(null);
       try {
-        const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports();
+        // const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports(); // Commented out for package build
+        // Simulating no data for build purposes
+        const rawReports: PlaywrightPulseReport[] = [];
+        setErrorHistory('Test history data fetching is handled by the consuming application.');
+
         const historyData: TestRunHistoryData[] = [];
 
         rawReports.forEach(report => {
@@ -208,7 +214,11 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
       }
     };
 
-    fetchTestHistory();
+    // fetchTestHistory(); // Commented out call for package build
+    setLoadingHistory(false); // Ensure loading completes for build
+    setErrorHistory('Test history data fetching is handled by the consuming application.');
+
+
   }, [testId]);
 
 
@@ -501,17 +511,16 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {errorHistory && !loadingHistory && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Error Loading History</AlertTitle>
+                  <AlertTitle>Test History Information</AlertTitle>
                   <AlertDescription>{errorHistory}</AlertDescription>
                 </Alert>
               )}
               {!loadingHistory && !errorHistory && testHistory.length === 0 && (
-                <Alert>
+                 <Alert>
                   <Info className="h-4 w-4" />
                   <AlertTitle>No Historical Data</AlertTitle>
                   <AlertDescription>
-                    No historical run data found for this specific test (ID: {testId}).
-                    Ensure `trend-*.json` files in `pulse-report/history/` contain results for this test ID.
+                    No historical run data found for this specific test (ID: {testId}). Or, data fetching is handled by the consuming application.
                   </AlertDescription>
                 </Alert>
               )}

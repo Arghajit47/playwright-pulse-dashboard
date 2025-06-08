@@ -1,31 +1,10 @@
 
 'use server';
 
-import { analyzeFailurePatterns, type AnalyzeFailurePatternsInput } from '@/ai/flows/analyze-failure-patterns';
 import fs from 'fs/promises';
 import path from 'path';
 import type { PlaywrightPulseReport, DetailedTestResult, FlakyTestDetail, FlakyTestOccurrence } from '@/types/playwright'; 
 
-export async function getFailurePatternAnalysis(): Promise<{ success: boolean; analysis?: string; error?: string }> {
-  try {
-    const historicalReports = await getRawHistoricalReports(); 
-    
-    if (historicalReports.length === 0) {
-      return { success: true, analysis: "No historical data found to analyze." };
-    }
-
-    const input: AnalyzeFailurePatternsInput = {
-      historicalData: JSON.stringify(historicalReports),
-    };
-
-    const result = await analyzeFailurePatterns(input);
-    return { success: true, analysis: result.analysis };
-  } catch (error) {
-    console.error('Error analyzing failure patterns:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during AI analysis.';
-    return { success: false, error: errorMessage };
-  }
-}
 
 export async function getRawHistoricalReports(): Promise<PlaywrightPulseReport[]> {
   const historyDir = path.join(process.cwd(), 'pulse-report', 'history');
