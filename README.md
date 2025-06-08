@@ -55,7 +55,6 @@ The dashboard uses a sidebar for navigation between different views:
 -   **Component Library**: ShadCN UI
 -   **Styling**: Tailwind CSS
 -   **Charting**: Recharts
--   **Generative AI**: Genkit with Google AI (for failure pattern analysis)
 -   **Language**: TypeScript
 
 ## Getting Started
@@ -83,14 +82,7 @@ The dashboard uses a sidebar for navigation between different views:
     -   For historical data, place older `trend-*.json` files into `public/pulse-report/history/`.
     -   Ensure any referenced attachments (screenshots, videos, traces) are correctly placed, typically within `public/pulse-report/attachments/` or are accessible via the paths specified in the JSON.
 
-4.  **Environment Variables (for Genkit/Google AI):**
-    -   If you are using Google AI with Genkit, ensure your Google AI API key and any other necessary Genkit configurations are set up. This might involve a `.env` file if `src/ai/genkit.ts` is configured to read from it (currently, the model is hardcoded but API keys are typically via environment variables for Google Cloud services).
-    ```bash
-    # Example .env file (if needed by Genkit configuration)
-    # GOOGLE_API_KEY=your_google_ai_api_key
-    ```
-
-5.  **Run the development server:**
+4.  **Run the development server:**
     ```bash
     npm run dev
     # or
@@ -104,16 +96,8 @@ The dashboard uses a sidebar for navigation between different views:
 -   `src/components/pulse-dashboard`: React components specific to the Pulse Dashboard UI.
 -   `src/components/ui`: Reusable ShadCN UI components.
 -   `src/hooks`: Custom React hooks (e.g., `useTestData`).
--   `src/ai`: Genkit configuration and AI flows.
 -   `public/pulse-report/`: Directory where the dashboard expects `playwright-pulse-report.json` and the `history/` subdirectory for trend data. Attachments are also typically served from under `public/`.
 -   `src/types`: TypeScript type definitions for report data.
-
-## AI-Powered Insights
-
-The "Failure Pattern Analysis" feature (accessible if AI analysis is triggered, typically planned for the Dashboard view or a dedicated section) uses Genkit to:
--   Analyze historical failure data from `trend-*.json` files.
--   Identify common error messages and recurring failure patterns.
--   Suggest potential root causes and debugging strategies.
 
 ## Customization
 
