@@ -57,6 +57,16 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
   }
 }
 
+const REPORT_BASE_PATH = '/pulse-report/';
+
+function getAssetPath(relativePath: string | undefined | null): string {
+  if (!relativePath) return '#';
+  if (relativePath.startsWith('http') || relativePath.startsWith('/')) {
+    return relativePath;
+  }
+  return `${REPORT_BASE_PATH}${relativePath}`;
+}
+
 export function TestItem({ test }: TestItemProps) {
   const imageAttachments = test.screenshots?.filter(att => att.contentType?.startsWith('image/')) || [];
   const hasDetailsInAccordion = test.errorMessage || imageAttachments.length > 0;
@@ -104,9 +114,9 @@ export function TestItem({ test }: TestItemProps) {
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
                     {imageAttachments.slice(0,4).map((att, index) => (
-                         <a key={`img-thumb-${index}`} href={att.path.startsWith('http') || att.path.startsWith('/') ? att.path : `/${att.path}`} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group border hover:border-primary">
+                         <a key={`img-thumb-${index}`} href={getAssetPath(att.path)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group border hover:border-primary">
                             <Image 
-                                src={att.path.startsWith('http') || att.path.startsWith('/') ? att.path : `/${att.path}`}
+                                src={getAssetPath(att.path)}
                                 alt={att.name} 
                                 fill={true}
                                 style={{objectFit: "cover"}}
@@ -131,3 +141,4 @@ export function TestItem({ test }: TestItemProps) {
     </div>
   );
 }
+

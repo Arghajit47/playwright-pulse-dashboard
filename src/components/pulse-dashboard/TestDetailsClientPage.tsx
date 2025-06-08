@@ -108,6 +108,17 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
   }
 }
 
+const REPORT_BASE_PATH = '/pulse-report/';
+
+function getAssetPath(relativePath: string | undefined | null): string {
+  if (!relativePath) return '#'; // Fallback for undefined/null paths
+  if (relativePath.startsWith('http') || relativePath.startsWith('/')) {
+    return relativePath;
+  }
+  return `${REPORT_BASE_PATH}${relativePath}`;
+}
+
+
 export function TestDetailsClientPage({ testId }: { testId: string }) {
   const router = useRouter();
   const { currentRun, loadingCurrent, errorCurrent } = useTestData();
@@ -329,9 +340,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {imageScreenshots.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {imageScreenshots.map((att, index) => (
-                        <a key={`img-preview-${index}`} href={att.path.startsWith('http') || att.path.startsWith('/') ? att.path : `/${att.path}`} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
+                        <a key={`img-preview-${index}`} href={getAssetPath(att.path)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
                           <Image
-                            src={att.path.startsWith('http') || att.path.startsWith('/') ? att.path : `/${att.path}`}
+                            src={getAssetPath(att.path)}
                             alt={att.name || `screenshot ${index + 1}`}
                             fill={true}
                             style={{objectFit: "cover"}}
@@ -354,7 +365,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {hasVideo ? (
                     <div className="p-4 border rounded-md bg-muted/30">
                       <a
-                        href={test.videoPath!.startsWith('http') || test.videoPath!.startsWith('/') ? test.videoPath! : `/${test.videoPath!}`}
+                        href={getAssetPath(test.videoPath)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
@@ -377,7 +388,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {hasTrace ? (
                     <div className="p-4 border rounded-md bg-muted/30 space-y-3">
                        <a
-                        href={test.tracePath!.startsWith('http') || test.tracePath!.startsWith('/') ? test.tracePath! : `/${test.tracePath!}`}
+                        href={getAssetPath(test.tracePath)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
@@ -413,7 +424,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </h3>
                 <ScrollArea className="h-48 w-full rounded-md border p-3 bg-muted/30">
                     <pre className="text-sm text-foreground whitespace-pre-wrap break-words">
-                        {Array.isArray(test.stdout) && test.stdout.length > 0
+                        {test.stdout && Array.isArray(test.stdout) && test.stdout.length > 0
                             ? test.stdout.join('\n')
                             : "No standard output logs captured for this test."}
                     </pre>
@@ -423,7 +434,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
                   <AlertCircle className="h-5 w-5 mr-2 text-destructive"/>Error Messages / Standard Error
                 </h3>
-                {test.errorMessage ? (
+                {test.errorMessage && test.errorMessage.trim() !== '' ? (
                   <ScrollArea className="h-48 w-full rounded-md border bg-destructive/5">
                     <pre className="text-sm text-destructive p-3 whitespace-pre-wrap break-all font-code">
                       {test.errorMessage}
@@ -520,3 +531,4 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
+
