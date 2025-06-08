@@ -109,14 +109,21 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 }
 
 function getAssetPath(relativePath: string | undefined | null): string {
-  if (!relativePath || typeof relativePath !== 'string' || relativePath.trim() === '') return '#';
-  if (relativePath.startsWith('http')) {
-    return relativePath;
+  if (!relativePath || typeof relativePath !== 'string' || relativePath.trim() === '') {
+    return '#';
   }
-  if (relativePath.startsWith('/')) {
-    return relativePath;
+  const trimmedPath = relativePath.trim();
+
+  if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
+    return trimmedPath;
   }
-  return `/${relativePath}`;
+
+  if (trimmedPath.startsWith('/')) {
+    return trimmedPath;
+  }
+  // Assumes relativePath is like "runId/image.png" or "image.png"
+  // and needs to be prefixed to point within public/pulse-report/attachments/
+  return `/pulse-report/attachments/${trimmedPath}`;
 }
 
 
@@ -239,12 +246,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     );
   }
 
-  const validScreenshots = (test.screenshots || []).filter(p => typeof p === 'string' && p.trim() !== '');
+  const currentScreenshots = (test.screenshots || []).filter(p => typeof p === 'string' && p.trim() !== '');
   const displayName = formatTestName(test.name);
   const hasVideo = !!test.videoPath;
   const hasTrace = !!test.tracePath;
 
-  let totalAttachmentsCount = validScreenshots.length;
+  let totalAttachmentsCount = currentScreenshots.length;
   if (hasVideo) totalAttachmentsCount++;
   if (hasTrace) totalAttachmentsCount++;
 
@@ -324,7 +331,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <TabsList className="grid w-full grid-cols-3 mb-4">
                   <TabsTrigger value="sub-screenshots">
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    Screenshots ({validScreenshots.length})
+                    Screenshots ({currentScreenshots.length})
                   </TabsTrigger>
                   <TabsTrigger value="sub-video" disabled={!hasVideo}>
                     <Film className="h-4 w-4 mr-2" />
@@ -338,11 +345,10 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                 <TabsContent value="sub-screenshots" className="mt-4">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
-                  {validScreenshots.length > 0 ? (
+                  {currentScreenshots.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {validScreenshots.map((path, index) => {
+                      {currentScreenshots.map((path, index) => {
                         const imageSrc = getAssetPath(path);
-                        // Ensure imageSrc is valid for <Image> to prevent errors
                         if (imageSrc === '#') return null; 
                         return (
                           <a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
@@ -367,7 +373,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                 <TabsContent value="sub-video" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Video Recording</h3>
-                  {hasVideo ? (
+                  {hasVideo && test.videoPath ? (
                     <div className="p-4 border rounded-md bg-muted/30">
                       <a
                         href={getAssetPath(test.videoPath)}
@@ -390,7 +396,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                 <TabsContent value="sub-trace" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Trace File</h3>
-                  {hasTrace ? (
+                  {hasTrace && test.tracePath ? (
                     <div className="p-4 border rounded-md bg-muted/30 space-y-3">
                        <a
                         href={getAssetPath(test.tracePath)}
@@ -429,7 +435,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </h3>
                 <ScrollArea className="h-48 w-full rounded-md border p-3 bg-muted/30">
                   <pre className="text-sm text-foreground whitespace-pre-wrap break-words">
-                    {(test.stdout && test.stdout.length > 0)
+                    {(test.stdout && Array.isArray(test.stdout) && test.stdout.length > 0)
                       ? test.stdout.join('\n')
                       : "No standard output logs captured for this test."}
                   </pre>
@@ -536,3 +542,4 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
+

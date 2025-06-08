@@ -58,19 +58,24 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 }
 
 function getAssetPath(relativePath: string | undefined | null): string {
-  if (!relativePath || typeof relativePath !== 'string' || relativePath.trim() === '') return '#';
-  if (relativePath.startsWith('http')) {
-    return relativePath;
+  if (!relativePath || typeof relativePath !== 'string' || relativePath.trim() === '') {
+    return '#';
   }
-  if (relativePath.startsWith('/')) {
-    return relativePath;
+  const trimmedPath = relativePath.trim();
+
+  if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
+    return trimmedPath;
   }
-  return `/${relativePath}`;
+
+  if (trimmedPath.startsWith('/')) {
+    return trimmedPath;
+  }
+  return `/pulse-report/attachments/${trimmedPath}`;
 }
 
 export function TestItem({ test }: TestItemProps) {
-  const validScreenshots = (test.screenshots || []).filter(p => typeof p === 'string' && p.trim() !== '');
-  const hasDetailsInAccordion = test.errorMessage || validScreenshots.length > 0;
+  const currentScreenshots = (test.screenshots || []).filter(p => typeof p === 'string' && p.trim() !== '');
+  const hasDetailsInAccordion = test.errorMessage || currentScreenshots.length > 0;
   const displayName = formatTestName(test.name);
 
   return (
@@ -110,11 +115,11 @@ export function TestItem({ test }: TestItemProps) {
                   <pre className="bg-destructive/10 text-destructive text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">{test.errorMessage}</pre>
                 </div>
               )}
-              {validScreenshots.length > 0 && (
+              {currentScreenshots.length > 0 && (
                 <div>
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
-                    {validScreenshots.slice(0,4).map((path, index) => {
+                    {currentScreenshots.slice(0,4).map((path, index) => {
                         const imageSrc = getAssetPath(path);
                         if (imageSrc === '#') return null;
                         return (
@@ -135,7 +140,7 @@ export function TestItem({ test }: TestItemProps) {
                     </div>
                 </div>
               )}
-               {(!test.errorMessage && validScreenshots.length === 0) && (
+               {(!test.errorMessage && currentScreenshots.length === 0) && (
                   <p className="text-xs text-muted-foreground">No error or screenshots for quick look. Click to view full details.</p>
                )}
             </AccordionContent>
@@ -145,3 +150,4 @@ export function TestItem({ test }: TestItemProps) {
     </div>
   );
 }
+
