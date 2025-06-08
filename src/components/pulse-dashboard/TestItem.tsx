@@ -59,19 +59,28 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 
 function getAssetPath(relativePath: string | undefined | null): string {
   if (!relativePath || typeof relativePath !== 'string' || relativePath.trim() === '') {
-    return '#'; 
+    return '#'; // Indicates an invalid or empty path
   }
   const trimmedPath = relativePath.trim();
 
   if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
-    return trimmedPath; 
+    return trimmedPath; // Absolute external URL
   }
 
-  if (trimmedPath.startsWith('/')) {
-    return trimmedPath; 
-  }
+  // Normalize path: remove leading/trailing/double slashes, then split
+  const pathParts = trimmedPath.split('/').filter(part => part !== '');
 
-  return `/pulse-report/${trimmedPath}`;
+  if (pathParts.length === 0) {
+    return '#'; // Path was all slashes or empty
+  }
+  
+  if (pathParts[0] === 'pulse-report') {
+    // Path from JSON already includes 'pulse-report' segment (e.g., "pulse-report/attachments/...")
+    return `/${pathParts.join('/')}`;
+  } else {
+    // Path from JSON is relative to 'public/pulse-report/' (e.g., "attachments/...")
+    return `/pulse-report/${pathParts.join('/')}`;
+  }
 }
 
 export function TestItem({ test }: TestItemProps) {

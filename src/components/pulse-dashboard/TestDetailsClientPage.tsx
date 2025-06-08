@@ -118,13 +118,20 @@ function getAssetPath(relativePath: string | undefined | null): string {
     return trimmedPath; // Absolute external URL
   }
 
-  if (trimmedPath.startsWith('/')) {
-    return trimmedPath; // Already an absolute web path (e.g., /pulse-report/attachments/...)
+  // Normalize path: remove leading/trailing/double slashes, then split
+  const pathParts = trimmedPath.split('/').filter(part => part !== '');
+  
+  if (pathParts.length === 0) {
+    return '#'; // Path was all slashes or empty
   }
 
-  // Otherwise, assume it's relative to 'public/pulse-report/'
-  // e.g., JSON path "attachments/runId/image.png" becomes "/pulse-report/attachments/runId/image.png"
-  return `/pulse-report/${trimmedPath}`;
+  if (pathParts[0] === 'pulse-report') {
+    // Path from JSON already includes 'pulse-report' segment (e.g., "pulse-report/attachments/...")
+    return `/${pathParts.join('/')}`;
+  } else {
+    // Path from JSON is relative to 'public/pulse-report/' (e.g., "attachments/...")
+    return `/pulse-report/${pathParts.join('/')}`;
+  }
 }
 
 
@@ -246,7 +253,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
       </div>
     );
   }
-
+  
   const currentScreenshots = (test.screenshots || [])
     .map(p => (typeof p === 'string' ? p.trim() : ''))
     .filter(p => p && p !== '');
