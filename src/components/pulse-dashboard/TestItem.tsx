@@ -57,30 +57,31 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
   }
 }
 
-function getAssetPath(relativePath: string | undefined | null): string {
-  if (!relativePath || typeof relativePath !== 'string' || relativePath.trim() === '') {
-    return '#'; // Indicates an invalid or empty path
+function getAssetPath(jsonPath: string | undefined | null): string {
+  if (!jsonPath || typeof jsonPath !== 'string' || jsonPath.trim() === '') {
+    return '#'; 
   }
-  const trimmedPath = relativePath.trim();
+  const trimmedPath = jsonPath.trim();
 
+  if (trimmedPath.startsWith('data:image')) {
+    return trimmedPath; // It's a data URI, return as is
+  }
   if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
     return trimmedPath; // Absolute external URL
   }
-
-  // Normalize path: remove leading/trailing/double slashes, then split
-  const pathParts = trimmedPath.split('/').filter(part => part !== '');
-
-  if (pathParts.length === 0) {
-    return '#'; // Path was all slashes or empty
+  if (trimmedPath.startsWith('/')) { 
+    // Assumed to be an already correct absolute web path from server root
+    return trimmedPath;
   }
+
+  // Handle relative file paths like "attachments/RUN_ID/image.png"
+  // These are assumed relative to "public/pulse-report/"
+  const normalizedRelativePath = trimmedPath
+    .split('/')
+    .filter(part => part && part !== '.')
+    .join('/');
   
-  if (pathParts[0] === 'pulse-report') {
-    // Path from JSON already includes 'pulse-report' segment (e.g., "pulse-report/attachments/...")
-    return `/${pathParts.join('/')}`;
-  } else {
-    // Path from JSON is relative to 'public/pulse-report/' (e.g., "attachments/...")
-    return `/pulse-report/${pathParts.join('/')}`;
-  }
+  return `/pulse-report/${normalizedRelativePath}`;
 }
 
 export function TestItem({ test }: TestItemProps) {
