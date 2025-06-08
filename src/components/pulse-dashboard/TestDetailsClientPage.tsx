@@ -110,20 +110,21 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 
 function getAssetPath(relativePath: string | undefined | null): string {
   if (!relativePath || typeof relativePath !== 'string' || relativePath.trim() === '') {
-    return '#';
+    return '#'; // Indicates an invalid or empty path
   }
   const trimmedPath = relativePath.trim();
 
   if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
-    return trimmedPath;
+    return trimmedPath; // Absolute external URL
   }
 
   if (trimmedPath.startsWith('/')) {
-    return trimmedPath;
+    return trimmedPath; // Already an absolute web path (e.g., /pulse-report/attachments/...)
   }
-  // Assumes relativePath is like "runId/image.png" or "image.png"
-  // and needs to be prefixed to point within public/pulse-report/attachments/
-  return `/pulse-report/attachments/${trimmedPath}`;
+
+  // Otherwise, assume it's relative to 'public/pulse-report/'
+  // e.g., JSON path "attachments/runId/image.png" becomes "/pulse-report/attachments/runId/image.png"
+  return `/pulse-report/${trimmedPath}`;
 }
 
 
@@ -246,7 +247,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     );
   }
 
-  const currentScreenshots = (test.screenshots || []).filter(p => typeof p === 'string' && p.trim() !== '');
+  const currentScreenshots = (test.screenshots || [])
+    .map(p => (typeof p === 'string' ? p.trim() : ''))
+    .filter(p => p && p !== '');
   const displayName = formatTestName(test.name);
   const hasVideo = !!test.videoPath;
   const hasTrace = !!test.tracePath;
@@ -349,7 +352,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {currentScreenshots.map((path, index) => {
                         const imageSrc = getAssetPath(path);
-                        if (imageSrc === '#') return null; 
+                        if (imageSrc === '#') { 
+                            return null;
+                        }
                         return (
                           <a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
                             <Image

@@ -59,22 +59,25 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 
 function getAssetPath(relativePath: string | undefined | null): string {
   if (!relativePath || typeof relativePath !== 'string' || relativePath.trim() === '') {
-    return '#';
+    return '#'; 
   }
   const trimmedPath = relativePath.trim();
 
   if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
-    return trimmedPath;
+    return trimmedPath; 
   }
 
   if (trimmedPath.startsWith('/')) {
-    return trimmedPath;
+    return trimmedPath; 
   }
-  return `/pulse-report/attachments/${trimmedPath}`;
+
+  return `/pulse-report/${trimmedPath}`;
 }
 
 export function TestItem({ test }: TestItemProps) {
-  const currentScreenshots = (test.screenshots || []).filter(p => typeof p === 'string' && p.trim() !== '');
+  const currentScreenshots = (test.screenshots || [])
+    .map(p => (typeof p === 'string' ? p.trim() : ''))
+    .filter(p => p && p !== '');
   const hasDetailsInAccordion = test.errorMessage || currentScreenshots.length > 0;
   const displayName = formatTestName(test.name);
 
