@@ -57,22 +57,17 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
   }
 }
 
-function getAssetPath(relativePath: string | undefined | null, runId: string | undefined): string {
+function getAssetPath(relativePath: string | undefined | null): string {
   if (!relativePath) return '#';
-  if (relativePath.startsWith('http')) {
+  if (relativePath.startsWith('http')) { // Absolute URL
     return relativePath;
   }
-  if (relativePath.startsWith('/pulse-report/')) {
+  if (relativePath.startsWith('/')) { // Already an absolute path from web root (e.g. /pulse-report/...)
     return relativePath;
   }
-  if (relativePath.startsWith('/')) {
-    return relativePath;
-  }
-  if (!runId) {
-    console.warn(`runId is missing for asset path: ${relativePath}. Falling back to /pulse-report/ prefix.`);
-    return `/pulse-report/${relativePath}`;
-  }
-  return `/pulse-report/attachments/${runId}/${relativePath}`;
+  // Assumed to be relative to the /pulse-report/ directory
+  // e.g., "attachments/run123/image.png"
+  return `/pulse-report/${relativePath}`;
 }
 
 export function TestItem({ test }: TestItemProps) {
@@ -122,9 +117,9 @@ export function TestItem({ test }: TestItemProps) {
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
                     {imageAttachments.slice(0,4).map((att, index) => (
-                         <a key={`img-thumb-${index}`} href={getAssetPath(att.path, test.runId)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group border hover:border-primary">
+                         <a key={`img-thumb-${index}`} href={getAssetPath(att.path)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group border hover:border-primary">
                             <Image 
-                                src={getAssetPath(att.path, test.runId)}
+                                src={getAssetPath(att.path)}
                                 alt={att.name} 
                                 fill={true}
                                 style={{objectFit: "cover"}}

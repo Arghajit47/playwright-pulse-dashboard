@@ -108,22 +108,17 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
   }
 }
 
-function getAssetPath(relativePath: string | undefined | null, runId: string | undefined): string {
+function getAssetPath(relativePath: string | undefined | null): string {
   if (!relativePath) return '#';
-  if (relativePath.startsWith('http')) {
+  if (relativePath.startsWith('http')) { // Absolute URL
     return relativePath;
   }
-  if (relativePath.startsWith('/pulse-report/')) {
+  if (relativePath.startsWith('/')) { // Already an absolute path from web root (e.g. /pulse-report/...)
     return relativePath;
   }
-  if (relativePath.startsWith('/')) {
-    return relativePath;
-  }
-  if (!runId) {
-    console.warn(`runId is missing for asset path: ${relativePath}. Falling back to /pulse-report/ prefix.`);
-    return `/pulse-report/${relativePath}`;
-  }
-  return `/pulse-report/attachments/${runId}/${relativePath}`;
+  // Assumed to be relative to the /pulse-report/ directory
+  // e.g., "attachments/run123/image.png"
+  return `/pulse-report/${relativePath}`;
 }
 
 
@@ -348,9 +343,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {imageScreenshots.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {imageScreenshots.map((att, index) => (
-                        <a key={`img-preview-${index}`} href={getAssetPath(att.path, test.runId)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
+                        <a key={`img-preview-${index}`} href={getAssetPath(att.path)} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
                           <Image
-                            src={getAssetPath(att.path, test.runId)}
+                            src={getAssetPath(att.path)}
                             alt={att.name || `screenshot ${index + 1}`}
                             fill={true}
                             style={{objectFit: "cover"}}
@@ -373,7 +368,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {hasVideo ? (
                     <div className="p-4 border rounded-md bg-muted/30">
                       <a
-                        href={getAssetPath(test.videoPath, test.runId)}
+                        href={getAssetPath(test.videoPath)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
@@ -396,7 +391,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {hasTrace ? (
                     <div className="p-4 border rounded-md bg-muted/30 space-y-3">
                        <a
-                        href={getAssetPath(test.tracePath, test.runId)}
+                        href={getAssetPath(test.tracePath)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
