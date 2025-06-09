@@ -6,36 +6,54 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
-import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts'; // .d.ts for specific type import
+import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
+import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts'; 
 import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import type { NameType, ValueType, TooltipProps as RechartsTooltipProps } from 'recharts/types/component/DefaultTooltipContent.d.ts';
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
+
+
+interface ActiveShapeProps {
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  startAngle?: number;
+  endAngle?: number;
+  fill?: string;
+  payload?: PieSectorDataItem;
+  percent?: number;
+  value?: number;
+  name?: string;
+}
+
+interface CustomTooltipPayloadItem {
+  name: NameType;
+  value: ValueType;
+  color?: string;
+  payload: any; // The actual data object for this item
+  unit?: string;
+  // The following are specific to certain chart types, ensure 'any' covers them or add if consistently typed
+  // percentage?: number; 
+  // fullTestName?: string; 
+  // total?: number; 
+}
+
+interface RechartsTooltipProps {
+  active?: boolean;
+  payload?: CustomTooltipPayloadItem[];
+  label?: string | number;
+}
 
 
 interface DashboardOverviewChartsProps {
   currentRun: PlaywrightPulseReport | null;
   loading: boolean;
   error: string | null;
-}
-
-// Local definition for ActiveShapeProps
-interface ActiveShapeProps {
-  cx?: number;
-  cy?: number;
-  midAngle?: number;
-  innerRadius: number;
-  outerRadius?: number;
-  startAngle: number;
-  endAngle: number;
-  fill: string; // fill color of the sector
-  payload: PieSectorDataItem; // The original data item for this sector
-  percent?: number; // Percentage (0-1)
-  value: number;    // The numerical value of the sector
-  name?: string;    // The name of the sector, often same as payload.name
 }
 
 
@@ -65,10 +83,10 @@ function formatTestNameForChart(fullName: string): string {
   return parts[parts.length - 1] || fullName;
 }
 
-const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps<ValueType, NameType>) => {
+const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps) => {
   if (active && payload && payload.length) {
     const titleText = String(label);
-    const dataPoint = payload[0].payload as any; // Using any here for flexibility as payload structure varies
+    const dataPoint = payload[0].payload as any; 
 
     const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0;
     const isPieChartTooltip = dataPoint.percentage !== undefined && dataPoint.name;
@@ -79,15 +97,15 @@ const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps<ValueTyp
         <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>
           {dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
         </p>
-        {payload.map((entry: any, index: number) => (
-          <p key={`item-${index}`} style={{ color: entry.color || entry.payload.fill }} className="text-xs">
+        {payload.map((entry: CustomTooltipPayloadItem, index: number) => (
+          <p key={`item-${index}`} style={{ color: entry.color || (entry.payload as any)?.fill }} className="text-xs">
             {`${entry.name}: ${entry.value?.toLocaleString()}${entry.unit || ''}`}
-            {isPieChartTooltip && entry.name === dataPoint.name && ` (${dataPoint.percentage}%)`}
+            {isPieChartTooltip && entry.name === (dataPoint as any).name && ` (${(dataPoint as any).percentage}%)`}
           </p>
         ))}
         {isStackedBarTooltip && (
           <p className="text-xs font-bold mt-1 text-foreground">
-            Total: {dataPoint.total.toLocaleString()}
+            Total: {(dataPoint as any).total.toLocaleString()}
           </p>
         )}
       </div>
@@ -139,23 +157,23 @@ const BrowserIcon = ({ browserName, className }: { browserName: string, classNam
 
 const ActiveShape = (props: ActiveShapeProps) => {
   const RADIAN = Math.PI / 180;
-  const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+  const { cx, cy, midAngle, innerRadius = 0, outerRadius = 0, startAngle = 0, endAngle = 0, fill, payload, percent, value = 0 } = props;
   const sin = Math.sin(-RADIAN * (midAngle ?? 0));
   const cos = Math.cos(-RADIAN * (midAngle ?? 0));
-  const sx = (cx ?? 0) + ((outerRadius ?? 0) + 10) * cos;
-  const sy = (cy ?? 0) + ((outerRadius ?? 0) + 10) * sin;
-  const mx = (cx ?? 0) + ((outerRadius ?? 0) + 30) * cos;
-  const my = (cy ?? 0) + ((outerRadius ?? 0) + 30) * sin;
+  const sx = (cx ?? 0) + (outerRadius + 10) * cos;
+  const sy = (cy ?? 0) + (outerRadius + 10) * sin;
+  const mx = (cx ?? 0) + (outerRadius + 30) * cos;
+  const my = (cy ?? 0) + (outerRadius + 30) * sin;
   const ex = mx + (cos >= 0 ? 1 : -1) * 22;
   const ey = my;
   const textAnchor = cos >= 0 ? 'start' : 'end';
 
-  const centerNameTextFill = payload.name === 'Passed' ? COLORS.passed : 'hsl(var(--foreground))';
+  const centerNameTextFill = payload?.name === 'Passed' ? COLORS.passed : 'hsl(var(--foreground))';
 
   return (
     <g>
       <text x={cx} y={cy} dy={8} textAnchor="middle" fill={centerNameTextFill} className="text-lg font-bold">
-        {payload.name}
+        {payload?.name}
       </text>
       <Sector
         cx={cx}
@@ -171,8 +189,8 @@ const ActiveShape = (props: ActiveShapeProps) => {
         cy={cy}
         startAngle={startAngle}
         endAngle={endAngle}
-        innerRadius={(outerRadius ?? 0) + 6}
-        outerRadius={(outerRadius ?? 0) + 10}
+        innerRadius={outerRadius + 6}
+        outerRadius={outerRadius + 10}
         fill={fill}
       />
       <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
@@ -211,7 +229,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error downloading chart:', err);
       }
     }
@@ -367,7 +385,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                   <Pie
                     activeIndex={activeIndex}
-                    activeShape={ActiveShape as any} // Use 'as any' if ActiveShapeProps is locally defined and causes issues here
+                    activeShape={ActiveShape as any} 
                     data={testDistributionData}
                     cx="50%"
                     cy="50%"
@@ -382,7 +400,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
-                  <RechartsTooltip content={<CustomTooltip />} />
+                  <RechartsRechartsTooltip content={<CustomTooltip />} />
                   <Legend
                     iconSize={10}
                     layout="horizontal"
@@ -432,7 +450,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     tickFormatter={(value: string) => value.length > 20 ? value.substring(0,17) + '...' : value}
                     interval={0}
                 />
-                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
+                <RechartsRechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
                 <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}} />
                 <Bar dataKey="passed" name="Passed" stackId="a" fill={COLORS.passed} barSize={20} />
                 <Bar dataKey="failed" name="Failed" stackId="a" fill={COLORS.failed} barSize={20} />
@@ -488,8 +506,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     tickFormatter={(value: number) => formatDurationForChart(value)}
                     domain={[0, (dataMax: number) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}
                   />
-                  <RechartsTooltip
-                      content={({ active, payload, label }: RechartsTooltipProps<ValueType, NameType>) => {
+                  <RechartsRechartsTooltip
+                      content={({ active, payload, label }: RechartsTooltipProps ) => {
                           if (active && payload && payload.length) {
                               const data = payload[0].payload as {duration: number; fullTestName: string;};
                               return (
@@ -555,8 +573,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     tickFormatter={(value: number) => formatDurationForChart(value)}
                     domain={[0, (dataMax: number) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}
                   />
-                  <RechartsTooltip
-                      content={({ active, payload, label }: RechartsTooltipProps<ValueType, NameType>) => {
+                  <RechartsRechartsTooltip
+                      content={({ active, payload, label }: RechartsTooltipProps) => {
                           if (active && payload && payload.length) {
                               const data = payload[0].payload as {duration: number; fullTestName: string; status: DetailedTestResult['status']};
                               return (
@@ -620,7 +638,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     tickFormatter={(value: string) => value.length > 20 ? value.substring(0,17) + '...' : value}
                     interval={0}
                 />
-                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
+                <RechartsRechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
                 <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}} />
                 <Bar dataKey="passed" name="Passed" stackId="suiteStack" fill={COLORS.passed} barSize={15} />
                 <Bar dataKey="failed" name="Failed" stackId="suiteStack" fill={COLORS.failed} barSize={15} />

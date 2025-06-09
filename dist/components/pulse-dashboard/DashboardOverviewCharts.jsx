@@ -36,7 +36,7 @@ function formatTestNameForChart(fullName) {
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         const titleText = String(label);
-        const dataPoint = payload[0].payload;
+        const dataPoint = payload[0].payload; // Using any here for flexibility as payload structure varies
         const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0;
         const isPieChartTooltip = dataPoint.percentage !== undefined && dataPoint.name;
         return (<div className="bg-card p-3 border border-border rounded-md shadow-lg">
@@ -271,7 +271,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
           <div ref={testDistributionChartRef} className="w-full h-[280px]">
             {testDistributionData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                  <Pie activeIndex={activeIndex} activeShape={ActiveShape} data={testDistributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" onMouseEnter={onPieEnter} paddingAngle={2} stroke="hsl(var(--card))">
+                  <Pie activeIndex={activeIndex} activeShape={ActiveShape} // Use 'as any' if ActiveShapeProps is locally defined and causes issues here
+         data={testDistributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" onMouseEnter={onPieEnter} paddingAngle={2} stroke="hsl(var(--card))">
                     {testDistributionData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.fill}/>))}
                   </Pie>
                   <RechartsTooltip content={<CustomTooltip />}/>
