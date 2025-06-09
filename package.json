@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": false,
   "type": "module",
-  "description": "A Next.js Dashboard application for real-time monitoring and historical analysis of Playwright test executions. This component provides the UI for visualizing Playwright test results.",
+  "description": "A Next.js Dashboard application for real-time monitoring and historical analysis of Playwright test executions. This component provides the UI for visualizing Playwright test results and can be run as a standalone CLI tool.",
   "author": "Arghajit Singha",
   "license": "Apache-2.0",
   "repository": {
@@ -22,13 +22,22 @@
     "pulse-reporter",
     "pulse-report",
     "pulse-dashboard",
-    "live-reporter"
+    "live-reporter",
+    "cli"
   ],
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "bin": {
+    "pulse-dashboard": "bin/pulse-dashboard.js"
+  },
   "files": [
     "dist",
+    "bin",
+    ".next",
+    "public",
+    "src",
+    "next.config.ts",
     "README.md",
     "LICENSE"
   ],
@@ -37,13 +46,14 @@
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build:app": "next build",
-    "start": "next start",
+    "start": "next start -p 9002",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist .next",
     "build:tsc": "tsc --project tsconfig.build.json",
     "build:css": "tailwindcss -i ./src/app/globals.css -o ./dist/styles.css --minify",
     "build": "npm run clean && npm run build:tsc && npm run build:css",
+    "prepublishOnly": "npm run build:app && npm run build",
     "postinstall": "echo \"Pulse Dashboard is an extensive visualization of playwright-pulse-report, kindly run the 'npm install @arghajit/playwright-pulse-report@latest' to install pulse-report package and follow the readm file. If already installed please ignore, happy reporting!\""
   },
   "dependencies": {
