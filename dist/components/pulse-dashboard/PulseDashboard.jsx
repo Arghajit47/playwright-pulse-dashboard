@@ -15,6 +15,7 @@ export function PulseDashboard() {
     const { currentRun, historicalTrends, loadingCurrent, loadingHistorical, errorCurrent, errorHistorical } = useTestData();
     const [activeView, setActiveView] = useState('dashboard');
     const [initialLiveResultsFilter, setInitialLiveResultsFilter] = useState(undefined);
+    const [linkColor, setLinkColor] = useState('#7737BF'); // For footer link
     const handleMetricCardClick = (filter) => {
         setInitialLiveResultsFilter(filter);
         setActiveView('live-results');
@@ -57,11 +58,11 @@ export function PulseDashboard() {
             componentToRender = <SummaryMetrics currentRun={currentRun} loading={loadingCurrent} error={errorCurrent} onMetricClick={handleMetricCardClick}/>;
     }
     return (<SidebarProvider defaultOpen>
-      <Sidebar collapsible="icon" className="border-r">
-        <SidebarHeader className="p-4 flex items-start justify-between border-b border-sidebar-border">
-           <Link href="/" className="flex items-start gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
-            <Image src="https://i.postimg.cc/FHbZFDxq/pulse-removebg-preview.png" alt="Pulse Dashboard Logo" width={50} height={50} className="rounded-sm" data-ai-hint="pulse logo"/>
-            <h2 className="font-bold text-lg text-primary">Pulse Dashboard</h2>
+      <Sidebar collapsible="icon" className="border-r border-sidebar-border shadow-lg">
+        <SidebarHeader className="p-4 flex items-center justify-between border-b border-sidebar-border">
+           <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
+            <Image src="https://i.postimg.cc/FHbZFDxq/pulse-removebg-preview.png" alt="Pulse Dashboard Logo" width={40} height={40} className="rounded-sm" data-ai-hint="pulse logo"/>
+            <h2 className="font-bold text-xl text-sidebar-foreground">Pulse</h2>
           </Link>
           <SidebarTrigger className="md:hidden group-data-[collapsible=icon]:hidden"/>
         </SidebarHeader>
@@ -71,20 +72,20 @@ export function PulseDashboard() {
                 <SidebarMenuButton onClick={() => {
                 setActiveView(item.id);
             }} isActive={activeView === item.id} tooltip={{ children: item.label, side: 'right', align: 'center' }}>
-                  <item.icon className="h-4 w-4"/>
+                  <item.icon className="h-5 w-5"/>
                   <span>{item.label}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="p-2 group-data-[collapsible=icon]:hidden">
+        <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden">
             <p className="text-xs text-muted-foreground">
               Pulse v1.0
             </p>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <div className="container mx-auto px-4 py-6 space-y-6 min-h-screen flex flex-col">
+        <div className="container mx-auto p-6 md:p-8 space-y-6 min-h-screen flex flex-col rounded-xl shadow-lg bg-background">
           <header className="mb-0">
             <h1 className="text-3xl font-bold font-headline text-primary tracking-tight">
               {activeMenuItem?.label || "Pulse Dashboard"}
@@ -98,10 +99,38 @@ export function PulseDashboard() {
             {componentToRender}
           </main>
 
-          <footer className="text-center mt-auto py-3 border-t">
-            <p className="text-sm text-muted-foreground">
-              Pulse Dashboard &copy; {new Date().getFullYear()}
-            </p>
+          <footer style={{
+            padding: '0.5rem',
+            boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
+            textAlign: 'center',
+            fontFamily: "'Segoe UI', system-ui, sans-serif",
+            marginTop: 'auto', // Ensures footer is at the bottom
+        }}>
+            <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            letterSpacing: '0.5px',
+        }} className="text-foreground">
+              <span>Created by</span>
+              <a href="https://github.com/Arghajit47" target="_blank" rel="noopener noreferrer" style={{
+            color: linkColor,
+            fontWeight: 700,
+            fontStyle: 'italic',
+            textDecoration: 'none',
+            transition: 'all 0.2s ease',
+        }} onMouseOver={() => setLinkColor('#BF5C37')} onMouseOut={() => setLinkColor('#7737BF')}>
+                Arghajit Singha
+              </a>
+            </div>
+            <div style={{
+            marginTop: '0.5rem',
+            fontSize: '0.75rem',
+        }} className="text-muted-foreground">
+              Crafted with precision
+            </div>
           </footer>
         </div>
       </SidebarInset>

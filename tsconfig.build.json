@@ -7,7 +7,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "module": "ESNext", 
+    "module": "NodeNext", 
     "moduleResolution": "NodeNext",
     "noEmit": false, 
     "jsx": "preserve",

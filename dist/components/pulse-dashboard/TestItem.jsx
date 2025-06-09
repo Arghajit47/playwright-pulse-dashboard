@@ -76,7 +76,7 @@ export function TestItem({ test }) {
         .filter(p => p && p !== '');
     const hasDetailsInAccordion = test.errorMessage || currentScreenshots.length > 0;
     const displayName = formatTestName(test.name);
-    return (<div className="border-b border-border last:border-b-0 py-3 hover:bg-muted/10 transition-colors duration-200 px-4 rounded-md mb-2 shadow-sm bg-card hover:shadow-md">
+    return (<div className="border-b border-border last:border-b-0 py-3 hover:bg-muted/20 transition-colors duration-200 px-4 rounded-lg mb-2 shadow-md bg-card hover:shadow-lg">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <StatusIcon status={test.status}/>
@@ -85,7 +85,7 @@ export function TestItem({ test }) {
           </Link>
         </div>
         <div className="flex items-center space-x-3 ml-2 flex-shrink-0">
-          <Badge className={cn("capitalize text-xs px-2 py-0.5 border-transparent", getStatusBadgeClass(test.status))}>
+          <Badge className={cn("capitalize text-xs px-2 py-0.5 border-transparent rounded-full", getStatusBadgeClass(test.status))}>
             {test.status}
           </Badge>
           <span className="text-sm text-muted-foreground w-20 text-right">{formatDuration(test.duration)}</span>
@@ -96,10 +96,10 @@ export function TestItem({ test }) {
       </div>
       {hasDetailsInAccordion && (<Accordion type="single" collapsible className="w-full mt-2">
           <AccordionItem value="details" className="border-none">
-            <AccordionTrigger className="text-xs py-1 px-1 hover:no-underline text-muted-foreground justify-start hover:bg-accent/10 rounded-sm [&[data-state=open]>svg]:ml-2">
+            <AccordionTrigger className="text-xs py-1 px-1 hover:no-underline text-muted-foreground justify-start hover:bg-accent/10 rounded-md [&[data-state=open]>svg]:ml-2">
                 Quick Look
             </AccordionTrigger>
-            <AccordionContent className="pt-2 pl-2 pr-2 pb-1 bg-muted/20 rounded-md">
+            <AccordionContent className="pt-2 pl-2 pr-2 pb-1 bg-muted/30 rounded-lg">
               {test.errorMessage && (<div className="mb-3">
                   <h4 className="font-semibold text-xs text-destructive mb-1">Error:</h4>
                   <pre className="bg-destructive/10 text-destructive text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">{test.errorMessage}</pre>
@@ -111,7 +111,7 @@ export function TestItem({ test }) {
                     const imageSrc = getAssetPath(path);
                     if (imageSrc === '#')
                         return null;
-                    return (<a key={`img-thumb-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-sm overflow-hidden group border hover:border-primary">
+                    return (<a key={`img-thumb-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-md overflow-hidden group border hover:border-primary shadow-sm">
                             <Image src={imageSrc} alt={`Screenshot ${index + 1}`} fill={true} style={{ objectFit: "cover" }} className="group-hover:scale-105 transition-transform duration-300"/>
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                 <Eye className="h-6 w-6 text-white"/>

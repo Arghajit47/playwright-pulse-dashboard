@@ -13,8 +13,8 @@ const COLORS = {
     passed: 'hsl(var(--chart-3))',
     failed: 'hsl(var(--destructive))',
     skipped: 'hsl(var(--accent))',
-    timedOut: 'hsl(var(--destructive))',
-    pending: 'hsl(var(--muted-foreground))',
+    timedOut: 'hsl(var(--destructive))', // Group with failed for coloring
+    pending: 'hsl(var(--muted-foreground))', // A neutral color for pending
     default1: 'hsl(var(--chart-1))',
     default2: 'hsl(var(--chart-2))',
     default3: 'hsl(var(--chart-4))',
@@ -35,17 +35,21 @@ function formatTestNameForChart(fullName) {
 }
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-        const data = payload[0].payload;
-        // For browser chart, 'label' (or payload[0].name) is the full browser string.
-        // For other charts, it might be fullTestName or a pre-formatted name.
-        const displayName = data.fullTestName ? formatTestNameForChart(data.fullTestName) : (payload[0].name || label);
-        const titleText = data.fullTestName || payload[0].name || label;
+        const titleText = String(label); // Main title for the tooltip (e.g., browser name, date, suite name)
+        const dataPoint = payload[0].payload; // The raw data object for this tick
+        const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0; // Check if it's a stacked bar (browser or suite)
+        const isPieChartTooltip = dataPoint.percentage !== undefined && dataPoint.name;
         return (<div className="bg-card p-3 border border-border rounded-md shadow-lg">
-        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>{displayName}</p>
+        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>
+          {dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
+        </p>
         {payload.map((entry, index) => (<p key={`item-${index}`} style={{ color: entry.color || entry.payload.fill }} className="text-xs">
             {`${entry.name}: ${entry.value.toLocaleString()}${entry.unit || ''}`}
-            {entry.name === payload[0].name && payload[0].payload.percentage && ` (${payload[0].payload.percentage}%)`}
+            {isPieChartTooltip && entry.name === dataPoint.name && ` (${dataPoint.percentage}%)`}
           </p>))}
+        {isStackedBarTooltip && (<p className="text-xs font-bold mt-1 text-foreground">
+            Total: {dataPoint.total.toLocaleString()}
+          </p>)}
       </div>);
     }
     return null;
@@ -76,14 +80,13 @@ function normalizeBrowserNameForIcon(rawBrowserName) {
     return 'Unknown';
 }
 const BrowserIcon = ({ browserName, className }) => {
-    const normalizedForIcon = normalizeBrowserNameForIcon(browserName); // Use the original full browser name for icon normalization
+    const normalizedForIcon = normalizeBrowserNameForIcon(browserName);
     if (normalizedForIcon === 'Chrome' || normalizedForIcon === 'Chrome Mobile') {
         return <Chrome className={cn("h-4 w-4", className)}/>;
     }
     if (normalizedForIcon === 'Safari' || normalizedForIcon === 'Mobile Safari') {
         return <Compass className={cn("h-4 w-4", className)}/>;
     }
-    // For Firefox, Edge, and Unknown, use Globe as specific icons are not always available or cause build issues.
     return <Globe className={cn("h-4 w-4", className)}/>;
 };
 const ActiveShape = (props) => {
@@ -182,20 +185,24 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
         ...(pending > 0 ? [{ name: 'Pending', value: pending, fill: COLORS.pending }] : []),
     ]
         .filter(d => d.value > 0)
-        .map(d => ({ ...d, percentage: totalTestsForPie > 0 ? ((d.value / totalTestsForPie) * 100).toFixed(1) : '0.0' }));
-    const browserDistribution = currentRun.results.reduce((acc, test) => {
-        const browserName = test.browser || 'Unknown'; // Use the raw browser string
+        .map(d => ({ ...d, name: d.name, value: d.value, fill: d.fill, percentage: totalTestsForPie > 0 ? ((d.value / totalTestsForPie) * 100).toFixed(1) : '0.0' }));
+    const browserDistributionRaw = currentRun.results.reduce((acc, test) => {
+        const browserName = test.browser || 'Unknown';
         if (!acc[browserName]) {
-            acc[browserName] = { count: 0 };
+            acc[browserName] = { name: browserName, passed: 0, failed: 0, skipped: 0, pending: 0, total: 0 };
         }
-        acc[browserName].count += 1;
+        if (test.status === 'passed')
+            acc[browserName].passed++;
+        else if (test.status === 'failed' || test.status === 'timedOut')
+            acc[browserName].failed++;
+        else if (test.status === 'skipped')
+            acc[browserName].skipped++;
+        else if (test.status === 'pending')
+            acc[browserName].pending++;
+        acc[browserName].total++;
         return acc;
     }, {});
-    const browserChartData = Object.entries(browserDistribution).map(([name, data], index) => ({
-        name, // Full browser string (e.g., "chrome-121.0.0")
-        value: data.count,
-        fill: [COLORS.default1, COLORS.default2, COLORS.default3, COLORS.default4, COLORS.default5][index % 5]
-    }));
+    const browserChartData = Object.values(browserDistributionRaw).sort((a, b) => b.total - a.total);
     const failedTestsDurationData = currentRun.results
         .filter(test => test.status === 'failed' || test.status === 'timedOut')
         .map(test => {
@@ -209,16 +216,23 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
     })
         .sort((a, b) => b.duration - a.duration)
         .slice(0, 10);
-    const testsPerSuite = currentRun.results.reduce((acc, test) => {
-        const suite = test.suiteName || 'Default Suite';
-        acc[suite] = (acc[suite] || 0) + 1;
+    const suiteDistributionRaw = currentRun.results.reduce((acc, test) => {
+        const suiteName = test.suiteName || 'Unknown Suite';
+        if (!acc[suiteName]) {
+            acc[suiteName] = { name: suiteName, passed: 0, failed: 0, skipped: 0, pending: 0, total: 0 };
+        }
+        if (test.status === 'passed')
+            acc[suiteName].passed++;
+        else if (test.status === 'failed' || test.status === 'timedOut')
+            acc[suiteName].failed++;
+        else if (test.status === 'skipped')
+            acc[suiteName].skipped++;
+        else if (test.status === 'pending')
+            acc[suiteName].pending++;
+        acc[suiteName].total++;
         return acc;
     }, {});
-    const testsPerSuiteChartData = Object.entries(testsPerSuite).map(([name, value], index) => ({
-        name,
-        value,
-        fill: [COLORS.default1, COLORS.default2, COLORS.default3, COLORS.default4, COLORS.default5][index % 5]
-    }));
+    const testsPerSuiteChartData = Object.values(suiteDistributionRaw).sort((a, b) => b.total - a.total);
     const slowestTestsData = [...currentRun.results]
         .sort((a, b) => b.duration - a.duration)
         .slice(0, 5)
@@ -232,6 +246,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
             status: test.status,
         };
     });
+    const showPendingInBrowserChart = browserChartData.some(d => d.pending > 0);
+    const showPendingInSuiteChart = testsPerSuiteChartData.some(s => s.pending > 0);
     return (<TooltipProvider>
     <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -270,7 +286,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">Tests by Browser</CardTitle>
-            <CardDescription className="text-xs">Number of tests executed per browser.</CardDescription>
+            <CardDescription className="text-xs">Breakdown of test outcomes per browser.</CardDescription>
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -285,18 +301,19 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
         </CardHeader>
         <CardContent>
           <div ref={browserChartRef} className="w-full h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
+          {browserChartData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
               <RechartsBarChart data={browserChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10}/>
                 <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} tickFormatter={(value) => value.length > 20 ? value.substring(0, 17) + '...' : value} interval={0}/>
-                <RechartsTooltip content={<CustomTooltip />}/>
-                <Bar dataKey="value" name="Tests" barSize={20}>
-                  {browserChartData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.fill}/>))}
-                   <LabelList dataKey="value" position="right" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }}/>
-                </Bar>
+                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
+                <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}/>
+                <Bar dataKey="passed" name="Passed" stackId="a" fill={COLORS.passed} barSize={20}/>
+                <Bar dataKey="failed" name="Failed" stackId="a" fill={COLORS.failed} barSize={20}/>
+                <Bar dataKey="skipped" name="Skipped" stackId="a" fill={COLORS.skipped} barSize={20}/>
+                {showPendingInBrowserChart && (<Bar dataKey="pending" name="Pending" stackId="a" fill={COLORS.pending} barSize={20}/>)}
               </RechartsBarChart>
-            </ResponsiveContainer>
+            </ResponsiveContainer>) : (<div className="text-center text-muted-foreground h-[250px] flex items-center justify-center">No browser data.</div>)}
           </div>
            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-xs text-muted-foreground">
             {browserChartData.map(b => (<div key={b.name} className="flex items-center gap-1" title={b.name}>
@@ -304,7 +321,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                     <span className="truncate max-w-[150px]">{b.name}</span>
                 </div>))}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Note: Icons are representative. Full browser name (including version) is shown.</p>
+            <p className="text-xs text-muted-foreground mt-2">Note: Icons are representative. Full browser name (including version) is shown in tooltip.</p>
         </CardContent>
       </Card>
 
@@ -331,7 +348,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                 <RechartsBarChart data={failedTestsDurationData} margin={{ top: 5, right: 5, left: 5, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                   <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} angle={-40} textAnchor="end" interval={0}/>
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(value) => formatDurationForChart(value)}/>
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(value) => formatDurationForChart(value)} domain={[0, (dataMax) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}/>
                   <RechartsTooltip content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
                     const data = payload[0].payload;
@@ -378,9 +395,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
             {slowestTestsData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                 <RechartsBarChart data={slowestTestsData} margin={{ top: 5, right: 5, left: 5, bottom: 30 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
-                  <XAxis dataKey="name" tickLine={false} tickFormatter={() => ''} // Hide X-axis labels for this chart to save space
-         stroke="hsl(var(--muted-foreground))"/>
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(value) => formatDurationForChart(value)}/>
+                  <XAxis dataKey="name" tickLine={false} tickFormatter={() => ''} stroke="hsl(var(--muted-foreground))"/>
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(value) => formatDurationForChart(value)} domain={[0, (dataMax) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}/>
                   <RechartsTooltip content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
                     const data = payload[0].payload;
@@ -407,7 +423,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
-            <CardDescription className="text-xs">Number of test cases in each suite.</CardDescription>
+            <CardDescription className="text-xs">Breakdown of test outcomes per suite.</CardDescription>
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -421,19 +437,20 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
           </Tooltip>
         </CardHeader>
         <CardContent className="max-h-[400px] overflow-y-auto">
-          <div ref={testsPerSuiteChartRef} className="w-full" style={{ height: Math.max(250, testsPerSuiteChartData.length * 35 + 60) }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsBarChart data={testsPerSuiteChartData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+          <div ref={testsPerSuiteChartRef} className="w-full" style={{ height: Math.max(250, testsPerSuiteChartData.length * 45 + 60) }}> {/* Adjusted height for potentially more bars */}
+          {testsPerSuiteChartData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
+              <RechartsBarChart data={testsPerSuiteChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10}/>
-                <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} interval={0} tickFormatter={(value) => value.length > 25 ? value.substring(0, 22) + '...' : value}/>
-                <RechartsTooltip content={<CustomTooltip />}/>
-                <Bar dataKey="value" name="Tests" barSize={15}>
-                  {testsPerSuiteChartData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.fill}/>))}
-                  <LabelList dataKey="value" position="right" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }}/>
-                </Bar>
+                <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} tickFormatter={(value) => value.length > 20 ? value.substring(0, 17) + '...' : value} interval={0}/>
+                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
+                <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}/>
+                <Bar dataKey="passed" name="Passed" stackId="suiteStack" fill={COLORS.passed} barSize={15}/>
+                <Bar dataKey="failed" name="Failed" stackId="suiteStack" fill={COLORS.failed} barSize={15}/>
+                <Bar dataKey="skipped" name="Skipped" stackId="suiteStack" fill={COLORS.skipped} barSize={15}/>
+                {showPendingInSuiteChart && (<Bar dataKey="pending" name="Pending" stackId="suiteStack" fill={COLORS.pending} barSize={15}/>)}
               </RechartsBarChart>
-            </ResponsiveContainer>
+            </ResponsiveContainer>) : (<div className="text-center text-muted-foreground h-[250px] flex items-center justify-center">No suite data.</div>)}
           </div>
         </CardContent>
       </Card>
