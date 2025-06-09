@@ -12,12 +12,13 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ansiToHtml } from '@/lib/utils';
 
 interface CategorizedFailureGroup {
   categoryName: string;
   count: number;
   tests: DetailedTestResult[];
-  exampleErrorMessages: string[];
+  exampleErrorMessages: (string | null | undefined)[]; // Can contain original error messages
 }
 
 const CATEGORIES_CONFIG: { name: string; keywords: string[]; description?: string }[] = [
@@ -49,7 +50,8 @@ const CATEGORIES_CONFIG: { name: string; keywords: string[]; description?: strin
 ];
 const OTHER_ERRORS_CATEGORY = 'Other Errors';
 
-function stripAnsiCodes(str: string): string {
+// This utility is now only used for the categorization logic, not for display
+function stripAnsiCodesForLogic(str: string): string {
   if (!str) return '';
   return str.replace(/\u001b\[[0-9;]*[mGKH]/g, '');
 }
@@ -71,20 +73,22 @@ export function FailureCategorizationView() {
       (test: DetailedTestResult) => test.status === 'failed' || test.status === 'timedOut'
     );
 
-    const categoriesMap = new Map<string, { tests: DetailedTestResult[], exampleErrorMessages: string[] }>();
+    const categoriesMap = new Map<string, { tests: DetailedTestResult[], exampleErrorMessages: (string | null | undefined)[] }>();
 
     failedTests.forEach((test: DetailedTestResult) => {
-      const currentErrorMessage = stripAnsiCodes(test.errorMessage || 'Unknown error').toLowerCase();
+      // For categorization logic, use stripped and lowercased error message
+      const logicalErrorMessage = stripAnsiCodesForLogic(test.errorMessage || 'Unknown error').toLowerCase();
       let assignedCategory = false;
 
       for (const category of CATEGORIES_CONFIG) {
-        if (category.keywords.some(keyword => currentErrorMessage.includes(keyword.toLowerCase()))) {
+        if (category.keywords.some(keyword => logicalErrorMessage.includes(keyword.toLowerCase()))) {
           if (!categoriesMap.has(category.name)) {
             categoriesMap.set(category.name, { tests: [], exampleErrorMessages: [] });
           }
           categoriesMap.get(category.name)!.tests.push(test);
-          if (categoriesMap.get(category.name)!.exampleErrorMessages.length < 3 && test.errorMessage) {
-             categoriesMap.get(category.name)!.exampleErrorMessages.push(stripAnsiCodes(test.errorMessage));
+          // Store original error message for display
+          if (categoriesMap.get(category.name)!.exampleErrorMessages.length < 3) {
+             categoriesMap.get(category.name)!.exampleErrorMessages.push(test.errorMessage);
           }
           assignedCategory = true;
           break;
@@ -96,8 +100,9 @@ export function FailureCategorizationView() {
           categoriesMap.set(OTHER_ERRORS_CATEGORY, { tests: [], exampleErrorMessages: [] });
         }
         categoriesMap.get(OTHER_ERRORS_CATEGORY)!.tests.push(test);
-         if (categoriesMap.get(OTHER_ERRORS_CATEGORY)!.exampleErrorMessages.length < 3 && test.errorMessage) {
-            categoriesMap.get(OTHER_ERRORS_CATEGORY)!.exampleErrorMessages.push(stripAnsiCodes(test.errorMessage));
+        // Store original error message for display
+         if (categoriesMap.get(OTHER_ERRORS_CATEGORY)!.exampleErrorMessages.length < 3 ) {
+            categoriesMap.get(OTHER_ERRORS_CATEGORY)!.exampleErrorMessages.push(test.errorMessage);
          }
       }
     });
@@ -189,6 +194,12 @@ export function FailureCategorizationView() {
     <div className="space-y-6">
       {categorizedFailures.map(group => {
         const categoryConfig = CATEGORIES_CONFIG.find(c => c.name === group.categoryName);
+        const firstExampleError = group.exampleErrorMessages[0];
+        const exampleErrorHtml = firstExampleError 
+          ? ansiToHtml(firstExampleError.substring(0, 150)) // Display more characters for context
+          : '';
+        const showEllipsis = firstExampleError && firstExampleError.length > 150;
+
         return (
           <Card key={group.categoryName} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
             <CardHeader>
@@ -199,9 +210,9 @@ export function FailureCategorizationView() {
               {categoryConfig?.description && (
                 <CardDescription className="text-xs mt-1">{categoryConfig.description}</CardDescription>
               )}
-              {group.categoryName === OTHER_ERRORS_CATEGORY && group.exampleErrorMessages.length > 0 && (
+              {group.categoryName === OTHER_ERRORS_CATEGORY && firstExampleError && (
                  <CardDescription className="text-xs mt-1 italic">
-                    Example errors: "{group.exampleErrorMessages[0].substring(0, 100)}{group.exampleErrorMessages[0].length > 100 ? '...' : ''}"
+                    Example error: <span dangerouslySetInnerHTML={{ __html: exampleErrorHtml }} />{showEllipsis ? '...' : ''}
                  </CardDescription>
               )}
             </CardHeader>
@@ -220,8 +231,8 @@ export function FailureCategorizationView() {
                         <Link href={`/test/${test.id}`} className="text-xs text-primary hover:underline mb-2 block">View full test details</Link>
                         <h5 className="text-xs font-semibold text-muted-foreground mb-1">Error Message:</h5>
                         <ScrollArea className="max-h-32 w-full">
-                          <pre className="text-xs whitespace-pre-wrap break-words font-code bg-muted/30 p-2 rounded-sm text-destructive">
-                            {stripAnsiCodes(test.errorMessage || 'No error message captured.')}
+                          <pre className="text-xs whitespace-pre-wrap break-words font-code bg-muted/30 p-2 rounded-sm">
+                            <span dangerouslySetInnerHTML={{ __html: ansiToHtml(test.errorMessage || 'No error message captured.') }} />
                           </pre>
                         </ScrollArea>
                       </AccordionContent>

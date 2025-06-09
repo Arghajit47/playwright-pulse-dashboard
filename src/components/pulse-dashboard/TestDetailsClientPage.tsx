@@ -17,7 +17,7 @@ import { useState, useEffect, useRef } from 'react';
 import { TestStepItemRecursive } from './TestStepItemRecursive';
 import { getRawHistoricalReports } from '@/app/actions'; 
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, DotProps } from 'recharts';
-import { cn } from '@/lib/utils';
+import { cn, ansiToHtml } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -328,7 +328,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {test.errorMessage && (
                  <div className="mb-4 p-3 md:p-0">
                   <h4 className="font-semibold text-md text-destructive mb-1">Overall Test Error:</h4>
-                  <pre className="bg-destructive/10 text-destructive text-sm p-4 rounded-lg whitespace-pre-wrap break-all font-code overflow-x-auto">{test.errorMessage}</pre>
+                  <pre className="bg-destructive/10 text-sm p-4 rounded-lg whitespace-pre-wrap break-all font-code overflow-x-auto">
+                    <span dangerouslySetInnerHTML={{ __html: ansiToHtml(test.errorMessage) }} />
+                  </pre>
                 </div>
               )}
               {test.steps && test.steps.length > 0 ? (
@@ -378,6 +380,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                               fill={true}
                               style={{objectFit: "cover"}}
                               className="group-hover:scale-105 transition-transform duration-300"
+                              data-ai-hint="test screenshot"
                             />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2">
                               <p className="text-white text-xs text-center break-all">{`Screenshot ${index + 1}`}</p>
@@ -454,10 +457,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   <Terminal className="h-5 w-5 mr-2 text-primary"/>Console Logs / Standard Output
                 </h3>
                 <ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm">
-                  <pre className="text-sm text-foreground whitespace-pre-wrap break-words">
-                    {(test.stdout && Array.isArray(test.stdout) && test.stdout.length > 0)
-                      ? test.stdout.join('\n')
-                      : "No standard output logs captured for this test."}
+                  <pre className="text-sm whitespace-pre-wrap break-words font-code">
+                    <span dangerouslySetInnerHTML={{ __html: ansiToHtml(
+                      (test.stdout && Array.isArray(test.stdout) && test.stdout.length > 0)
+                        ? test.stdout.join('\n')
+                        : "No standard output logs captured for this test."
+                    )}} />
                   </pre>
                 </ScrollArea>
               </div>
@@ -465,15 +470,13 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
                   <AlertCircle className="h-5 w-5 mr-2 text-destructive"/>Error Messages / Standard Error
                 </h3>
-                {test.errorMessage && test.errorMessage.trim() !== '' ? (
-                  <ScrollArea className="h-48 w-full rounded-lg border bg-destructive/5 shadow-sm">
-                    <pre className="text-sm text-destructive p-3 whitespace-pre-wrap break-all font-code">
-                      {test.errorMessage}
-                    </pre>
-                  </ScrollArea>
-                ) : (
-                  <p className="text-muted-foreground p-3">No errors captured for this test.</p>
-                )}
+                <ScrollArea className="h-48 w-full rounded-lg border bg-destructive/5 shadow-sm">
+                  <pre className="text-sm p-3 whitespace-pre-wrap break-all font-code">
+                    <span dangerouslySetInnerHTML={{ __html: ansiToHtml(
+                      test.errorMessage || "No errors captured for this test."
+                    )}} />
+                  </pre>
+                </ScrollArea>
               </div>
             </TabsContent>
 

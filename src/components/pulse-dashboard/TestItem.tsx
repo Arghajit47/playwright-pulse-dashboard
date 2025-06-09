@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle2, XCircle, AlertCircle, Clock, Eye, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, ansiToHtml } from '@/lib/utils';
 
 interface TestItemProps {
   test: DetailedTestResult;
@@ -125,7 +125,9 @@ export function TestItem({ test }: TestItemProps) {
               {test.errorMessage && (
                 <div className="mb-3">
                   <h4 className="font-semibold text-xs text-destructive mb-1">Error:</h4>
-                  <pre className="bg-destructive/10 text-destructive text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">{test.errorMessage}</pre>
+                  <pre className="bg-destructive/10 text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">
+                    <span dangerouslySetInnerHTML={{ __html: ansiToHtml(test.errorMessage) }} />
+                  </pre>
                 </div>
               )}
               {currentScreenshots.length > 0 && (
@@ -143,6 +145,7 @@ export function TestItem({ test }: TestItemProps) {
                                 fill={true}
                                 style={{objectFit: "cover"}}
                                 className="group-hover:scale-105 transition-transform duration-300"
+                                data-ai-hint="test screenshot"
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                 <Eye className="h-6 w-6 text-white"/>
