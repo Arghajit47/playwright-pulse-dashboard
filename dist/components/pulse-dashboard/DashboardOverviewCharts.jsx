@@ -50,8 +50,8 @@ const CustomTooltip = ({ active, payload, label }) => {
             displayTitle = String(label); // Fallback for bar charts using axis label
         }
         // Fallback if displayTitle ended up as "undefined" but there's a name on the series item
-        if (displayTitle === "undefined" && payload[0]?.name) {
-            displayTitle = payload[0].name;
+        if (displayTitle === "undefined" && payload[0]?.name !== undefined) {
+            displayTitle = String(payload[0].name);
         }
         // Final safety for "undefined" string, can be made more generic like "Details"
         if (displayTitle === "undefined") {
