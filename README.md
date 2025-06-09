@@ -34,19 +34,47 @@ yarn add pulse-dashboard-component
 ## Usage
 
 1.  **Import CSS**:
-    In your main application file (e.g., `_app.tsx`, `layout.tsx`, or a global CSS file):
+    In your main application file (e.g., `_app.tsx`, `layout.tsx`, or a global CSS file of your **consuming Next.js application**):
     ```javascript
-    import 'pulse-dashboard-component/dist/styles.css';
+    import 'pulse-dashboard-component/dist/styles.css'; // Adjust if your package name is different
     ```
 
 2.  **Import and Use Component**:
+    In a page or component of your **consuming Next.js application** (e.g., `app/dashboard/page.tsx` or `pages/dashboard.tsx`):
     ```tsx
-    import { PulseDashboard } from 'pulse-dashboard-component';
+    import { PulseDashboard } from 'pulse-dashboard-component'; // Adjust if your package name is different
 
-    function MyPage() {
+    export default function MyDashboardPage() {
       return <PulseDashboard />;
     }
     ```
+
+## Viewing Your Pulse Dashboard
+
+Once you've installed `pulse-dashboard-component` into your own Next.js application and configured the data provision requirements (see next section), you can view the dashboard by:
+
+1.  **Ensuring Component is Rendered:**
+    Make sure you have imported and are rendering the `PulseDashboard` component in one of your Next.js application's pages (as shown in the "Usage" section above).
+
+2.  **Setting Up Data & APIs:**
+    Verify that your consuming Next.js application meets all points in the "Data Provision Requirements" section below. This includes:
+    *   Creating the `pulse-report/` directory at the root of **your application's project**.
+    *   Populating it with `playwright-pulse-report.json` and historical `trend-*.json` files.
+    *   Implementing the required API routes (`/api/current-run` and `/api/historical-trends`).
+    *   Configuring serving of attachments from `YOUR_PROJECT_ROOT/pulse-report/attachments/` at the `/pulse-report/attachments/` web path.
+
+3.  **Running Your Next.js Application:**
+    Navigate to your **consuming Next.js application's directory** in your terminal and run its development server, typically with:
+    ```bash
+    npm run dev
+    # or
+    yarn dev
+    # or
+    pnpm dev
+    ```
+    Then, open your browser and navigate to the page where you've rendered the `PulseDashboard` component (e.g., `http://localhost:3000/dashboard`).
+
+**Important:** The `PulseDashboard` component is a UI library. It doesn't run on its own like a standalone application. It needs to be hosted within a Next.js application that provides the data and API endpoints it requires. The `npm run dev` script *within this `pulse-dashboard-component` package's repository* is for developing the component itself, not for general use by consumers of the published package.
 
 ## Data Provision Requirements (Consumer Application)
 
