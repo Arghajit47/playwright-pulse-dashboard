@@ -7,11 +7,11 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "module": "NodeNext", // Keep as NodeNext with bundler resolution
-    "moduleResolution": "bundler", // Changed from NodeNext
+    "module": "esnext", // Changed from NodeNext
+    "moduleResolution": "bundler", // Keep as bundler
     "noEmit": false,
     "jsx": "preserve",
-    "isolatedModules": false, // Reverted from true in previous step
+    "isolatedModules": false,
     "target": "ES2020",
     "baseUrl": "./",
     "paths": {
@@ -34,7 +34,7 @@
     "node_modules",
     "dist",
     ".next",
-    "src/app", // Exclude the app-specific directory
-    "src/ai" // Exclude AI specific directory
+    "src/app", 
+    "src/ai" 
   ]
 }
