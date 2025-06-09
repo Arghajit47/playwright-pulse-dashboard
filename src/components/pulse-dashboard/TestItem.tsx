@@ -58,30 +58,36 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 }
 
 function getAssetPath(jsonPath: string | undefined | null): string {
-  if (!jsonPath || typeof jsonPath !== 'string' || jsonPath.trim() === '') {
-    return '#'; 
+  if (!jsonPath || typeof jsonPath !== 'string') {
+    return '#'; // Return a non-functional link for invalid input
   }
-  const trimmedPath = jsonPath.trim();
-
-  if (trimmedPath.startsWith('data:image')) {
-    return trimmedPath; // It's a data URI, return as is
-  }
-  if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
-    return trimmedPath; // Absolute external URL
-  }
-  if (trimmedPath.startsWith('/')) { 
-    // Assumed to be an already correct absolute web path from server root
-    return trimmedPath;
+  let path = jsonPath.trim();
+  if (path === '') {
+    return '#';
   }
 
-  // Handle relative file paths like "attachments/RUN_ID/image.png"
-  // These are assumed relative to "pulse-report/"
-  const normalizedRelativePath = trimmedPath
-    .split('/')
-    .filter(part => part && part !== '.')
-    .join('/');
+  // If it's a data URI or absolute web URL, return as is
+  if (path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  // Normalize path separators
+  path = path.replace(/\\/g, '/');
   
-  return `/pulse-report/${normalizedRelativePath}`;
+  // If path ALREADY starts with "/pulse-report/", it's a correct root-relative path.
+  if (path.startsWith('/pulse-report/')) {
+    return path;
+  }
+
+  // If path starts with "pulse-report/" (without leading slash), make it root-relative.
+  if (path.startsWith('pulse-report/')) {
+    return `/${path}`;
+  }
+  
+  // Otherwise, assume the path is relative to the 'pulse-report' directory itself
+  // (e.g., "attachments/image.png", "videos/video.mp4").
+  const parts = path.split('/').filter(part => part && part !== '.');
+  return `/pulse-report/${parts.join('/')}`;
 }
 
 export function TestItem({ test }: TestItemProps) {
@@ -145,7 +151,7 @@ export function TestItem({ test }: TestItemProps) {
                                 fill={true}
                                 style={{objectFit: "cover"}}
                                 className="group-hover:scale-105 transition-transform duration-300"
-                                data-ai-hint="test screenshot"
+                                data-ai-hint="test screenshot thumbnail"
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                 <Eye className="h-6 w-6 text-white"/>
@@ -166,3 +172,5 @@ export function TestItem({ test }: TestItemProps) {
     </div>
   );
 }
+
+    

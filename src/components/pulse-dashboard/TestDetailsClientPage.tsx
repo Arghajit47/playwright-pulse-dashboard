@@ -110,34 +110,36 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 
 function getAssetPath(jsonPath: string | undefined | null): string {
   if (!jsonPath || typeof jsonPath !== 'string') {
-    return '#';
+    return '#'; // Return a non-functional link for invalid input
   }
-  const trimmedPath = jsonPath.trim();
-  if (trimmedPath === '') {
+  let path = jsonPath.trim();
+  if (path === '') {
     return '#';
   }
 
-  if (trimmedPath.startsWith('data:image')) {
-    return trimmedPath; // It's a data URI
-  }
-  if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
-    return trimmedPath; // Absolute external URL
-  }
-  if (trimmedPath.startsWith('/')) {
-    // Assumed to be an already correct absolute web path from server root
-    // e.g., /pulse-report/attachments/... or /some-other-custom-path/...
-    return trimmedPath;
+  // If it's a data URI or absolute web URL, return as is
+  if (path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
   }
 
-  // Handle relative file paths like "attachments/RUN_ID/image.png" or "RUN_ID/image.png"
-  // These are assumed relative to "public/pulse-report/"
-  // So, prepend "/pulse-report/"
-  const normalizedRelativePath = trimmedPath
-    .split('/')
-    .filter(part => part && part !== '.') // Filter out empty strings and single dots
-    .join('/');
+  // Normalize path separators
+  path = path.replace(/\\/g, '/');
   
-  return `/pulse-report/${normalizedRelativePath}`;
+  // If path ALREADY starts with "/pulse-report/", it's a correct root-relative path.
+  if (path.startsWith('/pulse-report/')) {
+    return path;
+  }
+
+  // If path starts with "pulse-report/" (without leading slash), make it root-relative.
+  if (path.startsWith('pulse-report/')) {
+    return `/${path}`;
+  }
+  
+  // Otherwise, assume the path is relative to the 'pulse-report' directory itself
+  // (e.g., "attachments/image.png", "videos/video.mp4").
+  // We want it to become "/pulse-report/attachments/image.png" or "/pulse-report/videos/video.mp4"
+  const parts = path.split('/').filter(part => part && part !== '.'); // Remove empty parts or "."
+  return `/pulse-report/${parts.join('/')}`;
 }
 
 
@@ -564,3 +566,5 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
+
+    
