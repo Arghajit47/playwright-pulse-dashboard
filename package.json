@@ -42,7 +42,7 @@
     "build:tsc": "tsc --project tsconfig.build.json",
     "build:css": "tailwindcss -i ./src/app/globals.css -o ./dist/styles.css --minify",
     "build": "npm run clean && npm run build:tsc && npm run build:css",
-    "postinstall": "echo \"Pulse Dashboard is an extensive visualization of playwright-pulse-report, kindly run the 'npm install @arghajit/playwright-pulse-report@latest' to install pulse-report. If already installed please ignore, happy reporting!\""
+    "postinstall": "echo \"Pulse Dashboard is an extensive visualization of playwright-pulse-report, kindly run the 'npm install @arghajit/playwright-pulse-report@latest' to install pulse-report package and follow the readm file. If already installed please ignore, happy reporting!\""
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",

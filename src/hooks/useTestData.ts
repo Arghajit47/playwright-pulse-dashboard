@@ -17,17 +17,15 @@ export function useTestData() {
   const [data, setData] = useState<TestDataState>({
     currentRun: null,
     historicalTrends: [],
-    loadingCurrent: true,
-    loadingHistorical: true,
+    loadingCurrent: true, // Initial loading state set to true
+    loadingHistorical: true, // Initial loading state set to true
     errorCurrent: null,
     errorHistorical: null,
   });
 
   const fetchCurrentRun = useCallback(async () => {
     const apiUrl = '/api/current-run';
-    if (!data.currentRun && !data.errorCurrent) {
-      setData(prev => ({ ...prev, loadingCurrent: true }));
-    }
+    // loadingCurrent is true initially. Subsequent polls won't set it to true to avoid UI flicker.
     try {
       console.log(`Attempting to fetch current run data from: ${apiUrl}`);
       const response = await fetch(apiUrl);
@@ -44,6 +42,7 @@ export function useTestData() {
         throw new Error(`Failed to fetch current run from ${apiUrl}: ${errorDetails}`);
       }
       const result: PlaywrightPulseReport = await response.json();
+      // Set loadingCurrent to false on successful fetch.
       setData(prev => ({ ...prev, currentRun: result, loadingCurrent: false, errorCurrent: null }));
     } catch (error) {
       console.error(`PulseDashboard Fetch Error (currentRun at ${apiUrl}):`, error); 
@@ -55,15 +54,14 @@ export function useTestData() {
       } else {
         detailedErrorMessage = String(error);
       }
+      // Set loadingCurrent to false on error.
       setData(prev => ({ ...prev, loadingCurrent: false, errorCurrent: detailedErrorMessage }));
     }
-  }, [data.currentRun, data.errorCurrent]);
+  }, []); // Empty dependency array for useCallback makes this function stable
 
   const fetchHistoricalTrends = useCallback(async () => {
     const apiUrl = '/api/historical-trends';
-    if (data.historicalTrends.length === 0 && !data.errorHistorical) {
-     setData(prev => ({ ...prev, loadingHistorical: true }));
-    }
+    // loadingHistorical is true initially.
     try {
       console.log(`Attempting to fetch historical trends data from: ${apiUrl}`);
       const response = await fetch(apiUrl);
@@ -80,6 +78,7 @@ export function useTestData() {
         throw new Error(`Failed to fetch historical trends from ${apiUrl}: ${errorDetails}`);
       }
       const result: HistoricalTrend[] = await response.json();
+      // Set loadingHistorical to false on successful fetch.
       setData(prev => ({ ...prev, historicalTrends: result, loadingHistorical: false, errorHistorical: null }));
     } catch (error) {
       console.error(`PulseDashboard Fetch Error (historicalTrends at ${apiUrl}):`, error);
@@ -91,14 +90,25 @@ export function useTestData() {
       } else {
         detailedErrorMessage = String(error);
       }
+      // Set loadingHistorical to false on error.
       setData(prev => ({ ...prev, loadingHistorical: false, errorHistorical: detailedErrorMessage }));
     }
-  }, [data.historicalTrends.length, data.errorHistorical]);
+  }, []); // Empty dependency array for useCallback makes this function stable
 
   useEffect(() => {
+    // Initial fetches
     fetchCurrentRun();
     fetchHistoricalTrends();
-  }, [fetchCurrentRun, fetchHistoricalTrends]);
+
+    // Setup polling for currentRun
+    const intervalId = setInterval(() => {
+      console.log('Polling for current run data...');
+      fetchCurrentRun();
+    }, 5000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [fetchCurrentRun, fetchHistoricalTrends]); // useEffect dependencies are now stable
 
   return data;
 }
