@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
+import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
 import { Terminal, CheckCircle, Info, Chrome, Globe, Compass, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
@@ -36,14 +36,14 @@ function formatTestNameForChart(fullName) {
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         const titleText = String(label);
-        const dataPoint = payload[0].payload; // Using any here for flexibility as payload structure varies
+        const dataPoint = payload[0].payload;
         const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0;
         const isPieChartTooltip = dataPoint.percentage !== undefined && dataPoint.name;
         return (<div className="bg-card p-3 border border-border rounded-md shadow-lg">
         <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>
           {dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
         </p>
-        {payload.map((entry, index) => (<p key={`item-${index}`} style={{ color: entry.color || entry.payload.fill }} className="text-xs">
+        {payload.map((entry, index) => (<p key={`item-${index}`} style={{ color: entry.color || entry.payload?.fill }} className="text-xs">
             {`${entry.name}: ${entry.value?.toLocaleString()}${entry.unit || ''}`}
             {isPieChartTooltip && entry.name === dataPoint.name && ` (${dataPoint.percentage}%)`}
           </p>))}
@@ -91,23 +91,23 @@ const BrowserIcon = ({ browserName, className }) => {
 };
 const ActiveShape = (props) => {
     const RADIAN = Math.PI / 180;
-    const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+    const { cx, cy, midAngle, innerRadius = 0, outerRadius = 0, startAngle = 0, endAngle = 0, fill, payload, percent, value = 0 } = props;
     const sin = Math.sin(-RADIAN * (midAngle ?? 0));
     const cos = Math.cos(-RADIAN * (midAngle ?? 0));
-    const sx = (cx ?? 0) + ((outerRadius ?? 0) + 10) * cos;
-    const sy = (cy ?? 0) + ((outerRadius ?? 0) + 10) * sin;
-    const mx = (cx ?? 0) + ((outerRadius ?? 0) + 30) * cos;
-    const my = (cy ?? 0) + ((outerRadius ?? 0) + 30) * sin;
+    const sx = (cx ?? 0) + (outerRadius + 10) * cos;
+    const sy = (cy ?? 0) + (outerRadius + 10) * sin;
+    const mx = (cx ?? 0) + (outerRadius + 30) * cos;
+    const my = (cy ?? 0) + (outerRadius + 30) * sin;
     const ex = mx + (cos >= 0 ? 1 : -1) * 22;
     const ey = my;
     const textAnchor = cos >= 0 ? 'start' : 'end';
-    const centerNameTextFill = payload.name === 'Passed' ? COLORS.passed : 'hsl(var(--foreground))';
+    const centerNameTextFill = payload?.name === 'Passed' ? COLORS.passed : 'hsl(var(--foreground))';
     return (<g>
       <text x={cx} y={cy} dy={8} textAnchor="middle" fill={centerNameTextFill} className="text-lg font-bold">
-        {payload.name}
+        {payload?.name}
       </text>
       <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius} startAngle={startAngle} endAngle={endAngle} fill={fill}/>
-      <Sector cx={cx} cy={cy} startAngle={startAngle} endAngle={endAngle} innerRadius={(outerRadius ?? 0) + 6} outerRadius={(outerRadius ?? 0) + 10} fill={fill}/>
+      <Sector cx={cx} cy={cy} startAngle={startAngle} endAngle={endAngle} innerRadius={outerRadius + 6} outerRadius={outerRadius + 10} fill={fill}/>
       <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none"/>
       <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none"/>
       <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="hsl(var(--foreground))" className="text-xs">{`${value}`}</text>
@@ -271,11 +271,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
           <div ref={testDistributionChartRef} className="w-full h-[280px]">
             {testDistributionData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                  <Pie activeIndex={activeIndex} activeShape={ActiveShape} // Use 'as any' if ActiveShapeProps is locally defined and causes issues here
-         data={testDistributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" onMouseEnter={onPieEnter} paddingAngle={2} stroke="hsl(var(--card))">
+                  <Pie activeIndex={activeIndex} activeShape={ActiveShape} data={testDistributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" onMouseEnter={onPieEnter} paddingAngle={2} stroke="hsl(var(--card))">
                     {testDistributionData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.fill}/>))}
                   </Pie>
-                  <RechartsTooltip content={<CustomTooltip />}/>
+                  <RechartsRechartsTooltip content={<CustomTooltip />}/>
                   <Legend iconSize={10} layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}/>
                 </RechartsPieChart>
               </ResponsiveContainer>) : (<div className="text-center text-muted-foreground">No test distribution data.</div>)}
@@ -307,7 +306,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10}/>
                 <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} tickFormatter={(value) => value.length > 20 ? value.substring(0, 17) + '...' : value} interval={0}/>
-                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
+                <RechartsRechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
                 <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}/>
                 <Bar dataKey="passed" name="Passed" stackId="a" fill={COLORS.passed} barSize={20}/>
                 <Bar dataKey="failed" name="Failed" stackId="a" fill={COLORS.failed} barSize={20}/>
@@ -350,7 +349,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                   <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} angle={-40} textAnchor="end" interval={0}/>
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(value) => formatDurationForChart(value)} domain={[0, (dataMax) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}/>
-                  <RechartsTooltip content={({ active, payload, label }) => {
+                  <RechartsRechartsTooltip content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
                     const data = payload[0].payload;
                     return (<div className="bg-card p-3 border border-border rounded-md shadow-lg">
@@ -398,7 +397,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                   <XAxis dataKey="name" tickLine={false} tickFormatter={() => ''} stroke="hsl(var(--muted-foreground))"/>
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(value) => formatDurationForChart(value)} domain={[0, (dataMax) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}/>
-                  <RechartsTooltip content={({ active, payload, label }) => {
+                  <RechartsRechartsTooltip content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
                     const data = payload[0].payload;
                     return (<div className="bg-card p-3 border border-border rounded-md shadow-lg">
@@ -444,7 +443,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10}/>
                 <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} tickFormatter={(value) => value.length > 20 ? value.substring(0, 17) + '...' : value} interval={0}/>
-                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
+                <RechartsRechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
                 <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}/>
                 <Bar dataKey="passed" name="Passed" stackId="suiteStack" fill={COLORS.passed} barSize={15}/>
                 <Bar dataKey="failed" name="Failed" stackId="suiteStack" fill={COLORS.failed} barSize={15}/>
