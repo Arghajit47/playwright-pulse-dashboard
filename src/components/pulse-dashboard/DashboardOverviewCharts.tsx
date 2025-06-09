@@ -25,8 +25,8 @@ const COLORS = {
   passed: 'hsl(var(--chart-3))',
   failed: 'hsl(var(--destructive))',
   skipped: 'hsl(var(--accent))',
-  timedOut: 'hsl(var(--destructive))',
-  pending: 'hsl(var(--muted-foreground))',
+  timedOut: 'hsl(var(--destructive))', // Group with failed for coloring
+  pending: 'hsl(var(--muted-foreground))', // A neutral color for pending
   default1: 'hsl(var(--chart-1))',
   default2: 'hsl(var(--chart-2))',
   default3: 'hsl(var(--chart-4))',
@@ -49,27 +49,37 @@ function formatTestNameForChart(fullName: string): string {
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    // For browser chart, 'label' (or payload[0].name) is the full browser string.
-    // For other charts, it might be fullTestName or a pre-formatted name.
-    const displayName = data.fullTestName ? formatTestNameForChart(data.fullTestName) : (payload[0].name || label);
-    const titleText = data.fullTestName || payload[0].name || label;
+    const titleText = String(label); // Main title for the tooltip (e.g., browser name, date)
+    const dataPoint = payload[0].payload; // The raw data object for this tick
+
+    // Determine if this is for the browser chart (has 'total' and multiple payload entries for stack)
+    const isBrowserChartTooltip = dataPoint.total !== undefined && payload.length > 1;
+    // Determine if this is for the pie chart (has 'percentage')
+    const isPieChartTooltip = dataPoint.percentage !== undefined && dataPoint.name;
 
 
     return (
       <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>{displayName}</p>
+        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>
+          {dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
+        </p>
         {payload.map((entry: any, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color || entry.payload.fill }} className="text-xs">
             {`${entry.name}: ${entry.value.toLocaleString()}${entry.unit || ''}`}
-            {entry.name === payload[0].name && payload[0].payload.percentage && ` (${payload[0].payload.percentage}%)`}
+            {isPieChartTooltip && entry.name === dataPoint.name && ` (${dataPoint.percentage}%)`}
           </p>
         ))}
+        {isBrowserChartTooltip && (
+          <p className="text-xs font-bold mt-1 text-foreground">
+            Total: {dataPoint.total.toLocaleString()}
+          </p>
+        )}
       </div>
     );
   }
   return null;
 };
+
 
 // This function normalizes for ICON display only. Chart labels will use the raw browser string.
 function normalizeBrowserNameForIcon(rawBrowserName: string | undefined): string {
@@ -99,7 +109,7 @@ function normalizeBrowserNameForIcon(rawBrowserName: string | undefined): string
 }
 
 const BrowserIcon = ({ browserName, className }: { browserName: string, className?: string }) => {
-  const normalizedForIcon = normalizeBrowserNameForIcon(browserName); // Use the original full browser name for icon normalization
+  const normalizedForIcon = normalizeBrowserNameForIcon(browserName); 
 
   if (normalizedForIcon === 'Chrome' || normalizedForIcon === 'Chrome Mobile') {
     return <Chrome className={cn("h-4 w-4", className)} />;
@@ -107,7 +117,6 @@ const BrowserIcon = ({ browserName, className }: { browserName: string, classNam
   if (normalizedForIcon === 'Safari' || normalizedForIcon === 'Mobile Safari') {
     return <Compass className={cn("h-4 w-4", className)} />;
   }
-  // For Firefox, Edge, and Unknown, use Globe as specific icons are not always available or cause build issues.
   return <Globe className={cn("h-4 w-4", className)} />;
 };
 
@@ -249,24 +258,24 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     ...(pending > 0 ? [{ name: 'Pending', value: pending, fill: COLORS.pending }] : []),
   ]
   .filter(d => d.value > 0)
-  .map(d => ({ ...d, percentage: totalTestsForPie > 0 ? ((d.value / totalTestsForPie) * 100).toFixed(1) : '0.0' }));
+  .map(d => ({ ...d, name: d.name, value: d.value, fill: d.fill, percentage: totalTestsForPie > 0 ? ((d.value / totalTestsForPie) * 100).toFixed(1) : '0.0' }));
 
 
-  const browserDistribution = currentRun.results.reduce((acc, test) => {
-    const browserName = test.browser || 'Unknown'; // Use the raw browser string
+  const browserDistributionRaw = currentRun.results.reduce((acc, test) => {
+    const browserName = test.browser || 'Unknown';
     if (!acc[browserName]) {
-      acc[browserName] = { count: 0 };
+      acc[browserName] = { name: browserName, passed: 0, failed: 0, skipped: 0, pending: 0, total: 0 };
     }
-    acc[browserName].count += 1;
+    if (test.status === 'passed') acc[browserName].passed++;
+    else if (test.status === 'failed' || test.status === 'timedOut') acc[browserName].failed++;
+    else if (test.status === 'skipped') acc[browserName].skipped++;
+    else if (test.status === 'pending') acc[browserName].pending++;
+    acc[browserName].total++;
     return acc;
-  }, {} as Record<string, { count: number }>);
+  }, {} as Record<string, { name: string; passed: number; failed: number; skipped: number; pending: number; total: number }>);
 
+  const browserChartData = Object.values(browserDistributionRaw).sort((a, b) => b.total - a.total);
 
-  const browserChartData = Object.entries(browserDistribution).map(([name, data], index) => ({
-    name, // Full browser string (e.g., "chrome-121.0.0")
-    value: data.count,
-    fill: [COLORS.default1, COLORS.default2, COLORS.default3, COLORS.default4, COLORS.default5][index % 5]
-  }));
 
   const failedTestsDurationData = currentRun.results
     .filter(test => test.status === 'failed' || test.status === 'timedOut')
@@ -308,6 +317,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
       };
     });
 
+  const showPendingInBrowserChart = browserChartData.some(d => d.pending > 0);
 
   return (
     <TooltipProvider>
@@ -372,7 +382,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">Tests by Browser</CardTitle>
-            <CardDescription className="text-xs">Number of tests executed per browser.</CardDescription>
+            <CardDescription className="text-xs">Breakdown of test outcomes per browser.</CardDescription>
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -387,20 +397,33 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardHeader>
         <CardContent>
           <div ref={browserChartRef} className="w-full h-[250px]">
+          {browserChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <RechartsBarChart data={browserChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={150} tickFormatter={(value) => value.length > 20 ? value.substring(0,17) + '...' : value} interval={0} />
-                <RechartsTooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" name="Tests" barSize={20}>
-                  {browserChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                   <LabelList dataKey="value" position="right" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))' }} />
-                </Bar>
+                <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    stroke="hsl(var(--muted-foreground))" 
+                    fontSize={10} 
+                    width={150} 
+                    tickFormatter={(value) => value.length > 20 ? value.substring(0,17) + '...' : value} 
+                    interval={0} 
+                />
+                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
+                <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}} />
+                <Bar dataKey="passed" name="Passed" stackId="a" fill={COLORS.passed} barSize={20} />
+                <Bar dataKey="failed" name="Failed" stackId="a" fill={COLORS.failed} barSize={20} />
+                <Bar dataKey="skipped" name="Skipped" stackId="a" fill={COLORS.skipped} barSize={20} />
+                {showPendingInBrowserChart && (
+                    <Bar dataKey="pending" name="Pending" stackId="a" fill={COLORS.pending} barSize={20} />
+                )}
               </RechartsBarChart>
             </ResponsiveContainer>
+             ) : (
+                <div className="text-center text-muted-foreground h-[250px] flex items-center justify-center">No browser data.</div>
+            )}
           </div>
            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-xs text-muted-foreground">
             {browserChartData.map(b => (
@@ -410,7 +433,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 </div>
             ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Note: Icons are representative. Full browser name (including version) is shown.</p>
+            <p className="text-xs text-muted-foreground mt-2">Note: Icons are representative. Full browser name (including version) is shown in tooltip.</p>
         </CardContent>
       </Card>
 
@@ -502,7 +525,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                   <XAxis
                     dataKey="name"
                     tickLine={false}
-                    tickFormatter={() => ''} // Hide X-axis labels for this chart to save space
+                    tickFormatter={() => ''} 
                     stroke="hsl(var(--muted-foreground))"
                   />
                   <YAxis 
@@ -562,6 +585,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardHeader>
         <CardContent className="max-h-[400px] overflow-y-auto">
           <div ref={testsPerSuiteChartRef} className="w-full" style={{ height: Math.max(250, testsPerSuiteChartData.length * 35 + 60) }}>
+          {testsPerSuiteChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <RechartsBarChart data={testsPerSuiteChartData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
@@ -576,6 +600,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 </Bar>
               </RechartsBarChart>
             </ResponsiveContainer>
+            ) : (
+                 <div className="text-center text-muted-foreground h-[250px] flex items-center justify-center">No suite data.</div>
+            )}
           </div>
         </CardContent>
       </Card>

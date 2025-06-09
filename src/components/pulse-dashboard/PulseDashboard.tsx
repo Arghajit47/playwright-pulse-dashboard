@@ -171,7 +171,6 @@ export function PulseDashboard() {
               }}
               className="text-foreground" 
             >
-               <Image width="32" height="32" src="https://img.icons8.com/emoji/48/index-pointing-at-the-viewer-light-skin-tone-emoji.png" alt="pointing emoji" data-ai-hint="pointing hand emoji" />
               <span>Created by</span>
               <a
                 href="https://github.com/Arghajit47"
