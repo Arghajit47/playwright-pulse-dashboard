@@ -1,6 +1,6 @@
 {
   "name": "pulse-dashboard",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "type": "module",
   "description": "A Next.js Dashboard application for real-time monitoring and historical analysis of Playwright test executions. This component provides the UI for visualizing Playwright test results and can be run as a standalone CLI tool.",
