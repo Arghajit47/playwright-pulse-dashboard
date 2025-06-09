@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { TrendingUp, Terminal, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 interface TrendAnalysisProps {
   trends: HistoricalTrend[];
@@ -21,7 +21,7 @@ interface TrendAnalysisProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-card p-3 border border-border rounded-md shadow-lg">
+      <div className="bg-card p-3 border border-border rounded-lg shadow-lg">
         <p className="label text-sm font-semibold text-foreground">{`Date: ${label}`}</p>
         {payload.map((entry: any, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color }} className="text-xs">
@@ -79,13 +79,13 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
 
   if (loading) {
     return (
-      <Card className="shadow-xl">
+      <Card className="shadow-xl rounded-lg">
         <CardHeader>
-          <CardTitle><Skeleton className="h-6 w-40" /></CardTitle>
+          <CardTitle><Skeleton className="h-6 w-40 rounded-md" /></CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full rounded-md" />
+          <Skeleton className="h-64 w-full rounded-md" />
         </CardContent>
       </Card>
     );
@@ -93,7 +93,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
 
   if (error) {
      return (
-      <Alert variant="destructive" className="mt-4 shadow-md">
+      <Alert variant="destructive" className="mt-4 shadow-md rounded-lg">
         <Terminal className="h-4 w-4" />
         <AlertTitle>Error Fetching Historical Trends</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
@@ -103,7 +103,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
 
   if (!trends || trends.length === 0) { // This check handles when original trends data is empty
     return (
-      <Card className="shadow-xl">
+      <Card className="shadow-xl rounded-lg">
         <CardHeader>
           <CardTitle className="flex items-center text-2xl font-headline text-primary">
             <TrendingUp className="h-7 w-7 mr-2" />
@@ -119,7 +119,8 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
 
 
   return (
-    <Card className="shadow-xl">
+    <TooltipProvider>
+    <Card className="shadow-xl rounded-lg">
       <CardHeader>
         <CardTitle className="text-2xl font-headline text-primary flex items-center">
           <TrendingUp className="h-7 w-7 mr-2" />
@@ -132,16 +133,16 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
             <h4 className="text-lg font-semibold text-foreground">Test Outcomes Over Time</h4>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={() => handleDownloadChart(outcomesChartRef, 'test-outcomes-trend.png')} aria-label="Download Test Outcomes Chart">
+                <Button variant="outline" size="icon" onClick={() => handleDownloadChart(outcomesChartRef, 'test-outcomes-trend.png')} aria-label="Download Test Outcomes Chart" className="rounded-md">
                   <Download className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="rounded-md">
                 <p>Download as PNG</p>
               </TooltipContent>
             </Tooltip>
           </div>
-          <div ref={outcomesChartRef} className="w-full h-[300px]">
+          <div ref={outcomesChartRef} className="w-full h-[300px] bg-card p-4 rounded-lg shadow-inner">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={formattedTrends}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -162,16 +163,16 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
             <h4 className="text-lg font-semibold text-foreground">Test Duration Over Time (Seconds)</h4>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={() => handleDownloadChart(durationChartRef, 'test-duration-trend.png')} aria-label="Download Test Duration Chart">
+                <Button variant="outline" size="icon" onClick={() => handleDownloadChart(durationChartRef, 'test-duration-trend.png')} aria-label="Download Test Duration Chart" className="rounded-md">
                   <Download className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="rounded-md">
                 <p>Download as PNG</p>
               </TooltipContent>
             </Tooltip>
           </div>
-          <div ref={durationChartRef} className="w-full h-[300px]">
+          <div ref={durationChartRef} className="w-full h-[300px] bg-card p-4 rounded-lg shadow-inner">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={formattedTrends}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -191,16 +192,16 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
               <h4 className="text-lg font-semibold text-foreground">Flakiness Rate Over Time (%)</h4>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="icon" onClick={() => handleDownloadChart(flakinessChartRef, 'flakiness-rate-trend.png')} aria-label="Download Flakiness Rate Chart">
+                  <Button variant="outline" size="icon" onClick={() => handleDownloadChart(flakinessChartRef, 'flakiness-rate-trend.png')} aria-label="Download Flakiness Rate Chart" className="rounded-md">
                     <Download className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="rounded-md">
                   <p>Download as PNG</p>
                 </TooltipContent>
               </Tooltip>
             </div>
-            <div ref={flakinessChartRef} className="w-full h-[300px]">
+            <div ref={flakinessChartRef} className="w-full h-[300px] bg-card p-4 rounded-lg shadow-inner">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={formattedTrends}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -217,6 +218,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
 
       </CardContent>
     </Card>
+    </TooltipProvider>
   );
 }
 

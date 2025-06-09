@@ -31,7 +31,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "dev": "next dev --turbopack -p 9002",
+    "start-dashboard": "next dev --turbopack -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build:app": "next build",

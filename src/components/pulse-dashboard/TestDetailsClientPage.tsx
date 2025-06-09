@@ -47,7 +47,7 @@ const HistoryTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as TestRunHistoryData;
     return (
-      <div className="bg-card p-3 border border-border rounded-md shadow-lg">
+      <div className="bg-card p-3 border border-border rounded-lg shadow-lg">
         <p className="label text-sm font-semibold text-foreground">{`Date: ${new Date(data.date).toLocaleDateString()}`}</p>
         <p className="text-xs text-foreground">{`Duration: ${formatDuration(data.duration)}`}</p>
         <p className="text-xs" style={{ color: data.status === 'passed' ? 'hsl(var(--chart-3))' : data.status === 'failed' || data.status === 'timedOut' ? 'hsl(var(--destructive))' : 'hsl(var(--accent))' }}>
@@ -218,15 +218,15 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   if (loadingCurrent && !test) {
     return (
       <div className="container mx-auto px-4 py-8 space-y-6">
-        <Skeleton className="h-10 w-48 mb-4" />
-        <Card className="shadow-xl">
+        <Skeleton className="h-10 w-48 mb-4 rounded-md" />
+        <Card className="shadow-xl rounded-lg">
           <CardHeader>
-            <Skeleton className="h-8 w-3/4 mb-2" />
-            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-8 w-3/4 mb-2 rounded-md" />
+            <Skeleton className="h-4 w-1/2 rounded-md" />
           </CardHeader>
           <CardContent className="space-y-4">
-            <Skeleton className="h-10 w-1/3 mb-4" />
-            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-10 w-1/3 mb-4 rounded-md" />
+            <Skeleton className="h-40 w-full rounded-md" />
           </CardContent>
         </Card>
       </div>
@@ -236,11 +236,11 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   if (errorCurrent) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="rounded-lg">
           <AlertTitle>Error loading test data</AlertTitle>
           <AlertDescription>{errorCurrent}</AlertDescription>
         </Alert>
-        <Button onClick={() => router.push('/')} variant="outline" className="mt-4">
+        <Button onClick={() => router.push('/')} variant="outline" className="mt-4 rounded-md">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
       </div>
@@ -250,11 +250,11 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   if (!test) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-        <Alert>
+        <Alert className="rounded-lg">
             <AlertTitle>Test Not Found</AlertTitle>
             <AlertDescription>The test with ID '{testId}' could not be found in the current report.</AlertDescription>
         </Alert>
-        <Button onClick={() => router.push('/')} variant="outline" className="mt-6">
+        <Button onClick={() => router.push('/')} variant="outline" className="mt-6 rounded-md">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
         </Button>
       </div>
@@ -275,11 +275,11 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
-      <Button onClick={() => router.push('/')} variant="outline" size="sm" className="mb-6">
+      <Button onClick={() => router.push('/')} variant="outline" size="sm" className="mb-6 rounded-md">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
       </Button>
 
-      <Card className="shadow-xl">
+      <Card className="shadow-xl rounded-lg">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -297,7 +297,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <div className="text-right flex-shrink-0">
                  <Badge
                     className={cn(
-                      "capitalize text-sm px-3 py-1 border-transparent",
+                      "capitalize text-sm px-3 py-1 border-transparent rounded-full",
                       getStatusBadgeClass(test.status)
                     )}
                   >
@@ -307,7 +307,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <p className="text-xs text-muted-foreground">Retries: {test.retries}</p>
                 {test.tags && test.tags.length > 0 && (
                     <div className="mt-1 space-x-1">
-                        {test.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>)}
+                        {test.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs rounded-full">{tag}</Badge>)}
                     </div>
                 )}
             </div>
@@ -315,19 +315,19 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="steps" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 rounded-lg">
               <TabsTrigger value="steps">Execution Steps ({test.steps?.length || 0})</TabsTrigger>
               <TabsTrigger value="attachments">Attachments ({totalAttachmentsCount})</TabsTrigger>
               <TabsTrigger value="logs"><FileText className="h-4 w-4 mr-2"/>Logs</TabsTrigger>
               <TabsTrigger value="history">Test Run History</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="steps" className="mt-4 p-1 md:p-4 border rounded-md bg-card">
+            <TabsContent value="steps" className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner">
               <h3 className="text-lg font-semibold text-foreground mb-3 px-3 md:px-0">Test Execution Steps</h3>
               {test.errorMessage && (
                  <div className="mb-4 p-3 md:p-0">
                   <h4 className="font-semibold text-md text-destructive mb-1">Overall Test Error:</h4>
-                  <pre className="bg-destructive/10 text-destructive text-sm p-4 rounded-md whitespace-pre-wrap break-all font-code overflow-x-auto">{test.errorMessage}</pre>
+                  <pre className="bg-destructive/10 text-destructive text-sm p-4 rounded-lg whitespace-pre-wrap break-all font-code overflow-x-auto">{test.errorMessage}</pre>
                 </div>
               )}
               {test.steps && test.steps.length > 0 ? (
@@ -343,9 +343,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               )}
             </TabsContent>
 
-            <TabsContent value="attachments" className="mt-4 p-1 md:p-4 border rounded-md bg-card">
+            <TabsContent value="attachments" className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner">
               <Tabs defaultValue="sub-screenshots" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsList className="grid w-full grid-cols-3 mb-4 rounded-lg">
                   <TabsTrigger value="sub-screenshots">
                     <ImageIcon className="h-4 w-4 mr-2" />
                     Screenshots ({currentScreenshots.length})
@@ -370,7 +370,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                             return null;
                         }
                         return (
-                          <a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all">
+                          <a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg">
                             <Image
                               src={imageSrc}
                               alt={`Screenshot ${index + 1}`}
@@ -393,7 +393,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <TabsContent value="sub-video" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Video Recording</h3>
                   {hasVideo && test.videoPath ? (
-                    <div className="p-4 border rounded-md bg-muted/30">
+                    <div className="p-4 border rounded-lg bg-muted/30 shadow-sm">
                       <a
                         href={getAssetPath(test.videoPath)}
                         target="_blank"
@@ -405,7 +405,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                       <p className="text-xs text-muted-foreground mt-2">Path: {test.videoPath}</p>
                     </div>
                   ) : (
-                    <Alert>
+                    <Alert className="rounded-lg">
                         <Info className="h-4 w-4" />
                         <AlertTitle>No Video Available</AlertTitle>
                         <AlertDescription>There is no video recording associated with this test run.</AlertDescription>
@@ -416,7 +416,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <TabsContent value="sub-trace" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Trace File</h3>
                   {hasTrace && test.tracePath ? (
-                    <div className="p-4 border rounded-md bg-muted/30 space-y-3">
+                    <div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
                        <a
                         href={getAssetPath(test.tracePath)}
                         target="_blank"
@@ -427,7 +427,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                         <Download className="h-5 w-5 mr-2" /> Download Trace File (.zip)
                       </a>
                       <p className="text-xs text-muted-foreground">Path: {test.tracePath}</p>
-                       <Alert>
+                       <Alert className="rounded-lg">
                           <Info className="h-4 w-4" />
                           <AlertTitle>Using Trace Files</AlertTitle>
                           <AlertDescription>
@@ -437,7 +437,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                       </Alert>
                     </div>
                   ) : (
-                     <Alert>
+                     <Alert className="rounded-lg">
                         <Info className="h-4 w-4" />
                         <AlertTitle>No Trace File Available</AlertTitle>
                         <AlertDescription>There is no Playwright trace file associated with this test run.</AlertDescription>
@@ -447,12 +447,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               </Tabs>
             </TabsContent>
 
-            <TabsContent value="logs" className="mt-4 p-4 border rounded-md bg-card space-y-6">
+            <TabsContent value="logs" className="mt-4 p-4 border rounded-lg bg-card space-y-6 shadow-inner">
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
                   <Terminal className="h-5 w-5 mr-2 text-primary"/>Console Logs / Standard Output
                 </h3>
-                <ScrollArea className="h-48 w-full rounded-md border p-3 bg-muted/30">
+                <ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm">
                   <pre className="text-sm text-foreground whitespace-pre-wrap break-words">
                     {(test.stdout && Array.isArray(test.stdout) && test.stdout.length > 0)
                       ? test.stdout.join('\n')
@@ -465,7 +465,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   <AlertCircle className="h-5 w-5 mr-2 text-destructive"/>Error Messages / Standard Error
                 </h3>
                 {test.errorMessage && test.errorMessage.trim() !== '' ? (
-                  <ScrollArea className="h-48 w-full rounded-md border bg-destructive/5">
+                  <ScrollArea className="h-48 w-full rounded-lg border bg-destructive/5 shadow-sm">
                     <pre className="text-sm text-destructive p-3 whitespace-pre-wrap break-all font-code">
                       {test.errorMessage}
                     </pre>
@@ -476,7 +476,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               </div>
             </TabsContent>
 
-            <TabsContent value="history" className="mt-4 p-4 border rounded-md bg-card">
+            <TabsContent value="history" className="mt-4 p-4 border rounded-lg bg-card shadow-inner">
              <TooltipProvider>
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-semibold text-foreground flex items-center">
@@ -485,11 +485,11 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </h3>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="outline" size="icon" onClick={() => handleDownloadChart(historyChartRef, `test-history-${testId}.png`)} aria-label="Download Test History Chart">
+                      <Button variant="outline" size="icon" onClick={() => handleDownloadChart(historyChartRef, `test-history-${testId}.png`)} aria-label="Download Test History Chart" className="rounded-md">
                         <Download className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent className="rounded-md">
                       <p>Download as PNG</p>
                     </TooltipContent>
                   </Tooltip>
@@ -497,19 +497,19 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               </TooltipProvider>
               {loadingHistory && (
                 <div className="space-y-3">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-64 w-full" />
+                  <Skeleton className="h-6 w-3/4 rounded-md" />
+                  <Skeleton className="h-64 w-full rounded-lg" />
                 </div>
               )}
               {errorHistory && !loadingHistory && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="rounded-lg">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Error Loading Test History</AlertTitle>
                   <AlertDescription>{errorHistory}</AlertDescription>
                 </Alert>
               )}
               {!loadingHistory && !errorHistory && testHistory.length === 0 && (
-                 <Alert>
+                 <Alert className="rounded-lg">
                   <Info className="h-4 w-4" />
                   <AlertTitle>No Historical Data</AlertTitle>
                   <AlertDescription>
@@ -518,7 +518,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </Alert>
               )}
               {!loadingHistory && !errorHistory && testHistory.length > 0 && (
-                <div ref={historyChartRef} className="w-full h-[300px]">
+                <div ref={historyChartRef} className="w-full h-[300px] bg-card p-4 rounded-lg shadow-inner">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsLineChart data={testHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
@@ -560,4 +560,3 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
-

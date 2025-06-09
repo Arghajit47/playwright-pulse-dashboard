@@ -46,7 +46,7 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {[...Array(5)].map((_, i) => (
-          <Card key={i}>
+          <Card key={i} className="shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-5 w-24" />
               <Skeleton className="h-6 w-6" />
@@ -104,7 +104,7 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
         ))}
          {loading && runMetadata && ( // Show skeleton for cards if data is partially loaded
           [...Array(5 - metrics.length)].map((_, i) => (
-            <Card key={`loading-${i}`}>
+            <Card key={`loading-${i}`} className="shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <Skeleton className="h-5 w-24" />
                 <Skeleton className="h-6 w-6" />
