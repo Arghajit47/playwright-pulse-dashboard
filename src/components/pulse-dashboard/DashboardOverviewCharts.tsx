@@ -82,17 +82,34 @@ function formatTestNameForChart(fullName: string): string {
 
 const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps) => {
   if (active && payload && payload.length) {
-    const titleText = String(label);
-    const dataPoint = payload[0].payload as any; // This is the nested payload
+    const dataPoint = payload[0].payload as any; // This is the nested payload from the original data array
 
     const isStackedBarTooltip = dataPoint && dataPoint.total !== undefined && payload.length > 0;
+    // isPieChartTooltip relies on 'percentage' and 'name' being present on the dataPoint (original data object)
     const isPieChartTooltip = dataPoint && dataPoint.percentage !== undefined && dataPoint.name;
 
+    let displayTitle: string;
+    if (isPieChartTooltip && dataPoint?.name) {
+      displayTitle = dataPoint.name;
+    } else if (dataPoint?.fullTestName) {
+      displayTitle = formatTestNameForChart(dataPoint.fullTestName);
+    } else {
+      displayTitle = String(label); // Fallback for bar charts using axis label
+    }
+    
+    // Fallback if displayTitle ended up as "undefined" but there's a name on the series item
+    if (displayTitle === "undefined" && payload[0]?.name) {
+        displayTitle = payload[0].name;
+    }
+     // Final safety for "undefined" string, can be made more generic like "Details"
+    if (displayTitle === "undefined") {
+        displayTitle = "Details"; 
+    }
 
     return (
       <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>
-          {dataPoint && dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
+        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={displayTitle}>
+          {displayTitle}
         </p>
         {payload.map((entry: CustomTooltipPayloadItem, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color || (entry.payload as any)?.fill }} className="text-xs">
@@ -388,7 +405,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     innerRadius={60}
                     outerRadius={90}
                     dataKey="value"
-                    nameKey="name"
+                    nameKey="name" 
                     onMouseEnter={onPieEnter}
                     paddingAngle={2}
                     stroke="hsl(var(--card))"
