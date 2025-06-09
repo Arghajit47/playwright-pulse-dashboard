@@ -3,7 +3,7 @@
 
 **Pulse Dashboard Component** is a reusable Next.js component package designed to provide real-time monitoring and historical analysis of Playwright test executions. It helps development and QA teams to quickly identify issues, track test performance over time, and gain insights into failure patterns.
 
-This package provides the UI components. The consuming Next.js application is responsible for providing the backend API endpoints and data.
+While it's designed as an NPM package for integration into other Next.js applications, **this project itself can also be run as a standalone dashboard** to view your Playwright reports directly.
 
 ## Key Features (UI Package)
 
@@ -23,7 +23,54 @@ This package provides the UI components. The consuming Next.js application is re
 -   **Theme Customization**: Switch between light and dark themes. Theme preference is saved in local storage.
 -   **Interactive Charts**: Overview charts and historical trend charts are interactive. Charts can be downloaded as PNG.
 
-## Installation
+## Two Ways to Use Pulse Dashboard
+
+You have two main ways to use this dashboard:
+
+1.  **As a Standalone Application (Recommended for direct report viewing):**
+    Run this project directly to view your Playwright reports. See "Running the Dashboard Standalone" below.
+2.  **As an NPM Package in another Next.js Application:**
+    Install and import the `PulseDashboard` component into your existing Next.js project. See "Installation as an NPM Package" and "Usage as a Component" below.
+
+## Running the Dashboard Standalone (for direct report viewing)
+
+If you want to view your Playwright reports without integrating the dashboard into another Next.js project, you can run this `pulse-dashboard` project directly.
+
+1.  **Prerequisites:**
+    *   Ensure you have Node.js and npm installed.
+    *   Clone this repository (or download the source code).
+        ```bash
+        git clone https://github.com/Postman-test-bit/pulse-dashboard.git
+        cd pulse-dashboard
+        ```
+
+2.  **Install Dependencies:**
+    Navigate to the root directory of this `pulse-dashboard` project and run:
+    ```bash
+    npm install
+    ```
+
+3.  **Prepare Your Report Data:**
+    *   At the root of this `pulse-dashboard` project, create a directory named `pulse-report`.
+    *   Place your `playwright-pulse-report.json` (the main report from `@arghajit/playwright-pulse-report`) inside the `pulse-report` directory.
+    *   For historical trends, create `pulse-report/history/` and place your `trend-*.json` files there.
+    *   For attachments (screenshots, videos, traces), ensure they are located within `pulse-report/attachments/`. For example, if a screenshot path in your JSON is `attachments/[runId]/asset.png`, the physical file should be at `pulse-dashboard/pulse-report/attachments/[runId]/asset.png`. The dashboard will expect to load these from `/pulse-report/attachments/...`.
+        *   **Note:** When running `npm run dev`, Next.js does not automatically serve files outside the `public` directory. For attachments to work correctly in this standalone dev mode, you might need to either:
+            *   Manually copy your `pulse-report/attachments` into a `public/pulse-report/attachments` directory within this project before running `npm run dev`.
+            *   Or, ensure your `playwright-pulse-report.json` uses absolute URLs or Base64 data URIs for attachments if direct file serving is an issue.
+            *   For a production build (`npm run build` then `npm start`), you would need to ensure the `pulse-report` directory is handled by your deployment or served appropriately.
+
+4.  **Start the Dashboard:**
+    From the root of this `pulse-dashboard` project, run:
+    ```bash
+    npm run dev
+    ```
+    This will start the Next.js development server.
+
+5.  **View in Browser:**
+    Open your web browser and navigate to `http://localhost:9002` (or the port shown in your terminal if 9002 is in use).
+
+## Installation as an NPM Package (for integration into another Next.js app)
 
 ```bash
 npm install pulse-dashboard-component # Or your chosen package name
@@ -31,7 +78,7 @@ npm install pulse-dashboard-component # Or your chosen package name
 yarn add pulse-dashboard-component
 ```
 
-## Usage
+## Usage as a Component (in another Next.js app)
 
 1.  **Import CSS**:
     In your main application file (e.g., `_app.tsx`, `layout.tsx`, or a global CSS file of your **consuming Next.js application**):
@@ -49,38 +96,11 @@ yarn add pulse-dashboard-component
     }
     ```
 
-## Viewing Your Pulse Dashboard
+## Data Provision Requirements (When Used as a Component in a Consumer Application)
 
-Once you've installed `pulse-dashboard-component` into your own Next.js application and configured the data provision requirements (see next section), you can view the dashboard by:
+If you are using `pulse-dashboard-component` as an NPM package in your own Next.js application, that application is responsible for providing the necessary data.
 
-1.  **Ensuring Component is Rendered:**
-    Make sure you have imported and are rendering the `PulseDashboard` component in one of your Next.js application's pages (as shown in the "Usage" section above).
-
-2.  **Setting Up Data & APIs:**
-    Verify that your consuming Next.js application meets all points in the "Data Provision Requirements" section below. This includes:
-    *   Creating the `pulse-report/` directory at the root of **your application's project**.
-    *   Populating it with `playwright-pulse-report.json` and historical `trend-*.json` files.
-    *   Implementing the required API routes (`/api/current-run` and `/api/historical-trends`).
-    *   Configuring serving of attachments from `YOUR_PROJECT_ROOT/pulse-report/attachments/` at the `/pulse-report/attachments/` web path.
-
-3.  **Running Your Next.js Application:**
-    Navigate to your **consuming Next.js application's directory** in your terminal and run its development server, typically with:
-    ```bash
-    npm run dev
-    # or
-    yarn dev
-    # or
-    pnpm dev
-    ```
-    Then, open your browser and navigate to the page where you've rendered the `PulseDashboard` component (e.g., `http://localhost:3000/dashboard`).
-
-**Important:** The `PulseDashboard` component is a UI library. It doesn't run on its own like a standalone application. It needs to be hosted within a Next.js application that provides the data and API endpoints it requires. The `npm run dev` script *within this `pulse-dashboard-component` package's repository* is for developing the component itself, not for general use by consumers of the published package.
-
-## Data Provision Requirements (Consumer Application)
-
-The `PulseDashboard` component relies on the consuming Next.js application to provide data through specific API routes and server actions. You must implement these in your application.
-
-### 1. Data File Locations:
+### 1. Data File Locations (in Consumer Application):
 
    All report data and attachments should be placed within a `pulse-report/` directory at the **root of your consuming Next.js project**.
 
@@ -126,7 +146,7 @@ The `PulseDashboard` component relies on the consuming Next.js application to pr
         -   **Expected Input/Output**: Refer to `src/ai/flows/analyze-failure-patterns.ts` in the original project for details on `AnalyzeFailurePatternsInput` and the expected string output.
         -   *Note*: This is an advanced feature and may require significant setup in the consuming application.
 
-## Technical Stack (of the Component Package)
+## Technical Stack (of this Dashboard Project/Component Package)
 
 -   **Framework**: Next.js (UI components compatible with App Router)
 -   **UI Library**: React
@@ -135,13 +155,17 @@ The `PulseDashboard` component relies on the consuming Next.js application to pr
 -   **Charting**: Recharts
 -   **Language**: TypeScript
 
-## NPM Scripts (for developing this package)
+## NPM Scripts (for developing/running this project)
 
--   `npm run dev`: Starts the Next.js development server for testing the components locally (requires example data and mock APIs).
--   `npm run build`: Compiles TypeScript and CSS to the `dist` folder, making the package ready for publishing.
--   `npm run prepare`: Automatically runs `npm run build` before publishing.
--   `npm run clean`: Removes the `dist` directory.
+-   `npm run dev`: Starts the Next.js development server. Use this to run the dashboard standalone (requires report data in `pulse-report/` directory).
+-   `npm run build:app`: Builds the Next.js application (e.g., for a standalone deployment).
+-   `npm run start`: Starts the Next.js production server after running `npm run build:app`.
+-   `npm run lint`: Lints the codebase.
 -   `npm run typecheck`: Runs TypeScript compiler for type checking.
+-   `npm run build:tsc`: Compiles TypeScript to the `dist` folder for the NPM package.
+-   `npm run build:css`: Compiles Tailwind CSS to `dist/styles.css` for the NPM package.
+-   `npm run build`: Prepares the NPM package (runs `clean`, `build:tsc`, `build:css`).
+-   `npm run clean`: Removes the `dist` directory.
 
 ## Contributing
 
@@ -150,3 +174,4 @@ Contributions are welcome! Please open an issue or submit a pull request for any
 ## License
 
 This project is licensed under the Apache 2.0 License. (Assuming `LICENSE` file exists or will be added).
+```
