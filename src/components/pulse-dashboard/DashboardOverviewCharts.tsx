@@ -6,14 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector, TooltipProps as RechartsTooltipProps } from 'recharts';
-import type { PieSectorDataItem, ActiveShapeProps } from 'recharts/types/polar/Pie.d.ts'; // .d.ts for specific type import
+import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
+import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts'; // .d.ts for specific type import
 import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
+import type { NameType, ValueType, TooltipProps as RechartsTooltipProps } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 
 
 interface DashboardOverviewChartsProps {
@@ -21,6 +21,23 @@ interface DashboardOverviewChartsProps {
   loading: boolean;
   error: string | null;
 }
+
+// Local definition for ActiveShapeProps
+interface ActiveShapeProps {
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  innerRadius: number;
+  outerRadius?: number;
+  startAngle: number;
+  endAngle: number;
+  fill: string; // fill color of the sector
+  payload: PieSectorDataItem; // The original data item for this sector
+  percent?: number; // Percentage (0-1)
+  value: number;    // The numerical value of the sector
+  name?: string;    // The name of the sector, often same as payload.name
+}
+
 
 const COLORS = {
   passed: 'hsl(var(--chart-3))',
@@ -50,10 +67,10 @@ function formatTestNameForChart(fullName: string): string {
 
 const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
-    const titleText = String(label); 
-    const dataPoint = payload[0].payload; 
+    const titleText = String(label);
+    const dataPoint = payload[0].payload as any; // Using any here for flexibility as payload structure varies
 
-    const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0; 
+    const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0;
     const isPieChartTooltip = dataPoint.percentage !== undefined && dataPoint.name;
 
 
@@ -62,7 +79,7 @@ const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps<ValueTyp
         <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>
           {dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
         </p>
-        {payload.map((entry, index: number) => (
+        {payload.map((entry: any, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color || entry.payload.fill }} className="text-xs">
             {`${entry.name}: ${entry.value?.toLocaleString()}${entry.unit || ''}`}
             {isPieChartTooltip && entry.name === dataPoint.name && ` (${dataPoint.percentage}%)`}
@@ -103,12 +120,12 @@ function normalizeBrowserNameForIcon(rawBrowserName: string | undefined): string
   if (lowerName.includes('safari') || lowerName.includes('webkit')) {
     return 'Safari';
   }
-  
+
   return 'Unknown';
 }
 
 const BrowserIcon = ({ browserName, className }: { browserName: string, className?: string }) => {
-  const normalizedForIcon = normalizeBrowserNameForIcon(browserName); 
+  const normalizedForIcon = normalizeBrowserNameForIcon(browserName);
 
   if (normalizedForIcon === 'Chrome' || normalizedForIcon === 'Chrome Mobile') {
     return <Chrome className={cn("h-4 w-4", className)} />;
@@ -260,7 +277,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   .map(d => ({ ...d, name: d.name, value: d.value, fill: d.fill, percentage: totalTestsForPie > 0 ? ((d.value / totalTestsForPie) * 100).toFixed(1) : '0.0' }));
 
 
-  const browserDistributionRaw = currentRun.results.reduce((acc, test) => {
+  const browserDistributionRaw = currentRun.results.reduce((acc, test: DetailedTestResult) => {
     const browserName = test.browser || 'Unknown';
     if (!acc[browserName]) {
       acc[browserName] = { name: browserName, passed: 0, failed: 0, skipped: 0, pending: 0, total: 0 };
@@ -290,7 +307,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     .sort((a,b) => b.duration - a.duration)
     .slice(0, 10);
 
-  const suiteDistributionRaw = currentRun.results.reduce((acc, test) => {
+  const suiteDistributionRaw = currentRun.results.reduce((acc, test: DetailedTestResult) => {
     const suiteName = test.suiteName || 'Unknown Suite';
     if (!acc[suiteName]) {
       acc[suiteName] = { name: suiteName, passed: 0, failed: 0, skipped: 0, pending: 0, total: 0 };
@@ -350,7 +367,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                   <Pie
                     activeIndex={activeIndex}
-                    activeShape={ActiveShape}
+                    activeShape={ActiveShape as any} // Use 'as any' if ActiveShapeProps is locally defined and causes issues here
                     data={testDistributionData}
                     cx="50%"
                     cy="50%"
@@ -406,14 +423,14 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
               <RechartsBarChart data={browserChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    stroke="hsl(var(--muted-foreground))" 
-                    fontSize={10} 
-                    width={150} 
-                    tickFormatter={(value) => value.length > 20 ? value.substring(0,17) + '...' : value} 
-                    interval={0} 
+                <YAxis
+                    dataKey="name"
+                    type="category"
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={10}
+                    width={150}
+                    tickFormatter={(value: string) => value.length > 20 ? value.substring(0,17) + '...' : value}
+                    interval={0}
                 />
                 <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
                 <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}} />
@@ -465,16 +482,16 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <RechartsBarChart data={failedTestsDurationData} margin={{ top: 5, right: 5, left: 5, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                   <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} angle={-40} textAnchor="end" interval={0} />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))" 
-                    fontSize={10} 
-                    tickFormatter={(value) => formatDurationForChart(value)}
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={10}
+                    tickFormatter={(value: number) => formatDurationForChart(value)}
                     domain={[0, (dataMax: number) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}
                   />
                   <RechartsTooltip
-                      content={({ active, payload, label }) => {
+                      content={({ active, payload, label }: RechartsTooltipProps<ValueType, NameType>) => {
                           if (active && payload && payload.length) {
-                              const data = payload[0].payload;
+                              const data = payload[0].payload as {duration: number; fullTestName: string;};
                               return (
                               <div className="bg-card p-3 border border-border rounded-md shadow-lg">
                                   <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{formatTestNameForChart(data.fullTestName)}</p>
@@ -529,19 +546,19 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                   <XAxis
                     dataKey="name"
                     tickLine={false}
-                    tickFormatter={() => ''} 
+                    tickFormatter={() => ''}
                     stroke="hsl(var(--muted-foreground))"
                   />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))" 
-                    fontSize={10} 
-                    tickFormatter={(value) => formatDurationForChart(value)}
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={10}
+                    tickFormatter={(value: number) => formatDurationForChart(value)}
                     domain={[0, (dataMax: number) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}
                   />
                   <RechartsTooltip
-                      content={({ active, payload, label }) => {
+                      content={({ active, payload, label }: RechartsTooltipProps<ValueType, NameType>) => {
                           if (active && payload && payload.length) {
-                              const data = payload[0].payload;
+                              const data = payload[0].payload as {duration: number; fullTestName: string; status: DetailedTestResult['status']};
                               return (
                               <div className="bg-card p-3 border border-border rounded-md shadow-lg">
                                   <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{formatTestNameForChart(data.fullTestName)}</p>
@@ -594,14 +611,14 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
               <RechartsBarChart data={testsPerSuiteChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    stroke="hsl(var(--muted-foreground))" 
-                    fontSize={10} 
-                    width={150} 
-                    tickFormatter={(value) => value.length > 20 ? value.substring(0,17) + '...' : value} 
-                    interval={0} 
+                <YAxis
+                    dataKey="name"
+                    type="category"
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={10}
+                    width={150}
+                    tickFormatter={(value: string) => value.length > 20 ? value.substring(0,17) + '...' : value}
+                    interval={0}
                 />
                 <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.3 }}/>
                 <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}} />
@@ -624,3 +641,5 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </TooltipProvider>
   );
 }
+
+    
