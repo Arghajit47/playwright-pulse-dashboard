@@ -50,8 +50,10 @@ export interface RunMetadata {
   failed: number;
   skipped: number;
   duration: number;
-  timedOut?: number; // Optional, if your data source provides it
-  pending?: number; // Optional
+  timedOut?: number; 
+  pending?: number; 
+  flakinessRate?: number; // Added flakinessRate here
+  userProjectDir?: string; // Path to the user's project root
 }
 
 export interface ReportFileMetadata {
