@@ -41,7 +41,8 @@
     "clean": "rm -rf dist",
     "build:tsc": "tsc --project tsconfig.build.json",
     "build:css": "tailwindcss -i ./src/app/globals.css -o ./dist/styles.css --minify",
-    "build": "npm run clean && npm run build:tsc && npm run build:css"
+    "build": "npm run clean && npm run build:tsc && npm run build:css",
+    "postinstall": "echo \"Pulse Dashboard is an extensive visualization of playwright-pulse-report, kindly run the 'npm install @arghajit/playwright-pulse-report@latest' to install pulse-report. If already installed please ignore, happy reporting!\""
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
@@ -66,8 +67,6 @@
     "@radix-ui/react-toast": "^1.2.6",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
     "@types/recharts": "^1.8.29",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
