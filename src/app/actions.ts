@@ -7,12 +7,22 @@ import type { PlaywrightPulseReport, DetailedTestResult, FlakyTestDetail, FlakyT
 
 
 export async function getRawHistoricalReports(): Promise<PlaywrightPulseReport[]> {
-  // This function runs on the server, so process.env should be available if set by the bin script
-  const baseDir = process.env.PULSE_USER_CWD || process.cwd();
-  // console.log('[ACTIONS getRawHistoricalReports] Effective baseDir:', baseDir); // Optional: for debugging actions too
+  console.log('[ACTIONS getRawHistoricalReports] ------------- START -------------');
+  const pulseUserCwdFromEnv = process.env.PULSE_USER_CWD;
+  const currentProcessCwd = process.cwd();
+
+  console.log('[ACTIONS getRawHistoricalReports] process.env.PULSE_USER_CWD:', pulseUserCwdFromEnv);
+  console.log('[ACTIONS getRawHistoricalReports] process.cwd():', currentProcessCwd);
+
+  const baseDir = (pulseUserCwdFromEnv && pulseUserCwdFromEnv.trim() !== '') ? pulseUserCwdFromEnv.trim() : currentProcessCwd;
+  console.log('[ACTIONS getRawHistoricalReports] Effective baseDir determined:', baseDir);
+  
   const historyDir = path.join(baseDir, 'pulse-report', 'history');
+  console.log('[ACTIONS getRawHistoricalReports] Attempting to read history directory:', historyDir);
+
   try {
     const trendFileNames = (await fs.readdir(historyDir)).filter(file => file.startsWith('trend-') && file.endsWith('.json'));
+    console.log(`[ACTIONS getRawHistoricalReports] Found ${trendFileNames.length} trend files in ${historyDir}`);
     
     const historicalDataArray: PlaywrightPulseReport[] = [];
     for (const fileName of trendFileNames) {
@@ -21,23 +31,30 @@ export async function getRawHistoricalReports(): Promise<PlaywrightPulseReport[]
         const fileContent = await fs.readFile(filePath, 'utf-8');
         const reportData = JSON.parse(fileContent) as PlaywrightPulseReport;
         if (reportData.run && reportData.results) { 
+            // Ensure flakinessRate is carried over if it exists
+            if (reportData.run.flakinessRate === undefined) {
+              reportData.run.flakinessRate = 0; // Default if not present
+            }
             historicalDataArray.push(reportData);
         } else {
-            console.warn(`Skipping invalid historical report file: ${fileName}`);
+            console.warn(`[ACTIONS getRawHistoricalReports] Skipping invalid historical report file (missing run or results): ${fileName}`);
         }
       } catch (fileReadError) {
-        console.error(`Error reading or parsing historical file ${fileName}:`, fileReadError);
+        console.error(`[ACTIONS getRawHistoricalReports] Error reading or parsing historical file ${fileName}:`, fileReadError);
       }
     }
     
     historicalDataArray.sort((a, b) => new Date(a.run.timestamp).getTime() - new Date(b.run.timestamp).getTime());
-    
+    console.log('[ACTIONS getRawHistoricalReports] ------------- END (SUCCESS) -------------');
     return historicalDataArray;
-  } catch (error) {
-    console.error(`Error fetching raw historical reports from ${historyDir}:`, error);
+  } catch (error: any) {
+    console.error(`[ACTIONS getRawHistoricalReports] Error accessing or reading historical trends directory ${historyDir}:`, error.message);
     if (error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
-        console.warn(`History directory not found at ${historyDir}. This is normal if no historical reports exist yet.`);
+        console.warn(`[ACTIONS getRawHistoricalReports] History directory not found at ${historyDir}. This is normal if no historical reports exist yet.`);
     }
+    console.log('[ACTIONS getRawHistoricalReports] ------------- END (ERROR) -------------');
+    // Re-throw or return empty to allow API route to handle HTTP response
+    // For now, returning empty and letting API route handle it based on this logged error.
     return []; 
   }
 }
@@ -46,6 +63,11 @@ export async function getFlakyTestsAnalysis(): Promise<{ success: boolean; flaky
   try {
     const historicalReports = await getRawHistoricalReports();
     if (historicalReports.length === 0) {
+      // Check if this is due to an actual lack of files or an error in getRawHistoricalReports
+      // The logs from getRawHistoricalReports will indicate this.
+      // If an error occurred there, it would have logged and returned empty.
+      // So, here we assume if it's empty, it's genuinely no data or a handled error.
+      console.log('[ACTIONS getFlakyTestsAnalysis] No historical reports found or an error occurred in getRawHistoricalReports. Returning empty flaky tests.');
       return { success: true, flakyTests: [] };
     }
 
@@ -56,6 +78,10 @@ export async function getFlakyTestsAnalysis(): Promise<{ success: boolean; flaky
     }>();
 
     for (const report of historicalReports) {
+      if (!report.results) { // Additional safety check
+        console.warn('[ACTIONS getFlakyTestsAnalysis] Skipping a report in history due to missing .results property.');
+        continue;
+      }
       for (const testResult of report.results) {
         if (!testStatsMap.has(testResult.id)) {
           testStatsMap.set(testResult.id, {
@@ -112,7 +138,7 @@ export async function getFlakyTestsAnalysis(): Promise<{ success: boolean; flaky
 
     return { success: true, flakyTests };
   } catch (error) {
-    console.error('Error analyzing flaky tests:', error);
+    console.error('[ACTIONS getFlakyTestsAnalysis] Error analyzing flaky tests:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during flaky test analysis.';
     return { success: false, error: errorMessage };
   }

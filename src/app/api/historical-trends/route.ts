@@ -4,45 +4,54 @@ import { getRawHistoricalReports } from '@/app/actions';
 import type { PlaywrightPulseReport, HistoricalTrend } from '@/types/playwright';
 
 export async function GET() {
-  const pulseUserCwd = process.env.PULSE_USER_CWD;
-  const baseDir = (pulseUserCwd && pulseUserCwd.trim() !== '') ? pulseUserCwd.trim() : process.cwd();
-
   console.log('[API /api/historical-trends] Route hit.');
-  console.log('[API /api/historical-trends] PULSE_USER_CWD from env:', pulseUserCwd);
-  console.log('[API /api/historical-trends] Fallback process.cwd():', process.cwd());
-  console.log('[API /api/historical-trends] Effective baseDir for historical trends:', baseDir);
+  const pulseUserCwdFromEnv = process.env.PULSE_USER_CWD;
+  const currentProcessCwd = process.cwd();
+
+  console.log('[API /api/historical-trends] process.env.PULSE_USER_CWD (inside API route):', pulseUserCwdFromEnv);
+  console.log('[API /api/historical-trends] process.cwd() (inside API route):', currentProcessCwd);
+  
+  const baseDir = (pulseUserCwdFromEnv && pulseUserCwdFromEnv.trim() !== '') ? pulseUserCwdFromEnv.trim() : currentProcessCwd;
+  console.log('[API /api/historical-trends] Effective baseDir determined for API route (should match actions):', baseDir);
 
   try {
-    const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports();
+    const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports(); // This function now has more internal logging
 
-    if (!rawReports || rawReports.length === 0) {
-      console.log('[API /api/historical-trends] No raw historical reports found or an empty array was returned.');
-      return NextResponse.json([], { status: 200 });
+    // The getRawHistoricalReports function will log its own errors if fs operations fail.
+    // If it returns an empty array, it could be due to actual lack of files or an internal error it handled by returning [].
+    // The logs from getRawHistoricalReports should be checked.
+    if (!rawReports) { // Should not happen if getRawHistoricalReports always returns an array
+        console.error('[API /api/historical-trends] getRawHistoricalReports returned undefined/null. This is unexpected.');
+        return NextResponse.json({ message: "Internal error: Failed to retrieve historical reports data structure." }, { status: 500 });
     }
+    
+    console.log(`[API /api/historical-trends] Received ${rawReports.length} raw reports from getRawHistoricalReports.`);
 
     const historicalTrends: HistoricalTrend[] = rawReports.map(report => {
       if (!report.run) {
         console.warn('[API /api/historical-trends] Found a report in history without a .run property, skipping:', report);
-        return null; // Will be filtered out later
+        return null; 
       }
       return {
         date: report.run.timestamp,
         totalTests: report.run.totalTests,
         passed: report.run.passed,
-        failed: report.run.failed + (report.run.timedOut || 0), // Combine failed and timedOut
+        failed: report.run.failed + (report.run.timedOut || 0),
         skipped: report.run.skipped,
         duration: report.run.duration,
-        flakinessRate: report.run.flakinessRate, // Ensure this is part of your RunMetadata type if you use it
+        flakinessRate: report.run.flakinessRate !== undefined ? report.run.flakinessRate : 0, // Default if undefined
       };
     }).filter((trend): trend is HistoricalTrend => trend !== null)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date ascending
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); 
 
     console.log(`[API /api/historical-trends] Successfully processed ${historicalTrends.length} historical trend items.`);
     return NextResponse.json(historicalTrends, { status: 200 });
 
   } catch (error: any) {
-    console.error('[API /api/historical-trends] Critical error processing historical trends:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred while fetching historical trends.';
+    // This catch block is for errors specifically within this API route's logic,
+    // not for errors deep within getRawHistoricalReports's fs calls (those are logged there).
+    console.error('[API /api/historical-trends] Error processing historical trends in API route:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred while processing historical trends.';
     return NextResponse.json({ message: `Error processing historical trends: ${errorMessage}`, details: String(error) }, { status: 500 });
   }
 }
