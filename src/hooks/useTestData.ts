@@ -25,9 +25,7 @@ export function useTestData() {
 
   const fetchCurrentRun = useCallback(async () => {
     const apiUrl = '/api/current-run';
-    // loadingCurrent is true initially for the first load.
-    // Subsequent polls won't set it to true to avoid UI flicker, unless data.currentRun is null.
-    if (data.currentRun === null && !data.errorCurrent) {
+    if (!data.currentRun && !data.loadingCurrent && !data.errorCurrent) {
         setData(prev => ({ ...prev, loadingCurrent: true, errorCurrent: null }));
     }
 
@@ -35,21 +33,17 @@ export function useTestData() {
       console.log(`Attempting to fetch current run data from: ${apiUrl}`);
       const response = await fetch(apiUrl);
       if (!response.ok) {
-        let extractedMessageFromServer = '';
+        let errorDetails = `${response.status} ${response.statusText || 'Server Error'}`;
         try {
           const errorBody = await response.json();
           if (errorBody && typeof errorBody.message === 'string' && errorBody.message.trim() !== '') {
-            extractedMessageFromServer = errorBody.message;
+            errorDetails = errorBody.message; // Use message from server if available
           } else if (errorBody && typeof errorBody === 'object' && errorBody !== null) {
-            // If message is not a string or empty, but body exists, stringify it.
-            extractedMessageFromServer = `Server error details: ${JSON.stringify(errorBody)}`;
+            errorDetails = `Server error (${response.status}): ${JSON.stringify(errorBody)}`;
           }
         } catch (e) {
-          // Failed to parse JSON body, or no JSON body sent.
           console.warn(`Could not parse error response body as JSON for ${apiUrl}. Status: ${response.status}`, e);
         }
-
-        const errorDetails = extractedMessageFromServer || `${response.status} ${response.statusText || 'Server Error'}`;
         throw new Error(`Failed to fetch current run from ${apiUrl}: ${errorDetails}`);
       }
       const result: PlaywrightPulseReport = await response.json();
@@ -57,38 +51,37 @@ export function useTestData() {
     } catch (error) {
       console.error(`PulseDashboard Fetch Error (currentRun at ${apiUrl}):`, error);
       let detailedErrorMessage = `An unknown error occurred while fetching current run data from ${apiUrl}.`;
-      if (error instanceof TypeError && error.message.toLowerCase() === 'failed to fetch') {
-        detailedErrorMessage = `Network error: Could not connect to the API endpoint (${apiUrl}). Please check your network connection. Also, ensure your Next.js server is running, accessible, and that there are no errors in the Next.js server's console output related to this API route.`;
+      if (error instanceof TypeError && error.message.toLowerCase().includes('failed to fetch')) {
+        detailedErrorMessage = `Network error: Could not connect to the API endpoint (${apiUrl}). Please check your network connection and ensure the server is running.`;
       } else if (error instanceof Error) {
-        detailedErrorMessage = error.message;
+        detailedErrorMessage = error.message; // This will now include the more specific message from the API
       } else {
         detailedErrorMessage = String(error);
       }
       setData(prev => ({ ...prev, currentRun: null, loadingCurrent: false, errorCurrent: detailedErrorMessage }));
     }
-  }, [data.currentRun, data.errorCurrent]); // Dependencies ensure loading state is correctly managed
+  }, []);
 
   const fetchHistoricalTrends = useCallback(async () => {
     const apiUrl = '/api/historical-trends';
-    if (data.historicalTrends.length === 0 && !data.errorHistorical) {
+     if (!data.historicalTrends.length && !data.loadingHistorical && !data.errorHistorical) {
         setData(prev => ({ ...prev, loadingHistorical: true, errorHistorical: null }));
     }
     try {
       console.log(`Attempting to fetch historical trends data from: ${apiUrl}`);
       const response = await fetch(apiUrl);
       if (!response.ok) {
-        let extractedMessageFromServer = '';
+        let errorDetails = `${response.status} ${response.statusText || 'Server Error'}`;
         try {
           const errorBody = await response.json();
           if (errorBody && typeof errorBody.message === 'string' && errorBody.message.trim() !== '') {
-            extractedMessageFromServer = errorBody.message;
+            errorDetails = errorBody.message;
           } else if (errorBody && typeof errorBody === 'object' && errorBody !== null) {
-            extractedMessageFromServer = `Server error details: ${JSON.stringify(errorBody)}`;
+            errorDetails = `Server error (${response.status}): ${JSON.stringify(errorBody)}`;
           }
         } catch (e) {
           console.warn(`Could not parse historical trends error response body as JSON for ${apiUrl}. Status: ${response.status}`, e);
         }
-        const errorDetails = extractedMessageFromServer || `${response.status} ${response.statusText || 'Server Error'}`;
         throw new Error(`Failed to fetch historical trends from ${apiUrl}: ${errorDetails}`);
       }
       const result: HistoricalTrend[] = await response.json();
@@ -96,8 +89,8 @@ export function useTestData() {
     } catch (error) {
       console.error(`PulseDashboard Fetch Error (historicalTrends at ${apiUrl}):`, error);
       let detailedErrorMessage = `An unknown error occurred while fetching historical trends from ${apiUrl}.`;
-      if (error instanceof TypeError && error.message.toLowerCase() === 'failed to fetch') {
-        detailedErrorMessage = `Network error: Could not connect to the API endpoint (${apiUrl}). Please check your network connection. Also, ensure your Next.js server is running, accessible, and that there are no errors in the Next.js server's console output related to this API route.`;
+      if (error instanceof TypeError && error.message.toLowerCase().includes('failed to fetch')) {
+        detailedErrorMessage = `Network error: Could not connect to the API endpoint (${apiUrl}). Please check your network connection and ensure the server is running.`;
       } else if (error instanceof Error) {
         detailedErrorMessage = error.message;
       } else {
@@ -105,11 +98,12 @@ export function useTestData() {
       }
       setData(prev => ({ ...prev, historicalTrends: [], loadingHistorical: false, errorHistorical: detailedErrorMessage }));
     }
-  }, [data.historicalTrends.length, data.errorHistorical]); // Dependencies ensure loading state is correctly managed
+  }, []);
 
   useEffect(() => {
-    fetchCurrentRun();
-    fetchHistoricalTrends();
+    // Initial fetch for both
+    if (data.loadingCurrent) fetchCurrentRun(); // Only fetch if truly in initial loading state
+    if (data.loadingHistorical) fetchHistoricalTrends(); // Only fetch if truly in initial loading state
 
     const intervalId = setInterval(() => {
       console.log('Polling for current run data...');
@@ -117,7 +111,7 @@ export function useTestData() {
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [fetchCurrentRun, fetchHistoricalTrends]);
+  }, [fetchCurrentRun, fetchHistoricalTrends, data.loadingCurrent, data.loadingHistorical]);
 
   return data;
 }
