@@ -27,6 +27,12 @@ export async function GET() {
 
   try {
     const jsonData: PlaywrightPulseReport = JSON.parse(fileContent);
+    // Augment metadata with the base directory for constructing file:/// URLs later
+    if (jsonData.metadata) {
+      jsonData.metadata.userProjectDir = baseDir;
+    } else {
+      jsonData.metadata = { generatedAt: new Date().toISOString(), userProjectDir: baseDir };
+    }
     return NextResponse.json(jsonData);
   } catch (parseError: any) {
     console.error(`[API /api/current-run] FAILED to parse JSON from ${filePath}. Error: ${parseError.message}. Stack: ${parseError.stack}`);

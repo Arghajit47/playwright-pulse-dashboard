@@ -56,6 +56,7 @@ export interface RunMetadata {
 
 export interface ReportFileMetadata {
   generatedAt: string;
+  userProjectDir?: string; // Path to the user's project root (where pulse-report is)
 }
 
 export interface PlaywrightPulseReport {

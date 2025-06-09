@@ -17,7 +17,7 @@ import { useState, useEffect, useRef } from 'react';
 import { TestStepItemRecursive } from './TestStepItemRecursive';
 import { getRawHistoricalReports } from '@/app/actions'; 
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, DotProps } from 'recharts';
-import { cn, ansiToHtml } from '@/lib/utils';
+import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -108,37 +108,10 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
   }
 }
 
-function getAssetPath(jsonPath: string | undefined | null): string {
-  if (!jsonPath || typeof jsonPath !== 'string') {
-    return '#';
-  }
-  let path = jsonPath.trim();
-  if (path === '') {
-    return '#';
-  }
-
-  if (path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
-    return path;
-  }
-
-  path = path.replace(/\\/g, '/');
-  
-  if (path.startsWith('/pulse-report/')) {
-    return path;
-  }
-
-  if (path.startsWith('pulse-report/')) {
-    return `/${path}`;
-  }
-  
-  const parts = path.split('/').filter(part => part && part !== '.');
-  return `/pulse-report/${parts.join('/')}`;
-}
-
 
 export function TestDetailsClientPage({ testId }: { testId: string }) {
   const router = useRouter();
-  const { currentRun, loadingCurrent, errorCurrent } = useTestData();
+  const { currentRun, loadingCurrent, errorCurrent, userProjectDir } = useTestData();
   const [test, setTest] = useState<DetailedTestResult | null>(null);
   const [testHistory, setTestHistory] = useState<TestRunHistoryData[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -228,7 +201,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     );
   }
 
-  if (errorCurrent && !test) { // Only show top-level error if specific test data couldn't be even potentially found
+  if (errorCurrent && !test) { 
     return (
       <div className="container mx-auto px-4 py-8">
         <Alert variant="destructive" className="rounded-lg">
@@ -289,7 +262,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                         <span className="text-muted-foreground">Loading...</span>
                     ) : currentRun?.run?.timestamp ? (
                         <span className="font-medium">{new Date(currentRun.run.timestamp).toLocaleString()}</span>
-                    ) : errorCurrent && !currentRun?.run?.timestamp ? ( // Show error only if timestamp is missing due to error
+                    ) : errorCurrent && !currentRun?.run?.timestamp ? ( 
                         <span className="text-destructive font-medium">Error loading date</span>
                     ) : (
                         <span className="font-medium">Not available</span>
@@ -374,7 +347,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {currentScreenshots.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {currentScreenshots.map((path: string, index: number) => {
-                        const imageSrc = getAssetPath(path);
+                        const imageSrc = getUtilAssetPath(path, userProjectDir);
                         if (imageSrc === '#') { 
                             return null;
                         }
@@ -387,6 +360,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                               style={{objectFit: "cover"}}
                               className="group-hover:scale-105 transition-transform duration-300"
                               data-ai-hint="test screenshot"
+                              unoptimized={imageSrc.startsWith('file:///')}
                             />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2">
                               <p className="text-white text-xs text-center break-all">{`Screenshot ${index + 1}`}</p>
@@ -405,7 +379,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {hasVideo && test.videoPath ? (
                     <div className="p-4 border rounded-lg bg-muted/30 shadow-sm">
                       <a
-                        href={getAssetPath(test.videoPath)}
+                        href={getUtilAssetPath(test.videoPath, userProjectDir)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
@@ -428,7 +402,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {hasTrace && test.tracePath ? (
                     <div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
                        <a
-                        href={getAssetPath(test.tracePath)}
+                        href={getUtilAssetPath(test.tracePath, userProjectDir)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
@@ -570,7 +544,3 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
-
-    
-
-    

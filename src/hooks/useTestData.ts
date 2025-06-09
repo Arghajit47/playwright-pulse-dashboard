@@ -11,6 +11,7 @@ interface TestDataState {
   loadingHistorical: boolean;
   errorCurrent: string | null;
   errorHistorical: string | null;
+  userProjectDir: string | null; // To store the base path for file:/// URLs
 }
 
 export function useTestData() {
@@ -21,6 +22,7 @@ export function useTestData() {
     loadingHistorical: true,
     errorCurrent: null,
     errorHistorical: null,
+    userProjectDir: null,
   });
 
   const fetchCurrentRun = useCallback(async () => {
@@ -37,7 +39,7 @@ export function useTestData() {
         try {
           const errorBody = await response.json();
           if (errorBody && typeof errorBody.message === 'string' && errorBody.message.trim() !== '') {
-            errorDetails = errorBody.message; // Use message from server if available
+            errorDetails = errorBody.message; 
           } else if (errorBody && typeof errorBody === 'object' && errorBody !== null) {
             errorDetails = `Server error (${response.status}): ${JSON.stringify(errorBody)}`;
           }
@@ -47,20 +49,26 @@ export function useTestData() {
         throw new Error(`Failed to fetch current run from ${apiUrl}: ${errorDetails}`);
       }
       const result: PlaywrightPulseReport = await response.json();
-      setData(prev => ({ ...prev, currentRun: result, loadingCurrent: false, errorCurrent: null }));
+      setData(prev => ({ 
+        ...prev, 
+        currentRun: result, 
+        loadingCurrent: false, 
+        errorCurrent: null,
+        userProjectDir: result?.metadata?.userProjectDir || null,
+      }));
     } catch (error) {
       console.error(`PulseDashboard Fetch Error (currentRun at ${apiUrl}):`, error);
       let detailedErrorMessage = `An unknown error occurred while fetching current run data from ${apiUrl}.`;
       if (error instanceof TypeError && error.message.toLowerCase().includes('failed to fetch')) {
         detailedErrorMessage = `Network error: Could not connect to the API endpoint (${apiUrl}). Please check your network connection and ensure the server is running.`;
       } else if (error instanceof Error) {
-        detailedErrorMessage = error.message; // This will now include the more specific message from the API
+        detailedErrorMessage = error.message; 
       } else {
         detailedErrorMessage = String(error);
       }
-      setData(prev => ({ ...prev, currentRun: null, loadingCurrent: false, errorCurrent: detailedErrorMessage }));
+      setData(prev => ({ ...prev, currentRun: null, loadingCurrent: false, errorCurrent: detailedErrorMessage, userProjectDir: null }));
     }
-  }, []);
+  }, [data.currentRun, data.loadingCurrent, data.errorCurrent]); // Added dependencies
 
   const fetchHistoricalTrends = useCallback(async () => {
     const apiUrl = '/api/historical-trends';
@@ -98,12 +106,11 @@ export function useTestData() {
       }
       setData(prev => ({ ...prev, historicalTrends: [], loadingHistorical: false, errorHistorical: detailedErrorMessage }));
     }
-  }, []);
+  }, [data.historicalTrends.length, data.loadingHistorical, data.errorHistorical]); // Added dependencies
 
   useEffect(() => {
-    // Initial fetch for both
-    if (data.loadingCurrent) fetchCurrentRun(); // Only fetch if truly in initial loading state
-    if (data.loadingHistorical) fetchHistoricalTrends(); // Only fetch if truly in initial loading state
+    if (data.loadingCurrent) fetchCurrentRun(); 
+    if (data.loadingHistorical) fetchHistoricalTrends(); 
 
     const intervalId = setInterval(() => {
       console.log('Polling for current run data...');

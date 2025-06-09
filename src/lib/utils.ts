@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -11,7 +12,7 @@ export function ansiToHtml(text: string | null | undefined): string {
   }
 
   const codes: Record<string, string> = {
-    '0': 'color:inherit;font-weight:normal;font-style:normal;text-decoration:none;opacity:1;', // Added opacity reset
+    '0': 'color:inherit;font-weight:normal;font-style:normal;text-decoration:none;opacity:1;background-color:inherit;',
     '1': 'font-weight:bold',
     '2': 'opacity:0.6',
     '3': 'font-style:italic',
@@ -44,73 +45,72 @@ export function ansiToHtml(text: string | null | undefined): string {
     '97': 'color:#fff',    // white
   };
 
-  let currentStyles: Record<string, string> = {};
+  let currentStylesArray: string[] = []; // Store styles as an array to manage order and reset
   let html = '';
   let openSpan = false;
 
-  const resetAndApplyStyles = (newCodesStr: string) => {
-    let styleString = '';
+  const applyStyles = () => {
     if (openSpan) {
       html += '</span>';
       openSpan = false;
     }
-    
+    if (currentStylesArray.length > 0) {
+      // Filter out potential empty strings or duplicates if any advanced logic added later
+      const styleString = currentStylesArray.filter(s => s).join(';');
+      if (styleString) {
+        html += `<span style="${styleString}">`;
+        openSpan = true;
+      }
+    }
+  };
+  
+  const resetAndApplyNewCodes = (newCodesStr: string) => {
     const newCodes = newCodesStr.split(';');
-    if (newCodes.includes('0')) {
-      currentStyles = {}; // Full reset
+    
+    if (newCodes.includes('0')) { // Full reset
+      currentStylesArray = []; // codes['0'] implies full reset, but we'll explicitly clear
+      if (codes['0']) currentStylesArray.push(codes['0']); // Add base reset style
     }
 
     for (const code of newCodes) {
+      if (code === '0') continue; // Already handled by full reset
+
       if (codes[code]) {
-        const [prop, value] = codes[code].split(':');
-        if (prop && value) {
-           // Handle resets for specific properties if needed, e.g. 'color:inherit' should overwrite previous color
-          if (value.includes('inherit') || prop === 'font-weight' && value.includes('normal')) {
-             // more fine-grained reset logic could be added here
-          }
-          currentStyles[prop] = value;
+        // For simplicity, we'll just add. More complex logic could replace specific properties.
+        // e.g., if 'color:red' exists and 'color:blue' comes, replace.
+        // For now, last one wins if browser merges CSS correctly, or add more specific handling.
+        if(code === '39') { // reset foreground
+            currentStylesArray = currentStylesArray.filter(s => !s.startsWith('color:'));
+            currentStylesArray.push('color:inherit');
+        } else if (code === '49') { // reset background
+            currentStylesArray = currentStylesArray.filter(s => !s.startsWith('background-color:'));
+            currentStylesArray.push('background-color:inherit');
+        } else {
+             currentStylesArray.push(codes[code]);
         }
-      } else if (code.startsWith('38;2;') || code.startsWith('48;2;')) { // True color foreground/background
+      } else if (code.startsWith('38;2;') || code.startsWith('48;2;')) { 
         const parts = code.split(';');
         const type = parts[0] === '38' ? 'color' : 'background-color';
-        if (parts.length === 5) { // r;g;b
-          currentStyles[type] = `rgb(${parts[2]},${parts[3]},${parts[4]})`;
+        if (parts.length === 5) { 
+          currentStylesArray = currentStylesArray.filter(s => !s.startsWith(type + ':'));
+          currentStylesArray.push(`${type}:rgb(${parts[2]},${parts[3]},${parts[4]})`);
         }
-      } else if (code.startsWith('38;5;') || code.startsWith('48;5;')) { // 256 color palette - simplified, map to nearest standard if possible or ignore
-        // Basic handling: just note it, full 256 color mapping is complex for CSS
-        // For now, we'll let these pass through without specific styling or map to a default.
       }
     }
-
-    styleString = Object.entries(currentStyles)
-      .map(([prop, val]) => `${prop}:${val}`)
-      .join(';');
-
-    if (styleString) {
-      html += `<span style="${styleString}">`;
-      openSpan = true;
-    }
+    applyStyles();
   };
 
-  const segments = text.split(/(\x1b\[[0-9;]*[mJKHfABCDsu])|(\x1b\[\?25[hl])/g);
+  // Using a simpler regex that captures content between \x1b[...m and the next \x1b[ or end of string.
+  // And also handle isolated reset codes.
+  const segments = text.split(/(\x1b\[[0-9;]*m)/g);
 
   for (const segment of segments) {
     if (!segment) continue;
 
-    if (segment.startsWith('\x1b[')) {
-      const command = segment.slice(2, -1); // Remove \x1b[ and final char (m, H, etc.)
-      const type = segment.slice(-1);
-
-      if (type === 'm') {
-        resetAndApplyStyles(command);
-      } else if (type === 'K') { // Erase line
-        // Typically not directly translated to HTML display unless it's about clearing previous content.
-        // For static display, might not need specific handling or could clear current line if stateful.
-      }
-      // Add more command handlers if needed (J, H, A, B, C, D, s, u, ?25h, ?25l)
-      // For now, focusing on 'm' styling commands.
+    if (segment.startsWith('\x1b[') && segment.endsWith('m')) {
+      const command = segment.slice(2, -1);
+      resetAndApplyNewCodes(command);
     } else {
-      // Escape HTML special characters in the content itself
       const escapedContent = segment
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -122,8 +122,63 @@ export function ansiToHtml(text: string | null | undefined): string {
   }
 
   if (openSpan) {
-    html += '</span>'; // Close any unclosed span
+    html += '</span>'; 
   }
 
   return html;
+}
+
+
+export function getAssetPath(
+  jsonPath: string | undefined | null,
+  userProjectDir: string | undefined | null // e.g., /Users/me/my-playwright-project
+): string {
+  if (!jsonPath || typeof jsonPath !== 'string' || jsonPath.trim() === '') {
+    return '#';
+  }
+  const trimmedJsonPath = jsonPath.trim().replace(/\\/g, '/');
+
+  if (trimmedJsonPath.startsWith('data:') || trimmedJsonPath.startsWith('http://') || trimmedJsonPath.startsWith('https://') || trimmedJsonPath.startsWith('file:///')) {
+    return trimmedJsonPath;
+  }
+
+  if (!userProjectDir) {
+    // Fallback to web path if userProjectDir isn't available for file:///
+    let webPath = trimmedJsonPath;
+    if (webPath.startsWith('/')) webPath = webPath.substring(1);
+    
+    if (!webPath.startsWith('pulse-report/')) {
+      if (webPath.includes('/') && (webPath.startsWith('attachments/') || webPath.startsWith('videos/') || webPath.startsWith('traces/'))) {
+           webPath = `pulse-report/${webPath}`;
+      } else if (!webPath.includes('/')) {
+           webPath = `pulse-report/${webPath}`;
+      }
+    }
+    return `/${webPath}`;
+  }
+
+  const normalizedUserProjectDir = userProjectDir.replace(/\\/g, '/');
+  
+  let reportDirBasePath = normalizedUserProjectDir;
+  if (!reportDirBasePath.endsWith('/')) {
+    reportDirBasePath += '/';
+  }
+  // Assuming 'pulse-report' is the direct subdirectory in userProjectDir containing attachments etc.
+  reportDirBasePath += 'pulse-report'; 
+
+  let absoluteFsPath = reportDirBasePath;
+  if (!absoluteFsPath.endsWith('/')) {
+    absoluteFsPath += '/';
+  }
+  absoluteFsPath += trimmedJsonPath;
+
+  absoluteFsPath = absoluteFsPath.replace(/\/\/\/\//g, '//').replace(/\/\/\//g, '/').replace(/\/\//g, '/');
+
+
+  if (absoluteFsPath.match(/^[a-zA-Z]:\//)) { // Windows path like C:/...
+    return `file:///${absoluteFsPath}`;
+  } else { // POSIX-like path, ensure it starts with a slash for file:///
+    const finalPath = absoluteFsPath.startsWith('/') ? absoluteFsPath : `/${absoluteFsPath}`;
+    return `file://${finalPath}`; // This will form file:///path/to/file
+  }
 }

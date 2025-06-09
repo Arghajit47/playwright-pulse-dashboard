@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle2, XCircle, AlertCircle, Clock, Eye, ChevronRight } from 'lucide-react';
-import { cn, ansiToHtml } from '@/lib/utils';
+import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
+import { useTestData } from '@/hooks/useTestData'; // Import useTestData
 
 interface TestItemProps {
   test: DetailedTestResult;
@@ -57,40 +58,10 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
   }
 }
 
-function getAssetPath(jsonPath: string | undefined | null): string {
-  if (!jsonPath || typeof jsonPath !== 'string') {
-    return '#'; // Return a non-functional link for invalid input
-  }
-  let path = jsonPath.trim();
-  if (path === '') {
-    return '#';
-  }
-
-  // If it's a data URI or absolute web URL, return as is
-  if (path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
-    return path;
-  }
-
-  // Normalize path separators
-  path = path.replace(/\\/g, '/');
-  
-  // If path ALREADY starts with "/pulse-report/", it's a correct root-relative path.
-  if (path.startsWith('/pulse-report/')) {
-    return path;
-  }
-
-  // If path starts with "pulse-report/" (without leading slash), make it root-relative.
-  if (path.startsWith('pulse-report/')) {
-    return `/${path}`;
-  }
-  
-  // Otherwise, assume the path is relative to the 'pulse-report' directory itself
-  // (e.g., "attachments/image.png", "videos/video.mp4").
-  const parts = path.split('/').filter(part => part && part !== '.');
-  return `/pulse-report/${parts.join('/')}`;
-}
 
 export function TestItem({ test }: TestItemProps) {
+  const { userProjectDir } = useTestData(); // Get userProjectDir from the hook
+
   const currentScreenshots = (test.screenshots || [])
     .map((p: string) => (typeof p === 'string' ? p.trim() : ''))
     .filter((p: string) => p && p !== '');
@@ -141,7 +112,7 @@ export function TestItem({ test }: TestItemProps) {
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
                     {currentScreenshots.slice(0,4).map((path: string, index: number) => {
-                        const imageSrc = getAssetPath(path);
+                        const imageSrc = getUtilAssetPath(path, userProjectDir);
                         if (imageSrc === '#') return null;
                         return (
                          <a key={`img-thumb-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-md overflow-hidden group border hover:border-primary shadow-sm">
@@ -152,6 +123,7 @@ export function TestItem({ test }: TestItemProps) {
                                 style={{objectFit: "cover"}}
                                 className="group-hover:scale-105 transition-transform duration-300"
                                 data-ai-hint="test screenshot thumbnail"
+                                unoptimized={imageSrc.startsWith('file:///')}
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                 <Eye className="h-6 w-6 text-white"/>
@@ -172,5 +144,3 @@ export function TestItem({ test }: TestItemProps) {
     </div>
   );
 }
-
-    
