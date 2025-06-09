@@ -3,11 +3,12 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import type { PlaywrightPulseReport, DetailedTestResult, FlakyTestDetail, FlakyTestOccurrence } from '@/types/playwright'; 
+import type { PlaywrightPulseReport, DetailedTestResult, FlakyTestDetail, FlakyTestOccurrence } from '@/types/playwright';
 
 
 export async function getRawHistoricalReports(): Promise<PlaywrightPulseReport[]> {
-  const historyDir = path.join(process.cwd(), 'pulse-report', 'history');
+  const baseDir = process.env.PULSE_USER_CWD || process.cwd();
+  const historyDir = path.join(baseDir, 'pulse-report', 'history');
   try {
     const trendFileNames = (await fs.readdir(historyDir)).filter(file => file.startsWith('trend-') && file.endsWith('.json'));
     
@@ -31,7 +32,10 @@ export async function getRawHistoricalReports(): Promise<PlaywrightPulseReport[]
     
     return historicalDataArray;
   } catch (error) {
-    console.error('Error fetching raw historical reports:', error);
+    console.error(`Error fetching raw historical reports from ${historyDir}:`, error);
+    if (error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+        console.warn(`History directory not found at ${historyDir}. This is normal if no historical reports exist yet.`);
+    }
     return []; 
   }
 }

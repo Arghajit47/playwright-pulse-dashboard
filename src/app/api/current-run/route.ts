@@ -6,7 +6,8 @@ import type { PlaywrightPulseReport } from '@/types/playwright';
 
 export async function GET() {
   try {
-    const filePath = path.join(process.cwd(), 'pulse-report', 'playwright-pulse-report.json');
+    const baseDir = process.env.PULSE_USER_CWD || process.cwd();
+    const filePath = path.join(baseDir, 'pulse-report', 'playwright-pulse-report.json');
     console.log('[API /api/current-run] Attempting to read current run report from:', filePath);
 
     let fileContent: string;
@@ -15,7 +16,7 @@ export async function GET() {
     } catch (fileReadError: any) {
       console.error(`[API /api/current-run] FAILED to read file ${filePath}. Error: ${fileReadError.message}. Stack: ${fileReadError.stack}`);
       if (fileReadError.code === 'ENOENT') {
-        return NextResponse.json({ message: `Report file not found at ${filePath}. Please ensure 'playwright-pulse-report.json' exists in the 'pulse-report' directory at the project root.`, path: filePath }, { status: 404 });
+        return NextResponse.json({ message: `Report file not found at ${filePath}. Please ensure 'playwright-pulse-report.json' exists in the 'pulse-report' directory at '${baseDir}'.`, path: filePath }, { status: 404 });
       }
       return NextResponse.json({ message: `Error reading report file from ${filePath}: ${fileReadError.message || 'Unknown file read error.'}`, path: filePath, details: String(fileReadError) }, { status: 500 });
     }

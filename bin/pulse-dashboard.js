@@ -9,21 +9,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Command to run Next.js
-const nextCommand = 'next'; // Changed from path.resolve
+const nextCommand = 'next';
 const projectRoot = path.resolve(__dirname, '..'); // This is the root of the installed pulse-dashboard package
+const userCwd = process.cwd(); // Capture the CWD from where the user ran the command
 
 const args = ['start', '-p', '9002'];
 
 console.log(`Starting Pulse Dashboard from: ${projectRoot}`);
+console.log(`User CWD for reports: ${userCwd}`);
 console.log(`Executing: ${nextCommand} ${args.join(' ')}`);
-console.log(`IMPORTANT: Ensure you run this command from the directory containing your 'pulse-report' folder.`);
+console.log(`IMPORTANT: Ensure your 'pulse-report' folder is in: ${userCwd}`);
 
-const child = spawn(nextCommand, args, { // Changed from nextCliPath
+const child = spawn(nextCommand, args, {
   stdio: 'inherit',
   // The `cwd` option tells `next start` where to look for the .next folder, package.json, etc.
   // This should be the root of the installed `pulse-dashboard` package.
-  cwd: projectRoot, 
-  shell: true // shell: true helps in resolving commands like 'next' from PATH
+  cwd: projectRoot,
+  shell: true, // shell: true helps in resolving commands like 'next' from PATH
+  env: {
+    ...process.env, // Inherit existing environment variables
+    PULSE_USER_CWD: userCwd // Pass the user's CWD to the Next.js app
+  }
 });
 
 child.on('error', (err) => {

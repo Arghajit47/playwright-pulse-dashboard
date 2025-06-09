@@ -5,7 +5,8 @@ import path from 'path';
 import type { HistoricalTrend, PlaywrightPulseReport } from '@/types/playwright';
 
 export async function GET() {
-  const historyDir = path.join(process.cwd(), 'pulse-report', 'history');
+  const baseDir = process.env.PULSE_USER_CWD || process.cwd();
+  const historyDir = path.join(baseDir, 'pulse-report', 'history');
   console.log('Attempting to read historical trends from directory:', historyDir);
   try {
     const files = await fs.readdir(historyDir);
@@ -51,6 +52,9 @@ export async function GET() {
   } catch (error) {
     console.error('Failed to read historical trends directory or encountered a critical error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Error fetching historical trends';
+    if (error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return NextResponse.json({ message: `Historical trends directory not found at ${historyDir}. Please ensure 'pulse-report/history/' exists in '${baseDir}'.` }, { status: 404 });
+    }
     return NextResponse.json({ message: `Error accessing or reading historical trends directory ${historyDir}: ${errorMessage}` }, { status: 500 });
   }
 }
