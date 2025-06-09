@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import Image from 'next/image'; // Keep for logo, use <img> for external icon
 import { useTestData } from '@/hooks/useTestData';
 import { SummaryMetrics } from './SummaryMetrics';
 import { LiveTestResults, type TestStatusFilter } from './LiveTestResults';
@@ -47,6 +47,7 @@ export function PulseDashboard() {
 
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [initialLiveResultsFilter, setInitialLiveResultsFilter] = useState<TestStatusFilter | undefined>(undefined);
+  const [linkColor, setLinkColor] = useState('#7737BF');
 
   const handleMetricCardClick = (filter: TestStatusFilter) => {
     setInitialLiveResultsFilter(filter);
@@ -150,13 +151,64 @@ export function PulseDashboard() {
             {componentToRender}
           </main>
 
-          <footer className="text-center mt-auto py-3 border-t">
-            <p className="text-sm text-muted-foreground">
-              Pulse Dashboard &copy; {new Date().getFullYear()}
-            </p>
+          <footer
+            style={{
+              padding: '0.5rem',
+              boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
+              textAlign: 'center',
+              fontFamily: "'Segoe UI', system-ui, sans-serif",
+              marginTop: 'auto',
+            }}
+          >
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                letterSpacing: '0.5px',
+              }}
+              className="text-foreground" 
+            >
+              <img
+                width="48"
+                height="48"
+                src="https://img.icons8.com/emoji/48/index-pointing-at-the-viewer-light-skin-tone-emoji.png"
+                alt="Index finger pointing at the viewer emoji"
+                data-ai-hint="pointing hand"
+              />
+              <span>Created by</span>
+              <a
+                href="https://github.com/Arghajit47"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: linkColor,
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseOver={() => setLinkColor('#BF5C37')}
+                onMouseOut={() => setLinkColor('#7737BF')}
+              >
+                Arghajit Singha
+              </a>
+            </div>
+            <div
+              style={{
+                marginTop: '0.5rem',
+                fontSize: '0.75rem',
+              }}
+              className="text-muted-foreground"
+            >
+              Crafted with precision
+            </div>
           </footer>
         </div>
       </SidebarInset>
     </SidebarProvider>
   );
 }
+
