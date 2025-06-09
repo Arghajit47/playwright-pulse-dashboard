@@ -438,7 +438,12 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <RechartsBarChart data={failedTestsDurationData} margin={{ top: 5, right: 5, left: 5, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
                   <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} angle={-40} textAnchor="end" interval={0} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(value) => formatDurationForChart(value)}/>
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))" 
+                    fontSize={10} 
+                    tickFormatter={(value) => formatDurationForChart(value)}
+                    domain={[0, (dataMax: number) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}
+                  />
                   <RechartsTooltip
                       content={({ active, payload, label }) => {
                           if (active && payload && payload.length) {
@@ -500,7 +505,12 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     tickFormatter={() => ''} // Hide X-axis labels for this chart to save space
                     stroke="hsl(var(--muted-foreground))"
                   />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(value) => formatDurationForChart(value)}/>
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))" 
+                    fontSize={10} 
+                    tickFormatter={(value) => formatDurationForChart(value)}
+                    domain={[0, (dataMax: number) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}
+                  />
                   <RechartsTooltip
                       content={({ active, payload, label }) => {
                           if (active && payload && payload.length) {
@@ -574,3 +584,4 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </TooltipProvider>
   );
 }
+
