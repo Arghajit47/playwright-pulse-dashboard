@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector, TooltipProps } from 'recharts';
-import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts';
+import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
+import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts'; 
 import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
@@ -20,8 +20,8 @@ interface CustomTooltipPayloadItem {
   name?: NameType;
   value?: ValueType;
   color?: string;
-  payload?: any; // Made optional to match Recharts' internal Payload type
-  unit?: string;
+  payload?: any; 
+  unit?: React.ReactNode; // Changed from string | undefined
 }
 
 interface RechartsTooltipProps {
@@ -30,7 +30,7 @@ interface RechartsTooltipProps {
   label?: string | number;
 }
 
-// Local definition for ActiveShapeProps as it's not reliably exported
+// Local definition for ActiveShapeProps
 interface ActiveShapeProps {
   cx?: number;
   cy?: number;
@@ -40,7 +40,7 @@ interface ActiveShapeProps {
   startAngle?: number;
   endAngle?: number;
   fill?: string;
-  payload?: PieSectorDataItem; // This 'payload' is for the pie sector itself
+  payload?: PieSectorDataItem;
   percent?: number;
   value?: number;
   name?: string;

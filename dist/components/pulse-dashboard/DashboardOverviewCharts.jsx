@@ -36,18 +36,18 @@ function formatTestNameForChart(fullName) {
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         const titleText = String(label);
-        const dataPoint = payload[0].payload;
-        const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0;
-        const isPieChartTooltip = dataPoint.percentage !== undefined && dataPoint.name;
+        const dataPoint = payload[0].payload; // This is the nested payload
+        const isStackedBarTooltip = dataPoint && dataPoint.total !== undefined && payload.length > 0;
+        const isPieChartTooltip = dataPoint && dataPoint.percentage !== undefined && dataPoint.name;
         return (<div className="bg-card p-3 border border-border rounded-md shadow-lg">
         <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>
-          {dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
+          {dataPoint && dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
         </p>
         {payload.map((entry, index) => (<p key={`item-${index}`} style={{ color: entry.color || entry.payload?.fill }} className="text-xs">
             {`${entry.name || 'Value'}: ${entry.value?.toLocaleString()}${entry.unit || ''}`}
-            {isPieChartTooltip && entry.name === dataPoint.name && ` (${dataPoint.percentage}%)`}
+            {isPieChartTooltip && dataPoint && entry.name === dataPoint.name && ` (${dataPoint.percentage}%)`}
           </p>))}
-        {isStackedBarTooltip && (<p className="text-xs font-bold mt-1 text-foreground">
+        {isStackedBarTooltip && dataPoint && (<p className="text-xs font-bold mt-1 text-foreground">
             Total: {dataPoint.total.toLocaleString()}
           </p>)}
       </div>);
