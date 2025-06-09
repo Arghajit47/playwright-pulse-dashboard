@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useTestData } from '@/hooks/useTestData.js';
+import { useTestData } from '@/hooks/useTestData';
 import type { DetailedTestResult } from '@/types/playwright.js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -21,28 +21,28 @@ interface CategorizedFailureGroup {
 }
 
 const CATEGORIES_CONFIG: { name: string; keywords: string[]; description?: string }[] = [
-  { 
-    name: 'Timeout Errors', 
+  {
+    name: 'Timeout Errors',
     keywords: ['timeout', 'exceeded'],
     description: "Tests that failed due to exceeding a specified time limit for an operation."
   },
-  { 
-    name: 'Locator/Selector Errors', 
+  {
+    name: 'Locator/Selector Errors',
     keywords: ['locator', 'selector', 'getByRole', 'getByText', 'getByLabel', 'getByPlaceholder', 'element not found', 'no element found'],
     description: "Failures related to finding or interacting with UI elements on the page."
   },
-  { 
-    name: 'Assertion Errors', 
+  {
+    name: 'Assertion Errors',
     keywords: ['expect(', 'expected', 'assertion failed'],
     description: "Tests where a specific condition or value did not meet the expected criteria."
   },
-  { 
-    name: 'Strict Mode Violations', 
+  {
+    name: 'Strict Mode Violations',
     keywords: ['strict mode violation'],
     description: "Failures caused by Playwright's strict mode, often when a locator resolves to multiple elements."
   },
-  { 
-    name: 'Navigation Errors', 
+  {
+    name: 'Navigation Errors',
     keywords: ['navigation failed', 'page.goto', 'frame.goto'],
     description: "Errors that occurred during page navigation actions."
   },
@@ -87,7 +87,7 @@ export function FailureCategorizationView() {
              categoriesMap.get(category.name)!.exampleErrorMessages.push(stripAnsiCodes(test.errorMessage));
           }
           assignedCategory = true;
-          break; 
+          break;
         }
       }
 
@@ -111,7 +111,7 @@ export function FailureCategorizationView() {
         exampleErrorMessages: data.exampleErrorMessages,
       });
     });
-    
+
     result.sort((a,b) => b.count - a.count); // Sort by count descending
     return result;
 
@@ -157,7 +157,7 @@ export function FailureCategorizationView() {
       </Alert>
     );
   }
-  
+
   const totalFailures = currentRun.results.filter((t: DetailedTestResult) => t.status === 'failed' || t.status === 'timedOut').length;
 
   if (totalFailures === 0) {
@@ -171,7 +171,7 @@ export function FailureCategorizationView() {
       </Alert>
     );
   }
-  
+
   if (categorizedFailures.length === 0 && totalFailures > 0) {
      return (
       <Alert className="shadow-md">
