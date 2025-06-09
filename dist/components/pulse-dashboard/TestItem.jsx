@@ -1,28 +1,22 @@
 'use client';
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TestItem = TestItem;
-const accordion_1 = require("@/components/ui/accordion");
-const badge_1 = require("@/components/ui/badge");
-const image_1 = __importDefault(require("next/image"));
-const link_1 = __importDefault(require("next/link"));
-const lucide_react_1 = require("lucide-react");
-const utils_1 = require("@/lib/utils");
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
+import Link from 'next/link';
+import { CheckCircle2, XCircle, AlertCircle, Clock, Eye, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 function StatusIcon({ status }) {
     switch (status) {
         case 'passed':
-            return <lucide_react_1.CheckCircle2 className="h-5 w-5 text-green-500"/>;
+            return <CheckCircle2 className="h-5 w-5 text-green-500"/>;
         case 'failed':
-            return <lucide_react_1.XCircle className="h-5 w-5 text-destructive"/>;
+            return <XCircle className="h-5 w-5 text-destructive"/>;
         case 'skipped':
-            return <lucide_react_1.AlertCircle className="h-5 w-5 text-accent"/>;
+            return <AlertCircle className="h-5 w-5 text-accent"/>;
         case 'timedOut':
-            return <lucide_react_1.Clock className="h-5 w-5 text-destructive"/>;
+            return <Clock className="h-5 w-5 text-destructive"/>;
         case 'pending':
-            return <lucide_react_1.Clock className="h-5 w-5 text-primary animate-pulse"/>;
+            return <Clock className="h-5 w-5 text-primary animate-pulse"/>;
         default:
             return null;
     }
@@ -76,7 +70,7 @@ function getAssetPath(jsonPath) {
         .join('/');
     return `/pulse-report/${normalizedRelativePath}`;
 }
-function TestItem({ test }) {
+export function TestItem({ test }) {
     const currentScreenshots = (test.screenshots || [])
         .map(p => (typeof p === 'string' ? p.trim() : ''))
         .filter(p => p && p !== '');
@@ -86,26 +80,26 @@ function TestItem({ test }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <StatusIcon status={test.status}/>
-          <link_1.default href={`/test/${test.id}`} className="font-medium text-foreground text-sm md:text-base hover:underline truncate" title={test.name}>
+          <Link href={`/test/${test.id}`} className="font-medium text-foreground text-sm md:text-base hover:underline truncate" title={test.name}>
             {displayName}
-          </link_1.default>
+          </Link>
         </div>
         <div className="flex items-center space-x-3 ml-2 flex-shrink-0">
-          <badge_1.Badge className={(0, utils_1.cn)("capitalize text-xs px-2 py-0.5 border-transparent rounded-full", getStatusBadgeClass(test.status))}>
+          <Badge className={cn("capitalize text-xs px-2 py-0.5 border-transparent rounded-full", getStatusBadgeClass(test.status))}>
             {test.status}
-          </badge_1.Badge>
+          </Badge>
           <span className="text-sm text-muted-foreground w-20 text-right">{formatDuration(test.duration)}</span>
-           <link_1.default href={`/test/${test.id}`} aria-label={`View details for ${displayName}`}>
-            <lucide_react_1.ChevronRight className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors"/>
-          </link_1.default>
+           <Link href={`/test/${test.id}`} aria-label={`View details for ${displayName}`}>
+            <ChevronRight className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors"/>
+          </Link>
         </div>
       </div>
-      {hasDetailsInAccordion && (<accordion_1.Accordion type="single" collapsible className="w-full mt-2">
-          <accordion_1.AccordionItem value="details" className="border-none">
-            <accordion_1.AccordionTrigger className="text-xs py-1 px-1 hover:no-underline text-muted-foreground justify-start hover:bg-accent/10 rounded-md [&[data-state=open]>svg]:ml-2">
+      {hasDetailsInAccordion && (<Accordion type="single" collapsible className="w-full mt-2">
+          <AccordionItem value="details" className="border-none">
+            <AccordionTrigger className="text-xs py-1 px-1 hover:no-underline text-muted-foreground justify-start hover:bg-accent/10 rounded-md [&[data-state=open]>svg]:ml-2">
                 Quick Look
-            </accordion_1.AccordionTrigger>
-            <accordion_1.AccordionContent className="pt-2 pl-2 pr-2 pb-1 bg-muted/30 rounded-lg">
+            </AccordionTrigger>
+            <AccordionContent className="pt-2 pl-2 pr-2 pb-1 bg-muted/30 rounded-lg">
               {test.errorMessage && (<div className="mb-3">
                   <h4 className="font-semibold text-xs text-destructive mb-1">Error:</h4>
                   <pre className="bg-destructive/10 text-destructive text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">{test.errorMessage}</pre>
@@ -118,18 +112,18 @@ function TestItem({ test }) {
                     if (imageSrc === '#')
                         return null;
                     return (<a key={`img-thumb-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-md overflow-hidden group border hover:border-primary shadow-sm">
-                            <image_1.default src={imageSrc} alt={`Screenshot ${index + 1}`} fill={true} style={{ objectFit: "cover" }} className="group-hover:scale-105 transition-transform duration-300"/>
+                            <Image src={imageSrc} alt={`Screenshot ${index + 1}`} fill={true} style={{ objectFit: "cover" }} className="group-hover:scale-105 transition-transform duration-300"/>
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                <lucide_react_1.Eye className="h-6 w-6 text-white"/>
+                                <Eye className="h-6 w-6 text-white"/>
                             </div>
                          </a>);
                 })}
                     </div>
                 </div>)}
                {(!test.errorMessage && currentScreenshots.length === 0) && (<p className="text-xs text-muted-foreground">No error or screenshots for quick look. Click to view full details.</p>)}
-            </accordion_1.AccordionContent>
-          </accordion_1.AccordionItem>
-        </accordion_1.Accordion>)}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>)}
     </div>);
 }
 //# sourceMappingURL=TestItem.jsx.map
