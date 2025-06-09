@@ -45,15 +45,15 @@ body {
     --chart-4: 0 70% 60%; /* A soft red */
     --chart-5: 240 50% 65%; /* A gentle purple */
 
-    /* Sidebar specific (can be adjusted if sidebar is heavily used, for now align with main theme) */
-    --sidebar-background: 200 60% 92%;
-    --sidebar-foreground: 210 20% 25%;
-    --sidebar-primary: 200 67% 62%;
+    /* Sidebar specific */
+    --sidebar-background: 200 60% 97%; /* Very light, almost off-white blue */
+    --sidebar-foreground: 210 20% 30%; /* Slightly darker for better contrast on light sidebar */
+    --sidebar-primary: 200 67% 58%; /* Maintained primary for consistency if needed elsewhere */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 36 90% 51%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 200 30% 85%;
-    --sidebar-ring: 200 67% 55%;
+    --sidebar-accent: 200 67% 50%; /* More saturated/darker blue for active items */
+    --sidebar-accent-foreground: 0 0% 100%; /* White text on active items */
+    --sidebar-border: 200 30% 90%; /* Softer border */
+    --sidebar-ring: 200 67% 50%;
   }
 
   .dark {
@@ -93,13 +93,14 @@ body {
     --chart-4: 0 75% 65%;  /* Adjusted red for charts */
     --chart-5: 240 55% 70%; /* Adjusted purple for charts */
     
-    --sidebar-background: 220 14% 12%; /* Distinct sidebar module background */
-    --sidebar-foreground: 220 20% 88%; /* Readable text on sidebar */
+    /* Sidebar specific - Dark Mode */
+    --sidebar-background: 220 14% 12%; /* Slightly darker than main dark card for distinction */
+    --sidebar-foreground: 220 20% 88%; 
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: var(--accent);
-    --sidebar-accent-foreground: var(--accent-foreground);
-    --sidebar-border: 220 10% 22%; /* Subtle border for sidebar elements */
+    --sidebar-accent: 200 75% 60%; /* Brighter blue for active items in dark mode */
+    --sidebar-accent-foreground: 210 100% 98%; /* Very light text on active items */
+    --sidebar-border: 220 10% 20%; /* Darker, subtle border */
     --sidebar-ring: var(--ring);
   }
 }

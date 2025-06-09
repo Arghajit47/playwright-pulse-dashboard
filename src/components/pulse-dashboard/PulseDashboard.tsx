@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image'; // Keep for logo, use <img> for external icon
+import Image from 'next/image'; 
 import { useTestData } from '@/hooks/useTestData';
 import { SummaryMetrics } from './SummaryMetrics';
 import { LiveTestResults, type TestStatusFilter } from './LiveTestResults';
@@ -22,7 +22,7 @@ import {
   SidebarInset,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, TrendingUp, Wand2, Settings, Repeat, ListX } from 'lucide-react';
+import { LayoutDashboard, ListChecks, TrendingUp, Settings, Repeat, ListX } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -47,7 +47,7 @@ export function PulseDashboard() {
 
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [initialLiveResultsFilter, setInitialLiveResultsFilter] = useState<TestStatusFilter | undefined>(undefined);
-  const [linkColor, setLinkColor] = useState('#7737BF');
+  const [linkColor, setLinkColor] = useState('#7737BF'); // For footer link
 
   const handleMetricCardClick = (filter: TestStatusFilter) => {
     setInitialLiveResultsFilter(filter);
@@ -97,18 +97,18 @@ export function PulseDashboard() {
 
   return (
     <SidebarProvider defaultOpen>
-      <Sidebar collapsible="icon" className="border-r">
-        <SidebarHeader className="p-4 flex items-start justify-between border-b border-sidebar-border">
-           <Link href="/" className="flex items-start gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
+      <Sidebar collapsible="icon" className="border-r border-sidebar-border shadow-lg">
+        <SidebarHeader className="p-4 flex items-center justify-between border-b border-sidebar-border">
+           <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
             <Image
                 src="https://i.postimg.cc/FHbZFDxq/pulse-removebg-preview.png"
                 alt="Pulse Dashboard Logo"
-                width={50}
-                height={50}
+                width={40}
+                height={40}
                 className="rounded-sm"
                 data-ai-hint="pulse logo"
             />
-            <h2 className="font-bold text-lg text-primary">Pulse Dashboard</h2>
+            <h2 className="font-bold text-xl text-sidebar-foreground">Pulse</h2>
           </Link>
           <SidebarTrigger className="md:hidden group-data-[collapsible=icon]:hidden" />
         </SidebarHeader>
@@ -123,14 +123,14 @@ export function PulseDashboard() {
                   isActive={activeView === item.id}
                   tooltip={{children: item.label, side: 'right', align: 'center'}}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className="h-5 w-5" />
                   <span>{item.label}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="p-2 group-data-[collapsible=icon]:hidden">
+        <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden">
             <p className="text-xs text-muted-foreground">
               Pulse v1.0
             </p>
@@ -157,7 +157,7 @@ export function PulseDashboard() {
               boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
               textAlign: 'center',
               fontFamily: "'Segoe UI', system-ui, sans-serif",
-              marginTop: 'auto',
+              marginTop: 'auto', // Ensures footer is at the bottom
             }}
           >
             <div
@@ -171,6 +171,7 @@ export function PulseDashboard() {
               }}
               className="text-foreground" 
             >
+               <Image width="32" height="32" src="https://img.icons8.com/emoji/48/index-pointing-at-the-viewer-light-skin-tone-emoji.png" alt="pointing emoji" data-ai-hint="pointing hand emoji" />
               <span>Created by</span>
               <a
                 href="https://github.com/Arghajit47"
@@ -204,4 +205,3 @@ export function PulseDashboard() {
     </SidebarProvider>
   );
 }
-
