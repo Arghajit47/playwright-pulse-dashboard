@@ -110,35 +110,28 @@ function getStatusBadgeClass(status: DetailedTestResult['status']): string {
 
 function getAssetPath(jsonPath: string | undefined | null): string {
   if (!jsonPath || typeof jsonPath !== 'string') {
-    return '#'; // Return a non-functional link for invalid input
+    return '#';
   }
   let path = jsonPath.trim();
   if (path === '') {
     return '#';
   }
 
-  // If it's a data URI or absolute web URL, return as is
   if (path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
 
-  // Normalize path separators
   path = path.replace(/\\/g, '/');
   
-  // If path ALREADY starts with "/pulse-report/", it's a correct root-relative path.
   if (path.startsWith('/pulse-report/')) {
     return path;
   }
 
-  // If path starts with "pulse-report/" (without leading slash), make it root-relative.
   if (path.startsWith('pulse-report/')) {
     return `/${path}`;
   }
   
-  // Otherwise, assume the path is relative to the 'pulse-report' directory itself
-  // (e.g., "attachments/image.png", "videos/video.mp4").
-  // We want it to become "/pulse-report/attachments/image.png" or "/pulse-report/videos/video.mp4"
-  const parts = path.split('/').filter(part => part && part !== '.'); // Remove empty parts or "."
+  const parts = path.split('/').filter(part => part && part !== '.');
   return `/pulse-report/${parts.join('/')}`;
 }
 
@@ -156,10 +149,10 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     if (chartRef.current) {
       try {
         const canvas = await html2canvas(chartRef.current, {
-          backgroundColor: null, // Transparent background
+          backgroundColor: null, 
           logging: false,
-          useCORS: true, // For external images if any in chart (less likely here)
-          scale: 2, // Higher resolution
+          useCORS: true, 
+          scale: 2, 
         });
         const image = canvas.toDataURL('image/png', 1.0);
         const link = document.createElement('a');
@@ -170,7 +163,6 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         document.body.removeChild(link);
       } catch (err) {
         console.error('Error downloading chart:', err);
-        // Optionally, inform the user with a toast or alert
       }
     }
   };
@@ -236,7 +228,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     );
   }
 
-  if (errorCurrent) {
+  if (errorCurrent && !test) { // Only show top-level error if specific test data couldn't be even potentially found
     return (
       <div className="container mx-auto px-4 py-8">
         <Alert variant="destructive" className="rounded-lg">
@@ -291,6 +283,18 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <span className="ml-3">{displayName}</span>
                 </CardTitle>
                 {test.suiteName && <CardDescription className="mt-1 text-md">From suite: {test.suiteName}</CardDescription>}
+                 <p className="text-sm text-muted-foreground mt-2">
+                    Latest Run Date:{" "}
+                    {loadingCurrent ? (
+                        <span className="text-muted-foreground">Loading...</span>
+                    ) : currentRun?.run?.timestamp ? (
+                        <span className="font-medium">{new Date(currentRun.run.timestamp).toLocaleString()}</span>
+                    ) : errorCurrent && !currentRun?.run?.timestamp ? ( // Show error only if timestamp is missing due to error
+                        <span className="text-destructive font-medium">Error loading date</span>
+                    ) : (
+                        <span className="font-medium">Not available</span>
+                    )}
+                </p>
                  <div className="mt-1 text-xs text-muted-foreground">
                     <p>ID: {test.id}</p>
                     {test.browser && <p>Browser: {test.browser}</p>}
@@ -566,5 +570,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
+
+    
 
     
