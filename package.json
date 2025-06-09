@@ -1,3 +1,4 @@
+
 {
   "name": "pulse-dashboard",
   "version": "0.1.5",
@@ -52,7 +53,7 @@
     "build:tsc": "tsc --project tsconfig.build.json",
     "build:css": "tailwindcss -i ./src/app/globals.css -o ./dist/styles.css --minify",
     "build": "npm run clean && npm run build:tsc && npm run build:css",
-    "prepublishOnly": "npm run build:app && npm run build",
+    "prepublishOnly": "npm run build:app && find .next -name \"*.map\" -type f -delete && npm run build",
     "postinstall": "echo \"Pulse Dashboard is an extensive visualization of playwright-pulse-report, kindly run the 'npm install @arghajit/playwright-pulse-report@latest' to install pulse-report package and follow the readm file. If already installed please ignore, happy reporting!\""
   },
   "dependencies": {

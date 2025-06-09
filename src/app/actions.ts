@@ -7,7 +7,9 @@ import type { PlaywrightPulseReport, DetailedTestResult, FlakyTestDetail, FlakyT
 
 
 export async function getRawHistoricalReports(): Promise<PlaywrightPulseReport[]> {
+  // This function runs on the server, so process.env should be available if set by the bin script
   const baseDir = process.env.PULSE_USER_CWD || process.cwd();
+  // console.log('[ACTIONS getRawHistoricalReports] Effective baseDir:', baseDir); // Optional: for debugging actions too
   const historyDir = path.join(baseDir, 'pulse-report', 'history');
   try {
     const trendFileNames = (await fs.readdir(historyDir)).filter(file => file.startsWith('trend-') && file.endsWith('.json'));

@@ -45,7 +45,7 @@ jspm_packages/
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
-# TypeScript cache
+# TypeScript cache file
 *.tsbuildinfo
 
 # Optional npm cache directory
@@ -53,6 +53,9 @@ web_modules/
 
 # Optional eslint cache
 .eslintcache
+
+# Optional stylelint cache
+.stylelintcache
 
 # Microbundle cache
 .rpt2_cache/
@@ -69,41 +72,39 @@ web_modules/
 # Yarn Integrity file
 .yarnclean
 
-# Jekyll Folder
-_site
+# dotenv environment variables file
+.env
+.env*.local
+.env*.development
+.env*.test
+.env*.production
+!example.env
+!example.env.local
 
-# Docusaurus Folder
-.docusaurus
-
-# Serverless Folder
-.serverless/
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-dynamodb_local_*.db
-dynamodb_local_*.log
-
-# Next.js build cache
+# Next.js build cache and other artifacts not strictly needed for runtime
 .next/cache/
+**/*.map
 
-# Storybook specific
-.storybook
+# VSCode
+.vscode/
+
+# Turborepo
+.turbo
+
+# Storybook
 storybook-static
 
-# Misc
-.DS_Store
-Thumbs.db
-*.bak
+# For this project
+src/ai/
+src/app/dev.ts
+*.bk
+*~
+# If you have test files alongside components that are not part of dist, ignore them.
+# e.g. **/*.test.tsx, **/*.spec.tsx
 
-# IDE specific
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
+# Ensure src is not packaged for this CLI tool, dist is for library use.
+# src/
 
-# Environment files
-.env
-.env.*
-!.env.example
+# Genkit files that are not needed for the runtime of the dashboard itself
+.genkit-cache/
+genkit.state

@@ -5,11 +5,12 @@ import path from 'path';
 import type { HistoricalTrend, PlaywrightPulseReport } from '@/types/playwright';
 
 export async function GET() {
-  console.log('[API /api/historical-trends] Node environment:', process.env.NODE_ENV);
+  // console.log('[API /api/historical-trends] All Environment Variables:', JSON.stringify(process.env, null, 2)); // Uncomment for very verbose debugging
   console.log('[API /api/historical-trends] Raw process.env.PULSE_USER_CWD:', process.env.PULSE_USER_CWD);
+  console.log('[API /api/historical-trends] Current process.cwd() for Next.js server:', process.cwd());
+
   const baseDir = process.env.PULSE_USER_CWD || process.cwd();
   console.log('[API /api/historical-trends] Effective baseDir determined:', baseDir);
-  console.log('[API /api/historical-trends] Fallback process.cwd() for Next.js server:', process.cwd());
 
   const historyDir = path.join(baseDir, 'pulse-report', 'history');
   console.log('[API /api/historical-trends] Attempting to read historical trends from directory:', historyDir);
@@ -27,7 +28,7 @@ export async function GET() {
     const trends: HistoricalTrend[] = [];
     for (const file of trendFiles) {
       const filePath = path.join(historyDir, file);
-      console.log('[API /api/historical-trends] Processing historical trend file:', filePath);
+      // console.log('[API /api/historical-trends] Processing historical trend file:', filePath); // Verbose
       try {
         const fileContent = await fs.readFile(filePath, 'utf-8');
         const reportData: PlaywrightPulseReport = JSON.parse(fileContent);
@@ -56,7 +57,7 @@ export async function GET() {
     console.error('[API /api/historical-trends] Failed to read historical trends directory or encountered a critical error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Error fetching historical trends';
     if (error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
-        // This specific error message will now include the baseDir it *thought* it should use.
+        // This specific error message will now include the historyDir it *thought* it should use.
         return NextResponse.json({ message: `Historical trends directory not found at ${historyDir}. This path was constructed using base directory: '${baseDir}'. Please ensure 'pulse-report/history/' exists in the correct location relative to where you ran the command.` }, { status: 404 });
     }
     return NextResponse.json({ message: `Error accessing or reading historical trends directory ${historyDir}: ${errorMessage}` }, { status: 500 });
