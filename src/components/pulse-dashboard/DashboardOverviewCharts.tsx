@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
+import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector, TooltipProps } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts';
 import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,9 +18,9 @@ import type { NameType, ValueType } from 'recharts/types/component/DefaultToolti
 
 interface CustomTooltipPayloadItem {
   name?: NameType;
-  value?: ValueType; // Made optional
+  value?: ValueType;
   color?: string;
-  payload: any;
+  payload?: any; // Made optional to match Recharts' internal Payload type
   unit?: string;
 }
 
@@ -30,6 +30,7 @@ interface RechartsTooltipProps {
   label?: string | number;
 }
 
+// Local definition for ActiveShapeProps as it's not reliably exported
 interface ActiveShapeProps {
   cx?: number;
   cy?: number;
@@ -39,7 +40,7 @@ interface ActiveShapeProps {
   startAngle?: number;
   endAngle?: number;
   fill?: string;
-  payload?: PieSectorDataItem;
+  payload?: PieSectorDataItem; // This 'payload' is for the pie sector itself
   percent?: number;
   value?: number;
   name?: string;
@@ -82,24 +83,24 @@ function formatTestNameForChart(fullName: string): string {
 const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps) => {
   if (active && payload && payload.length) {
     const titleText = String(label);
-    const dataPoint = payload[0].payload as any;
+    const dataPoint = payload[0].payload as any; // This is the nested payload
 
-    const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0;
-    const isPieChartTooltip = dataPoint.percentage !== undefined && dataPoint.name;
+    const isStackedBarTooltip = dataPoint && dataPoint.total !== undefined && payload.length > 0;
+    const isPieChartTooltip = dataPoint && dataPoint.percentage !== undefined && dataPoint.name;
 
 
     return (
       <div className="bg-card p-3 border border-border rounded-md shadow-lg">
         <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>
-          {dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
+          {dataPoint && dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
         </p>
         {payload.map((entry: CustomTooltipPayloadItem, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color || (entry.payload as any)?.fill }} className="text-xs">
             {`${entry.name || 'Value'}: ${entry.value?.toLocaleString()}${entry.unit || ''}`}
-            {isPieChartTooltip && entry.name === (dataPoint as any).name && ` (${(dataPoint as any).percentage}%)`}
+            {isPieChartTooltip && dataPoint && entry.name === (dataPoint as any).name && ` (${(dataPoint as any).percentage}%)`}
           </p>
         ))}
-        {isStackedBarTooltip && (
+        {isStackedBarTooltip && dataPoint && (
           <p className="text-xs font-bold mt-1 text-foreground">
             Total: {(dataPoint as any).total.toLocaleString()}
           </p>
