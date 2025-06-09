@@ -1,7 +1,10 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
-export function useTestData() {
-    const [data, setData] = useState({
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.useTestData = useTestData;
+const react_1 = require("react");
+function useTestData() {
+    const [data, setData] = (0, react_1.useState)({
         currentRun: null,
         historicalTrends: [],
         loadingCurrent: true,
@@ -9,7 +12,7 @@ export function useTestData() {
         errorCurrent: null,
         errorHistorical: null,
     });
-    const fetchCurrentRun = useCallback(async () => {
+    const fetchCurrentRun = (0, react_1.useCallback)(async () => {
         const apiUrl = '/api/current-run';
         if (!data.currentRun && !data.loadingCurrent && !data.errorCurrent) {
             setData(prev => ({ ...prev, loadingCurrent: true, errorCurrent: null }));
@@ -51,7 +54,7 @@ export function useTestData() {
             setData(prev => ({ ...prev, currentRun: null, loadingCurrent: false, errorCurrent: detailedErrorMessage }));
         }
     }, []);
-    const fetchHistoricalTrends = useCallback(async () => {
+    const fetchHistoricalTrends = (0, react_1.useCallback)(async () => {
         const apiUrl = '/api/historical-trends';
         if (!data.historicalTrends.length && !data.loadingHistorical && !data.errorHistorical) {
             setData(prev => ({ ...prev, loadingHistorical: true, errorHistorical: null }));
@@ -93,7 +96,7 @@ export function useTestData() {
             setData(prev => ({ ...prev, historicalTrends: [], loadingHistorical: false, errorHistorical: detailedErrorMessage }));
         }
     }, []);
-    useEffect(() => {
+    (0, react_1.useEffect)(() => {
         // Initial fetch for both
         if (data.loadingCurrent)
             fetchCurrentRun(); // Only fetch if truly in initial loading state

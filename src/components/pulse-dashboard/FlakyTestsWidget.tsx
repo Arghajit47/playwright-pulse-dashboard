@@ -17,28 +17,28 @@ import { cn } from '@/lib/utils';
 function StatusBadge({ status }: { status: FlakyTestOccurrence['status'] }) {
   let variant: "default" | "secondary" | "destructive" | "outline" = "secondary";
   let icon = <Clock className="h-3 w-3 mr-1" />;
-  let text = status;
+  let text: FlakyTestOccurrence['status'] = status;
 
   switch (status) {
     case 'passed':
       variant = 'default'; 
       icon = <CheckCircle className="h-3 w-3 mr-1 text-green-500" />;
-      text = "Passed";
+      text = "passed";
       break;
     case 'failed':
     case 'timedOut':
       variant = 'destructive';
       icon = <XCircle className="h-3 w-3 mr-1" />;
-      text = status === 'failed' ? "Failed" : "Timed Out";
+      text = status === 'failed' ? "failed" : "timedOut";
       break;
     case 'skipped':
       variant = 'outline'; 
       icon = <SkipForward className="h-3 w-3 mr-1 text-orange-500" />;
-      text = "Skipped";
+      text = "skipped";
       break;
     case 'pending':
       icon = <Clock className="h-3 w-3 mr-1 text-blue-500" />;
-      text = "Pending";
+      text = "pending";
       break;
   }
   return (
