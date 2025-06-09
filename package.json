@@ -1,14 +1,34 @@
-
 {
   "name": "pulse-dashboard-component",
   "version": "0.1.0",
   "private": false,
+  "description": "A Next.js Dashboard application for real-time monitoring and historical analysis of Playwright test executions. This component provides the UI for visualizing Playwright test results.",
+  "author": "Your Name or Company",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/pulse-dashboard-component.git"
+  },
+  "homepage": "https://github.com/your-username/pulse-dashboard-component#readme",
+  "keywords": [
+    "react",
+    "nextjs",
+    "playwright",
+    "dashboard",
+    "testing",
+    "test-reporting",
+    "pulse",
+    "pulse-reporter",
+    "pulse-report",
+    "pulse-dashboard"
+  ],
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
@@ -21,8 +41,7 @@
     "clean": "rm -rf dist",
     "build:tsc": "tsc --project tsconfig.build.json",
     "build:css": "tailwindcss -i ./src/app/globals.css -o ./dist/styles.css --minify",
-    "build": "npm run clean && npm run build:tsc && npm run build:css",
-    "prepare": "npm run build"
+    "build": "npm run clean && npm run build:tsc && npm run build:css"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
@@ -46,37 +65,33 @@
     "@radix-ui/react-tabs": "^1.1.3",
     "@radix-ui/react-toast": "^1.2.6",
     "@radix-ui/react-tooltip": "^1.1.8",
+    "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/recharts": "^1.8.29",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.475.0",
+    "next": "15.2.3",
+    "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.0.1",
     "zod": "^3.24.2"
   },
-  "peerDependencies": {
-    "next": ">=14.0.0",
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
-  },
   "devDependencies": {
     "@genkit-ai/googleai": "^1.8.0",
     "@genkit-ai/next": "^1.8.0",
-    "@types/node": "^20",
     "autoprefixer": "^10.4.19",
     "dotenv": "^16.5.0",
     "genkit": "^1.8.0",
     "genkit-cli": "^1.8.0",
-    "next": "15.2.3",
     "patch-package": "^8.0.0",
     "postcss": "^8",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5"

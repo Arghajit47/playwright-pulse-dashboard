@@ -1,2 +1,2 @@
-export declare function FlakyTestsWidget(): import("react/jsx-runtime").JSX.Element;
+export declare function FlakyTestsWidget(): import("react").JSX.Element;
 //# sourceMappingURL=FlakyTestsWidget.d.ts.map

@@ -15,7 +15,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef } from 'react';
 import { TestStepItemRecursive } from './TestStepItemRecursive';
-// import { getRawHistoricalReports } from '@/app/actions'; // Commented out for package build
+import { getRawHistoricalReports } from '@/app/actions'; 
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, DotProps } from 'recharts';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
@@ -186,11 +186,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
       setLoadingHistory(true);
       setErrorHistory(null);
       try {
-        // const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports(); // Commented out for package build
-        // Simulating no data for build purposes
-        const rawReports: PlaywrightPulseReport[] = [];
-        setErrorHistory('Test history data fetching is handled by the consuming application.');
-
+        const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports(); 
+        
         const historyData: TestRunHistoryData[] = [];
 
         rawReports.forEach(report => {
@@ -214,11 +211,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
       }
     };
 
-    // fetchTestHistory(); // Commented out call for package build
-    setLoadingHistory(false); // Ensure loading completes for build
-    setErrorHistory('Test history data fetching is handled by the consuming application.');
-
-
+    fetchTestHistory();
   }, [testId]);
 
 
@@ -511,7 +504,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {errorHistory && !loadingHistory && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Test History Information</AlertTitle>
+                  <AlertTitle>Error Loading Test History</AlertTitle>
                   <AlertDescription>{errorHistory}</AlertDescription>
                 </Alert>
               )}
@@ -520,7 +513,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   <Info className="h-4 w-4" />
                   <AlertTitle>No Historical Data</AlertTitle>
                   <AlertDescription>
-                    No historical run data found for this specific test (ID: {testId}). Or, data fetching is handled by the consuming application.
+                    No historical run data found for this specific test (ID: {testId}).
                   </AlertDescription>
                 </Alert>
               )}

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-// import { getFlakyTestsAnalysis } from '@/app/actions'; // Commented out for package build
+import { getFlakyTestsAnalysis } from '@/app/actions'; 
 import type { FlakyTestDetail, FlakyTestOccurrence } from '@/types/playwright';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,7 +21,7 @@ function StatusBadge({ status }: { status: FlakyTestOccurrence['status'] }) {
 
   switch (status) {
     case 'passed':
-      variant = 'default'; // Primary theme color for passed (often green-ish via theme)
+      variant = 'default'; 
       icon = <CheckCircle className="h-3 w-3 mr-1 text-green-500" />;
       text = "Passed";
       break;
@@ -64,9 +64,7 @@ export function FlakyTestsWidget() {
     async function fetchData() {
       setIsLoading(true);
       setError(null);
-      // const result = await getFlakyTestsAnalysis(); // Commented out for package build
-      // Simulating no data for build purposes, real app would need prop injection
-      const result = { success: true, flakyTests: [] as FlakyTestDetail[], error: 'Data fetching disabled for package build.' }; 
+      const result = await getFlakyTestsAnalysis(); 
       if (result.success && result.flakyTests) {
         setFlakyTests(result.flakyTests);
       } else {
@@ -74,12 +72,7 @@ export function FlakyTestsWidget() {
       }
       setIsLoading(false);
     }
-    // fetchData(); // Commented out call for package build
-    // Simulate initial loading state for build purposes
-    setFlakyTests([]);
-    setIsLoading(false);
-    setError('Flaky test analysis data fetching is handled by the consuming application.');
-
+    fetchData(); 
   }, []);
 
   if (isLoading) {
@@ -106,7 +99,7 @@ export function FlakyTestsWidget() {
     return (
       <Alert variant="destructive">
         <Terminal className="h-4 w-4" />
-        <AlertTitle>Flaky Test Analysis Information</AlertTitle>
+        <AlertTitle>Flaky Test Analysis Error</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
@@ -122,15 +115,14 @@ export function FlakyTestsWidget() {
           </CardTitle>
           <CardDescription>
             Analysis of tests that have shown inconsistent pass/fail behavior across historical runs.
-            (Data to be provided by consuming application)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Alert>
             <CheckCircle className="h-4 w-4" />
-            <AlertTitle>No Flaky Tests Data</AlertTitle>
+            <AlertTitle>No Flaky Tests Identified</AlertTitle>
             <AlertDescription>
-              The consuming application is responsible for fetching and providing flaky test data.
+              No tests were identified as flaky based on the available historical data.
             </AlertDescription>
           </Alert>
         </CardContent>

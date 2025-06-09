@@ -100,7 +100,7 @@ export function PulseDashboard() {
         <SidebarHeader className="p-4 flex items-start justify-between border-b border-sidebar-border">
            <Link href="/" className="flex items-start gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
             <Image
-                src="https://i.postimg.cc/wxw3b8gW/pulse.png"
+                src="https://i.postimg.cc/FHbZFDxq/pulse-removebg-preview.png"
                 alt="Pulse Dashboard Logo"
                 width={50}
                 height={50}
