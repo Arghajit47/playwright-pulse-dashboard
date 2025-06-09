@@ -11,7 +11,7 @@
     "moduleResolution": "NodeNext",
     "noEmit": false, 
     "jsx": "preserve",
-    "isolatedModules": true, 
+    "isolatedModules": false, 
     "target": "ES2020",
     "baseUrl": "./",
     "paths": {
