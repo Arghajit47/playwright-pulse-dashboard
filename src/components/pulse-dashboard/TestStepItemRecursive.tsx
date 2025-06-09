@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { TestStep } from '@/types/playwright';
+import type { TestStep } from '@/types/playwright.js';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, AlertCircle, Clock, ChevronsRightLeft, Info, Code2 } from 'lucide-react';
@@ -73,7 +73,7 @@ export function TestStepItemRecursive({ step, level = 0 }: TestStepItemRecursive
           </AccordionTrigger>
           <AccordionContent className="pt-0 pb-0">
             <div className="mt-1">
-              {step.steps.map(subStep => (
+              {step.steps.map((subStep: TestStep) => (
                 <TestStepItemRecursive key={subStep.id} step={subStep} level={level + 1} />
               ))}
             </div>

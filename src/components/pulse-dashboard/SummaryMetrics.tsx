@@ -84,7 +84,7 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
             className={`shadow-lg hover:shadow-xl transition-shadow duration-300 ${metric.filterKey && onMetricClick ? 'cursor-pointer hover:ring-2 hover:ring-primary' : ''}`}
             onClick={() => handleCardClick(metric.filterKey)}
             tabIndex={metric.filterKey && onMetricClick ? 0 : -1}
-            onKeyDown={(e) => {
+            onKeyDown={(e: React.KeyboardEvent) => {
               if ((e.key === 'Enter' || e.key === ' ') && metric.filterKey && onMetricClick) {
                 handleCardClick(metric.filterKey);
               }

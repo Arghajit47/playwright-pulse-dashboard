@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { DetailedTestResult } from '@/types/playwright';
+import type { DetailedTestResult } from '@/types/playwright.js';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
@@ -86,8 +86,8 @@ function getAssetPath(jsonPath: string | undefined | null): string {
 
 export function TestItem({ test }: TestItemProps) {
   const currentScreenshots = (test.screenshots || [])
-    .map(p => (typeof p === 'string' ? p.trim() : ''))
-    .filter(p => p && p !== '');
+    .map((p: string) => (typeof p === 'string' ? p.trim() : ''))
+    .filter((p: string) => p && p !== '');
   const hasDetailsInAccordion = test.errorMessage || currentScreenshots.length > 0;
   const displayName = formatTestName(test.name);
 
@@ -132,7 +132,7 @@ export function TestItem({ test }: TestItemProps) {
                 <div>
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
-                    {currentScreenshots.slice(0,4).map((path, index) => {
+                    {currentScreenshots.slice(0,4).map((path: string, index: number) => {
                         const imageSrc = getAssetPath(path);
                         if (imageSrc === '#') return null;
                         return (

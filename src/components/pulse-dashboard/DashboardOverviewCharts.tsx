@@ -1,18 +1,19 @@
 
 'use client';
 
-import type { PlaywrightPulseReport } from '@/types/playwright';
+import type { PlaywrightPulseReport, DetailedTestResult } from '@/types/playwright.js';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
-import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
+import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector, TooltipProps as RechartsTooltipProps } from 'recharts';
+import type { PieSectorDataItem, ActiveShapeProps } from 'recharts/types/polar/Pie.d.ts'; // .d.ts for specific type import
 import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 
 
 interface DashboardOverviewChartsProps {
@@ -47,12 +48,12 @@ function formatTestNameForChart(fullName: string): string {
   return parts[parts.length - 1] || fullName;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
-    const titleText = String(label); // Main title for the tooltip (e.g., browser name, date, suite name)
-    const dataPoint = payload[0].payload; // The raw data object for this tick
+    const titleText = String(label); 
+    const dataPoint = payload[0].payload; 
 
-    const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0; // Check if it's a stacked bar (browser or suite)
+    const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0; 
     const isPieChartTooltip = dataPoint.percentage !== undefined && dataPoint.name;
 
 
@@ -61,9 +62,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>
           {dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
         </p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color || entry.payload.fill }} className="text-xs">
-            {`${entry.name}: ${entry.value.toLocaleString()}${entry.unit || ''}`}
+            {`${entry.name}: ${entry.value?.toLocaleString()}${entry.unit || ''}`}
             {isPieChartTooltip && entry.name === dataPoint.name && ` (${dataPoint.percentage}%)`}
           </p>
         ))}
@@ -119,15 +120,15 @@ const BrowserIcon = ({ browserName, className }: { browserName: string, classNam
 };
 
 
-const ActiveShape = (props: any) => {
+const ActiveShape = (props: ActiveShapeProps) => {
   const RADIAN = Math.PI / 180;
   const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
-  const sin = Math.sin(-RADIAN * midAngle);
-  const cos = Math.cos(-RADIAN * midAngle);
-  const sx = cx + (outerRadius + 10) * cos;
-  const sy = cy + (outerRadius + 10) * sin;
-  const mx = cx + (outerRadius + 30) * cos;
-  const my = cy + (outerRadius + 30) * sin;
+  const sin = Math.sin(-RADIAN * (midAngle ?? 0));
+  const cos = Math.cos(-RADIAN * (midAngle ?? 0));
+  const sx = (cx ?? 0) + ((outerRadius ?? 0) + 10) * cos;
+  const sy = (cy ?? 0) + ((outerRadius ?? 0) + 10) * sin;
+  const mx = (cx ?? 0) + ((outerRadius ?? 0) + 30) * cos;
+  const my = (cy ?? 0) + ((outerRadius ?? 0) + 30) * sin;
   const ex = mx + (cos >= 0 ? 1 : -1) * 22;
   const ey = my;
   const textAnchor = cos >= 0 ? 'start' : 'end';
@@ -153,15 +154,15 @@ const ActiveShape = (props: any) => {
         cy={cy}
         startAngle={startAngle}
         endAngle={endAngle}
-        innerRadius={outerRadius + 6}
-        outerRadius={outerRadius + 10}
+        innerRadius={(outerRadius ?? 0) + 6}
+        outerRadius={(outerRadius ?? 0) + 10}
         fill={fill}
       />
       <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
       <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
       <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="hsl(var(--foreground))" className="text-xs">{`${value}`}</text>
       <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="hsl(var(--muted-foreground))" className="text-xs">
-        {`(Rate ${(percent * 100).toFixed(2)}%)`}
+        {`(Rate ${( (percent ?? 0) * 100).toFixed(2)}%)`}
       </text>
     </g>
   );
@@ -201,7 +202,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
 
   const onPieEnter = React.useCallback(
-    (_: any, index: number) => {
+    (_data: PieSectorDataItem, index: number) => {
       setActiveIndex(index);
     },
     [setActiveIndex]
@@ -276,8 +277,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
 
   const failedTestsDurationData = currentRun.results
-    .filter(test => test.status === 'failed' || test.status === 'timedOut')
-    .map(test => {
+    .filter((test: DetailedTestResult) => test.status === 'failed' || test.status === 'timedOut')
+    .map((test: DetailedTestResult) => {
       const shortName = formatTestNameForChart(test.name);
       return {
         name: shortName.length > 50 ? shortName.substring(0, 47) + '...' : shortName,
@@ -308,7 +309,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const slowestTestsData = [...currentRun.results]
     .sort((a, b) => b.duration - a.duration)
     .slice(0, 5)
-    .map(test => {
+    .map((test: DetailedTestResult) => {
       const shortName = formatTestNameForChart(test.name);
       return {
         name: shortName,
@@ -623,4 +624,3 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </TooltipProvider>
   );
 }
-

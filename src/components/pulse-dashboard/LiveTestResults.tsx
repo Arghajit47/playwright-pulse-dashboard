@@ -56,8 +56,8 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
       const uniqueBrowsers = new Set<string>();
       const uniqueSuites = new Set<string>();
 
-      report.results.forEach(test => {
-        test.tags?.forEach(tag => uniqueTags.add(tag));
+      report.results.forEach((test: DetailedTestResult) => {
+        test.tags?.forEach((tag: string) => uniqueTags.add(tag));
         if (test.browser) uniqueBrowsers.add(test.browser);
         if (test.suiteName) uniqueSuites.add(test.suiteName);
       });
@@ -89,11 +89,11 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
   const groupedAndFilteredSuites = useMemo(() => {
     if (!report?.results) return [];
 
-    const filteredTests = report.results.filter(test => {
+    const filteredTests = report.results.filter((test: DetailedTestResult) => {
       const statusMatch = statusFilter === 'all' || test.status === statusFilter;
       const searchTermMatch = test.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                               test.suiteName.toLowerCase().includes(searchTerm.toLowerCase());
-      const tagMatch = selectedTags.length === 0 || (test.tags && test.tags.some(tag => selectedTags.includes(tag)));
+      const tagMatch = selectedTags.length === 0 || (test.tags && test.tags.some((tag: string) => selectedTags.includes(tag)));
       const browserMatch = selectedBrowser === 'all' || test.browser === selectedBrowser;
       const suiteMatch = selectedSuite === 'all' || test.suiteName === selectedSuite;
       const retriesMatch = !showRetriesOnly || (showRetriesOnly && test.retries > 0);
@@ -102,7 +102,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     });
 
     const suitesMap = new Map<string, DetailedTestResult[]>();
-    filteredTests.forEach(test => {
+    filteredTests.forEach((test: DetailedTestResult) => {
       const suiteTests = suitesMap.get(test.suiteName) || [];
       suiteTests.push(test);
       suitesMap.set(test.suiteName, suiteTests);
@@ -187,7 +187,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="status-filter" className="text-sm font-medium text-muted-foreground">Filter by Status</Label>
-              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as TestStatusFilter)}>
+              <Select value={statusFilter} onValueChange={(value: string) => setStatusFilter(value as TestStatusFilter)}>
                 <SelectTrigger id="status-filter" className="w-full bg-background shadow-inner rounded-md">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
@@ -207,7 +207,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                 type="text"
                 placeholder="Enter test or suite name..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 className="w-full bg-background shadow-inner rounded-md"
               />
             </div>
@@ -231,9 +231,9 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                                   <Checkbox
                                       id={`tag-${tag}`}
                                       checked={selectedTags.includes(tag)}
-                                      onCheckedChange={(checked) => {
+                                      onCheckedChange={(checked: boolean | 'indeterminate') => {
                                           setSelectedTags(prev =>
-                                              checked
+                                              checked === true
                                                   ? [...prev, tag]
                                                   : prev.filter(t => t !== tag)
                                           );
@@ -287,7 +287,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
               <Checkbox
                 id="retries-filter"
                 checked={showRetriesOnly}
-                onCheckedChange={(checked) => setShowRetriesOnly(Boolean(checked))}
+                onCheckedChange={(checked: boolean | 'indeterminate') => setShowRetriesOnly(Boolean(checked))}
                 className="rounded-sm"
               />
               <Label htmlFor="retries-filter" className="text-sm font-medium text-muted-foreground cursor-pointer flex items-center">

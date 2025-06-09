@@ -1,21 +1,24 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
 import * as React from "react"
 
 import type {
-  ToastActionElement,
+  ToastActionElement as UIToastActionElement, // Renamed to avoid conflict
   ToastProps,
-} from "@/components/ui/toast"
+} from "@/components/ui/toast.js"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
-type ToasterToast = ToastProps & {
+export type ToastActionElement = UIToastActionElement; // Re-export with original name if needed elsewhere
+
+export type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
-  action?: ToastActionElement
+  action?: UIToastActionElement // Use renamed type
 }
 
 const actionTypes = {
@@ -158,7 +161,7 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
+      onOpenChange: (open: boolean) => {
         if (!open) dismiss()
       },
     },

@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useTestData } from '@/hooks/useTestData';
-import type { DetailedTestResult } from '@/types/playwright';
+import { useTestData } from '@/hooks/useTestData.js';
+import type { DetailedTestResult } from '@/types/playwright.js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -68,12 +68,12 @@ export function FailureCategorizationView() {
     if (!currentRun?.results) return [];
 
     const failedTests = currentRun.results.filter(
-      test => test.status === 'failed' || test.status === 'timedOut'
+      (test: DetailedTestResult) => test.status === 'failed' || test.status === 'timedOut'
     );
 
     const categoriesMap = new Map<string, { tests: DetailedTestResult[], exampleErrorMessages: string[] }>();
 
-    failedTests.forEach(test => {
+    failedTests.forEach((test: DetailedTestResult) => {
       const currentErrorMessage = stripAnsiCodes(test.errorMessage || 'Unknown error').toLowerCase();
       let assignedCategory = false;
 
@@ -158,7 +158,7 @@ export function FailureCategorizationView() {
     );
   }
   
-  const totalFailures = currentRun.results.filter(t => t.status === 'failed' || t.status === 'timedOut').length;
+  const totalFailures = currentRun.results.filter((t: DetailedTestResult) => t.status === 'failed' || t.status === 'timedOut').length;
 
   if (totalFailures === 0) {
     return (

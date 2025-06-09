@@ -2,15 +2,16 @@
 'use client';
 
 import * as React from 'react';
-import type { HistoricalTrend } from '@/types/playwright';
+import type { HistoricalTrend } from '@/types/playwright.js';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar, TooltipProps as RechartsTooltipProps } from 'recharts';
 import { TrendingUp, Terminal, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 
 interface TrendAnalysisProps {
   trends: HistoricalTrend[];
@@ -18,14 +19,14 @@ interface TrendAnalysisProps {
   error: string | null;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-card p-3 border border-border rounded-lg shadow-lg">
         <p className="label text-sm font-semibold text-foreground">{`Date: ${label}`}</p>
         {payload.map((entry: any, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color }} className="text-xs">
-            {`${entry.name}: ${entry.value.toLocaleString()}${entry.name === 'Flakiness Rate (%)' ? '%' : ''}`}
+            {`${entry.name}: ${entry.value?.toLocaleString()}${entry.name === 'Flakiness Rate (%)' ? '%' : ''}`}
           </p>
         ))}
       </div>

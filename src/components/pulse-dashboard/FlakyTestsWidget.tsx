@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getFlakyTestsAnalysis } from '@/app/actions'; 
-import type { FlakyTestDetail, FlakyTestOccurrence } from '@/types/playwright';
+import type { FlakyTestDetail, FlakyTestOccurrence } from '@/types/playwright.js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -153,7 +153,7 @@ export function FlakyTestsWidget() {
             <AccordionItem value={`flaky-${test.id}-${index}`} key={test.id + index} className="border rounded-lg bg-card hover:bg-muted/20 transition-colors">
               <AccordionTrigger className="p-4 text-left hover:no-underline">
                 <div className="flex flex-col w-full">
-                  <Link href={`/test/${test.id}`} className="hover:underline text-base font-semibold text-primary" onClick={(e) => e.stopPropagation()}>
+                  <Link href={`/test/${test.id}`} className="hover:underline text-base font-semibold text-primary" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                     {formatTestNameForDisplay(test.name)}
                   </Link>
                   <p className="text-xs text-muted-foreground mt-0.5">Suite: {test.suiteName}</p>
@@ -177,7 +177,7 @@ export function FlakyTestsWidget() {
               <AccordionContent className="p-4 pt-0">
                 <h4 className="text-sm font-semibold mb-2 text-foreground">Run History ({test.occurrences.length}):</h4>
                 <div className="max-h-60 overflow-y-auto space-y-1.5 pr-2">
-                  {test.occurrences.map((occ, occIndex) => (
+                  {test.occurrences.map((occ: FlakyTestOccurrence, occIndex: number) => (
                     <div key={occIndex} className="flex justify-between items-center text-xs p-1.5 bg-muted/30 rounded-md">
                       <span>{new Date(occ.runTimestamp).toLocaleString()}</span>
                       <StatusBadge status={occ.status} />
@@ -192,4 +192,3 @@ export function FlakyTestsWidget() {
     </Card>
   );
 }
-

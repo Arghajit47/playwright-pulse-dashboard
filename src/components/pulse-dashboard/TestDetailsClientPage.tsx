@@ -154,10 +154,10 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     if (chartRef.current) {
       try {
         const canvas = await html2canvas(chartRef.current, {
-          backgroundColor: null,
+          backgroundColor: null, // Transparent background
           logging: false,
-          useCORS: true,
-          scale: 2,
+          useCORS: true, // For external images if any in chart (less likely here)
+          scale: 2, // Higher resolution
         });
         const image = canvas.toDataURL('image/png', 1.0);
         const link = document.createElement('a');
@@ -168,13 +168,14 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         document.body.removeChild(link);
       } catch (err) {
         console.error('Error downloading chart:', err);
+        // Optionally, inform the user with a toast or alert
       }
     }
   };
 
   useEffect(() => {
     if (currentRun?.results) {
-      const foundTest = currentRun.results.find(t => t.id === testId);
+      const foundTest = currentRun.results.find((t: DetailedTestResult) => t.id === testId);
       setTest(foundTest || null);
     }
   }, [currentRun, testId]);
@@ -191,7 +192,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         const historyData: TestRunHistoryData[] = [];
 
         rawReports.forEach(report => {
-          const historicalTest = report.results.find(r => r.id === testId); 
+          const historicalTest = report.results.find((r: DetailedTestResult) => r.id === testId); 
           if (historicalTest) {
             historyData.push({
               date: report.run.timestamp,
@@ -262,8 +263,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   }
   
   const currentScreenshots = (test.screenshots || [])
-    .map(p => (typeof p === 'string' ? p.trim() : ''))
-    .filter(p => p && p !== '');
+    .map((p: string) => (typeof p === 'string' ? p.trim() : ''))
+    .filter((p: string) => p && p !== '');
   const displayName = formatTestName(test.name);
   const hasVideo = !!test.videoPath;
   const hasTrace = !!test.tracePath;
@@ -307,7 +308,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <p className="text-xs text-muted-foreground">Retries: {test.retries}</p>
                 {test.tags && test.tags.length > 0 && (
                     <div className="mt-1 space-x-1">
-                        {test.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs rounded-full">{tag}</Badge>)}
+                        {test.tags.map((tag: string) => <Badge key={tag} variant="secondary" className="text-xs rounded-full">{tag}</Badge>)}
                     </div>
                 )}
             </div>
@@ -333,7 +334,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {test.steps && test.steps.length > 0 ? (
                 <ScrollArea className="h-[600px] w-full">
                   <div className="pr-4">
-                    {test.steps.map((step, index) => (
+                    {test.steps.map((step: TestStep, index: number) => (
                       <TestStepItemRecursive key={step.id || index} step={step} />
                     ))}
                   </div>
@@ -364,7 +365,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
                   {currentScreenshots.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {currentScreenshots.map((path, index) => {
+                      {currentScreenshots.map((path: string, index: number) => {
                         const imageSrc = getAssetPath(path);
                         if (imageSrc === '#') { 
                             return null;

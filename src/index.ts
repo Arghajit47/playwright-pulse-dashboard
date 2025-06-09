@@ -1,6 +1,5 @@
-
 // Main component export
-export { PulseDashboard } from './components/pulse-dashboard/PulseDashboard';
+export { PulseDashboard } from './components/pulse-dashboard/PulseDashboard.js';
 
 // Type exports for consumers
 export type {
@@ -12,9 +11,9 @@ export type {
   FlakyTestDetail,
   FlakyTestOccurrence,
   ScreenshotAttachment, // If consumers need to understand the structure of screenshot objects (though it's string[] now)
-} from './types/playwright';
+} from './types/playwright.js';
 
-export type { TestStatusFilter } from './components/pulse-dashboard/LiveTestResults';
+export type { TestStatusFilter } from './components/pulse-dashboard/LiveTestResults.js';
 
 // It's crucial to instruct users of this package to import the CSS.
 // For example, in their main application file (like _app.tsx or layout.tsx):
@@ -22,4 +21,3 @@ export type { TestStatusFilter } from './components/pulse-dashboard/LiveTestResu
 
 // Note: Server Actions and API route handlers are not exported as part of this client-side package.
 // The consuming Next.js application must implement the required backend endpoints and data provision.
-
