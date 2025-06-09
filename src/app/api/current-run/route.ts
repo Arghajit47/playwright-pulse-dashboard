@@ -5,24 +5,32 @@ import path from 'path';
 import type { PlaywrightPulseReport } from '@/types/playwright';
 
 export async function GET() {
-  const filePath = path.join(process.cwd(), 'pulse-report', 'playwright-pulse-report.json');
-  console.log('Attempting to read current run report from:', filePath);
   try {
-    const data = await fs.readFile(filePath, 'utf-8');
+    const filePath = path.join(process.cwd(), 'pulse-report', 'playwright-pulse-report.json');
+    console.log('[API /api/current-run] Attempting to read current run report from:', filePath);
+
+    let fileContent: string;
     try {
-      const jsonData: PlaywrightPulseReport = JSON.parse(data);
+      fileContent = await fs.readFile(filePath, 'utf-8');
+    } catch (fileReadError: any) {
+      console.error(`[API /api/current-run] FAILED to read file ${filePath}. Error: ${fileReadError.message}. Stack: ${fileReadError.stack}`);
+      if (fileReadError.code === 'ENOENT') {
+        return NextResponse.json({ message: `Report file not found at ${filePath}. Please ensure 'playwright-pulse-report.json' exists in the 'pulse-report' directory at the project root.`, path: filePath }, { status: 404 });
+      }
+      return NextResponse.json({ message: `Error reading report file from ${filePath}: ${fileReadError.message || 'Unknown file read error.'}`, path: filePath, details: String(fileReadError) }, { status: 500 });
+    }
+
+    try {
+      const jsonData: PlaywrightPulseReport = JSON.parse(fileContent);
       return NextResponse.json(jsonData);
-    } catch (parseError) {
-      console.error(`Failed to parse JSON from ${filePath}:`, parseError);
-      const errorMessage = parseError instanceof Error ? parseError.message : 'Unknown parsing error';
-      return NextResponse.json({ message: `Invalid JSON format in ${filePath}: ${errorMessage}`, path: filePath, details: String(parseError) }, { status: 400 });
+    } catch (parseError: any) {
+      console.error(`[API /api/current-run] FAILED to parse JSON from ${filePath}. Error: ${parseError.message}. Stack: ${parseError.stack}`);
+      return NextResponse.json({ message: `Invalid JSON format in ${filePath}: ${parseError.message || 'Unknown parsing error.'}`, path: filePath, details: String(parseError) }, { status: 400 });
     }
-  } catch (fileReadError: any) {
-    console.error(`Failed to read current run report from ${filePath}:`, fileReadError);
-    if (fileReadError.code === 'ENOENT') {
-      return NextResponse.json({ message: `Report file not found at ${filePath}. Please ensure 'playwright-pulse-report.json' exists in the 'pulse-report' directory at the project root.`, path: filePath }, { status: 404 });
-    }
-    const errorMessage = fileReadError instanceof Error ? fileReadError.message : 'Unknown file read error';
-    return NextResponse.json({ message: `Error reading report file from ${filePath}: ${errorMessage}`, path: filePath, details: String(fileReadError) }, { status: 500 });
+
+  } catch (e: any) {
+    // This catch is for truly unexpected errors not caught by the specific file/parse handlers.
+    console.error(`[API /api/current-run] UNEXPECTED CRITICAL ERROR in GET handler. Error: ${e.message}. Stack: ${e.stack}`);
+    return NextResponse.json({ message: `An unexpected server error occurred while processing the report: ${e.message || 'Unknown critical error.'}` }, { status: 500 });
   }
 }
