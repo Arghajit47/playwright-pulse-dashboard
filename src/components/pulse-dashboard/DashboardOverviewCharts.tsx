@@ -11,9 +11,9 @@ import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts';
 import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 
 
 interface CustomTooltipPayloadItem {
@@ -21,7 +21,7 @@ interface CustomTooltipPayloadItem {
   value?: ValueType;
   color?: string;
   payload?: any; 
-  unit?: React.ReactNode; // Changed from string | undefined
+  unit?: React.ReactNode;
 }
 
 interface RechartsTooltipProps {
@@ -40,10 +40,10 @@ interface ActiveShapeProps {
   startAngle?: number;
   endAngle?: number;
   fill?: string;
-  payload?: PieSectorDataItem;
+  payload?: PieSectorDataItem; // This is the important part from PieSectorDataItem
   percent?: number;
   value?: number;
-  name?: string;
+  name?: string; // Added name as it's used in ActiveShape text
 }
 
 
@@ -388,6 +388,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     innerRadius={60}
                     outerRadius={90}
                     dataKey="value"
+                    nameKey="name"
                     onMouseEnter={onPieEnter}
                     paddingAngle={2}
                     stroke="hsl(var(--card))"
