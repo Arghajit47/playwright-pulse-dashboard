@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
-import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts'; 
+import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts';
 import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
@@ -15,6 +15,20 @@ import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 
+
+interface CustomTooltipPayloadItem {
+  name?: NameType;
+  value?: ValueType; // Made optional
+  color?: string;
+  payload: any;
+  unit?: string;
+}
+
+interface RechartsTooltipProps {
+  active?: boolean;
+  payload?: CustomTooltipPayloadItem[];
+  label?: string | number;
+}
 
 interface ActiveShapeProps {
   cx?: number;
@@ -31,20 +45,6 @@ interface ActiveShapeProps {
   name?: string;
 }
 
-interface CustomTooltipPayloadItem {
-  name?: NameType; // Made optional
-  value: ValueType;
-  color?: string;
-  payload: any; 
-  unit?: string;
-}
-
-interface RechartsTooltipProps {
-  active?: boolean;
-  payload?: CustomTooltipPayloadItem[];
-  label?: string | number;
-}
-
 
 interface DashboardOverviewChartsProps {
   currentRun: PlaywrightPulseReport | null;
@@ -57,8 +57,8 @@ const COLORS = {
   passed: 'hsl(var(--chart-3))',
   failed: 'hsl(var(--destructive))',
   skipped: 'hsl(var(--accent))',
-  timedOut: 'hsl(var(--destructive))', 
-  pending: 'hsl(var(--muted-foreground))', 
+  timedOut: 'hsl(var(--destructive))',
+  pending: 'hsl(var(--muted-foreground))',
   default1: 'hsl(var(--chart-1))',
   default2: 'hsl(var(--chart-2))',
   default3: 'hsl(var(--chart-4))',
@@ -82,7 +82,7 @@ function formatTestNameForChart(fullName: string): string {
 const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps) => {
   if (active && payload && payload.length) {
     const titleText = String(label);
-    const dataPoint = payload[0].payload as any; 
+    const dataPoint = payload[0].payload as any;
 
     const isStackedBarTooltip = dataPoint.total !== undefined && payload.length > 0;
     const isPieChartTooltip = dataPoint.percentage !== undefined && dataPoint.name;
@@ -380,7 +380,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                   <Pie
                     activeIndex={activeIndex}
-                    activeShape={ActiveShape as any} 
+                    activeShape={ActiveShape as any}
                     data={testDistributionData}
                     cx="50%"
                     cy="50%"
@@ -654,3 +654,4 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </TooltipProvider>
   );
 }
+

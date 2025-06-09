@@ -13,8 +13,8 @@ const COLORS = {
     passed: 'hsl(var(--chart-3))',
     failed: 'hsl(var(--destructive))',
     skipped: 'hsl(var(--accent))',
-    timedOut: 'hsl(var(--destructive))', // Group with failed for coloring
-    pending: 'hsl(var(--muted-foreground))', // A neutral color for pending
+    timedOut: 'hsl(var(--destructive))',
+    pending: 'hsl(var(--muted-foreground))',
     default1: 'hsl(var(--chart-1))',
     default2: 'hsl(var(--chart-2))',
     default3: 'hsl(var(--chart-4))',
@@ -44,7 +44,7 @@ const CustomTooltip = ({ active, payload, label }) => {
           {dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
         </p>
         {payload.map((entry, index) => (<p key={`item-${index}`} style={{ color: entry.color || entry.payload?.fill }} className="text-xs">
-            {`${entry.name}: ${entry.value?.toLocaleString()}${entry.unit || ''}`}
+            {`${entry.name || 'Value'}: ${entry.value?.toLocaleString()}${entry.unit || ''}`}
             {isPieChartTooltip && entry.name === dataPoint.name && ` (${dataPoint.percentage}%)`}
           </p>))}
         {isStackedBarTooltip && (<p className="text-xs font-bold mt-1 text-foreground">
@@ -54,7 +54,6 @@ const CustomTooltip = ({ active, payload, label }) => {
     }
     return null;
 };
-// This function normalizes for ICON display only. Chart labels will use the raw browser string.
 function normalizeBrowserNameForIcon(rawBrowserName) {
     if (!rawBrowserName)
         return 'Unknown';
@@ -179,9 +178,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
     const totalTestsForPie = passed + failed + skipped + timedOut + pending;
     const testDistributionData = [
         { name: 'Passed', value: passed, fill: COLORS.passed },
-        { name: 'Failed', value: failed, fill: COLORS.failed },
+        { name: 'Failed', value: failed + timedOut, fill: COLORS.failed }, // Combine failed and timedOut
         { name: 'Skipped', value: skipped, fill: COLORS.skipped },
-        ...(timedOut > 0 ? [{ name: 'Timed Out', value: timedOut, fill: COLORS.timedOut }] : []),
         ...(pending > 0 ? [{ name: 'Pending', value: pending, fill: COLORS.pending }] : []),
     ]
         .filter(d => d.value > 0)
