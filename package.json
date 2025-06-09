@@ -7,9 +7,9 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/pulse-dashboard-component.git"
+    "url": "https://github.com/Postman-test-bit/pulse-dashboard.git"
   },
-  "homepage": "https://github.com/your-username/pulse-dashboard-component#readme",
+  "homepage": "https://github.com/Postman-test-bit/pulse-dashboard#readme",
   "keywords": [
     "react",
     "nextjs",
