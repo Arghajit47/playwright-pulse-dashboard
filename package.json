@@ -48,7 +48,7 @@
     "start": "next start -p 9002",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist .next/cache",
     "build:tsc": "tsc --project tsconfig.build.json",
     "build:css": "tailwindcss -i ./src/app/globals.css -o ./dist/styles.css --minify",
     "build": "npm run clean && npm run build:tsc && npm run build:css",

@@ -26,7 +26,7 @@ coverage
 # nyc test coverage
 .nyc_output
 
-# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-intermediate-files)
+# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
 
 # Bower dependency directory (https://bower.io/)
@@ -39,15 +39,17 @@ bower_components
 build/Release
 
 # Dependency directories
-# Commented out as .next/standalone/node_modules might be needed by `next start`
-# node_modules/
-# jspm_packages/
+node_modules/
+jspm_packages/
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Optional npm cache directory
+.npm
 
 # Optional eslint cache
 .eslintcache
@@ -67,43 +69,41 @@ web_modules/
 # Yarn Integrity file
 .yarnclean
 
-# dotenv environment variables file
-.env
-.env*.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Jekyll Folder
+_site
 
-# Next.js build
-# We need .next for the CLI, but we specifically manage its inclusion via "files" in package.json
-# So, we don't strictly need to list it here if "files" is authoritative.
-# However, keeping it here ensures it's ignored if "files" was ever removed.
-# /.next/*
-# !/.next/standalone
-# !/.next/static
+# Docusaurus Folder
+.docusaurus
 
-# VSCode
-.vscode/
+# Serverless Folder
+.serverless/
 
-# Optional stylelint cache
-.stylelintcache
+# FuseBox cache
+.fusebox/
 
-# Parcel cache files
-.cache
-.parcel-cache
+# DynamoDB Local files
+dynamodb_local_*.db
+dynamodb_local_*.log
 
-# Next.js routing cache
-.next/trace
+# Next.js build cache
+.next/cache/
 
-# Storybook
+# Storybook specific
 .storybook
 storybook-static
 
-# Docusaurus
-.docusaurus
-
-# Mac OS folder attributes
+# Misc
 .DS_Store
+Thumbs.db
+*.bak
 
-# PNPM
-pnpm-lock.yaml
+# IDE specific
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment files
+.env
+.env.*
+!.env.example
