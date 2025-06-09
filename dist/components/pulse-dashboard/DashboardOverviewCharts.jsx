@@ -35,13 +35,31 @@ function formatTestNameForChart(fullName) {
 }
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-        const titleText = String(label);
-        const dataPoint = payload[0].payload; // This is the nested payload
+        const dataPoint = payload[0].payload; // This is the nested payload from the original data array
         const isStackedBarTooltip = dataPoint && dataPoint.total !== undefined && payload.length > 0;
+        // isPieChartTooltip relies on 'percentage' and 'name' being present on the dataPoint (original data object)
         const isPieChartTooltip = dataPoint && dataPoint.percentage !== undefined && dataPoint.name;
+        let displayTitle;
+        if (isPieChartTooltip && dataPoint?.name) {
+            displayTitle = dataPoint.name;
+        }
+        else if (dataPoint?.fullTestName) {
+            displayTitle = formatTestNameForChart(dataPoint.fullTestName);
+        }
+        else {
+            displayTitle = String(label); // Fallback for bar charts using axis label
+        }
+        // Fallback if displayTitle ended up as "undefined" but there's a name on the series item
+        if (displayTitle === "undefined" && payload[0]?.name) {
+            displayTitle = payload[0].name;
+        }
+        // Final safety for "undefined" string, can be made more generic like "Details"
+        if (displayTitle === "undefined") {
+            displayTitle = "Details";
+        }
         return (<div className="bg-card p-3 border border-border rounded-md shadow-lg">
-        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={titleText}>
-          {dataPoint && dataPoint.fullTestName ? formatTestNameForChart(dataPoint.fullTestName) : titleText}
+        <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={displayTitle}>
+          {displayTitle}
         </p>
         {payload.map((entry, index) => (<p key={`item-${index}`} style={{ color: entry.color || entry.payload?.fill }} className="text-xs">
             {`${entry.name || 'Value'}: ${entry.value?.toLocaleString()}${entry.unit || ''}`}
@@ -269,7 +287,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
           <div ref={testDistributionChartRef} className="w-full h-[280px]">
             {testDistributionData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                  <Pie activeIndex={activeIndex} activeShape={ActiveShape} data={testDistributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" onMouseEnter={onPieEnter} paddingAngle={2} stroke="hsl(var(--card))">
+                  <Pie activeIndex={activeIndex} activeShape={ActiveShape} data={testDistributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" nameKey="name" onMouseEnter={onPieEnter} paddingAngle={2} stroke="hsl(var(--card))">
                     {testDistributionData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.fill}/>))}
                   </Pie>
                   <RechartsRechartsTooltip content={<CustomTooltip />}/>
