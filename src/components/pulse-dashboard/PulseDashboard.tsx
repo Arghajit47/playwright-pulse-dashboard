@@ -145,9 +145,21 @@ export function PulseDashboard() {
             <p className="text-md text-muted-foreground mt-1">
               {activeMenuItem?.description || "Real-time Playwright Test Execution Monitoring & Analysis Overview"}
             </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Latest Run Date:{" "}
+              {loadingCurrent ? (
+                <span className="text-muted-foreground">Loading...</span>
+              ) : currentRun?.run?.timestamp ? (
+                <span className="text-muted-foreground font-medium">{new Date(currentRun.run.timestamp).toLocaleString()}</span>
+              ) : errorCurrent ? (
+                <span className="text-destructive font-medium">Error loading data</span>
+              ) : (
+                <span className="text-muted-foreground font-medium">Not available</span>
+              )}
+            </p>
           </header>
 
-          <main className="flex-grow">
+          <main className="flex-grow mt-6">
             {componentToRender}
           </main>
 
