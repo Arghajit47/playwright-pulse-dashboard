@@ -8,7 +8,10 @@ export async function GET() {
   console.log('[API /api/current-run] Raw process.env.PULSE_USER_CWD:', process.env.PULSE_USER_CWD);
   console.log('[API /api/current-run] Current process.cwd() for Next.js server:', process.cwd());
 
-  const baseDir = process.env.PULSE_USER_CWD || process.cwd();
+  const pulseUserCwdFromEnv = process.env.PULSE_USER_CWD;
+  const currentProcessCwd = process.cwd();
+  const baseDir = (pulseUserCwdFromEnv && pulseUserCwdFromEnv.trim() !== '') ? pulseUserCwdFromEnv.trim() : currentProcessCwd;
+  
   console.log('[API /api/current-run] Effective baseDir determined:', baseDir);
   
   const filePath = path.join(baseDir, 'pulse-report', 'playwright-pulse-report.json');
@@ -18,11 +21,14 @@ export async function GET() {
   try {
     fileContent = await fs.readFile(filePath, 'utf-8');
   } catch (fileReadError: any) {
-    console.error(`[API /api/current-run] FAILED to read file ${filePath}. Error: ${fileReadError.message}. Stack: ${fileReadError.stack}`);
-    if (fileReadError.code === 'ENOENT') {
-      return NextResponse.json({ message: `Report file not found at ${filePath}. This path was constructed using base directory: '${baseDir}'. Please ensure 'playwright-pulse-report.json' exists in the 'pulse-report' directory.`, path: filePath }, { status: 404 });
-    }
-    return NextResponse.json({ message: `Error reading report file from ${filePath}: ${fileReadError.message || 'Unknown file read error.'}`, path: filePath, details: String(fileReadError) }, { status: 500 });
+    console.error(`[API /api/current-run] ENTERED CATCH for fs.readFile. Path: ${filePath}. Error: ${fileReadError.message}. Code: ${fileReadError.code}. Stack: ${fileReadError.stack}`);
+    const errorMessage = `Report file not found or unreadable at '${filePath}'. Base directory used: '${baseDir}'. Error: ${fileReadError.message || 'Unknown file read error.'}${fileReadError.code ? ` (Code: ${fileReadError.code})` : ''}`;
+    return NextResponse.json({ 
+      message: errorMessage, 
+      pathAttempted: filePath,
+      baseDirUsed: baseDir,
+      errorCode: fileReadError.code || 'N/A'
+    }, { status: fileReadError.code === 'ENOENT' ? 404 : 500 });
   }
 
   try {
@@ -35,7 +41,12 @@ export async function GET() {
     }
     return NextResponse.json(jsonData);
   } catch (parseError: any) {
-    console.error(`[API /api/current-run] FAILED to parse JSON from ${filePath}. Error: ${parseError.message}. Stack: ${parseError.stack}`);
-    return NextResponse.json({ message: `Invalid JSON format in ${filePath}: ${parseError.message || 'Unknown parsing error.'}`, path: filePath, details: String(parseError) }, { status: 400 });
+    console.error(`[API /api/current-run] ENTERED CATCH for JSON.parse. Path: ${filePath}. Error: ${parseError.message}. Stack: ${parseError.stack}`);
+    const errorMessage = `Invalid JSON format in report file '${filePath}'. Error: ${parseError.message || 'Unknown parsing error.'}`;
+    return NextResponse.json({ 
+      message: errorMessage,
+      pathAttempted: filePath
+    }, { status: 400 });
   }
 }
+
