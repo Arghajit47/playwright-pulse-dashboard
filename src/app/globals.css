@@ -46,7 +46,6 @@ body {
     --chart-5: 45 74% 47%;  /* Dark Yellow (for 'Skipped') */
     --chart-info: 220 60% 65%; /* Blue for general info lines like Flakiness */
 
-
     /* Sidebar specific - Light Theme */
     --sidebar-background: 220 50% 96%; /* Slightly cooler, distinct from main bg */
     --sidebar-foreground: 220 25% 30%; /* Darker text for sidebar */
@@ -60,6 +59,13 @@ body {
     /* Skeleton Loader Colors - Light Theme */
     --skeleton-bg: 220 30% 90%; /* Muted background for skeleton */
     --skeleton-highlight: 220 30% 85%; /* Slightly lighter highlight */
+
+    /* Suite Title Colors - Light Theme */
+    --suite-color-1-hsl: 210 65% 55%; /* Distinct Blue */
+    --suite-color-2-hsl: 280 50% 58%; /* Purple */
+    --suite-color-3-hsl: 330 60% 60%; /* Pink/Rose */
+    --suite-color-4-hsl: 150 55% 50%; /* Sea Green/Teal variant */
+    --suite-color-5-hsl: 25 70% 55%;  /* Burnt Orange */
   }
 
   .dark { /* Neon Noir - Dark Theme */
@@ -100,7 +106,6 @@ body {
     --chart-5: 45 74% 50%;  /* Dark Yellow */
     --chart-info: 220 60% 70%; /* Blue for general info */
 
-
     /* Sidebar specific - Dark Mode */
     --sidebar-background: 220 28% 10%; /* Slightly distinct dark for sidebar */
     --sidebar-foreground: 220 20% 85%; /* Light text for sidebar */
@@ -114,6 +119,13 @@ body {
     /* Skeleton Loader Colors - Dark Theme */
     --skeleton-bg: 220 20% 15%; /* Darker base for skeleton */
     --skeleton-highlight: 220 20% 20%; /* Slightly lighter highlight for dark skeleton */
+
+    /* Suite Title Colors - Dark Theme */
+    --suite-color-1-hsl: 210 65% 65%;
+    --suite-color-2-hsl: 280 50% 68%;
+    --suite-color-3-hsl: 330 60% 70%;
+    --suite-color-4-hsl: 150 55% 60%;
+    --suite-color-5-hsl: 25 70% 65%;
   }
 }
 
@@ -171,6 +183,3 @@ body {
 .recharts-wrapper:focus, .recharts-surface:focus {
   outline: none !important;
 }
-
-
-    

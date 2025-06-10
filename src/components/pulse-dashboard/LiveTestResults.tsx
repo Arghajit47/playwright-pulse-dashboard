@@ -40,6 +40,14 @@ interface LiveTestResultsProps {
   initialFilter?: TestStatusFilter;
 }
 
+const suiteColorsCssVars = [
+  '--suite-color-1-hsl',
+  '--suite-color-2-hsl',
+  '--suite-color-3-hsl',
+  '--suite-color-4-hsl',
+  '--suite-color-5-hsl',
+];
+
 export function LiveTestResults({ report, loading, error, initialFilter }: LiveTestResultsProps) {
   const [statusFilter, setStatusFilter] = useState<TestStatusFilter>(initialFilter || 'all');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -367,7 +375,13 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                 <AccordionTrigger className="p-4 hover:no-underline text-left w-full group">
                   <div className="flex justify-between items-center w-full">
                     <div className="flex-grow min-w-0">
-                      <h3 className="text-lg font-semibold text-primary group-hover:text-primary/80 transition-colors truncate" title={suite.title}>{suite.title}</h3>
+                      <h3 
+                        className="text-lg font-semibold group-hover:opacity-80 transition-opacity truncate" 
+                        title={suite.title}
+                        style={{ color: `hsl(var(${suiteColorsCssVars[index % suiteColorsCssVars.length]}))` }}
+                      >
+                        {suite.title}
+                      </h3>
                       <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
                         <Badge variant="outline" className="text-xs border-muted-foreground/50">
                             <ListChecks className="mr-1.5 h-3 w-3 text-muted-foreground" />Total: {suite.stats.total}
@@ -415,6 +429,3 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     </Card>
   );
 }
-
-
-    
