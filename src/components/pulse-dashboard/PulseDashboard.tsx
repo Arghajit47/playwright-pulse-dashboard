@@ -22,7 +22,7 @@ import {
   SidebarInset,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, TrendingUp, Settings, Repeat, ListX } from 'lucide-react';
+import { LayoutDashboard, ListChecks, TrendingUp, Settings, Repeat, ListX, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -131,9 +131,11 @@ export function PulseDashboard() {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden">
-            <p className="text-xs text-muted-foreground">
-              Pulse v1.0
-            </p>
+            <div className="flex items-center gap-1.5 text-xs">
+              <ShieldCheck className="h-3.5 w-3.5 text-sidebar-foreground/70" />
+              <span className="font-medium text-sidebar-foreground">Pulse</span>
+              <span className="text-muted-foreground/80">v1.0</span>
+            </div>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
@@ -171,6 +173,7 @@ export function PulseDashboard() {
               fontFamily: "'Segoe UI', system-ui, sans-serif",
               marginTop: 'auto', // Ensures footer is at the bottom
             }}
+            className="text-foreground" 
           >
             <div
               style={{
@@ -181,7 +184,6 @@ export function PulseDashboard() {
                 fontWeight: 600,
                 letterSpacing: '0.5px',
               }}
-              className="text-foreground" 
             >
               <span>Created by</span>
               <a
