@@ -8,100 +8,108 @@ body {
 }
 
 @layer base {
-  :root {
-    --background: 200 67% 95%; /* #EBF5FB - Very light blue */
-    --foreground: 210 20% 25%; /* Dark grayish blue for text */
+  :root { /* Arctic Sky - Light Theme */
+    --background: 220 60% 98%; /* Very light cool gray */
+    --foreground: 220 25% 25%; /* Dark desaturated blue/gray */
 
-    --muted: 200 30% 90%;
-    --muted-foreground: 210 15% 45%;
+    --muted: 220 30% 92%; /* Light gray for muted backgrounds */
+    --muted-foreground: 220 20% 50%; /* Mid-gray for muted text */
 
-    --popover: 200 50% 99%;
-    --popover-foreground: 210 20% 25%;
+    --popover: 0 0% 100%; /* Clean white for popovers */
+    --popover-foreground: 220 25% 20%; /* Dark text for popovers */
 
-    --card: 200 50% 98%; /* Slightly off-white/blue from main background */
-    --card-foreground: 210 20% 25%;
+    --card: 0 0% 100%; /* Clean white for cards */
+    --card-foreground: 220 25% 22%; /* Dark text for cards */
 
-    --border: 200 30% 88%;
-    --input: 200 30% 92%;
+    --border: 220 20% 88%; /* Soft cool gray border */
+    --input: 220 30% 94%; /* Slightly off-white input background */
 
-    --primary: 200 67% 62%; /* #5DADE2 - Calm blue */
-    --primary-foreground: 0 0% 100%; /* White for text on primary */
+    --primary: 180 70% 45%; /* Electric cyan/teal - main interactive */
+    --primary-foreground: 200 100% 98%; /* Very light, almost white for high contrast on primary */
+
+    --secondary: 200 70% 70%; /* Soft complementary light pastel blue */
+    --secondary-foreground: 220 25% 25%; /* Dark text on secondary */
+
+    --accent: 290 60% 65%; /* Softer magenta/violet for accents */
+    --accent-foreground: 0 0% 100%; /* White text on accent */
+
+    --destructive: 0 72% 51%; /* Standard destructive red */
+    --destructive-foreground: 0 0% 98%; /* White text on destructive */
+
+    --ring: 180 70% 50%; /* Slightly brighter primary for focus rings */
+
+    /* Chart Colors - Light Theme */
+    --chart-1: 180 65% 50%; /* Primary - Cyan/Teal (main data bars/lines) */
+    --chart-2: 290 55% 60%; /* Accent - Magenta/Violet (secondary data lines, e.g., Total Tests) */
+    --chart-3: 120 50% 55%; /* Green (lime/emerald for 'Passed') */
+    --chart-4: 0 70% 60%;   /* Red (rose/coral for 'Failed') */
+    --chart-5: 39 90% 55%;  /* Orange (vibrant for 'Skipped') */
+    --chart-info: 220 60% 65%; /* Blue for general info lines like Flakiness */
 
 
-    --secondary: 200 40% 85%;
-    --secondary-foreground: 210 20% 25%;
+    /* Sidebar specific - Light Theme */
+    --sidebar-background: 220 50% 96%; /* Slightly cooler, distinct from main bg */
+    --sidebar-foreground: 220 25% 30%; /* Darker text for sidebar */
+    --sidebar-border: 220 30% 85%; /* Soft border for sidebar */
+    --sidebar-accent: hsl(var(--primary)); /* Primary color for active items */
+    --sidebar-accent-foreground: hsl(var(--primary-foreground)); /* Text on active items */
+    --sidebar-ring: hsl(var(--ring));
 
-    --accent: 36 90% 51%; /* #F39C12 - Vibrant orange */
-    --accent-foreground: 0 0% 100%; /* White for text on accent */
-
-    --destructive: 0 72% 51%; /* Default destructive red */
-    --destructive-foreground: 0 0% 98%;
-
-    --ring: 200 67% 55%; /* Slightly darker/more saturated primary for focus */
-
-    --chart-1: 200 67% 62%; /* Primary blue */
-    --chart-2: 36 90% 51%; /* Accent orange */
-    --chart-3: 120 40% 55%; /* A calm green */
-    --chart-4: 0 70% 60%; /* A soft red */
-    --chart-5: 240 50% 65%; /* A gentle purple */
-
-    /* Sidebar specific */
-    --sidebar-background: 200 60% 97%; /* Very light, almost off-white blue */
-    --sidebar-foreground: 210 20% 30%; /* Slightly darker for better contrast on light sidebar */
-    --sidebar-primary: 200 67% 58%; /* Maintained primary for consistency if needed elsewhere */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 67% 50%; /* More saturated/darker blue for active items */
-    --sidebar-accent-foreground: 0 0% 100%; /* White text on active items */
-    --sidebar-border: 200 30% 90%; /* Softer border */
-    --sidebar-ring: 200 67% 50%;
+    /* Skeleton Loader Colors - Light Theme */
+    --skeleton-bg: 220 30% 90%; /* Muted background for skeleton */
+    --skeleton-highlight: 220 30% 85%; /* Slightly lighter highlight */
   }
 
-  .dark {
-    --background: 220 14% 10%; /* Darker, slightly desaturated slate blue */
-    --foreground: 220 20% 94%; /* Lighter, slightly bluer white */
+  .dark { /* Neon Noir - Dark Theme */
+    --background: 220 30% 8%; /* Very dark, almost black blue */
+    --foreground: 220 20% 90%; /* Off-white, cool gray text */
 
-    --muted: 220 12% 20%; /* A step up from card */
-    --muted-foreground: 220 15% 65%; /* Mid-gray, good for secondary text */
+    --muted: 220 25% 18%; /* Darker muted background */
+    --muted-foreground: 220 15% 65%; /* Mid-gray for muted text */
 
-    --popover: 220 14% 12%; /* Slightly darker than card, for floating effect */
-    --popover-foreground: 220 20% 90%; /* Consistent with card-fg */
+    --popover: 220 28% 10%; /* Dark popover background */
+    --popover-foreground: 220 20% 88%; /* Lighter text for popovers */
 
-    --card: 220 14% 14%; /* Slightly lighter than new background, distinct */
-    --card-foreground: 220 20% 90%; /* Slightly toned down from main fg */
+    --card: 220 25% 12%; /* Dark card background, slightly lighter than main BG */
+    --card-foreground: 220 20% 88%; /* Lighter text for cards */
 
-    --border: 220 10% 25%; /* Visible but subtle border */
-    --input: 220 10% 28%; /* Slightly lighter than border for input fields */
+    --border: 220 20% 25%; /* Subtle dark border */
+    --input: 220 20% 20%; /* Dark input background */
 
-    --primary: 200 75% 55%; /* Slightly more saturated and lighter primary blue */
-    --primary-foreground: 210 100% 98%; /* Very light, almost white for high contrast */
+    --primary: 180 70% 55%; /* Vibrant electric cyan/teal - main interactive */
+    --primary-foreground: 200 100% 98%; /* Very light, almost white for high contrast on primary */
 
-    --secondary: 220 15% 30%; /* Darker secondary base */
-    --secondary-foreground: 220 20% 85%; /* Lighter secondary text */
+    --secondary: 290 60% 60%; /* Deep purple/magenta for secondary elements */
+    --secondary-foreground: 220 20% 90%; /* Light text on secondary */
 
-    --accent: 36 100% 60%; /* Brighter orange accent for dark mode */
-    --accent-foreground: 20 100% 98%; /* Very light, almost white for accent text */
+    --accent: 330 80% 60%; /* Contrasting vibrant pink/rose for accents */
+    --accent-foreground: 0 0% 100%; /* White text on accent */
 
-    --destructive: 0 70% 55%; /* Slightly more vibrant red */
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 70% 55%; /* More vibrant red for dark mode */
+    --destructive-foreground: 0 0% 98%; /* White text on destructive */
 
-    --ring: 200 80% 60%; /* Brighter ring for focus states */
+    --ring: 180 75% 60%; /* Brighter primary for focus rings */
 
-    /* Chart colors can often remain similar, ensure they pop against dark background */
-    --chart-1: 200 75% 60%; /* Adjusted primary for charts */
-    --chart-2: 36 100% 65%; /* Adjusted accent for charts */
-    --chart-3: 120 45% 60%; /* Adjusted green for charts */
-    --chart-4: 0 75% 65%;  /* Adjusted red for charts */
-    --chart-5: 240 55% 70%; /* Adjusted purple for charts */
-    
+    /* Chart Colors - Dark Theme (ensure good contrast) */
+    --chart-1: 180 70% 60%; /* Primary - Cyan/Teal */
+    --chart-2: 290 60% 65%; /* Accent - Magenta/Violet */
+    --chart-3: 120 55% 60%; /* Green */
+    --chart-4: 0 75% 65%;   /* Red */
+    --chart-5: 39 90% 60%;  /* Orange */
+    --chart-info: 220 60% 70%; /* Blue for general info */
+
+
     /* Sidebar specific - Dark Mode */
-    --sidebar-background: 220 14% 12%; /* Slightly darker than main dark card for distinction */
-    --sidebar-foreground: 220 20% 88%; 
-    --sidebar-primary: var(--primary);
-    --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: 200 75% 60%; /* Brighter blue for active items in dark mode */
-    --sidebar-accent-foreground: 210 100% 98%; /* Very light text on active items */
-    --sidebar-border: 220 10% 20%; /* Darker, subtle border */
-    --sidebar-ring: var(--ring);
+    --sidebar-background: 220 28% 10%; /* Slightly distinct dark for sidebar */
+    --sidebar-foreground: 220 20% 85%; /* Light text for sidebar */
+    --sidebar-border: 220 20% 20%; /* Darker, subtle border for sidebar */
+    --sidebar-accent: hsl(var(--primary)); /* Primary color for active items */
+    --sidebar-accent-foreground: hsl(var(--primary-foreground)); /* Text on active items */
+    --sidebar-ring: hsl(var(--ring));
+
+    /* Skeleton Loader Colors - Dark Theme */
+    --skeleton-bg: 220 20% 15%; /* Darker base for skeleton */
+    --skeleton-highlight: 220 20% 20%; /* Slightly lighter highlight for dark skeleton */
   }
 }
 
@@ -110,27 +118,52 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-300;
   }
 }
 
-/* Recharts specific styles for better theme integration */
-.recharts-tooltip-wrapper {
+/* Enhanced Recharts Tooltip & Legend Styling */
+.custom-recharts-tooltip {
+  @apply rounded-lg border border-border/50 bg-popover p-3 text-xs text-popover-foreground shadow-xl backdrop-blur-sm;
   outline: none !important;
 }
-.recharts-default-tooltip {
-  background-color: hsl(var(--popover)) !important;
-  border-color: hsl(var(--border)) !important;
-  color: hsl(var(--popover-foreground)) !important;
-  padding: 8px !important;
-  border-radius: var(--radius) !important;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
-}
-.recharts-legend-item-text {
-  color: hsl(var(--foreground)) !important;
-}
-.recharts-cartesian-axis-tick-value {
-   fill: hsl(var(--muted-foreground)) !important;
+.custom-recharts-tooltip .label {
+  @apply mb-1.5 block font-semibold text-sm;
 }
 
-    
+.recharts-default-legend {
+  @apply pt-3;
+}
+.recharts-legend-item {
+  @apply mr-4 !important; /* Ensure spacing */
+}
+.recharts-legend-item-text {
+  color: hsl(var(--muted-foreground)) !important;
+  @apply text-xs pl-1;
+}
+.recharts-surface { /* The little color swatch in legend */
+  @apply !mr-1.5;
+}
+
+.recharts-cartesian-axis-tick-value {
+   fill: hsl(var(--muted-foreground)) !important;
+   @apply text-[10px];
+}
+
+/* Enhanced Skeleton Pulse Animation */
+@keyframes pulse-enhanced {
+  0%, 100% {
+    background-color: hsl(var(--skeleton-bg));
+  }
+  50% {
+    background-color: hsl(var(--skeleton-highlight));
+  }
+}
+.animate-pulse-enhanced {
+  animation: pulse-enhanced 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Remove default focus outline from Recharts areas when using custom focus */
+.recharts-wrapper:focus, .recharts-surface:focus {
+  outline: none !important;
+}
