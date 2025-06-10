@@ -223,7 +223,12 @@ export function FailureCategorizationView() {
                     <AccordionItem value={test.id} key={test.id} className="border rounded-md bg-card hover:bg-muted/20 transition-colors px-1">
                       <AccordionTrigger className="p-3 text-left hover:no-underline text-sm">
                         <div className="flex justify-between items-center w-full">
-                          <span className="font-medium text-foreground truncate" title={test.name}>{formatTestName(test.name)}</span>
+                          <span className="font-medium text-foreground truncate" title={`${formatTestName(test.name)} (Suite: ${test.suiteName})`}>
+                            {formatTestName(test.name)}
+                            <span className="text-muted-foreground text-xs ml-1">
+                              (Suite: {test.suiteName && test.suiteName.length > 30 ? `${test.suiteName.substring(0,27)}...` : test.suiteName || 'N/A'})
+                            </span>
+                          </span>
                           <ChevronRight className="h-4 w-4 text-muted-foreground group-data-[state=open]:rotate-90 transition-transform" />
                         </div>
                       </AccordionTrigger>
