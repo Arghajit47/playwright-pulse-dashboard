@@ -102,17 +102,19 @@ export function PulseDashboard() {
   return (
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon" className="border-r border-sidebar-border shadow-lg">
-        <SidebarHeader className="p-4 flex items-center justify-between border-b border-sidebar-border">
-           <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
+        <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-2 flex items-center justify-between group-data-[collapsible=icon]:justify-center border-b border-sidebar-border">
+           <Link href="/" className="flex items-center" onClick={() => setActiveView('dashboard')}>
             <Image
                 src="https://i.postimg.cc/FHbZFDxq/pulse-removebg-preview.png"
                 alt="Pulse Dashboard Logo"
-                width={40}
-                height={40}
+                width={32}
+                height={32}
                 className="rounded-sm"
                 data-ai-hint="pulse logo"
             />
-            <h2 className="font-bold text-xl text-sidebar-foreground">Pulse</h2>
+            <h2 className="font-semibold text-lg text-sidebar-foreground ml-2 group-data-[collapsible=icon]:hidden">
+              Pulse
+            </h2>
           </Link>
           <SidebarTrigger className="md:hidden group-data-[collapsible=icon]:hidden" />
         </SidebarHeader>
@@ -151,7 +153,7 @@ export function PulseDashboard() {
               </SidebarMenuItem>
             </SidebarMenu>
           )}
-          <div className="pt-2 group-data-[collapsible=icon]:hidden"> {/* Add padding top if not icon mode */}
+          <div className="pt-2 group-data-[collapsible=icon]:hidden">
             <SidebarSeparator className="my-1 group-data-[collapsible=icon]:hidden" />
             <div className="flex items-center justify-center gap-1.5 text-xs p-2">
               <ShieldCheck className="h-3.5 w-3.5 text-sidebar-foreground/70" />
