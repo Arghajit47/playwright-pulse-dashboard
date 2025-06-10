@@ -7,7 +7,8 @@ import { TestItem } from './TestItem';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, Info, ChevronDown, XCircle, FilterX, Repeat1 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Terminal, Info, ChevronDown, XCircle, FilterX, Repeat1, ListChecks, CheckCircle2, SkipForward, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,13 @@ export type TestStatusFilter = typeof testStatuses[number];
 interface GroupedSuite {
   title: string;
   tests: DetailedTestResult[];
+  stats: {
+    total: number;
+    passed: number;
+    failed: number; // includes timedOut
+    skipped: number;
+    pending: number;
+  };
 }
 
 interface LiveTestResultsProps {
@@ -60,6 +68,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         test.tags?.forEach((tag: string) => uniqueTags.add(tag));
         if (test.browser) uniqueBrowsers.add(test.browser);
         if (test.suiteName) uniqueSuites.add(test.suiteName);
+        else uniqueSuites.add("Untitled Suite"); // Ensure "Untitled Suite" is an option if any exist
       });
 
       setAllTags(Array.from(uniqueTags).sort());
@@ -90,25 +99,45 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     if (!report?.results) return [];
 
     const filteredTests = report.results.filter((test: DetailedTestResult) => {
-      const statusMatch = statusFilter === 'all' || test.status === statusFilter;
-      const searchTermMatch = test.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              test.suiteName.toLowerCase().includes(searchTerm.toLowerCase());
+      const statusMatch = statusFilter === 'all' || test.status === statusFilter || (statusFilter === 'failed' && test.status === 'timedOut');
+      const searchTermMatch = (test.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (test.suiteName || '').toLowerCase().includes(searchTerm.toLowerCase());
       const tagMatch = selectedTags.length === 0 || (test.tags && test.tags.some((tag: string) => selectedTags.includes(tag)));
       const browserMatch = selectedBrowser === 'all' || test.browser === selectedBrowser;
-      const suiteMatch = selectedSuite === 'all' || test.suiteName === selectedSuite;
+      const currentSuiteName = test.suiteName || "Untitled Suite";
+      const suiteMatch = selectedSuite === 'all' || currentSuiteName === selectedSuite;
       const retriesMatch = !showRetriesOnly || (showRetriesOnly && test.retries > 0);
       
       return statusMatch && searchTermMatch && tagMatch && browserMatch && suiteMatch && retriesMatch;
     });
 
-    const suitesMap = new Map<string, DetailedTestResult[]>();
+    const suitesMap = new Map<string, {
+        tests: DetailedTestResult[];
+        stats: { total: number; passed: number; failed: number; skipped: number; pending: number; };
+    }>();
+
     filteredTests.forEach((test: DetailedTestResult) => {
-      const suiteTests = suitesMap.get(test.suiteName) || [];
-      suiteTests.push(test);
-      suitesMap.set(test.suiteName, suiteTests);
+        const suiteName = test.suiteName || 'Untitled Suite';
+        if (!suitesMap.has(suiteName)) {
+            suitesMap.set(suiteName, {
+                tests: [],
+                stats: { total: 0, passed: 0, failed: 0, skipped: 0, pending: 0 },
+            });
+        }
+        const currentSuiteData = suitesMap.get(suiteName)!;
+        currentSuiteData.tests.push(test);
+        currentSuiteData.stats.total++;
+        if (test.status === 'passed') currentSuiteData.stats.passed++;
+        else if (test.status === 'failed' || test.status === 'timedOut') currentSuiteData.stats.failed++;
+        else if (test.status === 'skipped') currentSuiteData.stats.skipped++;
+        else if (test.status === 'pending') currentSuiteData.stats.pending++;
     });
 
-    return Array.from(suitesMap.entries()).map(([title, tests]) => ({ title, tests }));
+    return Array.from(suitesMap.entries()).map(([title, data]) => ({
+        title,
+        tests: data.tests,
+        stats: data.stats,
+    })).sort((a, b) => b.stats.failed - a.stats.failed || b.stats.total - a.stats.total || a.title.localeCompare(b.title));
   }, [report, statusFilter, searchTerm, selectedTags, selectedBrowser, selectedSuite, showRetriesOnly]);
 
   if (loading) {
@@ -332,20 +361,50 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         )}
 
         {groupedAndFilteredSuites.length > 0 ? (
-          groupedAndFilteredSuites.map((suite: GroupedSuite, index: number) => (
-            <div key={index} className="mb-6">
-              <h3 className="text-xl font-semibold text-foreground mb-3 pb-2 border-b-2 border-primary/30">{suite.title}</h3>
-              {suite.tests.length > 0 ? (
-                <div className="space-y-1">
-                  {suite.tests.map(test => (
-                    <TestItem key={test.id} test={test} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground pl-4">No tests in this suite match the current filters.</p>
-              )}
-            </div>
-          ))
+          <Accordion type="multiple" className="w-full space-y-3">
+            {groupedAndFilteredSuites.map((suite: GroupedSuite, index: number) => (
+              <AccordionItem value={`suite-${suite.title.replace(/\s+/g, '-')}-${index}`} key={`${suite.title}-${index}`} className="border rounded-xl shadow-lg bg-card hover:shadow-xl transition-shadow duration-300">
+                <AccordionTrigger className="p-4 hover:no-underline text-left w-full group">
+                  <div className="flex justify-between items-center w-full">
+                    <div className="flex-grow min-w-0">
+                      <h3 className="text-lg font-semibold text-primary group-hover:text-primary/80 transition-colors truncate" title={suite.title}>{suite.title}</h3>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
+                        <Badge variant="outline" className="text-xs border-muted-foreground/50">
+                            <ListChecks className="mr-1.5 h-3 w-3 text-muted-foreground" />Total: {suite.stats.total}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs" style={{color: 'hsl(var(--chart-3))', borderColor: 'hsl(var(--chart-3) / 0.5)'}}>
+                            <CheckCircle2 className="mr-1.5 h-3 w-3" />Passed: {suite.stats.passed}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs" style={{color: 'hsl(var(--destructive))', borderColor: 'hsl(var(--destructive) / 0.5)'}}>
+                            <XCircle className="mr-1.5 h-3 w-3" />Failed: {suite.stats.failed}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs" style={{color: 'hsl(var(--accent))', borderColor: 'hsl(var(--accent) / 0.5)'}}>
+                            <SkipForward className="mr-1.5 h-3 w-3" />Skipped: {suite.stats.skipped}
+                        </Badge>
+                        {suite.stats.pending > 0 && (
+                          <Badge variant="outline" className="text-xs" style={{color: 'hsl(var(--primary))', borderColor: 'hsl(var(--primary) / 0.5)'}}>
+                              <Clock className="mr-1.5 h-3 w-3" />Pending: {suite.stats.pending}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    {/* Chevron is part of AccordionTrigger */}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="p-4 pt-0">
+                  {suite.tests.length > 0 ? (
+                    <div className="space-y-1 mt-2">
+                      {suite.tests.map(test => (
+                        <TestItem key={test.id} test={test} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-2">No tests in this suite match the current filters.</p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         ) : (
            <div className="text-center py-8">
              <p className="text-muted-foreground text-lg">No test results match your current filters.</p>
@@ -356,3 +415,6 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     </Card>
   );
 }
+
+
+    
