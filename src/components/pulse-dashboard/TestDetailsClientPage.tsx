@@ -36,9 +36,9 @@ const StatusDot = (props: CustomDotProps) => {
   if (!cx || !cy || !payload) return null;
 
   let color = 'hsl(var(--muted-foreground))'; // Default color
-  if (payload.status === 'passed') color = 'hsl(var(--chart-3))'; // green
-  else if (payload.status === 'failed' || payload.status === 'timedOut') color = 'hsl(var(--destructive))'; // red
-  else if (payload.status === 'skipped') color = 'hsl(var(--accent))'; // orange
+  if (payload.status === 'passed') color = 'hsl(var(--chart-3))'; 
+  else if (payload.status === 'failed' || payload.status === 'timedOut') color = 'hsl(var(--destructive))'; 
+  else if (payload.status === 'skipped') color = 'hsl(var(--accent))'; 
 
   return <circle cx={cx} cy={cy} r={5} fill={color} stroke="hsl(var(--card))" strokeWidth={1}/>;
 };
@@ -47,7 +47,7 @@ const HistoryTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as TestRunHistoryData;
     return (
-      <div className="bg-card p-3 border border-border rounded-lg shadow-lg">
+      <div className="custom-recharts-tooltip">
         <p className="label text-sm font-semibold text-foreground">{`Date: ${new Date(data.date).toLocaleDateString()}`}</p>
         <p className="text-xs text-foreground">{`Duration: ${formatDuration(data.duration)}`}</p>
         <p className="text-xs" style={{ color: data.status === 'passed' ? 'hsl(var(--chart-3))' : data.status === 'failed' || data.status === 'timedOut' ? 'hsl(var(--destructive))' : 'hsl(var(--accent))' }}>
@@ -63,17 +63,17 @@ const HistoryTooltip = ({ active, payload, label }: any) => {
 function StatusIcon({ status }: { status: DetailedTestResult['status'] }) {
   switch (status) {
     case 'passed':
-      return <CheckCircle2 className="h-6 w-6 text-green-500" />;
+      return <CheckCircle2 className="h-6 w-6 text-[hsl(var(--chart-3))]" />;
     case 'failed':
       return <XCircle className="h-6 w-6 text-destructive" />;
     case 'skipped':
-      return <AlertCircle className="h-6 w-6 text-accent" />;
+      return <AlertCircle className="h-6 w-6 text-[hsl(var(--accent))]" />;
     case 'timedOut':
       return <Clock className="h-6 w-6 text-destructive" />;
     case 'pending':
       return <Clock className="h-6 w-6 text-primary animate-pulse" />;
     default:
-      return null;
+      return <Info className="h-6 w-6 text-muted-foreground"/>;
   }
 }
 
@@ -92,26 +92,26 @@ function formatTestName(fullName: string): string {
   return parts[parts.length - 1] || fullName;
 }
 
-function getStatusBadgeClass(status: DetailedTestResult['status']): string {
+function getStatusBadgeStyle(status: DetailedTestResult['status']): React.CSSProperties {
   switch (status) {
     case 'passed':
-      return 'bg-[hsl(var(--chart-3))] text-primary-foreground hover:bg-[hsl(var(--chart-3))]';
+      return { backgroundColor: 'hsl(var(--chart-3))', color: 'hsl(var(--primary-foreground))' };
     case 'failed':
     case 'timedOut':
-      return 'bg-destructive text-destructive-foreground hover:bg-destructive/90';
+      return { backgroundColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))' };
     case 'skipped':
-      return 'bg-[hsl(var(--accent))] text-accent-foreground hover:bg-[hsl(var(--accent))]';
+      return { backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' };
     case 'pending':
-      return 'bg-primary text-primary-foreground hover:bg-primary/90';
+      return { backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' };
     default:
-      return 'bg-muted text-muted-foreground';
+      return { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' };
   }
 }
 
 
 export function TestDetailsClientPage({ testId }: { testId: string }) {
   const router = useRouter();
-  const { currentRun, loadingCurrent, errorCurrent, userProjectDir } = useTestData();
+  const { currentRun, loadingCurrent, errorCurrent } = useTestData();
   const [test, setTest] = useState<DetailedTestResult | null>(null);
   const [testHistory, setTestHistory] = useState<TestRunHistoryData[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -208,7 +208,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
           <AlertTitle>Error loading test data</AlertTitle>
           <AlertDescription>{errorCurrent}</AlertDescription>
         </Alert>
-        <Button onClick={() => router.push('/')} variant="outline" className="mt-4 rounded-md">
+        <Button onClick={() => router.push('/')} variant="outline" className="mt-4 rounded-lg">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
       </div>
@@ -222,7 +222,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <AlertTitle>Test Not Found</AlertTitle>
             <AlertDescription>The test with ID '{testId}' could not be found in the current report.</AlertDescription>
         </Alert>
-        <Button onClick={() => router.push('/')} variant="outline" className="mt-6 rounded-md">
+        <Button onClick={() => router.push('/')} variant="outline" className="mt-6 rounded-lg">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
         </Button>
       </div>
@@ -243,7 +243,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
-      <Button onClick={() => router.push('/')} variant="outline" size="sm" className="mb-6 rounded-md">
+      <Button onClick={() => router.push('/')} variant="outline" size="sm" className="mb-6 rounded-lg">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
       </Button>
 
@@ -276,10 +276,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             </div>
             <div className="text-right flex-shrink-0">
                  <Badge
-                    className={cn(
-                      "capitalize text-sm px-3 py-1 border-transparent rounded-full",
-                      getStatusBadgeClass(test.status)
-                    )}
+                    variant="outline"
+                    className="capitalize text-sm px-3 py-1 rounded-full border"
+                    style={getStatusBadgeStyle(test.status)}
                   >
                     {test.status}
                   </Badge>
@@ -347,7 +346,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {currentScreenshots.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {currentScreenshots.map((path: string, index: number) => {
-                        const imageSrc = getUtilAssetPath(path, userProjectDir);
+                        const imageSrc = getUtilAssetPath(path);
                         if (imageSrc === '#') { 
                             return null;
                         }
@@ -360,7 +359,6 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                               style={{objectFit: "cover"}}
                               className="group-hover:scale-105 transition-transform duration-300"
                               data-ai-hint="test screenshot"
-                              unoptimized={imageSrc.startsWith('file:///')}
                             />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2">
                               <p className="text-white text-xs text-center break-all">{`Screenshot ${index + 1}`}</p>
@@ -379,7 +377,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {hasVideo && test.videoPath ? (
                     <div className="p-4 border rounded-lg bg-muted/30 shadow-sm">
                       <a
-                        href={getUtilAssetPath(test.videoPath, userProjectDir)}
+                        href={getUtilAssetPath(test.videoPath)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
@@ -402,7 +400,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {hasTrace && test.tracePath ? (
                     <div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
                        <a
-                        href={getUtilAssetPath(test.tracePath, userProjectDir)}
+                        href={getUtilAssetPath(test.tracePath)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
@@ -469,11 +467,11 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </h3>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="outline" size="icon" onClick={() => handleDownloadChart(historyChartRef, `test-history-${testId}.png`)} aria-label="Download Test History Chart" className="rounded-md">
+                      <Button variant="outline" size="icon" onClick={() => handleDownloadChart(historyChartRef, `test-history-${testId}.png`)} aria-label="Download Test History Chart" className="rounded-lg">
                         <Download className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="rounded-md">
+                    <TooltipContent className="rounded-md shadow-lg">
                       <p>Download as PNG</p>
                     </TooltipContent>
                   </Tooltip>
@@ -505,7 +503,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <div ref={historyChartRef} className="w-full h-[300px] bg-card p-4 rounded-lg shadow-inner">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsLineChart data={testHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis
                         dataKey="date"
                         tickFormatter={(tick) => new Date(tick).toLocaleDateString('en-CA', {month: 'short', day: 'numeric'})}

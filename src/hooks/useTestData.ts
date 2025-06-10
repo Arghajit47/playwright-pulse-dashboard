@@ -11,7 +11,7 @@ interface TestDataState {
   loadingHistorical: boolean;
   errorCurrent: string | null;
   errorHistorical: string | null;
-  userProjectDir: string | null;
+  // userProjectDir is removed as it's no longer used for client-side path generation
 }
 
 export function useTestData() {
@@ -22,12 +22,10 @@ export function useTestData() {
     loadingHistorical: true,
     errorCurrent: null,
     errorHistorical: null,
-    userProjectDir: null,
   });
 
   const fetchCurrentRun = useCallback(async () => {
     const apiUrl = '/api/current-run';
-    // Set loading state at the beginning of the fetch attempt
     setData(prev => ({ ...prev, loadingCurrent: true, errorCurrent: null }));
 
     try {
@@ -53,7 +51,7 @@ export function useTestData() {
         currentRun: result,
         loadingCurrent: false,
         errorCurrent: null,
-        userProjectDir: result?.metadata?.userProjectDir || null,
+        // userProjectDir is no longer set here
       }));
     } catch (error) {
       console.error(`PulseDashboard Fetch Error (currentRun at ${apiUrl}):`, error);
@@ -65,13 +63,12 @@ export function useTestData() {
       } else {
         detailedErrorMessage = String(error);
       }
-      setData(prev => ({ ...prev, currentRun: null, loadingCurrent: false, errorCurrent: detailedErrorMessage, userProjectDir: null }));
+      setData(prev => ({ ...prev, currentRun: null, loadingCurrent: false, errorCurrent: detailedErrorMessage }));
     }
-  }, []); // Empty dependency array for useCallback as it only uses setData
+  }, []); 
 
   const fetchHistoricalTrends = useCallback(async () => {
     const apiUrl = '/api/historical-trends';
-    // Set loading state at the beginning of the fetch attempt
     setData(prev => ({ ...prev, loadingHistorical: true, errorHistorical: null }));
 
     try {
@@ -105,14 +102,12 @@ export function useTestData() {
       }
       setData(prev => ({ ...prev, historicalTrends: [], loadingHistorical: false, errorHistorical: detailedErrorMessage }));
     }
-  }, []); // Empty dependency array for useCallback as it only uses setData
+  }, []); 
 
   useEffect(() => {
-    // Fetch data on initial mount (which also occurs on browser refresh)
     fetchCurrentRun();
     fetchHistoricalTrends();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array ensures this effect runs only once on mount
+  }, [fetchCurrentRun, fetchHistoricalTrends]); // Added dependencies
 
   return data;
 }
