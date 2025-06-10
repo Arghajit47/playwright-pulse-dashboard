@@ -56,6 +56,15 @@ body {
     --sidebar-hover-foreground: 220 25% 25%; /* Prominent text on hover */
     --sidebar-ring: hsl(var(--ring));
 
+    /* Sidebar Tab Label Colors - Light Theme */
+    --sidebar-tab-dashboard-color-hsl: 210 60% 50%;
+    --sidebar-tab-results-color-hsl: 170 50% 45%;
+    --sidebar-tab-trends-color-hsl: 260 50% 55%;
+    --sidebar-tab-flaky-color-hsl: 30 70% 50%;
+    --sidebar-tab-failures-color-hsl: 230 55% 60%;
+    --sidebar-tab-settings-color-hsl: 220 10% 50%;
+
+
     /* Skeleton Loader Colors - Light Theme */
     --skeleton-bg: 220 30% 90%; /* Muted background for skeleton */
     --skeleton-highlight: 220 30% 85%; /* Slightly lighter highlight */
@@ -115,6 +124,14 @@ body {
     --sidebar-hover-background: 220 25% 15%; /* Slightly lighter for hover */
     --sidebar-hover-foreground: 220 20% 92%; /* Brighter text on hover */
     --sidebar-ring: hsl(var(--ring));
+
+    /* Sidebar Tab Label Colors - Dark Theme */
+    --sidebar-tab-dashboard-color-hsl: 210 60% 70%;
+    --sidebar-tab-results-color-hsl: 170 50% 65%;
+    --sidebar-tab-trends-color-hsl: 260 50% 75%;
+    --sidebar-tab-flaky-color-hsl: 30 70% 70%;
+    --sidebar-tab-failures-color-hsl: 230 55% 80%;
+    --sidebar-tab-settings-color-hsl: 220 10% 70%;
 
     /* Skeleton Loader Colors - Dark Theme */
     --skeleton-bg: 220 20% 15%; /* Darker base for skeleton */

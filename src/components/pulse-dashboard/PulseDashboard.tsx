@@ -34,6 +34,7 @@ interface MenuItemConfig {
   label: string;
   icon: React.ElementType;
   description: string;
+  labelColorVar?: string; // For custom label color
 }
 
 export function PulseDashboard() {
@@ -62,12 +63,12 @@ export function PulseDashboard() {
   }, [activeView, initialLiveResultsFilter]);
 
   const allMenuItemsConfig: MenuItemConfig[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: "Real-time Playwright Test Execution Monitoring & Analysis Overview" },
-    { id: 'live-results', label: 'Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters." },
-    { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance." },
-    { id: 'flaky-tests', label: 'Flaky Tests', icon: Repeat, description: "Analysis of historically flaky tests." },
-    { id: 'failure-categorization', label: 'Failure Categorization', icon: ListX, description: "Categorize and view common failure types." },
-    { id: 'settings', label: 'Settings', icon: Settings, description: "Configure dashboard appearance and preferences." },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: "Real-time Playwright Test Execution Monitoring & Analysis Overview", labelColorVar: '--sidebar-tab-dashboard-color-hsl' },
+    { id: 'live-results', label: 'Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters.", labelColorVar: '--sidebar-tab-results-color-hsl' },
+    { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance.", labelColorVar: '--sidebar-tab-trends-color-hsl' },
+    { id: 'flaky-tests', label: 'Flaky Tests', icon: Repeat, description: "Analysis of historically flaky tests.", labelColorVar: '--sidebar-tab-flaky-color-hsl' },
+    { id: 'failure-categorization', label: 'Failure Categorization', icon: ListX, description: "Categorize and view common failure types.", labelColorVar: '--sidebar-tab-failures-color-hsl' },
+    { id: 'settings', label: 'Settings', icon: Settings, description: "Configure dashboard appearance and preferences.", labelColorVar: '--sidebar-tab-settings-color-hsl' },
   ];
 
   const settingsMenuItem = allMenuItemsConfig.find(item => item.id === 'settings');
@@ -130,7 +131,9 @@ export function PulseDashboard() {
                   tooltip={{children: item.label, side: 'right', align: 'center'}}
                 >
                   <item.icon className="h-5 w-5" />
-                  <span>{item.label}</span>
+                  <span style={item.labelColorVar ? { color: `hsl(var(${item.labelColorVar}))` } : undefined}>
+                    {item.label}
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -148,7 +151,12 @@ export function PulseDashboard() {
                   tooltip={{children: settingsMenuItem.label, side: 'right', align: 'center'}}
                 >
                   <settingsMenuItem.icon className="h-5 w-5" />
-                  <span className="group-data-[collapsible=icon]:hidden">{settingsMenuItem.label}</span>
+                  <span 
+                    className="group-data-[collapsible=icon]:hidden"
+                    style={settingsMenuItem.labelColorVar ? { color: `hsl(var(${settingsMenuItem.labelColorVar}))` } : undefined}
+                  >
+                    {settingsMenuItem.label}
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
