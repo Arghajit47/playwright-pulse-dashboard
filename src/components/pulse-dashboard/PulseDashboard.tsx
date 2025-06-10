@@ -20,7 +20,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  SidebarFooter
+  SidebarFooter,
+  SidebarSeparator
 } from '@/components/ui/sidebar';
 import { LayoutDashboard, ListChecks, TrendingUp, Settings, Repeat, ListX, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
@@ -28,7 +29,7 @@ import Link from 'next/link';
 
 type ActiveView = 'dashboard' | 'live-results' | 'trend-analysis' | 'flaky-tests' | 'settings' | 'failure-categorization';
 
-interface MenuItem {
+interface MenuItemConfig {
   id: ActiveView;
   label: string;
   icon: React.ElementType;
@@ -60,7 +61,7 @@ export function PulseDashboard() {
     }
   }, [activeView, initialLiveResultsFilter]);
 
-  const menuItemsConfig: MenuItem[] = [
+  const allMenuItemsConfig: MenuItemConfig[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: "Real-time Playwright Test Execution Monitoring & Analysis Overview" },
     { id: 'live-results', label: 'Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters." },
     { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance." },
@@ -69,7 +70,10 @@ export function PulseDashboard() {
     { id: 'settings', label: 'Settings', icon: Settings, description: "Configure dashboard appearance and preferences." },
   ];
 
-  const activeMenuItem = menuItemsConfig.find(item => item.id === activeView);
+  const settingsMenuItem = allMenuItemsConfig.find(item => item.id === 'settings');
+  const mainMenuItems = allMenuItemsConfig.filter(item => item.id !== 'settings');
+
+  const activeMenuItem = allMenuItemsConfig.find(item => item.id === activeView);
 
   let componentToRender;
   switch (activeView) {
@@ -114,7 +118,7 @@ export function PulseDashboard() {
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {menuItemsConfig.map(item => (
+            {mainMenuItems.map(item => (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
                   onClick={() => {
@@ -130,12 +134,31 @@ export function PulseDashboard() {
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden">
-            <div className="flex items-center gap-1.5 text-xs">
+        <SidebarFooter className="p-2 mt-auto border-t border-sidebar-border">
+          {settingsMenuItem && (
+            <SidebarMenu className="group-data-[collapsible=icon]:py-2">
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => {
+                    setActiveView(settingsMenuItem.id);
+                  }}
+                  isActive={activeView === settingsMenuItem.id}
+                  tooltip={{children: settingsMenuItem.label, side: 'right', align: 'center'}}
+                >
+                  <settingsMenuItem.icon className="h-5 w-5" />
+                  <span className="group-data-[collapsible=icon]:hidden">{settingsMenuItem.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          )}
+          <div className="pt-2 group-data-[collapsible=icon]:hidden"> {/* Add padding top if not icon mode */}
+            <SidebarSeparator className="my-1 group-data-[collapsible=icon]:hidden" />
+            <div className="flex items-center justify-center gap-1.5 text-xs p-2">
               <ShieldCheck className="h-3.5 w-3.5 text-sidebar-foreground/70" />
               <span className="font-medium text-sidebar-foreground">Pulse</span>
               <span className="text-muted-foreground/80">v1.0</span>
             </div>
+          </div>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
