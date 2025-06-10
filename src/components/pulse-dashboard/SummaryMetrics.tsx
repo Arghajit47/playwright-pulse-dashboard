@@ -46,7 +46,7 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {[...Array(5)].map((_, i) => (
-          <Card key={i} className="shadow-lg">
+          <Card key={i} className="shadow-lg rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-5 w-24" />
               <Skeleton className="h-6 w-6" />
@@ -63,9 +63,9 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
   
   const metrics = runMetadata ? [
     { title: 'Total Tests', value: runMetadata.totalTests.toString(), icon: <ListFilter className="h-5 w-5 text-muted-foreground" />, change: null, filterKey: null },
-    { title: 'Passed', value: runMetadata.passed.toString(), icon: <CheckCircle className="h-5 w-5 text-green-500" />, change: `${runMetadata.totalTests > 0 ? ((runMetadata.passed / runMetadata.totalTests) * 100).toFixed(1) : '0.0'}% pass rate`, filterKey: 'passed' as TestStatusFilter },
+    { title: 'Passed', value: runMetadata.passed.toString(), icon: <CheckCircle className="h-5 w-5 text-[hsl(var(--chart-3))]" />, change: `${runMetadata.totalTests > 0 ? ((runMetadata.passed / runMetadata.totalTests) * 100).toFixed(1) : '0.0'}% pass rate`, filterKey: 'passed' as TestStatusFilter },
     { title: 'Failed', value: runMetadata.failed.toString(), icon: <XCircle className="h-5 w-5 text-destructive" />, change: `${runMetadata.totalTests > 0 ? ((runMetadata.failed / runMetadata.totalTests) * 100).toFixed(1) : '0.0'}% fail rate`, filterKey: 'failed' as TestStatusFilter },
-    { title: 'Skipped', value: runMetadata.skipped.toString(), icon: <SkipForward className="h-5 w-5 text-accent" />, change: null, filterKey: 'skipped' as TestStatusFilter },
+    { title: 'Skipped', value: runMetadata.skipped.toString(), icon: <SkipForward className="h-5 w-5 text-[hsl(var(--accent))]" />, change: `${runMetadata.totalTests > 0 ? ((runMetadata.skipped / runMetadata.totalTests) * 100).toFixed(1) : '0.0'}% skip rate`, filterKey: 'skipped' as TestStatusFilter },
     { title: 'Duration', value: formatDuration(runMetadata.duration), icon: <Clock className="h-5 w-5 text-primary" />, change: `Total execution time`, filterKey: null },
   ] : [];
 
@@ -81,7 +81,7 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
         {metrics.map(metric => (
           <Card 
             key={metric.title} 
-            className={`shadow-lg hover:shadow-xl transition-shadow duration-300 ${metric.filterKey && onMetricClick ? 'cursor-pointer hover:ring-2 hover:ring-primary' : ''}`}
+            className={`shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl ${metric.filterKey && onMetricClick ? 'cursor-pointer hover:ring-2 hover:ring-primary' : ''}`}
             onClick={() => handleCardClick(metric.filterKey)}
             tabIndex={metric.filterKey && onMetricClick ? 0 : -1}
             onKeyDown={(e: React.KeyboardEvent) => {
@@ -104,7 +104,7 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
         ))}
          {loading && runMetadata && ( // Show skeleton for cards if data is partially loaded
           [...Array(5 - metrics.length)].map((_, i) => (
-            <Card key={`loading-${i}`} className="shadow-lg">
+            <Card key={`loading-${i}`} className="shadow-lg rounded-xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <Skeleton className="h-5 w-24" />
                 <Skeleton className="h-6 w-6" />
