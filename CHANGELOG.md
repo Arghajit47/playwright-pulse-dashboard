@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (though pre-1.0.0 versions have less strict guarantees).
 
-## [0.1.8] - YYYY-MM-DD
+## [0.1.8]
 
 ### Added
 - "Total Tests" line added to the "Test Outcomes Over Time" chart in Trend Analysis view.
@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved resilience of API routes (`/api/historical-trends`, `/api/current-run`) and server actions (`src/app/actions.ts`) against potential "Failed to fetch" errors by making `baseDir` determination more robust and adding more specific logging for path issues.
 - Ensured `flakinessRate` is correctly handled and passed through from historical data if present.
 
-## [0.1.7] - YYYY-MM-DD
+## [0.1.7] 
 
 ### Changed
 - **Major UI Revamp: "Neon Noir & Arctic Sky" Theme**
@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PulseDashboard.tsx`: Main content area styled with `rounded-xl shadow-lg bg-background`. Footer link color now uses theme variable.
 - Updated various icons throughout the UI for better visual appeal and clarity.
 
-## [0.1.6] - YYYY-MM-DD
+## [0.1.6] 
 
 ### Added
 - Display "Latest Run Date" in the main header of `PulseDashboard.tsx`, visible across all views.
@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented `ansiToHtml` utility function to render ANSI escape codes (e.g., from error messages, console logs) as styled HTML, preserving terminal-like formatting.
 - Updated `TestItem.tsx`, `TestStepItemRecursive.tsx`, `TestDetailsClientPage.tsx`, and `FailureCategorizationView.tsx` to use `ansiToHtml` for displaying error messages and logs.
 
-## [0.1.5] - YYYY-MM-DD
+## [0.1.5]
 
 ### Changed
 - **Attachment Path Handling for Local CLI Usage:**
@@ -58,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Addressed issues where attachment URLs were not resolving correctly in different deployment/execution contexts.
 
-## [0.1.4] - YYYY-MM-DD
+## [0.1.4]
 
 ### Added
 - Introduced `PULSE_USER_CWD` environment variable mechanism to help the CLI tool determine the correct working directory for report files.
@@ -67,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Addressed "Failed to fetch" errors related to API routes crashing early due to incorrect path construction or unhandled exceptions during `baseDir` determination.
 
-## [0.1.3] - YYYY-MM-DD
+## [0.1.3]
 
 ### Added
 - Initial implementation of `FlakyTestsWidget.tsx` to display flaky test analysis.
@@ -79,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `LiveTestResults.tsx`: Added advanced filtering options (tags, browser, suite, retries only).
 - `TestDetailsClientPage.tsx`: Added tab for "Test Run History" with a chart.
 
-## [0.1.2] - YYYY-MM-DD
+## [0.1.2]
 
 ### Added
 - `DashboardOverviewCharts.tsx` component to display various charts (Test Distribution, Tests by Browser, Failed Tests Duration, Slowest Tests, Tests per Suite) on the main dashboard view.
@@ -91,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refined the structure of `PulseDashboard.tsx` to manage different views (Dashboard, Live Results, Trend Analysis, Test Details, Settings).
 - Initial styling improvements using ShadCN UI components and Tailwind CSS.
 
-## [0.1.1] - YYYY-MM-DD
+## [0.1.1]
 
 ### Added
 - Core `PulseDashboard` component structure (`src/components/pulse-dashboard/PulseDashboard.tsx`).
@@ -109,7 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Defined initial data types in `src/types/playwright.ts`.
 - Configured `globals.css` with initial HSL theme variables.
 
-## [0.1.0] - YYYY-MM-DD
+## [0.1.0]
 
 ### Added
 - Project initiated.
