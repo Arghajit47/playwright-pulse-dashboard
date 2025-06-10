@@ -53,6 +53,8 @@ body {
     --sidebar-border: 220 30% 85%; /* Soft border for sidebar */
     --sidebar-accent: hsl(var(--primary)); /* Primary color for active items */
     --sidebar-accent-foreground: hsl(var(--primary-foreground)); /* Text on active items */
+    --sidebar-hover-background: 220 40% 92%; /* Slightly darker for hover */
+    --sidebar-hover-foreground: 220 25% 25%; /* Prominent text on hover */
     --sidebar-ring: hsl(var(--ring));
 
     /* Skeleton Loader Colors - Light Theme */
@@ -105,6 +107,8 @@ body {
     --sidebar-border: 220 20% 20%; /* Darker, subtle border for sidebar */
     --sidebar-accent: hsl(var(--primary)); /* Primary color for active items */
     --sidebar-accent-foreground: hsl(var(--primary-foreground)); /* Text on active items */
+    --sidebar-hover-background: 220 25% 15%; /* Slightly lighter for hover */
+    --sidebar-hover-foreground: 220 20% 92%; /* Brighter text on hover */
     --sidebar-ring: hsl(var(--ring));
 
     /* Skeleton Loader Colors - Dark Theme */
@@ -167,3 +171,4 @@ body {
 .recharts-wrapper:focus, .recharts-surface:focus {
   outline: none !important;
 }
+
