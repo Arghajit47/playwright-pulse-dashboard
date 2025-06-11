@@ -106,11 +106,11 @@ export function PulseDashboard() {
         <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-2 flex items-center justify-between group-data-[collapsible=icon]:justify-center border-b border-sidebar-border">
            <Link href="/" className="flex items-center" onClick={() => setActiveView('dashboard')}>
             <Image
-                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images//pulse%20new%20logo.png"
+                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images//pulse-logo.png"
                 alt="Pulse Dashboard Logo"
                 width={120} // Adjusted width for the new logo
                 height={30} // Adjusted height for the new logo
-                style={{ objectFit: 'contain' }} // Ensures the logo scales nicely
+                style={{ objectFit: 'fill' }} // Ensures the logo scales nicely
                 className="transition-all duration-200"
                 data-ai-hint="pulse logo"
             />
