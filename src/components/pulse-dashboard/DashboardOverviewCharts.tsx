@@ -12,8 +12,6 @@ import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compa
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
-import html2canvas from 'html2canvas';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 
 interface CustomTooltipPayloadItem {
@@ -227,28 +225,6 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const slowestTestsChartRef = useRef<HTMLDivElement>(null);
   const testsPerSuiteChartRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadChart = async (chartRef: React.RefObject<HTMLDivElement>, fileName: string) => {
-    if (chartRef.current) {
-      try {
-        const canvas = await html2canvas(chartRef.current, {
-          backgroundColor: null,
-          logging: false,
-          useCORS: true,
-          scale: 2,
-        });
-        const image = canvas.toDataURL('image/png', 1.0);
-        const link = document.createElement('a');
-        link.href = image;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (err: any) {
-        console.error('Error downloading chart:', err);
-      }
-    }
-  };
-
 
   const onPieEnter = React.useCallback(
     (_data: PieSectorDataItem, index: number) => {
@@ -372,7 +348,6 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const showPendingInSuiteChart = testsPerSuiteChartData.some(s => s.pending > 0);
 
   return (
-    <TooltipProvider>
     <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader className="flex flex-row items-center justify-between">
@@ -380,16 +355,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
             <CardDescription className="text-xs">Passed, Failed, Skipped for the current run.</CardDescription>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(testDistributionChartRef, 'test-distribution.png')} aria-label="Download Test Distribution Chart">
-                <Download className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Download as PNG</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Download button removed */}
         </CardHeader>
         <CardContent className="flex justify-center items-center min-h-[280px]">
           <div ref={testDistributionChartRef} className="w-full h-[280px]">
@@ -437,16 +403,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Tests by Browser</CardTitle>
             <CardDescription className="text-xs">Breakdown of test outcomes per browser.</CardDescription>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(browserChartRef, 'tests-by-browser.png')} aria-label="Download Tests by Browser Chart">
-                <Download className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Download as PNG</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Download button removed */}
         </CardHeader>
         <CardContent>
           <div ref={browserChartRef} className="w-full h-[250px]">
@@ -496,16 +453,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Failed Tests Duration</CardTitle>
             <CardDescription className="text-xs">Duration of failed or timed out tests (Top 10).</CardDescription>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(failedDurationChartRef, 'failed-tests-duration.png')} aria-label="Download Failed Tests Duration Chart">
-                <Download className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Download as PNG</p>
-            </TooltipContent>
-          </Tooltip>
+           {/* Download button removed */}
         </CardHeader>
         <CardContent>
           <div ref={failedDurationChartRef} className="w-full h-[250px]">
@@ -558,16 +506,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Slowest Tests (Top 5)</CardTitle>
             <CardDescription className="text-xs">Top 5 longest running tests in this run. Full names in tooltip.</CardDescription>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(slowestTestsChartRef, 'slowest-tests.png')} aria-label="Download Slowest Tests Chart">
-                <Download className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Download as PNG</p>
-            </TooltipContent>
-          </Tooltip>
+           {/* Download button removed */}
         </CardHeader>
         <CardContent>
           <div ref={slowestTestsChartRef} className="w-full h-[250px]">
@@ -625,16 +564,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
             <CardDescription className="text-xs">Breakdown of test outcomes per suite.</CardDescription>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" onClick={() => handleDownloadChart(testsPerSuiteChartRef, 'tests-per-suite.png')} aria-label="Download Tests per Suite Chart">
-                <Download className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Download as PNG</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Download button removed */}
         </CardHeader>
         <CardContent className="max-h-[400px] overflow-y-auto">
           <div ref={testsPerSuiteChartRef} className="w-full" style={{ height: Math.max(250, testsPerSuiteChartData.length * 45 + 60) }}> {/* Adjusted height for potentially more bars */}
@@ -670,7 +600,6 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
       </Card>
 
     </div>
-    </TooltipProvider>
   );
 }
 

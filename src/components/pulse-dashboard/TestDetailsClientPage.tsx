@@ -18,8 +18,7 @@ import { TestStepItemRecursive } from './TestStepItemRecursive';
 import { getRawHistoricalReports } from '@/app/actions'; 
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, DotProps } from 'recharts';
 import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
-import html2canvas from 'html2canvas';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 interface TestRunHistoryData {
   date: string;
@@ -118,27 +117,6 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   const [errorHistory, setErrorHistory] = useState<string | null>(null);
   const historyChartRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadChart = async (chartRef: React.RefObject<HTMLDivElement>, fileName: string) => {
-    if (chartRef.current) {
-      try {
-        const canvas = await html2canvas(chartRef.current, {
-          backgroundColor: null, 
-          logging: false,
-          useCORS: true, 
-          scale: 2, 
-        });
-        const image = canvas.toDataURL('image/png', 1.0);
-        const link = document.createElement('a');
-        link.href = image;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (err) {
-        console.error('Error downloading chart:', err);
-      }
-    }
-  };
 
   useEffect(() => {
     if (currentRun?.results) {
@@ -459,24 +437,13 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             </TabsContent>
 
             <TabsContent value="history" className="mt-4 p-4 border rounded-lg bg-card shadow-inner">
-             <TooltipProvider>
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-semibold text-foreground flex items-center">
                   <LineChart className="h-5 w-5 mr-2 text-primary"/>
                   Individual Test Run History
                 </h3>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="outline" size="icon" onClick={() => handleDownloadChart(historyChartRef, `test-history-${testId}.png`)} aria-label="Download Test History Chart" className="rounded-lg">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="rounded-md shadow-lg">
-                      <p>Download as PNG</p>
-                    </TooltipContent>
-                  </Tooltip>
+                {/* Download button removed */}
               </div>
-              </TooltipProvider>
               {loadingHistory && (
                 <div className="space-y-3">
                   <Skeleton className="h-6 w-3/4 rounded-md" />
@@ -542,3 +509,4 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
+
