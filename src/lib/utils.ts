@@ -1,6 +1,16 @@
 
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import AnsiToHtml from 'ansi-to-html'; // Recommended: npm install ansi-to-html
+
+const ansiConverter = new AnsiToHtml({
+  fg: '#000', // Default foreground color
+  bg: '#FFF', // Default background color
+  newline: true, // Convert \n to <br/>
+  escapeXML: true, // Escape HTML entities
+  // You can customize colors further if needed
+  // colors: { ... }
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -123,38 +133,42 @@ export function ansiToHtml(text: string | null | undefined): string {
 }
 
 
-export function getAssetPath(
-  jsonPath: string | undefined | null
-): string {
-  if (!jsonPath || typeof jsonPath !== 'string' || jsonPath.trim() === '') {
-    return '#'; // Return a non-functional link for empty/invalid paths
-  }
-  const trimmedJsonPath = jsonPath.trim().replace(/\\/g, '/');
-
-  // If it's already a fully qualified data URI or HTTP/HTTPS URL, return as is.
-  if (trimmedJsonPath.startsWith('data:') || trimmedJsonPath.startsWith('http://') || trimmedJsonPath.startsWith('https://')) {
-    return trimmedJsonPath;
-  }
-
-  let webPath = trimmedJsonPath;
-
-  // Remove any leading slashes from jsonPath first to avoid double slashes if pulse-report/ is prepended.
-  if (webPath.startsWith('/')) {
-    webPath = webPath.substring(1);
+/**
+ * Generates the correct public URL for an asset.
+ * It expects the input path to be relative to the 'pulse-report' directory,
+ * or specifically, if it starts with 'attachments/', it assumes it's relative
+ * from 'pulse-report/attachments/'.
+ * @param pathFromReport The path string from the report data.
+ *                       e.g., "attachments/folder/image.png" or "folder/image.png" if attachments is implied.
+ * @returns A string URL to fetch the asset, or "#" if the path is invalid.
+ */
+export function getAssetPath(pathFromReport: string | undefined | null): string {
+  if (!pathFromReport || typeof pathFromReport !== 'string' || pathFromReport.trim() === '') {
+    return '#';
   }
 
-  if (!webPath.startsWith('pulse-report/')) {
-    // If it's 'attachments/foo.png', 'videos/bar.mp4', 'traces/baz.zip'
-    if (webPath.startsWith('attachments/') || webPath.startsWith('videos/') || webPath.startsWith('traces/')) {
-        webPath = `pulse-report/${webPath}`;
-    } else if (!webPath.includes('/')) { // Bare filename e.g. 'screenshot.png'
-        webPath = `pulse-report/attachments/${webPath}`; // Assume it's a screenshot/attachment
-    } else {
-        // Path like 'some_other_folder/image.png' - less common from Playwright.
-        // Prepend pulse-report to be safe, assuming it's relative to the report root.
-        webPath = `pulse-report/${webPath}`;
-    }
+  let cleanRelativePath = pathFromReport.trim();
+
+  // Define the known prefix that might be included in the report paths
+  const attachmentsPrefix = "attachments/";
+  const attachmentsPrefixBackslash = "attachments\\"; // Handle Windows-style paths just in case
+
+  // If the path from the report starts with "attachments/", strip it.
+  if (cleanRelativePath.toLowerCase().startsWith(attachmentsPrefix)) {
+    cleanRelativePath = cleanRelativePath.substring(attachmentsPrefix.length);
+  } else if (cleanRelativePath.toLowerCase().startsWith(attachmentsPrefixBackslash)) {
+    cleanRelativePath = cleanRelativePath.substring(attachmentsPrefixBackslash.length);
   }
-  // Ensure it starts with a single slash for a root-relative URL
-  return webPath.startsWith('/') ? webPath : `/${webPath}`;
+  
+  // Remove any leading slashes from the now potentially stripped path,
+  // as our API route structure will effectively add one.
+  cleanRelativePath = cleanRelativePath.replace(/^[\/\\]+/, '');
+
+  // If the path became empty after stripping (e.g., it was just "attachments/"), return non-functional path
+  if (cleanRelativePath === '') {
+    return '#';
+  }
+
+  return `/api/assets/${cleanRelativePath}`;
 }
+
