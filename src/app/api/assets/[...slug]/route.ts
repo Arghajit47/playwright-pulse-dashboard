@@ -6,7 +6,13 @@ import mime from 'mime-types';
 
 const PULSE_REPORT_ROOT_FROM_PROJECT_ROOT = 'pulse-report';
 const ATTACHMENTS_FOLDER_NAME = 'attachments';
-const ATTACHMENTS_BASE_PATH = path.resolve(process.cwd(), PULSE_REPORT_ROOT_FROM_PROJECT_ROOT, ATTACHMENTS_FOLDER_NAME);
+const RELATIVE_PATH_TO_PROJECT_ROOT_FROM_CWD = "../../";
+const ATTACHMENTS_BASE_PATH = path.resolve(
+  process.cwd(),
+  RELATIVE_PATH_TO_PROJECT_ROOT_FROM_CWD,
+  PULSE_REPORT_ROOT_FROM_PROJECT_ROOT,
+  ATTACHMENTS_FOLDER_NAME
+);
 
 // Initial log to confirm paths on server start (or first request in dev)
 console.log(`[API ASSETS] Initializing:`);
