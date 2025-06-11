@@ -29,6 +29,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'ocpaxmghzmfbuhxzxzae.supabase.co',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   productionBrowserSourceMaps: false, // Disable browser source maps for production
