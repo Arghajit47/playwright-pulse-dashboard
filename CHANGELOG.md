@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.9] - 2025-06-12
+
+### Fixed
+
+- Fixed Test Details > Attachment [Screenshots, Video, Trace] paths.
+
+---
+
 ## [0.1.8] - 2025-06-12
 
 ### Added
