@@ -8,8 +8,8 @@ import { TrendAnalysis } from './TrendAnalysis';
 import { FlakyTestsWidget } from './FlakyTestsWidget';
 import { SettingsView } from './SettingsView';
 import { FailureCategorizationView } from './FailureCategorizationView';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarTrigger, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, TrendingUp, Settings, Repeat, ListX } from 'lucide-react';
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarTrigger, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter, SidebarSeparator } from '@/components/ui/sidebar';
+import { LayoutDashboard, ListChecks, TrendingUp, Settings, Repeat, ListX, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 export function PulseDashboard() {
     const { currentRun, historicalTrends, loadingCurrent, loadingHistorical, errorCurrent, errorHistorical } = useTestData();
@@ -25,15 +25,17 @@ export function PulseDashboard() {
             setInitialLiveResultsFilter(undefined);
         }
     }, [activeView, initialLiveResultsFilter]);
-    const menuItemsConfig = [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: "Real-time Playwright Test Execution Monitoring & Analysis Overview" },
-        { id: 'live-results', label: 'Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters." },
-        { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance." },
-        { id: 'flaky-tests', label: 'Flaky Tests', icon: Repeat, description: "Analysis of historically flaky tests." },
-        { id: 'failure-categorization', label: 'Failure Categorization', icon: ListX, description: "Categorize and view common failure types." },
-        { id: 'settings', label: 'Settings', icon: Settings, description: "Configure dashboard appearance and preferences." },
+    const allMenuItemsConfig = [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: "Real-time Playwright Test Execution Monitoring & Analysis Overview", labelColorVar: '--sidebar-tab-dashboard-color-hsl' },
+        { id: 'live-results', label: 'Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters.", labelColorVar: '--sidebar-tab-results-color-hsl' },
+        { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance.", labelColorVar: '--sidebar-tab-trends-color-hsl' },
+        { id: 'flaky-tests', label: 'Flaky Tests', icon: Repeat, description: "Analysis of historically flaky tests.", labelColorVar: '--sidebar-tab-flaky-color-hsl' },
+        { id: 'failure-categorization', label: 'Failure Categorization', icon: ListX, description: "Categorize and view common failure types.", labelColorVar: '--sidebar-tab-failures-color-hsl' },
+        { id: 'settings', label: 'Settings', icon: Settings, description: "Configure dashboard appearance and preferences.", labelColorVar: '--sidebar-tab-settings-color-hsl' },
     ];
-    const activeMenuItem = menuItemsConfig.find(item => item.id === activeView);
+    const settingsMenuItem = allMenuItemsConfig.find(item => item.id === 'settings');
+    const mainMenuItems = allMenuItemsConfig.filter(item => item.id !== 'settings');
+    const activeMenuItem = allMenuItemsConfig.find(item => item.id === activeView);
     let componentToRender;
     switch (activeView) {
         case 'dashboard':
@@ -59,29 +61,50 @@ export function PulseDashboard() {
     }
     return (<SidebarProvider defaultOpen>
       <Sidebar collapsible="icon" className="border-r border-sidebar-border shadow-lg">
-        <SidebarHeader className="p-4 flex items-center justify-between border-b border-sidebar-border">
-           <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden" onClick={() => setActiveView('dashboard')}>
-            <Image src="https://i.postimg.cc/FHbZFDxq/pulse-removebg-preview.png" alt="Pulse Dashboard Logo" width={40} height={40} className="rounded-sm" data-ai-hint="pulse logo"/>
-            <h2 className="font-bold text-xl text-sidebar-foreground">Pulse</h2>
+        <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-2 flex items-center justify-between group-data-[collapsible=icon]:justify-center border-b border-sidebar-border">
+           <Link href="/" className="flex items-center" onClick={() => setActiveView('dashboard')}>
+            <Image src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images//pulse-logo.png" alt="Pulse Dashboard Logo" width={120} // Adjusted width for the new logo
+     height={30} // Adjusted height for the new logo
+     style={{ objectFit: 'fill' }} // Ensures the logo scales nicely
+     className="transition-all duration-200" data-ai-hint="pulse logo"/>
           </Link>
-          <SidebarTrigger className="md:hidden group-data-[collapsible=icon]:hidden"/>
+          <SidebarTrigger className="md:hidden"/>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {menuItemsConfig.map(item => (<SidebarMenuItem key={item.id}>
+            {mainMenuItems.map(item => (<SidebarMenuItem key={item.id}>
                 <SidebarMenuButton onClick={() => {
                 setActiveView(item.id);
             }} isActive={activeView === item.id} tooltip={{ children: item.label, side: 'right', align: 'center' }}>
                   <item.icon className="h-5 w-5"/>
-                  <span>{item.label}</span>
+                  <span style={item.labelColorVar ? { color: `hsl(var(${item.labelColorVar}))` } : undefined}>
+                    {item.label}
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="p-4 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden">
-            <p className="text-xs text-muted-foreground">
-              Pulse v1.0
-            </p>
+        <SidebarFooter className="p-2 mt-auto border-t border-sidebar-border">
+          {settingsMenuItem && (<SidebarMenu className="group-data-[collapsible=icon]:py-2">
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => {
+                setActiveView(settingsMenuItem.id);
+            }} isActive={activeView === settingsMenuItem.id} tooltip={{ children: settingsMenuItem.label, side: 'right', align: 'center' }}>
+                  <settingsMenuItem.icon className="h-5 w-5"/>
+                  <span className="group-data-[collapsible=icon]:hidden" style={settingsMenuItem.labelColorVar ? { color: `hsl(var(${settingsMenuItem.labelColorVar}))` } : undefined}>
+                    {settingsMenuItem.label}
+                  </span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>)}
+          <div className="pt-2 group-data-[collapsible=icon]:hidden">
+            <SidebarSeparator className="my-1 group-data-[collapsible=icon]:hidden"/>
+            <div className="flex items-center justify-center gap-1.5 text-xs p-2">
+              <ShieldCheck className="h-3.5 w-3.5 text-sidebar-foreground/70"/>
+              <span className="font-medium text-sidebar-foreground">Pulse</span>
+              <span className="text-muted-foreground/80">v1.0</span>
+            </div>
+          </div>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
@@ -109,7 +132,7 @@ export function PulseDashboard() {
             textAlign: 'center',
             fontFamily: "'Segoe UI', system-ui, sans-serif",
             marginTop: 'auto', // Ensures footer is at the bottom
-        }}>
+        }} className="text-foreground">
             <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -117,7 +140,7 @@ export function PulseDashboard() {
             fontSize: '0.9rem',
             fontWeight: 600,
             letterSpacing: '0.5px',
-        }} className="text-foreground">
+        }}>
               <span>Created by</span>
               <a href="https://github.com/Arghajit47" target="_blank" rel="noopener noreferrer" style={{
             color: linkColor,

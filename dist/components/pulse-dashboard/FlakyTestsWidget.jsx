@@ -8,39 +8,56 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Repeat, Terminal, CheckCircle, XCircle, SkipForward, Clock, CalendarDays, BarChartHorizontalBig } from 'lucide-react';
-import { cn } from '@/lib/utils';
 function StatusBadge({ status }) {
-    let variant = "secondary";
+    let badgeStyle = {};
     let icon = <Clock className="h-3 w-3 mr-1"/>;
     let text = status;
     switch (status) {
         case 'passed':
-            variant = 'default';
-            icon = <CheckCircle className="h-3 w-3 mr-1 text-green-500"/>;
+            badgeStyle = {
+                backgroundColor: 'hsl(var(--chart-3) / 0.1)',
+                color: 'hsl(var(--chart-3))',
+                borderColor: 'hsl(var(--chart-3) / 0.3)'
+            };
+            icon = <CheckCircle className="h-3 w-3 mr-1" style={{ color: 'hsl(var(--chart-3))' }}/>;
             text = "passed";
             break;
         case 'failed':
         case 'timedOut':
-            variant = 'destructive';
-            icon = <XCircle className="h-3 w-3 mr-1"/>;
+            badgeStyle = {
+                backgroundColor: 'hsl(var(--destructive) / 0.1)',
+                color: 'hsl(var(--destructive))',
+                borderColor: 'hsl(var(--destructive) / 0.3)'
+            };
+            icon = <XCircle className="h-3 w-3 mr-1" style={{ color: 'hsl(var(--destructive))' }}/>;
             text = status === 'failed' ? "failed" : "timedOut";
             break;
         case 'skipped':
-            variant = 'outline';
-            icon = <SkipForward className="h-3 w-3 mr-1 text-orange-500"/>;
+            badgeStyle = {
+                backgroundColor: 'hsl(var(--accent) / 0.1)',
+                color: 'hsl(var(--accent))',
+                borderColor: 'hsl(var(--accent) / 0.3)'
+            };
+            icon = <SkipForward className="h-3 w-3 mr-1" style={{ color: 'hsl(var(--accent))' }}/>;
             text = "skipped";
             break;
         case 'pending':
-            icon = <Clock className="h-3 w-3 mr-1 text-blue-500"/>;
+            badgeStyle = {
+                backgroundColor: 'hsl(var(--primary) / 0.1)',
+                color: 'hsl(var(--primary))',
+                borderColor: 'hsl(var(--primary) / 0.3)'
+            };
+            icon = <Clock className="h-3 w-3 mr-1" style={{ color: 'hsl(var(--primary))' }}/>;
             text = "pending";
             break;
+        default:
+            badgeStyle = {
+                backgroundColor: 'hsl(var(--muted) / 0.5)',
+                color: 'hsl(var(--muted-foreground))',
+                borderColor: 'hsl(var(--border))'
+            };
     }
-    return (<Badge variant={variant} className={cn("capitalize text-xs px-2 py-0.5 whitespace-nowrap", {
-            'bg-green-100 text-green-700 border-green-300 dark:bg-green-700/30 dark:text-green-300 dark:border-green-600': status === 'passed',
-            'bg-red-100 text-red-700 border-red-300 dark:bg-red-700/30 dark:text-red-300 dark:border-red-600': status === 'failed' || status === 'timedOut',
-            'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-700/30 dark:text-orange-300 dark:border-orange-600': status === 'skipped',
-            'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-700/30 dark:text-blue-300 dark:border-blue-600': status === 'pending',
-        })}>
+    return (<Badge variant="outline" className="capitalize text-xs px-2 py-0.5 whitespace-nowrap border" style={badgeStyle}>
       {icon}
       {text}
     </Badge>);
@@ -134,10 +151,10 @@ export function FlakyTestsWidget() {
                   </Link>
                   <p className="text-xs text-muted-foreground mt-0.5">Suite: {test.suiteName}</p>
                   <div className="flex flex-wrap gap-2 text-xs mt-2 items-center">
-                    <Badge variant="outline" className="border-green-500 text-green-600">
+                     <Badge variant="outline" style={{ borderColor: 'hsl(var(--chart-3))', color: 'hsl(var(--chart-3))' }}>
                       <CheckCircle className="h-3 w-3 mr-1.5"/> {test.passedCount} Passed
                     </Badge>
-                    <Badge variant="outline" className="border-red-500 text-red-600">
+                     <Badge variant="outline" style={{ borderColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive))' }}>
                       <XCircle className="h-3 w-3 mr-1.5"/> {test.failedCount} Failed
                     </Badge>
                     <Badge variant="secondary">

@@ -40,7 +40,7 @@ export function ansiToHtml(text) {
         '96': 'color:#5ff', // light cyan
         '97': 'color:#fff', // white
     };
-    let currentStylesArray = []; // Store styles as an array to manage order and reset
+    let currentStylesArray = [];
     let html = '';
     let openSpan = false;
     const applyStyles = () => {
@@ -49,7 +49,6 @@ export function ansiToHtml(text) {
             openSpan = false;
         }
         if (currentStylesArray.length > 0) {
-            // Filter out potential empty strings or duplicates if any advanced logic added later
             const styleString = currentStylesArray.filter(s => s).join(';');
             if (styleString) {
                 html += `<span style="${styleString}">`;
@@ -59,23 +58,20 @@ export function ansiToHtml(text) {
     };
     const resetAndApplyNewCodes = (newCodesStr) => {
         const newCodes = newCodesStr.split(';');
-        if (newCodes.includes('0')) { // Full reset
-            currentStylesArray = []; // codes['0'] implies full reset, but we'll explicitly clear
+        if (newCodes.includes('0')) {
+            currentStylesArray = [];
             if (codes['0'])
-                currentStylesArray.push(codes['0']); // Add base reset style
+                currentStylesArray.push(codes['0']);
         }
         for (const code of newCodes) {
             if (code === '0')
-                continue; // Already handled by full reset
+                continue;
             if (codes[code]) {
-                // For simplicity, we'll just add. More complex logic could replace specific properties.
-                // e.g., if 'color:red' exists and 'color:blue' comes, replace.
-                // For now, last one wins if browser merges CSS correctly, or add more specific handling.
-                if (code === '39') { // reset foreground
+                if (code === '39') {
                     currentStylesArray = currentStylesArray.filter(s => !s.startsWith('color:'));
                     currentStylesArray.push('color:inherit');
                 }
-                else if (code === '49') { // reset background
+                else if (code === '49') {
                     currentStylesArray = currentStylesArray.filter(s => !s.startsWith('background-color:'));
                     currentStylesArray.push('background-color:inherit');
                 }
@@ -94,8 +90,6 @@ export function ansiToHtml(text) {
         }
         applyStyles();
     };
-    // Using a simpler regex that captures content between \x1b[...m and the next \x1b[ or end of string.
-    // And also handle isolated reset codes.
     const segments = text.split(/(\x1b\[[0-9;]*m)/g);
     for (const segment of segments) {
         if (!segment)
@@ -119,49 +113,35 @@ export function ansiToHtml(text) {
     }
     return html;
 }
-export function getAssetPath(jsonPath, userProjectDir // e.g., /Users/me/my-playwright-project
-) {
+export function getAssetPath(jsonPath) {
     if (!jsonPath || typeof jsonPath !== 'string' || jsonPath.trim() === '') {
-        return '#';
+        return '#'; // Return a non-functional link for empty/invalid paths
     }
     const trimmedJsonPath = jsonPath.trim().replace(/\\/g, '/');
-    if (trimmedJsonPath.startsWith('data:') || trimmedJsonPath.startsWith('http://') || trimmedJsonPath.startsWith('https://') || trimmedJsonPath.startsWith('file:///')) {
+    // If it's already a fully qualified data URI or HTTP/HTTPS URL, return as is.
+    if (trimmedJsonPath.startsWith('data:') || trimmedJsonPath.startsWith('http://') || trimmedJsonPath.startsWith('https://')) {
         return trimmedJsonPath;
     }
-    if (!userProjectDir) {
-        // Fallback to web path if userProjectDir isn't available for file:///
-        let webPath = trimmedJsonPath;
-        if (webPath.startsWith('/'))
-            webPath = webPath.substring(1);
-        if (!webPath.startsWith('pulse-report/')) {
-            if (webPath.includes('/') && (webPath.startsWith('attachments/') || webPath.startsWith('videos/') || webPath.startsWith('traces/'))) {
-                webPath = `pulse-report/${webPath}`;
-            }
-            else if (!webPath.includes('/')) {
-                webPath = `pulse-report/${webPath}`;
-            }
+    let webPath = trimmedJsonPath;
+    // Remove any leading slashes from jsonPath first to avoid double slashes if pulse-report/ is prepended.
+    if (webPath.startsWith('/')) {
+        webPath = webPath.substring(1);
+    }
+    if (!webPath.startsWith('pulse-report/')) {
+        // If it's 'attachments/foo.png', 'videos/bar.mp4', 'traces/baz.zip'
+        if (webPath.startsWith('attachments/') || webPath.startsWith('videos/') || webPath.startsWith('traces/')) {
+            webPath = `pulse-report/${webPath}`;
         }
-        return `/${webPath}`;
+        else if (!webPath.includes('/')) { // Bare filename e.g. 'screenshot.png'
+            webPath = `pulse-report/attachments/${webPath}`; // Assume it's a screenshot/attachment
+        }
+        else {
+            // Path like 'some_other_folder/image.png' - less common from Playwright.
+            // Prepend pulse-report to be safe, assuming it's relative to the report root.
+            webPath = `pulse-report/${webPath}`;
+        }
     }
-    const normalizedUserProjectDir = userProjectDir.replace(/\\/g, '/');
-    let reportDirBasePath = normalizedUserProjectDir;
-    if (!reportDirBasePath.endsWith('/')) {
-        reportDirBasePath += '/';
-    }
-    // Assuming 'pulse-report' is the direct subdirectory in userProjectDir containing attachments etc.
-    reportDirBasePath += 'pulse-report';
-    let absoluteFsPath = reportDirBasePath;
-    if (!absoluteFsPath.endsWith('/')) {
-        absoluteFsPath += '/';
-    }
-    absoluteFsPath += trimmedJsonPath;
-    absoluteFsPath = absoluteFsPath.replace(/\/\/\/\//g, '//').replace(/\/\/\//g, '/').replace(/\/\//g, '/');
-    if (absoluteFsPath.match(/^[a-zA-Z]:\//)) { // Windows path like C:/...
-        return `file:///${absoluteFsPath}`;
-    }
-    else { // POSIX-like path, ensure it starts with a slash for file:///
-        const finalPath = absoluteFsPath.startsWith('/') ? absoluteFsPath : `/${absoluteFsPath}`;
-        return `file://${finalPath}`; // This will form file:///path/to/file
-    }
+    // Ensure it starts with a single slash for a root-relative URL
+    return webPath.startsWith('/') ? webPath : `/${webPath}`;
 }
 //# sourceMappingURL=utils.js.map

@@ -3,23 +3,22 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle2, XCircle, AlertCircle, Clock, Eye, ChevronRight } from 'lucide-react';
-import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
-import { useTestData } from '@/hooks/useTestData'; // Import useTestData
+import { CheckCircle2, XCircle, AlertCircle, Clock, Eye, ChevronRight, Info } from 'lucide-react';
+import { ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
 function StatusIcon({ status }) {
     switch (status) {
         case 'passed':
-            return <CheckCircle2 className="h-5 w-5 text-green-500"/>;
+            return <CheckCircle2 className="h-5 w-5 text-[hsl(var(--chart-3))]"/>;
         case 'failed':
             return <XCircle className="h-5 w-5 text-destructive"/>;
         case 'skipped':
-            return <AlertCircle className="h-5 w-5 text-accent"/>;
+            return <AlertCircle className="h-5 w-5 text-[hsl(var(--accent))]"/>;
         case 'timedOut':
             return <Clock className="h-5 w-5 text-destructive"/>;
         case 'pending':
             return <Clock className="h-5 w-5 text-primary animate-pulse"/>;
         default:
-            return null;
+            return <Info className="h-5 w-5 text-muted-foreground"/>;
     }
 }
 function formatDuration(ms) {
@@ -33,23 +32,22 @@ function formatTestName(fullName) {
     const parts = fullName.split(" > ");
     return parts[parts.length - 1] || fullName;
 }
-function getStatusBadgeClass(status) {
+function getStatusBadgeStyle(status) {
     switch (status) {
         case 'passed':
-            return 'bg-[hsl(var(--chart-3))] text-primary-foreground hover:bg-[hsl(var(--chart-3))]';
+            return { backgroundColor: 'hsl(var(--chart-3))', color: 'hsl(var(--primary-foreground))' };
         case 'failed':
         case 'timedOut':
-            return 'bg-destructive text-destructive-foreground hover:bg-destructive/90';
+            return { backgroundColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))' };
         case 'skipped':
-            return 'bg-[hsl(var(--accent))] text-accent-foreground hover:bg-[hsl(var(--accent))]';
+            return { backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' };
         case 'pending':
-            return 'bg-primary text-primary-foreground hover:bg-primary/90';
+            return { backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' };
         default:
-            return 'bg-muted text-muted-foreground';
+            return { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' };
     }
 }
 export function TestItem({ test }) {
-    const { userProjectDir } = useTestData(); // Get userProjectDir from the hook
     const currentScreenshots = (test.screenshots || [])
         .map((p) => (typeof p === 'string' ? p.trim() : ''))
         .filter((p) => p && p !== '');
@@ -64,7 +62,7 @@ export function TestItem({ test }) {
           </Link>
         </div>
         <div className="flex items-center space-x-3 ml-2 flex-shrink-0">
-          <Badge className={cn("capitalize text-xs px-2 py-0.5 border-transparent rounded-full", getStatusBadgeClass(test.status))}>
+          <Badge variant="outline" className="capitalize text-xs px-2 py-0.5 rounded-full border" style={getStatusBadgeStyle(test.status)}>
             {test.status}
           </Badge>
           <span className="text-sm text-muted-foreground w-20 text-right">{formatDuration(test.duration)}</span>
@@ -89,11 +87,11 @@ export function TestItem({ test }) {
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
                     {currentScreenshots.slice(0, 4).map((path, index) => {
-                    const imageSrc = getUtilAssetPath(path, userProjectDir);
+                    const imageSrc = getUtilAssetPath(path);
                     if (imageSrc === '#')
                         return null;
                     return (<a key={`img-thumb-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-md overflow-hidden group border hover:border-primary shadow-sm">
-                            <Image src={imageSrc} alt={`Screenshot ${index + 1}`} fill={true} style={{ objectFit: "cover" }} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint="test screenshot thumbnail" unoptimized={imageSrc.startsWith('file:///')}/>
+                            <Image src={imageSrc} alt={`Screenshot ${index + 1}`} fill={true} style={{ objectFit: "cover" }} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint="test screenshot thumbnail"/>
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                 <Eye className="h-6 w-6 text-white"/>
                             </div>

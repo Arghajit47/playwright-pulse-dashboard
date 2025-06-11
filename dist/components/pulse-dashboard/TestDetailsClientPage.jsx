@@ -14,26 +14,24 @@ import { useState, useEffect, useRef } from 'react';
 import { TestStepItemRecursive } from './TestStepItemRecursive';
 import { getRawHistoricalReports } from '@/app/actions';
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend } from 'recharts';
-import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
-import html2canvas from 'html2canvas';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
 const StatusDot = (props) => {
     const { cx, cy, payload } = props;
     if (!cx || !cy || !payload)
         return null;
     let color = 'hsl(var(--muted-foreground))'; // Default color
     if (payload.status === 'passed')
-        color = 'hsl(var(--chart-3))'; // green
+        color = 'hsl(var(--chart-3))';
     else if (payload.status === 'failed' || payload.status === 'timedOut')
-        color = 'hsl(var(--destructive))'; // red
+        color = 'hsl(var(--destructive))';
     else if (payload.status === 'skipped')
-        color = 'hsl(var(--accent))'; // orange
+        color = 'hsl(var(--accent))';
     return <circle cx={cx} cy={cy} r={5} fill={color} stroke="hsl(var(--card))" strokeWidth={1}/>;
 };
 const HistoryTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
-        return (<div className="bg-card p-3 border border-border rounded-lg shadow-lg">
+        return (<div className="custom-recharts-tooltip">
         <p className="label text-sm font-semibold text-foreground">{`Date: ${new Date(data.date).toLocaleDateString()}`}</p>
         <p className="text-xs text-foreground">{`Duration: ${formatDuration(data.duration)}`}</p>
         <p className="text-xs" style={{ color: data.status === 'passed' ? 'hsl(var(--chart-3))' : data.status === 'failed' || data.status === 'timedOut' ? 'hsl(var(--destructive))' : 'hsl(var(--accent))' }}>
@@ -46,17 +44,17 @@ const HistoryTooltip = ({ active, payload, label }) => {
 function StatusIcon({ status }) {
     switch (status) {
         case 'passed':
-            return <CheckCircle2 className="h-6 w-6 text-green-500"/>;
+            return <CheckCircle2 className="h-6 w-6 text-[hsl(var(--chart-3))]"/>;
         case 'failed':
             return <XCircle className="h-6 w-6 text-destructive"/>;
         case 'skipped':
-            return <AlertCircle className="h-6 w-6 text-accent"/>;
+            return <AlertCircle className="h-6 w-6 text-[hsl(var(--accent))]"/>;
         case 'timedOut':
             return <Clock className="h-6 w-6 text-destructive"/>;
         case 'pending':
             return <Clock className="h-6 w-6 text-primary animate-pulse"/>;
         default:
-            return null;
+            return <Info className="h-6 w-6 text-muted-foreground"/>;
     }
 }
 function formatDuration(ms) {
@@ -75,51 +73,29 @@ function formatTestName(fullName) {
     const parts = fullName.split(" > ");
     return parts[parts.length - 1] || fullName;
 }
-function getStatusBadgeClass(status) {
+function getStatusBadgeStyle(status) {
     switch (status) {
         case 'passed':
-            return 'bg-[hsl(var(--chart-3))] text-primary-foreground hover:bg-[hsl(var(--chart-3))]';
+            return { backgroundColor: 'hsl(var(--chart-3))', color: 'hsl(var(--primary-foreground))' };
         case 'failed':
         case 'timedOut':
-            return 'bg-destructive text-destructive-foreground hover:bg-destructive/90';
+            return { backgroundColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))' };
         case 'skipped':
-            return 'bg-[hsl(var(--accent))] text-accent-foreground hover:bg-[hsl(var(--accent))]';
+            return { backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' };
         case 'pending':
-            return 'bg-primary text-primary-foreground hover:bg-primary/90';
+            return { backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' };
         default:
-            return 'bg-muted text-muted-foreground';
+            return { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' };
     }
 }
 export function TestDetailsClientPage({ testId }) {
     const router = useRouter();
-    const { currentRun, loadingCurrent, errorCurrent, userProjectDir } = useTestData();
+    const { currentRun, loadingCurrent, errorCurrent } = useTestData();
     const [test, setTest] = useState(null);
     const [testHistory, setTestHistory] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(true);
     const [errorHistory, setErrorHistory] = useState(null);
     const historyChartRef = useRef(null);
-    const handleDownloadChart = async (chartRef, fileName) => {
-        if (chartRef.current) {
-            try {
-                const canvas = await html2canvas(chartRef.current, {
-                    backgroundColor: null,
-                    logging: false,
-                    useCORS: true,
-                    scale: 2,
-                });
-                const image = canvas.toDataURL('image/png', 1.0);
-                const link = document.createElement('a');
-                link.href = image;
-                link.download = fileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-            catch (err) {
-                console.error('Error downloading chart:', err);
-            }
-        }
-    };
     useEffect(() => {
         if (currentRun?.results) {
             const foundTest = currentRun.results.find((t) => t.id === testId);
@@ -179,7 +155,7 @@ export function TestDetailsClientPage({ testId }) {
           <AlertTitle>Error loading test data</AlertTitle>
           <AlertDescription>{errorCurrent}</AlertDescription>
         </Alert>
-        <Button onClick={() => router.push('/')} variant="outline" className="mt-4 rounded-md">
+        <Button onClick={() => router.push('/')} variant="outline" className="mt-4 rounded-lg">
           <ArrowLeft className="mr-2 h-4 w-4"/> Back
         </Button>
       </div>);
@@ -190,7 +166,7 @@ export function TestDetailsClientPage({ testId }) {
             <AlertTitle>Test Not Found</AlertTitle>
             <AlertDescription>The test with ID '{testId}' could not be found in the current report.</AlertDescription>
         </Alert>
-        <Button onClick={() => router.push('/')} variant="outline" className="mt-6 rounded-md">
+        <Button onClick={() => router.push('/')} variant="outline" className="mt-6 rounded-lg">
           <ArrowLeft className="mr-2 h-4 w-4"/> Back to Dashboard
         </Button>
       </div>);
@@ -207,7 +183,7 @@ export function TestDetailsClientPage({ testId }) {
     if (hasTrace)
         totalAttachmentsCount++;
     return (<div className="container mx-auto px-4 py-8 space-y-6">
-      <Button onClick={() => router.push('/')} variant="outline" size="sm" className="mb-6 rounded-md">
+      <Button onClick={() => router.push('/')} variant="outline" size="sm" className="mb-6 rounded-lg">
         <ArrowLeft className="mr-2 h-4 w-4"/> Back to Dashboard
       </Button>
 
@@ -231,7 +207,7 @@ export function TestDetailsClientPage({ testId }) {
                  </div>
             </div>
             <div className="text-right flex-shrink-0">
-                 <Badge className={cn("capitalize text-sm px-3 py-1 border-transparent rounded-full", getStatusBadgeClass(test.status))}>
+                 <Badge variant="outline" className="capitalize text-sm px-3 py-1 rounded-full border" style={getStatusBadgeStyle(test.status)}>
                     {test.status}
                   </Badge>
                 <p className="text-sm text-muted-foreground mt-1">Duration: {formatDuration(test.duration)}</p>
@@ -287,12 +263,12 @@ export function TestDetailsClientPage({ testId }) {
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
                   {currentScreenshots.length > 0 ? (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {currentScreenshots.map((path, index) => {
-                const imageSrc = getUtilAssetPath(path, userProjectDir);
+                const imageSrc = getUtilAssetPath(path);
                 if (imageSrc === '#') {
                     return null;
                 }
                 return (<a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg">
-                            <Image src={imageSrc} alt={`Screenshot ${index + 1}`} fill={true} style={{ objectFit: "cover" }} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint="test screenshot" unoptimized={imageSrc.startsWith('file:///')}/>
+                            <Image src={imageSrc} alt={`Screenshot ${index + 1}`} fill={true} style={{ objectFit: "cover" }} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint="test screenshot"/>
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2">
                               <p className="text-white text-xs text-center break-all">{`Screenshot ${index + 1}`}</p>
                             </div>
@@ -304,7 +280,7 @@ export function TestDetailsClientPage({ testId }) {
                 <TabsContent value="sub-video" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Video Recording</h3>
                   {hasVideo && test.videoPath ? (<div className="p-4 border rounded-lg bg-muted/30 shadow-sm">
-                      <a href={getUtilAssetPath(test.videoPath, userProjectDir)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base">
+                      <a href={getUtilAssetPath(test.videoPath)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base">
                         <Download className="h-5 w-5 mr-2"/> View/Download Video
                       </a>
                       <p className="text-xs text-muted-foreground mt-2">Path: {test.videoPath}</p>
@@ -318,7 +294,7 @@ export function TestDetailsClientPage({ testId }) {
                 <TabsContent value="sub-trace" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Trace File</h3>
                   {hasTrace && test.tracePath ? (<div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
-                       <a href={getUtilAssetPath(test.tracePath, userProjectDir)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base" download>
+                       <a href={getUtilAssetPath(test.tracePath)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base" download>
                         <Download className="h-5 w-5 mr-2"/> Download Trace File (.zip)
                       </a>
                       <p className="text-xs text-muted-foreground">Path: {test.tracePath}</p>
@@ -365,24 +341,13 @@ export function TestDetailsClientPage({ testId }) {
             </TabsContent>
 
             <TabsContent value="history" className="mt-4 p-4 border rounded-lg bg-card shadow-inner">
-             <TooltipProvider>
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-semibold text-foreground flex items-center">
                   <LineChart className="h-5 w-5 mr-2 text-primary"/>
                   Individual Test Run History
                 </h3>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="outline" size="icon" onClick={() => handleDownloadChart(historyChartRef, `test-history-${testId}.png`)} aria-label="Download Test History Chart" className="rounded-md">
-                        <Download className="h-4 w-4"/>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="rounded-md">
-                      <p>Download as PNG</p>
-                    </TooltipContent>
-                  </Tooltip>
+                {/* Download button removed */}
               </div>
-              </TooltipProvider>
               {loadingHistory && (<div className="space-y-3">
                   <Skeleton className="h-6 w-3/4 rounded-md"/>
                   <Skeleton className="h-64 w-full rounded-lg"/>

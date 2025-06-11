@@ -6,7 +6,6 @@ interface TestDataState {
     loadingHistorical: boolean;
     errorCurrent: string | null;
     errorHistorical: string | null;
-    userProjectDir: string | null;
 }
 export declare function useTestData(): TestDataState;
 export {};
