@@ -376,7 +376,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                   <div className="flex justify-between items-center w-full">
                     <div className="flex-grow min-w-0">
                       <h3 
-                        className="text-lg font-semibold group-hover:opacity-80 transition-opacity truncate" 
+                        className="text-lg font-semibold group-hover:opacity-80 transition-opacity" 
                         title={suite.title}
                         style={{ color: `hsl(var(${suiteColorsCssVars[index % suiteColorsCssVars.length]}))` }}
                       >
@@ -429,3 +429,4 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     </Card>
   );
 }
+
