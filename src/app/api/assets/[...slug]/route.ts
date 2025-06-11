@@ -25,23 +25,25 @@ try {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string[] } }
+  context: { params: { slug: string[] } } // Use 'context' or any other name for the second argument
 ) {
-  console.log(`[API ASSETS] GET request for: ${request.nextUrl.pathname}`);
-  console.log(`[API ASSETS] Params slug:`, params.slug);
+  const slug = context.params.slug; // Then access slug via context.params.slug
+  console.log(`[API ASSETS] Params slug:`, slug);
+  // ...
+  const requestedPathParts = slug; // Use the extracted slug
 
   try {
-    const requestedPathParts = params.slug;
+    const requestedPathParts = slug;
     if (!requestedPathParts || requestedPathParts.length === 0) {
-      console.warn('[API ASSETS] File path (slug) is missing');
-      return new NextResponse('File path is required', { status: 400 });
+      console.warn("[API ASSETS] File path (slug) is missing");
+      return new NextResponse("File path is required", { status: 400 });
     }
-    const relativePath = requestedPathParts.join('/');
+    const relativePath = requestedPathParts.join("/");
     console.log(`[API ASSETS] Relative path from slug: ${relativePath}`);
 
-    if (relativePath.includes('..')) {
+    if (relativePath.includes("..")) {
       console.warn(`[API ASSETS] Invalid path (contains ..): ${relativePath}`);
-      return new NextResponse('Invalid path', { status: 400 });
+      return new NextResponse("Invalid path", { status: 400 });
     }
 
     const filePath = path.join(ATTACHMENTS_BASE_PATH, relativePath);
@@ -50,48 +52,79 @@ export async function GET(
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
       console.log(`[API ASSETS] File FOUND: ${filePath}`);
       const fileBuffer = fs.readFileSync(filePath);
-      const mimeType = mime.lookup(filePath) || 'application/octet-stream';
+      const mimeType = mime.lookup(filePath) || "application/octet-stream";
 
       const headers = new Headers();
-      headers.set('Content-Type', mimeType);
-      headers.set('Content-Length', fileBuffer.length.toString());
+      headers.set("Content-Type", mimeType);
+      headers.set("Content-Length", fileBuffer.length.toString());
 
-      if (path.extname(filePath).toLowerCase() === '.zip') {
-        headers.set('Content-Disposition', `attachment; filename="${path.basename(filePath)}"`);
+      if (path.extname(filePath).toLowerCase() === ".zip") {
+        headers.set(
+          "Content-Disposition",
+          `attachment; filename="${path.basename(filePath)}"`
+        );
       }
       return new NextResponse(fileBuffer, { status: 200, headers: headers });
     } else {
-      console.warn(`[API ASSETS] File does NOT exist or is not a file at: ${filePath}`);
-      
+      console.warn(
+        `[API ASSETS] File does NOT exist or is not a file at: ${filePath}`
+      );
+
       // Log parent directory of the base path
       const projectRootContents = fs.readdirSync(process.cwd());
-      console.log(`[API ASSETS] Contents of Project Root (${process.cwd()}): `, projectRootContents.slice(0,15)); // Log first 15 items
-
+      console.log(
+        `[API ASSETS] Contents of Project Root (${process.cwd()}): `,
+        projectRootContents.slice(0, 15)
+      ); // Log first 15 items
 
       // Log contents of the attachments base path
-      if (fs.existsSync(ATTACHMENTS_BASE_PATH) && fs.statSync(ATTACHMENTS_BASE_PATH).isDirectory()) {
+      if (
+        fs.existsSync(ATTACHMENTS_BASE_PATH) &&
+        fs.statSync(ATTACHMENTS_BASE_PATH).isDirectory()
+      ) {
         const baseDirContents = fs.readdirSync(ATTACHMENTS_BASE_PATH);
-        console.log(`[API ASSETS] Contents of ATTACHMENTS_BASE_PATH (${ATTACHMENTS_BASE_PATH}): `, baseDirContents.slice(0,10)); // Log first 10 items
+        console.log(
+          `[API ASSETS] Contents of ATTACHMENTS_BASE_PATH (${ATTACHMENTS_BASE_PATH}): `,
+          baseDirContents.slice(0, 10)
+        ); // Log first 10 items
       } else {
-        console.warn(`[API ASSETS] ATTACHMENTS_BASE_PATH (${ATTACHMENTS_BASE_PATH}) does not exist or is not a directory when checking contents.`);
+        console.warn(
+          `[API ASSETS] ATTACHMENTS_BASE_PATH (${ATTACHMENTS_BASE_PATH}) does not exist or is not a directory when checking contents.`
+        );
       }
 
       // Log contents of the specific subfolder if possible
       const subfolderPath = path.dirname(filePath);
-      console.log(`[API ASSETS] Checking contents of expected parent directory for the file: ${subfolderPath}`);
-      if (subfolderPath !== ATTACHMENTS_BASE_PATH && fs.existsSync(subfolderPath) && fs.statSync(subfolderPath).isDirectory()) {
+      console.log(
+        `[API ASSETS] Checking contents of expected parent directory for the file: ${subfolderPath}`
+      );
+      if (
+        subfolderPath !== ATTACHMENTS_BASE_PATH &&
+        fs.existsSync(subfolderPath) &&
+        fs.statSync(subfolderPath).isDirectory()
+      ) {
         const subfolderDirContents = fs.readdirSync(subfolderPath);
-        console.log(`[API ASSETS] Contents of ${subfolderPath}: `, subfolderDirContents);
+        console.log(
+          `[API ASSETS] Contents of ${subfolderPath}: `,
+          subfolderDirContents
+        );
       } else if (subfolderPath === ATTACHMENTS_BASE_PATH) {
-        console.log(`[API ASSETS] Expected parent directory is the same as ATTACHMENTS_BASE_PATH. Already logged its contents.`);
+        console.log(
+          `[API ASSETS] Expected parent directory is the same as ATTACHMENTS_BASE_PATH. Already logged its contents.`
+        );
       } else {
-        console.warn(`[API ASSETS] Expected parent directory ${subfolderPath} does not exist or is not a directory.`);
+        console.warn(
+          `[API ASSETS] Expected parent directory ${subfolderPath} does not exist or is not a directory.`
+        );
       }
-      
-      return new NextResponse('File not found', { status: 404 });
+
+      return new NextResponse("File not found", { status: 404 });
     }
   } catch (error: any) {
-    console.error(`[API ASSETS] Error serving asset /api/assets/${params.slug.join('/')}:`, error);
-    return new NextResponse('Internal server error', { status: 500 });
+    console.error(
+      `[API ASSETS] Error serving asset /api/assets/${slug.join("/")}:`,
+      error
+    );
+    return new NextResponse("Internal server error", { status: 500 });
   }
 }
