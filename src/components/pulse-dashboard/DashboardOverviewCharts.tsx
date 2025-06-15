@@ -7,15 +7,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts';
-import { Terminal, CheckCircle, SkipForward, Info, Chrome, Globe, Compass, Users, AlertCircle as AlertTriangleIcon } from 'lucide-react'; // Renamed to avoid conflict
+import { Terminal, CheckCircle, SkipForward, Info, Chrome, Globe, Compass, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import React, { useMemo, useEffect, useState, useCallback } from 'react'; // Added useEffect, useState, useCallback
+import React, { useEffect, useState, useMemo, useCallback } from 'react'; // Import useEffect, useState, useMemo, useCallback
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Highcharts imports for the Gantt chart
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import HighchartsGantt from 'highcharts/modules/gantt'; // Default import
+import HighchartsGantt from 'highcharts/modules/gantt';
+
 
 interface CustomTooltipPayloadItem {
   name?: NameType;
@@ -46,24 +49,27 @@ interface ActiveShapeProps {
   name?: string;
 }
 
+
 interface DashboardOverviewChartsProps {
   currentRun: PlaywrightPulseReport | null;
   loading: boolean;
   error: string | null;
 }
 
+
 const COLORS = {
   passed: 'hsl(var(--chart-3))',
   failed: 'hsl(var(--destructive))',
   skipped: 'hsl(var(--accent))',
-  timedOut: 'hsl(var(--destructive))',
+  timedOut: 'hsl(var(--destructive))', // Same as failed
   pending: 'hsl(var(--muted-foreground))',
   default1: 'hsl(var(--chart-1))',
   default2: 'hsl(var(--chart-2))',
-  default3: 'hsl(var(--chart-4))',
-  default4: 'hsl(var(--chart-5))',
-  default5: 'hsl(var(--chart-3))',
+  default3: 'hsl(var(--chart-4))', // Note: chart-4 is red, destructive is also red. Ensure consistency or differentiation if needed.
+  default4: 'hsl(var(--chart-5))', // Note: chart-5 is yellow, accent is also yellow.
+  default5: 'hsl(var(--chart-3))', // Green
 };
+
 
 function formatDurationForChart(ms: number): string {
   if (ms === 0) return '0s';
@@ -122,6 +128,8 @@ const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps) => {
   return null;
 };
 
+
+
 function normalizeBrowserNameForIcon(rawBrowserName: string | undefined): string {
   if (!rawBrowserName) return 'Unknown';
   const lowerName = rawBrowserName.toLowerCase();
@@ -159,6 +167,7 @@ const BrowserIcon = ({ browserName, className }: { browserName: string, classNam
   }
   return <Globe className={cn("h-4 w-4", className)} />;
 };
+
 
 const ActiveShape = (props: ActiveShapeProps) => {
   const RADIAN = Math.PI / 180;
@@ -208,27 +217,30 @@ const ActiveShape = (props: ActiveShapeProps) => {
   );
 };
 
+
 export function DashboardOverviewCharts({ currentRun, loading, error }: DashboardOverviewChartsProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [ganttInitialized, setGanttInitialized] = useState(false);
+  const [selectedWorkerForGantt, setSelectedWorkerForGantt] = useState<string>('all');
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !ganttInitialized) { // Ensure this runs only on the client and only once
-      if (typeof Highcharts === 'object' && Highcharts) {
+    if (typeof window !== 'undefined' && !ganttInitialized) {
+      if (typeof Highcharts === 'object' && Highcharts && HighchartsGantt) {
         if (typeof HighchartsGantt === 'function') {
           HighchartsGantt(Highcharts);
           setGanttInitialized(true);
-        } else if (typeof (HighchartsGantt as any)?.default === 'function') {
+        } else if (typeof (HighchartsGantt as any).default === 'function') {
           (HighchartsGantt as any).default(Highcharts);
           setGanttInitialized(true);
         } else {
-          console.error('Failed to initialize Highcharts Gantt: Imported HighchartsGantt or its default export is not a function.');
+          console.error('Failed to initialize Highcharts Gantt: HighchartsGantt or HighchartsGantt.default is not a function.');
         }
       } else {
-        console.error('Highcharts object is not available for Gantt initialization.');
+        console.error('Highcharts object or Gantt module is not available for initialization.');
       }
     }
-  }, [ganttInitialized]); // Rerun if ganttInitialized changes (though it's set to true)
+  }, [ganttInitialized]);
+
 
   const onPieEnter = useCallback(
     (_data: PieSectorDataItem, index: number) => {
@@ -238,149 +250,129 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   );
 
   const workerGanttData = useMemo(() => {
-    if (!currentRun?.run || !currentRun.results || !currentRun.run.timestamp) return [];
-    const runStartTime = new Date(currentRun.run.timestamp).getTime();
-    if (isNaN(runStartTime)) return []; // Invalid run start time
+    if (!currentRun?.results) return [];
+    return currentRun.results.filter((t: DetailedTestResult) =>
+      t.workerId !== undefined &&
+      t.startTime && !isNaN(new Date(t.startTime).getTime()) &&
+      typeof t.duration === 'number' && t.duration >= 0 // Allow 0 duration for milestones
+    );
+  }, [currentRun?.results]);
 
-    return currentRun.results
-      .filter((test: DetailedTestResult) =>
-        test.workerId != null &&
-        typeof test.startTime === 'string' && !isNaN(new Date(test.startTime).getTime()) && // Check for valid startTime
-        typeof test.duration === 'number' && test.duration > 0 // Ensure duration is positive
-      )
-      .map((test: DetailedTestResult) => {
-        const testStartTime = new Date(test.startTime).getTime();
-        const startOffset = testStartTime - runStartTime;
+  const workerGanttDataSufficient = workerGanttData.length > 0;
+
+  const allUniqueWorkerIds = useMemo(() => {
+    if (!currentRun?.results) return [];
+    return Array.from(new Set(currentRun.results
+      .map(r => r.workerId)
+      .filter((id): id is string | number => id != null)
+      .map(id => String(id)) 
+    )).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  }, [currentRun?.results]);
+
+  const workerFilterDropdownOptions = useMemo(() => ['all', ...allUniqueWorkerIds], [allUniqueWorkerIds]);
+
+
+  const workerUtilizationOptions = useMemo((): Highcharts.Options => {
+      if (!currentRun?.run || !currentRun.results || !workerGanttDataSufficient) return {};
+
+      const workersToProcess = selectedWorkerForGantt === 'all'
+        ? allUniqueWorkerIds
+        : allUniqueWorkerIds.filter(id => id === selectedWorkerForGantt);
+
+      const seriesData = workersToProcess.map(workerIdStr => {
+          return {
+              type: 'gantt' as const,
+              name: `Worker ${workerIdStr}`,
+              data: currentRun.results
+                  .filter(r => String(r.workerId) === workerIdStr && r.startTime && !isNaN(new Date(r.startTime).getTime()) && typeof r.duration === 'number' && r.duration >= 0)
+                  .map(test => {
+                      const start = new Date(test.startTime).getTime();
+                      return {
+                          id: test.id,
+                          name: formatTestNameForChart(test.name),
+                          start: start,
+                          end: start + test.duration,
+                          color: COLORS[test.status as keyof typeof COLORS] || COLORS.default1,
+                          status: test.status,
+                          milestone: test.duration === 0,
+                          workerId: String(test.workerId), // Add workerId to point options
+                      };
+                  }),
+          };
+      }).filter(series => series.data.length > 0);
+
+
+      if (seriesData.length === 0 && selectedWorkerForGantt !== 'all') {
+        // Highcharts will show "No data to display" if series is empty.
+        // We'll provide a custom message.
         return {
-          id: test.id,
-          name: formatTestNameForChart(test.name),
-          workerId: String(test.workerId!), // Ensure workerId is a string for YAxis categories
-          startOffset: startOffset >= 0 ? startOffset : 0, // Ensure startOffset is not negative
-          duration: test.duration,
-          status: test.status,
-          color: COLORS[test.status as keyof typeof COLORS] || COLORS.default1,
+          title: { text: undefined },
+          series: [],
+          lang: { noData: `No tasks found for Worker ${selectedWorkerForGantt} in this run.` },
+          chart: { backgroundColor: 'transparent', style: { fontFamily: 'inherit' } },
+          credits: { enabled: false },
         };
-      });
-  }, [currentRun]);
+      }
+      
+      return {
+          credits: { enabled: false },
+          title: { text: undefined },
+          chart: {
+            backgroundColor: 'transparent',
+            style: { fontFamily: 'inherit' },
+            height: Math.max(150, workersToProcess.length * 40 + 60),
+          },
+          tooltip: {
+              formatter: function() {
+                  const point = (this as any).point;
+                  const duration = (point.end || 0) - point.start;
+                  const workerDisplayId = point.options?.workerId || point.series?.name?.replace('Worker ', '') || 'N/A';
+                  return `<b>${point.name}</b><br/>Status: ${point.status}<br/>Duration: ${formatDurationForChart(duration)}<br/>Worker: ${workerDisplayId}`;
+              },
+              backgroundColor: 'hsl(var(--card))',
+              borderColor: 'hsl(var(--border))',
+              style: { color: 'hsl(var(--foreground))' },
+          },
+          xAxis: {
+              type: 'datetime',
+              labels: { style: { color: 'hsl(var(--muted-foreground))' } },
+              gridLineColor: 'hsl(var(--border))',
+              min: currentRun.run.timestamp ? new Date(currentRun.run.timestamp).getTime() : undefined,
+          },
+          yAxis: {
+              type: 'category',
+              categories: workersToProcess.map(w => `Worker ${w}`),
+              labels: { style: { color: 'hsl(var(--muted-foreground))' } },
+              gridLineColor: 'hsl(var(--border))',
+              // Ensure at least one category is shown if workersToProcess is empty but we didn't hit the specific "no data for selected worker" case above
+              // This helps Highcharts avoid errors if categories list is empty.
+              min: 0,
+              max: Math.max(0, workersToProcess.length -1),
 
-  const ganttTimeDomain = useMemo(() => {
-    if (workerGanttData.length === 0) return [0, 1000];
-    const maxEndTime = Math.max(0, ...workerGanttData.map(d => d.startOffset + d.duration)); // Ensure non-negative result from Math.max
-    return [0, Math.max(1000, Math.ceil(maxEndTime / 1000) * 1000)]; // Ensure domain is at least 1s
-  }, [workerGanttData]);
-
-  const workerUtilizationOptions = useMemo((): Highcharts.Options | null => {
-    if (!ganttInitialized || !currentRun?.run || !currentRun.results || !workerGanttData.length) {
-      return null;
-    }
-
-    const uniqueWorkers = Array.from(new Set(workerGanttData.map(r => r.workerId))).sort();
-
-    const seriesData = uniqueWorkers.map(workerIdString => ({
-        type: 'gantt' as const,
-        name: `Worker ${workerIdString}`,
-        data: workerGanttData
-            .filter(test => test.workerId === workerIdString)
-            .map(test => {
-                return {
-                    id: test.id,
-                    name: test.name,
-                    start: test.startOffset, // Already relative to run start
-                    end: test.startOffset + test.duration,
-                    color: test.color,
-                    status: test.status,
-                    milestone: test.duration < 50, // Consider very short tests as milestones
-                };
-            }),
-    }));
-
-    return {
-        credits: { enabled: false },
-        title: { text: undefined },
-        chart: {
-          backgroundColor: 'transparent',
-          style: { fontFamily: 'inherit' },
-          height: Math.max(200, uniqueWorkers.length * 40 + 80), // Adjusted height
-          spacingTop: 20,
-        },
-        tooltip: {
-            formatter: function() {
-                const point = (this as any).point;
-                const duration = (point.end || 0) - point.start;
-                return `<b>${point.name}</b><br/>Status: ${point.status}<br/>Duration: ${formatDurationForChart(duration)}`;
-            },
-            backgroundColor: 'hsl(var(--card))',
-            borderColor: 'hsl(var(--border))',
-            style: { color: 'hsl(var(--foreground))' },
-        },
-        xAxis: {
-            type: 'linear', // Using linear for millisecond offsets
-            labels: {
-              style: { color: 'hsl(var(--muted-foreground))' },
-              formatter: function() { return formatDurationForChart((this as any).value); }
-            },
-            gridLineColor: 'hsl(var(--border))',
-            min: 0,
-            max: ganttTimeDomain[1],
-            tickInterval: Math.max(1000, Math.round(ganttTimeDomain[1] / 10 / 1000) * 1000) // Dynamic tick interval
-        },
-        yAxis: {
-            type: 'category',
-            categories: uniqueWorkers.map(w => `Worker ${w}`),
-            labels: { style: { color: 'hsl(var(--muted-foreground))' } },
-            gridLineColor: 'hsl(var(--border))',
-            staticScale: 30, // Height per category
-        },
-        legend: { enabled: false }, // Usually not needed for Gantt if colors are self-explanatory
-        series: seriesData,
-        plotOptions: {
-            gantt: {
-                dataLabels: {
-                    enabled: true,
-                    formatter: function() {
-                        const point = (this as any).point;
-                        if (point.name && point.name.length > 15) return point.name.substring(0, 12) + '...';
-                        return point.name;
-                    },
-                    style: {
-                        fontSize: '8px',
-                        fontWeight: 'normal',
-                        color: 'hsl(var(--foreground))',
-                        textOverflow: 'ellipsis',
-                    },
-                    inside: true,
-                    align: 'left',
-                    padding: 2,
-                },
-                borderRadius: 3,
-                borderWidth: 1,
-                borderColor: 'hsl(var(--border))',
-            }
-        },
-        accessibility: {
-            enabled: true,
-            point: {
-                descriptionFormatter: function (point: any) {
-                    const duration = (point.end || 0) - point.start;
-                    return `${point.name}, worker ${point.yCategory}, from ${formatDurationForChart(point.start)} to ${formatDurationForChart(point.end)}, status ${point.status}.`;
-                }
-            }
-        }
-    };
-  }, [currentRun, workerGanttData, ganttTimeDomain, ganttInitialized]);
+          },
+          legend: {
+              itemStyle: { color: 'hsl(var(--muted-foreground))' },
+              itemHoverStyle: { color: 'hsl(var(--foreground))' },
+          },
+          series: seriesData.length > 0 ? seriesData : [{ type: 'gantt', name: 'No Data', data: [] }], // Provide empty series if no data
+          lang: {
+            noData: "No tasks to display for the selected worker(s)."
+          }
+      };
+  }, [currentRun, workerGanttDataSufficient, selectedWorkerForGantt, allUniqueWorkerIds]);
 
 
   if (loading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
-        {[...Array(6)].map((_, i) => ( // Adjusted to 6 for consistent skeleton count
-          <Card key={i} className="shadow-md">
+        {[...Array(5)].map((_, i) => (
+          <Card key={i} className="shadow-md rounded-xl">
             <CardHeader>
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-1/2 mt-1" />
+              <Skeleton className="h-5 w-3/4 rounded-md" />
+              <Skeleton className="h-4 w-1/2 mt-1 rounded-md" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-48 w-full rounded-lg" />
             </CardContent>
           </Card>
         ))}
@@ -390,7 +382,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   if (error) {
     return (
-      <Alert variant="destructive" className="mt-6">
+      <Alert variant="destructive" className="mt-6 rounded-lg">
         <Terminal className="h-4 w-4" />
         <AlertTitle>Error Loading Chart Data</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
@@ -400,7 +392,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   if (!currentRun || !currentRun.run || !currentRun.results) {
     return (
-      <Alert className="mt-6">
+      <Alert className="mt-6 rounded-lg">
         <Info className="h-4 w-4" />
         <AlertTitle>No Data for Charts</AlertTitle>
         <AlertDescription>Current run data is not available to display charts.</AlertDescription>
@@ -420,6 +412,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   .filter(d => d.value > 0)
   .map(d => ({ ...d, name: d.name, value: d.value, fill: d.fill, percentage: totalTestsForPie > 0 ? ((d.value / totalTestsForPie) * 100).toFixed(1) : '0.0' }));
 
+
   const browserDistributionRaw = currentRun.results.reduce((acc, test: DetailedTestResult) => {
     const browserName = test.browser || 'Unknown';
     if (!acc[browserName]) {
@@ -434,6 +427,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   }, {} as Record<string, { name: string; passed: number; failed: number; skipped: number; pending: number; total: number }>);
 
   const browserChartData = Object.values(browserDistributionRaw).sort((a, b) => b.total - a.total);
+
 
   const failedTestsDurationData = currentRun.results
     .filter((test: DetailedTestResult) => test.status === 'failed' || test.status === 'timedOut')
@@ -464,6 +458,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   const testsPerSuiteChartData = Object.values(suiteDistributionRaw).sort((a, b) => b.total - a.total);
 
+
   const slowestTestsData = [...currentRun.results]
     .sort((a, b) => b.duration - a.duration)
     .slice(0, 5)
@@ -481,60 +476,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const showPendingInBrowserChart = browserChartData.some(d => d.pending > 0);
   const showPendingInSuiteChart = testsPerSuiteChartData.some(s => s.pending > 0);
 
-  // Worker Utilization Alert Logic
-  let workerUtilizationAlert = null;
-  if (!ganttInitialized) {
-    workerUtilizationAlert = (
-      <Alert variant="default" className="border-orange-500/50 bg-orange-50/50 text-orange-700 dark:text-orange-300 dark:bg-orange-900/30">
-        <AlertTriangleIcon className="h-4 w-4 text-orange-500" />
-        <AlertTitle>Worker Chart Initializing</AlertTitle>
-        <AlertDescription>The worker utilization chart is currently initializing Highcharts Gantt.</AlertDescription>
-      </Alert>
-    );
-  } else if (!workerUtilizationOptions || workerGanttData.length === 0) {
-    let alertMessage = "Data for the worker utilization chart could not be generated. This might be due to missing or invalid data in the report.";
-    const issues = [];
-    if (!currentRun?.run?.timestamp || isNaN(new Date(currentRun.run.timestamp).getTime())) {
-      issues.push("Invalid or missing main run timestamp (`run.timestamp`).");
-    }
-    const testsWithMissingWorkerId = currentRun.results.filter(t => t.workerId == null).length;
-    if (testsWithMissingWorkerId > 0) {
-      issues.push(`${testsWithMissingWorkerId} tests are missing 'workerId'.`);
-    }
-    const testsWithInvalidStartTime = currentRun.results.filter(t => typeof t.startTime !== 'string' || isNaN(new Date(t.startTime).getTime())).length;
-    if (testsWithInvalidStartTime > 0) {
-      issues.push(`${testsWithInvalidStartTime} tests have invalid or missing 'startTime'.`);
-    }
-    const testsWithInvalidDuration = currentRun.results.filter(t => typeof t.duration !== 'number' || t.duration <= 0).length;
-    if (testsWithInvalidDuration > 0) {
-      issues.push(`${testsWithInvalidDuration} tests have invalid or zero 'duration'.`);
-    }
-
-    if (issues.length > 0) {
-      alertMessage = "Worker utilization chart cannot be displayed due to the following data issues in 'playwright-pulse-report.json':";
-    }
-
-    workerUtilizationAlert = (
-       <Alert variant="default" className="border-orange-500/50 bg-orange-50/50 text-orange-700 dark:text-orange-300 dark:bg-orange-900/30">
-        <AlertTriangleIcon className="h-4 w-4 text-orange-500" />
-        <AlertTitle>Worker Utilization Data Incomplete</AlertTitle>
-        <AlertDescription>
-          {alertMessage}
-          {issues.length > 0 && (
-            <ul className="list-disc list-inside pl-4 mt-1 text-xs">
-              {issues.map((issue, index) => <li key={index}>{issue}</li>)}
-            </ul>
-          )}
-          <p className="text-xs mt-1">Please ensure each test result includes a valid `workerId`, `startTime` (ISO string), positive `duration` (ms), and the report has a valid `run.timestamp`.</p>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-
   return (
     <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
-      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
@@ -581,7 +525,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">Tests by Browser</CardTitle>
@@ -630,7 +574,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">Failed Tests Duration</CardTitle>
@@ -651,9 +595,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     domain={[0, (dataMax: number) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}
                   />
                   <RechartsRechartsTooltip
-                      content={({ active: tooltipActive, payload: tooltipPayload, label: tooltipLabel }: RechartsTooltipProps ) => {
-                          if (tooltipActive && tooltipPayload && tooltipPayload.length) {
-                              const data = tooltipPayload[0].payload as {duration: number; fullTestName: string;};
+                      content={({ active, payload, label }: RechartsTooltipProps ) => {
+                          if (active && payload && payload.length) {
+                              const data = payload[0].payload as {duration: number; fullTestName: string;};
                               return (
                               <div className="bg-card p-3 border border-border rounded-md shadow-lg">
                                   <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{formatTestNameForChart(data.fullTestName)}</p>
@@ -682,7 +626,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">Slowest Tests (Top 5)</CardTitle>
@@ -708,9 +652,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     domain={[0, (dataMax: number) => dataMax > 0 ? Math.round(dataMax * 1.20) : 100]}
                   />
                   <RechartsRechartsTooltip
-                      content={({ active: tooltipActive, payload: tooltipPayload, label: tooltipLabel }: RechartsTooltipProps) => {
-                          if (tooltipActive && tooltipPayload && tooltipPayload.length) {
-                              const data = tooltipPayload[0].payload as {duration: number; fullTestName: string; status: DetailedTestResult['status']};
+                      content={({ active, payload, label }: RechartsTooltipProps) => {
+                          if (active && payload && payload.length) {
+                              const data = payload[0].payload as {duration: number; fullTestName: string; status: DetailedTestResult['status']};
                               return (
                               <div className="bg-card p-3 border border-border rounded-md shadow-lg">
                                   <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>{formatTestNameForChart(data.fullTestName)}</p>
@@ -739,7 +683,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
@@ -779,37 +723,66 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
+      <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
+        <CardHeader>
+          <div className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg font-semibold text-primary flex items-center">
               <Users className="h-5 w-5 mr-2" /> Worker Utilization
             </CardTitle>
-            <CardDescription className="text-xs">Timeline of test execution per worker for the current run.</CardDescription>
           </div>
-        </CardHeader>
-        <CardContent className="min-h-[250px]">
-          {workerUtilizationAlert ? (
-            workerUtilizationAlert
-          ) : workerUtilizationOptions && ganttInitialized ? (
-            <div className="max-h-[500px] overflow-y-auto pr-1">
-              <HighchartsReact
-                  highcharts={Highcharts}
-                  constructorType={'ganttChart'}
-                  options={workerUtilizationOptions}
-              />
+          <CardDescription className="text-xs">Timeline of test execution per worker.</CardDescription>
+          {workerGanttDataSufficient && allUniqueWorkerIds.length > 0 && (
+            <div className="mt-3 space-y-1">
+              <Label htmlFor="worker-gantt-filter" className="text-sm font-medium text-muted-foreground">Filter by Worker:</Label>
+              <Select value={selectedWorkerForGantt} onValueChange={setSelectedWorkerForGantt}>
+                <SelectTrigger id="worker-gantt-filter" className="w-full md:w-1/2 lg:w-1/3 bg-background shadow-sm rounded-md">
+                  <SelectValue placeholder="Select worker" />
+                </SelectTrigger>
+                <SelectContent className="rounded-md">
+                  {workerFilterDropdownOptions.map(id => (
+                    <SelectItem key={id} value={id}>
+                      {id === 'all' ? 'All Workers' : `Worker ${id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          ) : (
-            <Alert variant="default" className="border-blue-500/50 bg-blue-50/50 text-blue-700 dark:text-blue-300 dark:bg-blue-900/30">
-                <Info className="h-4 w-4 text-blue-500" />
-                <AlertTitle>Preparing Worker Chart</AlertTitle>
-                <AlertDescription>Please wait while the worker utilization chart is being prepared...</AlertDescription>
-            </Alert>
+          )}
+        </CardHeader>
+        <CardContent className="max-h-[500px] overflow-y-auto">
+          {!ganttInitialized && (
+            <Skeleton className="h-[300px] w-full rounded-lg" />
+          )}
+          {ganttInitialized && !workerGanttDataSufficient && (
+             <Alert className="rounded-lg">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Insufficient Data for Worker Utilization</AlertTitle>
+                <AlertDescription>
+                  Not enough valid data (worker ID, start time, duration) found in the current run to generate the worker utilization chart.
+                  Please ensure your report includes these details for your tests.
+                </AlertDescription>
+              </Alert>
+          )}
+          {ganttInitialized && workerGanttDataSufficient && workerUtilizationOptions.series && workerUtilizationOptions.series.length === 0 && selectedWorkerForGantt !== 'all' && (
+             <Alert className="rounded-lg">
+                <Users className="h-4 w-4" />
+                <AlertTitle>No Tasks for Selected Worker</AlertTitle>
+                <AlertDescription>
+                  Worker {selectedWorkerForGantt} has no tasks in this run, or their tasks are not valid for Gantt display.
+                </AlertDescription>
+              </Alert>
+          )}
+          {ganttInitialized && workerGanttDataSufficient && (workerUtilizationOptions.series && workerUtilizationOptions.series.length > 0 || selectedWorkerForGantt === 'all') && (
+            <HighchartsReact
+                highcharts={Highcharts}
+                constructorType={'ganttChart'}
+                options={workerUtilizationOptions}
+            />
           )}
         </CardContent>
       </Card>
+
     </div>
   );
 }
 
-    
