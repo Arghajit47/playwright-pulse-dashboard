@@ -288,14 +288,14 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     
     return currentRun.results
       .filter(test => 
-        test.workerID && 
+        test.workerId && // Use workerId
         test.startTime && 
-        new Date(test.startTime).getTime() > 0 && 
+        new Date(test.startTime).getTime() > 0 && // Make sure startTime is valid
         typeof test.duration === 'number' && 
-        test.duration > 0 
+        test.duration > 0 // Make sure duration is positive
       )
       .map(test => ({
-        workerId: test.workerID!,
+        workerId: String(test.workerId!), // Ensure workerId is a string for YAxis
         testId: test.id,
         testName: formatTestNameForChart(test.name),
         status: test.status,
@@ -310,8 +310,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   
   const ganttTimeDomain = useMemo(() => {
     if (workerGanttData.length === 0) return [0, 1000]; 
-    const maxEndTime = Math.max(...workerGanttData.map(d => d.startOffset + d.duration), 0); // Ensure Math.max has at least one number if array is empty
-    return [0, Math.ceil(maxEndTime / 1000) * 1000 || 1000]; // Ensure a non-zero domain, default to 1s
+    const maxEndTime = Math.max(0, ...workerGanttData.map(d => d.startOffset + d.duration)); 
+    return [0, Math.ceil(maxEndTime / 1000) * 1000 || 1000]; 
   }, [workerGanttData]);
 
   if (loading) {
@@ -730,16 +730,16 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <AlertDescription>
                     Data for the worker utilization chart could not be generated. Please ensure your report includes:
                     <ul className="list-disc list-inside pl-5 mt-1 text-xs">
-                        <li>`workerID` for each test result.</li>
+                        <li>`workerId` for each test result (as string or number).</li>
                         <li>Valid `startTime` (ISO date string) for each test result.</li>
                         <li>`duration` (in ms, greater than 0) for each test result.</li>
                         <li>A valid `timestamp` in the main `run` object of your report.</li>
                     </ul>
-                    {currentRun?.results && currentRun.results.filter(t => !t.workerID).length > 0 && (
-                        <p className="mt-2">Note: {currentRun.results.filter(t => !t.workerID).length} test(s) in this run did not have a `workerID` and cannot be shown in this chart.</p>
+                    {currentRun?.results && currentRun.results.filter(t => !t.workerId).length > 0 && (
+                        <p className="mt-2">Note: {currentRun.results.filter(t => !t.workerId).length} test(s) in this run did not have a `workerId` and cannot be shown in this chart.</p>
                     )}
-                     {currentRun?.results && currentRun.results.filter(t => t.workerID && (!t.startTime || new Date(t.startTime).getTime() <= 0 || typeof t.duration !== 'number' || t.duration <= 0 )).length > 0 && (
-                        <p className="mt-2">Note: Some tests with `workerID` are missing valid `startTime` or `duration &gt; 0` and are excluded.</p>
+                     {currentRun?.results && currentRun.results.filter(t => t.workerId && (!t.startTime || new Date(t.startTime).getTime() <= 0 || typeof t.duration !== 'number' || t.duration <= 0 )).length > 0 && (
+                        <p className="mt-2">Note: Some tests with `workerId` are missing valid `startTime` or `duration &gt; 0` and are excluded.</p>
                     )}
                     {currentRun?.run && isNaN(new Date(currentRun.run.timestamp).getTime()) && (
                         <p className="mt-2">Note: The main run `timestamp` is invalid, preventing relative time calculations.</p>
@@ -747,8 +747,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 </AlertDescription>
             </Alert>
           )}
-          {currentRun?.results && workerGanttData.length > 0 && currentRun.results.filter(t => !t.workerID).length > 0 && (
-               <p className="text-xs text-muted-foreground mt-2">Note: {currentRun.results.filter(t => !t.workerID).length} test(s) did not have a workerID and are not shown.</p>
+          {currentRun?.results && workerGanttData.length > 0 && currentRun.results.filter(t => !t.workerId).length > 0 && ( // Check for workerId
+               <p className="text-xs text-muted-foreground mt-2">Note: {currentRun.results.filter(t => !t.workerId).length} test(s) did not have a workerId and are not shown.</p>
           )}
         </CardContent>
       </Card>

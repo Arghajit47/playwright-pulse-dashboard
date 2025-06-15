@@ -40,7 +40,11 @@ export interface DetailedTestResult {
   screenshots: string[]; // Changed from ScreenshotAttachment[]
   videoPath?: string;
   tracePath?: string;
-  workerID?: string;
+  workerId?: string | number; // Changed from workerID to workerId and allows number
+  // Fields from user sample, not currently used in dashboard UI but good to note
+  totalWorkers?: number;
+  configFile?: string;
+  metadata?: string; // This could be a JSON string or an object, needs clarification if used
 }
 
 // Flexible type for environment information
@@ -72,7 +76,7 @@ export interface PlaywrightPulseReport {
   run: RunMetadata;
   results: DetailedTestResult[];
   metadata: ReportFileMetadata;
-  environment?: EnvironmentInfo;
+  environment?: EnvironmentInfo; // Can also be at the root as per some report structures
 }
 
 export interface HistoricalTrend {
@@ -104,3 +108,4 @@ export interface FlakyTestDetail {
   firstSeen: string;
   lastSeen: string;
 }
+
