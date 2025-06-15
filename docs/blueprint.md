@@ -3,7 +3,7 @@
 ## Core Features:
 
 - Live Results View: Real-time test results fetched from `playwright-pulse-report.json`. Fetches and visualizes data as the file updates, offering an up-to-the-second view of the latest test runs.
-- Trend Analysis: Historical analysis of test runs using data from `trend-*.json` files in the history directory. Generates trend graphs for failures, flakiness, and duration using Highcharts or Recharts.
+- Trend Analysis: Historical analysis of test runs using data from `trend-*.json` files in the history directory. Generates trend graphs for failures, flakiness, and duration using Recharts.
 - Summary Metrics: Presents key metrics at a glance, including total tests, pass/fail rates, and overall duration, via summary cards. Metrics update automatically.
 - Test Details: Shows comprehensive results for individual tests including their status, error messages, and screenshots, within a vertically-oriented, scrolling format.
 - Automatic Data Refresh: Scheduled polling of `playwright-pulse-report.json` (every 5 seconds).
