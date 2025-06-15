@@ -11,9 +11,6 @@ import { Terminal, CheckCircle, SkipForward, Info, Chrome, Globe, Compass, Users
 import { cn } from '@/lib/utils';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
 // Highcharts imports for the Gantt chart
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
@@ -220,7 +217,6 @@ const ActiveShape = (props: ActiveShapeProps) => {
 export function DashboardOverviewCharts({ currentRun, loading, error }: DashboardOverviewChartsProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [ganttInitialized, setGanttInitialized] = useState(false);
-  const [selectedWorkerForGantt, setSelectedWorkerForGantt] = useState<string>('all');
 
   // Move hook definitions to the top
   const workerGanttData = useMemo(() => {
@@ -249,13 +245,22 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   const ganttTimeDomain = useMemo(() => {
     if (workerGanttData.length === 0) return [0, 1000]; // Default if no data
-    const maxEndTime = Math.max(0, ...workerGanttData.map(d => new Date(d.startTime).getTime() + d.duration));
-    const minStartTime = Math.min(Infinity, ...workerGanttData.map(d => new Date(d.startTime).getTime()));
-    if (maxEndTime === 0 && minStartTime === Infinity) return [0,1000];
+    let minStartTime = Infinity;
+    let maxEndTime = 0;
+
+    workerGanttData.forEach(d => {
+        const startTimeMs = new Date(d.startTime).getTime();
+        if (!isNaN(startTimeMs)) {
+            minStartTime = Math.min(minStartTime, startTimeMs);
+            maxEndTime = Math.max(maxEndTime, startTimeMs + (d.duration || 0));
+        }
+    });
+    
+    if (maxEndTime === 0 && minStartTime === Infinity) return [0,1000]; // No valid dates
+    if (minStartTime === maxEndTime) return [minStartTime - 500, maxEndTime + 500]; // Single point, give some buffer
+
     return [minStartTime, maxEndTime];
   }, [workerGanttData]);
-
-  const workerFilterDropdownOptions = useMemo(() => ['all', ...allUniqueWorkerIds], [allUniqueWorkerIds]);
 
 
   useEffect(() => {
@@ -264,8 +269,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     }
     console.log('DashboardOverviewCharts: useEffect for Gantt initialization triggered.');
     console.log('Typeof Highcharts:', typeof Highcharts);
-    console.log('Imported HighchartsGantt module:', HighchartsGantt);
-    console.log('Typeof imported HighchartsGantt module:', typeof HighchartsGantt);
+    console.log('Imported HighchartsGantt (default import):', HighchartsGantt);
+    console.log('Typeof imported HighchartsGantt (default import):', typeof HighchartsGantt);
 
     if (Highcharts && typeof Highcharts === 'object') {
       let initialized = false;
@@ -285,6 +290,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         } catch (e) {
           console.error('Error calling HighchartsGantt.default(Highcharts):', e);
         }
+      } else {
+         console.log('HighchartsGantt is not a function, nor is HighchartsGantt.default. Current value:', HighchartsGantt);
       }
 
       if (initialized) {
@@ -333,15 +340,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         return { series: [], lang: { noData: "Invalid run start time for Gantt chart." } };
       }
 
-      const workersToProcess = selectedWorkerForGantt === 'all'
-        ? allUniqueWorkerIds
-        : allUniqueWorkerIds.filter(id => String(id) === String(selectedWorkerForGantt));
-
-      if (selectedWorkerForGantt !== 'all' && workersToProcess.length === 0) {
-          return { series: [], lang: { noData: `Worker ${selectedWorkerForGantt} not found or has no data.` } };
-      }
-
-      const seriesData = workersToProcess.map(workerIdStr => {
+      const seriesData = allUniqueWorkerIds.map(workerIdStr => {
           const tasksForWorker = currentRun.results
               .filter(r => {
                   const testStartTimeValid = r.startTime && !isNaN(new Date(r.startTime).getTime());
@@ -358,8 +357,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                       color: COLORS[test.status as keyof typeof COLORS] || COLORS.default1,
                       status: test.status,
                       milestone: test.duration === 0,
-                      workerId: String(test.workerId),
-                      y: allUniqueWorkerIds.indexOf(String(workerIdStr))
+                      workerId: String(test.workerId), 
+                      y: allUniqueWorkerIds.indexOf(String(workerIdStr)) 
                   };
               });
           
@@ -372,9 +371,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
 
       if (seriesData.length === 0) {
-        const noDataMessage = selectedWorkerForGantt === 'all' 
-            ? "No tasks found for any worker in this run or tasks are invalid for Gantt display."
-            : `No tasks found for Worker ${selectedWorkerForGantt} in this run or tasks are invalid.`;
+        const noDataMessage = "No tasks found for any worker in this run or tasks are invalid for Gantt display.";
         return {
           title: { text: undefined },
           series: [],
@@ -390,7 +387,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           chart: {
             backgroundColor: 'transparent',
             style: { fontFamily: 'inherit' },
-            height: Math.max(150, workersToProcess.length * 40 + 80),
+            height: Math.max(150, allUniqueWorkerIds.length * 40 + 80),
             zoomType: 'x',
           },
           tooltip: {
@@ -414,26 +411,26 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           },
           yAxis: {
               type: 'category',
-              categories: workersToProcess.map(w => `Worker ${w}`),
+              categories: allUniqueWorkerIds.map(w => `Worker ${w}`),
               labels: { style: { color: 'hsl(var(--muted-foreground))' } },
               gridLineColor: 'hsl(var(--border))',
               min: 0,
-              max: Math.max(0, workersToProcess.length -1),
+              max: Math.max(0, allUniqueWorkerIds.length -1),
               staticScale: 50,
           },
           legend: {
-              enabled: selectedWorkerForGantt === 'all' && workersToProcess.length > 1, 
+              enabled: allUniqueWorkerIds.length > 1, 
               itemStyle: { color: 'hsl(var(--muted-foreground))' },
               itemHoverStyle: { color: 'hsl(var(--foreground))' },
           },
           series: seriesData,
           lang: {
-            noData: "No tasks to display for the selected worker(s)."
+            noData: "No tasks to display for the workers."
           },
           plotOptions: {
             gantt: {
               dataLabels: {
-                enabled: false, // Set to false to hide labels on bars
+                enabled: false,
               },
               pathfinder: {
                 enabled: true 
@@ -441,7 +438,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             }
           }
       };
-  }, [currentRun, ganttDataExistsForAnyWorker, selectedWorkerForGantt, allUniqueWorkerIds, ganttTimeDomain]);
+  }, [currentRun, ganttDataExistsForAnyWorker, allUniqueWorkerIds, ganttTimeDomain]);
 
   if (loading) {
     return (
@@ -812,23 +809,6 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             </CardTitle>
           </div>
           <CardDescription className="text-xs">Timeline of test execution per worker. Uses absolute time based on report. Test names in tooltip.</CardDescription>
-          {allUniqueWorkerIds.length > 0 && (
-            <div className="mt-3 space-y-1">
-              <Label htmlFor="worker-gantt-filter" className="text-sm font-medium text-muted-foreground">Filter by Worker:</Label>
-              <Select value={selectedWorkerForGantt} onValueChange={setSelectedWorkerForGantt}>
-                <SelectTrigger id="worker-gantt-filter" className="w-full md:w-1/2 lg:w-1/3 bg-background shadow-sm rounded-md">
-                  <SelectValue placeholder="Select worker" />
-                </SelectTrigger>
-                <SelectContent className="rounded-md">
-                  {workerFilterDropdownOptions.map(id => (
-                    <SelectItem key={id} value={id}>
-                      {id === 'all' ? 'All Workers' : `Worker ${id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </CardHeader>
         <CardContent className="max-h-[500px] overflow-y-auto">
           {!ganttInitialized && (
@@ -854,7 +834,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <Users className="h-4 w-4" />
                 <AlertTitle>No Tasks to Display</AlertTitle>
                 <AlertDescription>
-                  {workerUtilizationOptions.lang?.noData || "No tasks found for the selected worker(s) or tasks are invalid for Gantt display."}
+                  {workerUtilizationOptions.lang?.noData || "No tasks found for the workers or tasks are invalid for Gantt display."}
                 </AlertDescription>
               </Alert>
           )}
