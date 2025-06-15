@@ -115,7 +115,7 @@ export function SystemInformationWidget({ environmentInfo, loading }: SystemInfo
         </CardTitle>
         <CardDescription className="text-xs">Details about the test execution environment.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3 max-h-96 overflow-y-auto pr-2">
+      <CardContent className="space-y-3 pr-2">
         {Object.entries(environmentInfo).map(([key, value]) => (
           <div key={key} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/30 transition-colors">
             <div className="flex-shrink-0 pt-1">{getIcon(key)}</div>

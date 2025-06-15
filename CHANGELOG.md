@@ -7,17 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.9] - YYYY-MM-DD
+## [0.1.9] - 2025-06-16
+
+### Changed
+- **Worker Utilization Chart (Dashboard Overview)**:
+    - Replaced Highcharts Gantt chart with Google Gantt chart for rendering the worker utilization view.
+    - Y-axis (resource lanes) now displays worker IDs directly. Test names are available in tooltips.
+    - X-axis time legends, grid lines, and current time indicator have been removed for a cleaner visualization.
 
 ### Added
 - "Active Worker Count Over Time" chart added to the Trend Analysis view, visualizing the number of unique workers per historical run.
 - `workerCount` field added to the `HistoricalTrend` type and populated by the `/api/historical-trends` route.
-
-### Changed
-- Trend Analysis view: Replaced the "Flakiness Rate Over Time" chart with the new "Active Worker Count Over Time" chart.
-
-### Removed
-- "Flakiness Rate Over Time" chart from the Trend Analysis view.
 
 ---
 

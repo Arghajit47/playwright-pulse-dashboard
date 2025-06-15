@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { PlaywrightPulseReport, DetailedTestResult } from '@/types/playwright.js';
@@ -7,10 +6,60 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts';
-import { Terminal, CheckCircle, Info, Chrome, Globe, Compass, Users } from 'lucide-react';
+import { Terminal, CheckCircle, Info, Chrome, Globe, Compass, Users, ListFilter, RotateCcw, Search } from 'lucide-react'; // Added Search
 import { cn } from '@/lib/utils';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
+
+// Import UI components for filters
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+// --- FIX: Import Tooltip components for the reset button ---
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+
+interface LazyChartWrapperProps {
+  children: React.ReactNode;
+  placeholderHeight?: string;
+}
+
+const LazyChartWrapper = ({ children, placeholderHeight = '300px' }: LazyChartWrapperProps) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: '0px 0px 200px 0px',
+      }
+    );
+
+    const currentRef = ref.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, []);
+
+  return (
+    <div ref={ref} style={{ minHeight: !isVisible ? placeholderHeight : undefined }}>
+      {isVisible ? children : <Skeleton className="w-full rounded-lg" style={{ height: placeholderHeight }} />}
+    </div>
+  );
+};
 
 
 interface CustomTooltipPayloadItem {
@@ -211,33 +260,92 @@ const ActiveShape = (props: ActiveShapeProps) => {
 
 
 export function DashboardOverviewCharts({ currentRun, loading, error }: DashboardOverviewChartsProps) {
+  const [testNameFilter, setTestNameFilter] = useState('');
+  const [suiteFilter, setSuiteFilter] = useState('all');
+  const [workerFilter, setWorkerFilter] = useState<string[]>([]);
+  
+  const availableSuites = useMemo(() => {
+    if (!currentRun?.results) return [];
+    const suites = new Set(currentRun.results.map(t => t.suiteName).filter(name => name) as string[]);
+    return Array.from(suites).sort();
+  }, [currentRun?.results]);
+
+  const availableWorkers = useMemo(() => {
+    if (!currentRun?.results) return [];
+    
+    const workerIds = currentRun.results
+        .map(t => t.workerId)
+        .filter(id => id != null && id !== '' && String(id) !== '-1') 
+        .map(id => String(id));
+    
+    const uniqueWorkerIds = Array.from(new Set(workerIds));
+    return uniqueWorkerIds.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [currentRun?.results]);
+
+  useEffect(() => {
+    if (availableWorkers.length > 0) {
+      setWorkerFilter(availableWorkers);
+    }
+  }, [availableWorkers]);
 
   const workerDonutData = useMemo(() => {
     if (!currentRun?.results) return [];
 
-    const testsByWorker = currentRun.results.reduce((acc, test) => {
-      const workerId = test.workerId ?? 'unknown';
+    const filteredTests = currentRun.results.filter(test => {
+        const workerIdStr = test.workerId != null ? String(test.workerId) : '';
+
+        if (workerFilter.length > 0 && !workerFilter.includes(workerIdStr)) {
+            return false;
+        }
+        if (suiteFilter !== 'all' && test.suiteName !== suiteFilter) {
+            return false;
+        }
+        if (testNameFilter && !test.name.toLowerCase().includes(testNameFilter.toLowerCase())) {
+            return false;
+        }
+        if (workerIdStr === '-1' || workerIdStr === '') {
+            return false;
+        }
+        return test.startTime && typeof test.duration === 'number';
+    });
+
+    const testsByWorker = filteredTests.reduce((acc, test) => {
+      const workerId = test.workerId != null ? String(test.workerId) : 'unknown';
       if (!acc[workerId]) {
         acc[workerId] = [];
       }
-      // Ensure test has required properties for charting
-      if (test.startTime && typeof test.duration === 'number') {
-          acc[workerId].push(test);
-      }
+      acc[workerId].push(test);
       return acc;
     }, {} as Record<string, DetailedTestResult[]>);
 
     return Object.entries(testsByWorker)
       .map(([workerId, tests]) => ({
         workerId,
-        // Sort tests by start time for chronological order in the donut
         tests: tests.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
         totalDuration: tests.reduce((sum, test) => sum + test.duration, 0)
       }))
-      .sort((a,b) => a.workerId.localeCompare(b.workerId, undefined, { numeric: true })); // Sort workers by ID
-  }, [currentRun?.results]);
+      .sort((a,b) => a.workerId.localeCompare(b.workerId, undefined, { numeric: true }));
+  }, [currentRun?.results, testNameFilter, suiteFilter, workerFilter]);
 
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const onPieEnter = useCallback((_: any, index: number) => {
+    setActiveIndex(index);
+  }, []);
+
+  const onPieMouseLeave = useCallback(() => {
+    setActiveIndex(0);
+  }, []);
+
+  const isFiltered = useMemo(() => {
+    return testNameFilter !== '' || suiteFilter !== 'all' || workerFilter.length !== availableWorkers.length;
+  }, [testNameFilter, suiteFilter, workerFilter, availableWorkers]);
+
+  const handleResetFilters = useCallback(() => {
+    setTestNameFilter('');
+    setSuiteFilter('all');
+    setWorkerFilter(availableWorkers);
+  }, [availableWorkers]);
   
   if (loading) {
     return (
@@ -366,7 +474,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           <div className="w-full h-[280px]">
             {testDistributionData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }} onMouseLeave={onPieMouseLeave}>
                   <Pie
                     activeIndex={activeIndex}
                     activeShape={ActiveShape as any}
@@ -377,7 +485,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     outerRadius={90}
                     dataKey="value"
                     nameKey="name"
-                    
+                    onMouseEnter={onPieEnter}
                     paddingAngle={2}
                     stroke="hsl(var(--card))"
                   >
@@ -609,89 +717,157 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             </CardTitle>
           </div>
           <CardDescription className="text-xs">
-            Donut chart for each worker showing tests in chronological order. Slice size represents test duration.
+            Filter and inspect tests chronologically for each worker. Slice size represents test duration.
           </CardDescription>
         </CardHeader>
         <CardContent>
-  {workerDonutData.length > 0 ? (
-    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-      {workerDonutData.map(({ workerId, tests, totalDuration }) => (
-        workerId !== "-1" && (
-          <div key={workerId} className="flex flex-col items-center">
-            <h4 className="font-semibold text-center mb-2">Worker {workerId}</h4>
-            <div className="w-full h-[250px] relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart>
-                  <Pie
-                    data={tests}
-                    dataKey="duration"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    stroke="hsl(var(--card))"
-                  >
-                    {tests.map((test, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[test.status as keyof typeof COLORS] || COLORS.default1} />
-                    ))}
-                  </Pie>
-                  <RechartsRechartsTooltip
-                    content={({ active, payload }: RechartsTooltipProps) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload as DetailedTestResult;
-                        return (
-                          <div className="bg-background p-3 border border-border rounded-md shadow-lg max-w-sm">
-                            <p className="label text-sm font-semibold text-foreground truncate" title={data.name}>
-                              {formatTestNameForChart(data.name)}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">Suite: {data.suiteName || 'N/A'}</p>
-                            <p className="text-xs" style={{ color: payload[0].color || COLORS.default1 }}>
-                              Status: {data.status}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Duration: {formatDurationForChart(data.duration)}
-                            </p>
-                          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+            <div className="relative w-full sm:max-w-xs">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Filter by test name..."
+                value={testNameFilter}
+                onChange={(e) => setTestNameFilter(e.target.value)}
+                className="pl-8 w-full"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <Select value={suiteFilter} onValueChange={setSuiteFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filter by suite" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Suites</SelectItem>
+                  {availableSuites.map(suite => (
+                    <SelectItem key={suite} value={suite}>{suite}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-[180px] justify-between">
+                    <span>Workers ({workerFilter.length}/{availableWorkers.length})</span>
+                    <ListFilter className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuLabel>Visible Workers</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {availableWorkers.length > 0 ? availableWorkers.map(workerId => (
+                    <DropdownMenuCheckboxItem
+                      key={workerId}
+                      checked={workerFilter.includes(workerId)}
+                      onCheckedChange={(checked) => {
+                        setWorkerFilter(prev => 
+                          checked ? [...prev, workerId] : prev.filter(id => id !== workerId)
                         );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend
-                    iconSize={10}
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
-                    payload={[
-                      { value: 'Passed', type: 'square', id: 'ID01', color: COLORS.passed },
-                      { value: 'Failed', type: 'square', id: 'ID02', color: COLORS.failed },
-                      { value: 'Skipped', type: 'square', id: 'ID03', color: COLORS.skipped }
-                    ]}
-                  />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none" style={{ marginTop: '-20px' }}>
-                <div className="text-xs text-muted-foreground">Total</div>
-                <div className="text-lg font-bold text-foreground">{formatDurationForChart(totalDuration)}</div>
-              </div>
+                      }}
+                    >
+                      Worker {workerId}
+                    </DropdownMenuCheckboxItem>
+                  )) : <DropdownMenuLabel className="font-normal text-muted-foreground">No workers found</DropdownMenuLabel>}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {isFiltered && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={handleResetFilters}>
+                        <RotateCcw className="h-4 w-4" />
+                        <span className="sr-only">Reset Filters</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Reset Filters</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
           </div>
-        )
-      ))}
-    </div>
-  ) : (
-    <Alert className="rounded-lg">
-      <Info className="h-4 w-4" />
-      <AlertTitle>Insufficient Data for Worker Charts</AlertTitle>
-      <AlertDescription>
-        Could not generate worker charts. Ensure tests have a valid 'workerId', 'startTime', and 'duration'.
-      </AlertDescription>
-    </Alert>
-  )}
-</CardContent>
+          
+          {workerDonutData.length > 0 ? (
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {workerDonutData.map(({ workerId, tests, totalDuration }) => (
+                <LazyChartWrapper key={workerId}>
+                  <div className="flex flex-col items-center">
+                    <h4 className="font-semibold text-center mb-2">Worker {workerId}</h4>
+                    <div className="w-full h-[250px] relative">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RechartsPieChart>
+                          <Pie
+                            data={tests}
+                            dataKey="duration"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={2}
+                            stroke="hsl(var(--card))"
+                          >
+                            {tests.map((test, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[test.status as keyof typeof COLORS] || COLORS.default1} />
+                            ))}
+                          </Pie>
+                          <RechartsRechartsTooltip
+                            content={({ active, payload }: RechartsTooltipProps) => {
+                              if (active && payload && payload.length) {
+                                const data = payload[0].payload as DetailedTestResult;
+                                return (
+                                  <div className="bg-background p-3 border border-border rounded-md shadow-lg max-w-sm">
+                                    <p className="label text-sm font-semibold text-foreground truncate" title={data.name}>
+                                      {formatTestNameForChart(data.name)}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-1">Suite: {data.suiteName || 'N/A'}</p>
+                                    <p className="text-xs" style={{ color: payload[0].color || COLORS.default1 }}>
+                                      Status: {data.status}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Duration: {formatDurationForChart(data.duration)}
+                                    </p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Legend
+                            iconSize={10}
+                            layout="horizontal"
+                            verticalAlign="bottom"
+                            align="center"
+                            wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
+                            payload={[
+                              { value: 'Passed', type: 'square', id: 'ID01', color: COLORS.passed },
+                              { value: 'Failed', type: 'square', id: 'ID02', color: COLORS.failed },
+                              { value: 'Skipped', type: 'square', id: 'ID03', color: COLORS.skipped }
+                            ]}
+                          />
+                        </RechartsPieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none" style={{ marginTop: '-20px' }}>
+                        <div className="text-xs text-muted-foreground">Total</div>
+                        <div className="text-lg font-bold text-foreground">{formatDurationForChart(totalDuration)}</div>
+                      </div>
+                    </div>
+                  </div>
+                </LazyChartWrapper>
+              ))}
+            </div>
+          ) : (
+             <div className="flex flex-col items-center justify-center h-[200px] text-center p-4 rounded-lg bg-muted/60">
+                <Info className="h-8 w-8 text-muted-foreground mb-3" />
+                <p className="font-semibold text-foreground">No Matching Data</p>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Adjust your filters or verify the run data.
+                </p>
+            </div>
+          )}
+        </CardContent>
       </Card>
 
 
