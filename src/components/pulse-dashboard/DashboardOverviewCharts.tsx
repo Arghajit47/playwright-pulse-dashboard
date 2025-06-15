@@ -3,14 +3,13 @@
 
 import type { PlaywrightPulseReport, DetailedTestResult } from '@/types/playwright.js';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector, Rectangle } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts'; 
-import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download, Workflow, Users } from 'lucide-react';
+import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import React, { useRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 
 
@@ -48,8 +47,8 @@ interface WorkerGanttBarProps {
   y?: number;
   width?: number;
   height?: number;
-  fill?: string; // from Recharts, but we'll override based on status
-  payload?: GanttChartDataItem; // The specific data item for this bar
+  fill?: string;
+  payload?: GanttChartDataItem; 
 }
 
 interface GanttChartDataItem {
@@ -57,9 +56,8 @@ interface GanttChartDataItem {
   testId: string;
   testName: string;
   status: DetailedTestResult['status'];
-  startOffset: number; // in ms, from run start
-  duration: number; // in ms
-  // 'fill' will be determined by status
+  startOffset: number; 
+  duration: number; 
 }
 
 
@@ -74,13 +72,13 @@ const COLORS = {
   passed: 'hsl(var(--chart-3))',
   failed: 'hsl(var(--destructive))',
   skipped: 'hsl(var(--accent))',
-  timedOut: 'hsl(var(--destructive))', // Same as failed for color
-  pending: 'hsl(var(--muted-foreground))', // Or a theme color like primary
+  timedOut: 'hsl(var(--destructive))', 
+  pending: 'hsl(var(--muted-foreground))', 
   default1: 'hsl(var(--chart-1))',
   default2: 'hsl(var(--chart-2))',
   default3: 'hsl(var(--chart-4))',
   default4: 'hsl(var(--chart-5))',
-  default5: 'hsl(var(--chart-3))', // Example, might be primary or other distinct color
+  default5: 'hsl(var(--chart-3))', 
 };
 
 
@@ -158,15 +156,14 @@ const CustomGanttBar = (props: WorkerGanttBarProps) => {
   const { x = 0, y = 0, width = 0, height = 0, payload } = props;
 
   if (!payload || width === 0) {
-    return null; // Don't render if no payload or zero width
+    return null; 
   }
 
-  let barFill = COLORS.default1; // Default color
+  let barFill = COLORS.default1; 
   if (payload.status) {
     barFill = COLORS[payload.status as keyof typeof COLORS] || COLORS.default1;
   }
   
-  // Ensure width is not negative (can happen with tiny durations and scaling)
   const barWidth = Math.max(0, width);
 
   return (
@@ -284,9 +281,19 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     if (!currentRun?.results || !currentRun.run) return [];
 
     const runStartTime = new Date(currentRun.run.timestamp).getTime();
+    if (isNaN(runStartTime)) {
+        console.warn("[DashboardOverviewCharts] Invalid run timestamp, Gantt chart cannot be generated.");
+        return [];
+    }
     
     return currentRun.results
-      .filter(test => test.workerID && test.startTime && test.duration > 0) // Ensure necessary data exists
+      .filter(test => 
+        test.workerID && 
+        test.startTime && 
+        new Date(test.startTime).getTime() > 0 && 
+        typeof test.duration === 'number' && 
+        test.duration > 0 
+      )
       .map(test => ({
         workerId: test.workerID!,
         testId: test.id,
@@ -300,17 +307,17 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const workerIdsForGantt = useMemo(() => {
     return Array.from(new Set(workerGanttData.map(d => d.workerId))).sort();
   }, [workerGanttData]);
-
+  
   const ganttTimeDomain = useMemo(() => {
-    if (workerGanttData.length === 0) return [0, 1000]; // Default if no data
-    const maxEndTime = Math.max(...workerGanttData.map(d => d.startOffset + d.duration));
-    return [0, Math.ceil(maxEndTime / 1000) * 1000]; // Round up to nearest second
+    if (workerGanttData.length === 0) return [0, 1000]; 
+    const maxEndTime = Math.max(...workerGanttData.map(d => d.startOffset + d.duration), 0); // Ensure Math.max has at least one number if array is empty
+    return [0, Math.ceil(maxEndTime / 1000) * 1000 || 1000]; // Ensure a non-zero domain, default to 1s
   }, [workerGanttData]);
 
   if (loading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
-        {[...Array(5)].map((_, i) => ( // Increased to 5 for worker chart skeleton
+        {[...Array(6)].map((_, i) => (
           <Card key={i} className="shadow-md">
             <CardHeader>
               <Skeleton className="h-5 w-3/4" />
@@ -420,7 +427,6 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   const showPendingInBrowserChart = browserChartData.some(d => d.pending > 0);
   const showPendingInSuiteChart = testsPerSuiteChartData.some(s => s.pending > 0);
-
 
   return (
     <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
@@ -588,7 +594,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                   <XAxis
                     dataKey="name"
                     tickLine={false}
-                    tickFormatter={() => ''} // Hide X-axis labels for this chart, full name in tooltip
+                    tickFormatter={() => ''} 
                     stroke="hsl(var(--muted-foreground))"
                   />
                   <YAxis
@@ -669,28 +675,27 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardContent>
       </Card>
       
-      {/* Worker Utilization Chart */}
-      {workerGanttData.length > 0 && workerIdsForGantt.length > 0 && (
-        <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-primary flex items-center">
-              <Users className="h-5 w-5 mr-2" /> Worker Utilization
-            </CardTitle>
-            <CardDescription className="text-xs">Timeline of test execution per worker.</CardDescription>
-          </CardHeader>
-          <CardContent className="max-h-[500px] overflow-y-auto">
+      <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-primary flex items-center">
+            <Users className="h-5 w-5 mr-2" /> Worker Utilization
+          </CardTitle>
+          <CardDescription className="text-xs">Timeline of test execution per worker.</CardDescription>
+        </CardHeader>
+        <CardContent className="max-h-[500px] overflow-y-auto">
+          {workerGanttData.length > 0 && workerIdsForGantt.length > 0 ? (
             <div className="w-full" style={{ height: Math.max(200, workerIdsForGantt.length * 50 + 60) }}>
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsBarChart
                   data={workerGanttData}
                   layout="vertical"
                   margin={{ top: 5, right: 30, left: 20, bottom: 20 }}
-                  barCategoryGap="20%" // Gap between worker rows
+                  barCategoryGap="20%" 
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis
                     type="number"
-                    dataKey="startOffset" // This isn't directly used for axis scale, domain is set
+                    dataKey="startOffset" 
                     domain={ganttTimeDomain}
                     tickFormatter={(ms) => formatDurationForChart(ms)}
                     stroke="hsl(var(--muted-foreground))"
@@ -713,19 +718,40 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                       { value: 'Skipped', type: 'square', id: 'ID03', color: COLORS.skipped },
                       { value: 'Pending', type: 'square', id: 'ID04', color: COLORS.pending },
                   ]} />
-                  {/* This Bar is what draws the Gantt segments */}
                   <Bar dataKey="duration" name="duration" stackId="a" shape={<CustomGanttBar />} minPointSize={2}>
-                    {/* Cells are not needed here because CustomGanttBar handles fill by status */}
                   </Bar>
                 </RechartsBarChart>
               </ResponsiveContainer>
             </div>
-            {currentRun.results.filter(t => !t.workerID).length > 0 && (
-                 <p className="text-xs text-muted-foreground mt-2">Note: {currentRun.results.filter(t => !t.workerID).length} tests did not have a workerID and are not shown.</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <Alert className="rounded-lg mt-4">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Worker Utilization Chart Not Available</AlertTitle>
+                <AlertDescription>
+                    Data for the worker utilization chart could not be generated. Please ensure your report includes:
+                    <ul className="list-disc list-inside pl-5 mt-1 text-xs">
+                        <li>`workerID` for each test result.</li>
+                        <li>Valid `startTime` (ISO date string) for each test result.</li>
+                        <li>`duration` (in ms, greater than 0) for each test result.</li>
+                        <li>A valid `timestamp` in the main `run` object of your report.</li>
+                    </ul>
+                    {currentRun?.results && currentRun.results.filter(t => !t.workerID).length > 0 && (
+                        <p className="mt-2">Note: {currentRun.results.filter(t => !t.workerID).length} test(s) in this run did not have a `workerID` and cannot be shown in this chart.</p>
+                    )}
+                     {currentRun?.results && currentRun.results.filter(t => t.workerID && (!t.startTime || new Date(t.startTime).getTime() <= 0 || typeof t.duration !== 'number' || t.duration <= 0 )).length > 0 && (
+                        <p className="mt-2">Note: Some tests with `workerID` are missing valid `startTime` or `duration &gt; 0` and are excluded.</p>
+                    )}
+                    {currentRun?.run && isNaN(new Date(currentRun.run.timestamp).getTime()) && (
+                        <p className="mt-2">Note: The main run `timestamp` is invalid, preventing relative time calculations.</p>
+                    )}
+                </AlertDescription>
+            </Alert>
+          )}
+          {currentRun?.results && workerGanttData.length > 0 && currentRun.results.filter(t => !t.workerID).length > 0 && (
+               <p className="text-xs text-muted-foreground mt-2">Note: {currentRun.results.filter(t => !t.workerID).length} test(s) did not have a workerID and are not shown.</p>
+          )}
+        </CardContent>
+      </Card>
 
     </div>
   );
