@@ -1,14 +1,15 @@
 
 'use client';
 
-import type { RunMetadata, PlaywrightPulseReport, EnvironmentInfo } from '@/types/playwright';
+import type { PlaywrightPulseReport } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, XCircle, SkipForward, AlertTriangle, Clock, Terminal, PieChart, BarChart3, ListFilter } from 'lucide-react';
-import { DashboardOverviewCharts } from './DashboardOverviewCharts';
+import { CheckCircle, XCircle, SkipForward, Clock, Terminal, ListFilter } from 'lucide-react';
+// import { DashboardOverviewCharts } from './DashboardOverviewCharts'; // Original import
 import { SystemInformationWidget } from './SystemInformationWidget';
 import type { TestStatusFilter } from './LiveTestResults';
+import dynamic from 'next/dynamic'; // Import next/dynamic
 
 interface SummaryMetricsProps {
   currentRun: PlaywrightPulseReport | null;
@@ -16,6 +17,30 @@ interface SummaryMetricsProps {
   error: string | null;
   onMetricClick?: (filter: TestStatusFilter) => void;
 }
+
+// Dynamically import DashboardOverviewCharts with ssr: false
+const DynamicDashboardOverviewCharts = dynamic(
+  () => import('./DashboardOverviewCharts').then(mod => mod.DashboardOverviewCharts),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
+        {[...Array(6)].map((_, i) => ( // Assuming 6 chart skeletons, matches loader in DashboardOverviewCharts
+          <Card key={`loader-chart-${i}`} className="shadow-lg rounded-xl">
+            <CardHeader>
+              <Skeleton className="h-5 w-3/4 rounded-md" />
+              <Skeleton className="h-4 w-1/2 mt-1 rounded-md" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-48 w-full rounded-lg" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    ),
+  }
+);
+
 
 function formatDuration(ms: number): string {
   if (ms === 0) return '0s';
@@ -32,7 +57,7 @@ function formatDuration(ms: number): string {
 
 export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: SummaryMetricsProps) {
   const runMetadata = currentRun?.run;
-  const environmentData = currentRun?.run?.environment || currentRun?.environment; // Check both locations
+  const environmentData = currentRun?.run?.environment || currentRun?.environment;
 
   if (error && !runMetadata) {
     return (
@@ -61,9 +86,21 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
             </Card>
           ))}
         </div>
-        {/* Skeleton for SystemInfo and Charts */}
         <SystemInformationWidget environmentInfo={null} loading={true} error={null} />
-        <DashboardOverviewCharts currentRun={null} loading={true} error={null} />
+        {/* Skeleton for charts will be handled by DynamicDashboardOverviewCharts's loader */}
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
+            {[...Array(6)].map((_, i) => (
+                <Card key={`skeleton-chart-main-${i}`} className="shadow-lg rounded-xl">
+                    <CardHeader>
+                        <Skeleton className="h-5 w-3/4 rounded-md" />
+                        <Skeleton className="h-4 w-1/2 mt-1 rounded-md" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-48 w-full rounded-lg" />
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
       </>
     );
   }
@@ -125,7 +162,8 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
         )}
       </div>
       <SystemInformationWidget environmentInfo={environmentData} loading={loading} error={error} />
-      <DashboardOverviewCharts currentRun={currentRun} loading={loading} error={error} />
+      <DynamicDashboardOverviewCharts currentRun={currentRun} loading={loading} error={error} />
     </>
   );
 }
+

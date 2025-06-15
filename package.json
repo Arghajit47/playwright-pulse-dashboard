@@ -80,6 +80,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
+    "highcharts": "^12.2.0",
+    "highcharts-react-official": "^3.2.2",
     "lucide-react": "^0.475.0",
     "mime-types": "^3.0.1",
     "next": "15.2.3",
