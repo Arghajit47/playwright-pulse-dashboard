@@ -65,4 +65,3 @@ export async function GET() {
     return NextResponse.json({ message: `Error processing historical trends: ${errorMessage}`, details: String(error) }, { status: 500 });
   }
 }
-

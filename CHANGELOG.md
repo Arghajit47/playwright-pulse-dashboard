@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.9] - 2025-06-12
+## [0.1.9] - YYYY-MM-DD
 
-### Fixed
+### Added
+- "Active Worker Count Over Time" chart added to the Trend Analysis view, visualizing the number of unique workers per historical run.
+- `workerCount` field added to the `HistoricalTrend` type and populated by the `/api/historical-trends` route.
 
-- Fixed Test Details > Attachment [Screenshots, Video, Trace] paths.
+### Changed
+- Trend Analysis view: Replaced the "Flakiness Rate Over Time" chart with the new "Active Worker Count Over Time" chart.
+
+### Removed
+- "Flakiness Rate Over Time" chart from the Trend Analysis view.
 
 ---
 

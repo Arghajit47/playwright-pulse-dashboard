@@ -6,8 +6,9 @@ import type { HistoricalTrend } from '@/types/playwright.js';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar, TooltipProps as RechartsTooltipProps } from 'recharts';
-import { TrendingUp, Terminal, Info, Users } from 'lucide-react'; // Added Users icon
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import type { TooltipProps as RechartsTooltipProps } from 'recharts'; // Keep if used elsewhere, or remove if not
+import { TrendingUp, Terminal, Info, Users } from 'lucide-react'; 
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 
 interface TrendAnalysisProps {
@@ -36,7 +37,7 @@ const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps<ValueTyp
 const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading, error }) => {
   const outcomesChartRef = React.useRef<HTMLDivElement>(null);
   const durationChartRef = React.useRef<HTMLDivElement>(null);
-  const workerCountChartRef = React.useRef<HTMLDivElement>(null); // Ref for the new chart
+  const workerCountChartRef = React.useRef<HTMLDivElement>(null);
 
   const formattedTrends = React.useMemo(() => {
     if (!trends || trends.length === 0) {
@@ -46,7 +47,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
       ...t,
       date: new Date(t.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }),
       durationSeconds: parseFloat((t.duration / 1000).toFixed(2)),
-      // workerCount is already a number or undefined from the API
+      workerCount: t.workerCount // workerCount is already a number or undefined
     }));
   }, [trends]);
 
@@ -61,7 +62,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-8 p-6">
-          {[...Array(3)].map((_, i) => ( // Assuming 2 charts now + 1 if worker data exists
+          {[...Array(3)].map((_, i) => ( 
              <div key={i} className="bg-muted/30 p-4 rounded-lg shadow-inner">
                <Skeleton className="h-6 w-1/3 mb-4 rounded-md bg-muted/50" />
                <Skeleton className="h-64 w-full rounded-md bg-muted/50" />
@@ -181,11 +182,11 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
                     type="monotone" 
                     dataKey="workerCount" 
                     name="Active Workers" 
-                    stroke="hsl(var(--chart-info))" // Using chart-info, or pick another distinct color
+                    stroke="hsl(var(--chart-info))"
                     strokeWidth={2} 
                     dot={{ r: 3 }} 
                     activeDot={{ r: 6 }} 
-                    connectNulls={false} // Or true if you want to connect over missing data points
+                    connectNulls={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
