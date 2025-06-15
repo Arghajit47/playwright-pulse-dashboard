@@ -218,13 +218,12 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const [activeIndex, setActiveIndex] = useState(0);
   const [ganttInitialized, setGanttInitialized] = useState(false);
 
-  // Move hook definitions to the top
   const workerGanttData = useMemo(() => {
     if (!currentRun?.results) return [];
     return currentRun.results.filter((t: DetailedTestResult) =>
       typeof t.workerId !== 'undefined' && t.workerId !== null &&
       t.startTime && !isNaN(new Date(t.startTime).getTime()) &&
-      typeof t.duration === 'number' && t.duration >= 0
+      typeof t.duration === 'number' && t.duration >= 0 // Ensure duration is valid
     );
   }, [currentRun?.results]);
 
@@ -233,7 +232,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     const ids = Array.from(new Set(currentRun.results
       .map(r => r.workerId)
       .filter((id): id is string | number => id != null)
-      .map(id => String(id)) // Ensure worker IDs are strings for consistency
+      .map(id => String(id)) 
     )).sort((a, b) => {
         const numA = parseInt(a, 10);
         const numB = parseInt(b, 10);
@@ -243,8 +242,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     return ids;
   }, [currentRun?.results]);
 
+
   const ganttTimeDomain = useMemo(() => {
-    if (workerGanttData.length === 0) return [0, 1000]; // Default if no data
+    if (workerGanttData.length === 0) return [0, 1000]; 
     let minStartTime = Infinity;
     let maxEndTime = 0;
 
@@ -256,8 +256,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         }
     });
     
-    if (maxEndTime === 0 && minStartTime === Infinity) return [0,1000]; // No valid dates
-    if (minStartTime === maxEndTime) return [minStartTime - 500, maxEndTime + 500]; // Single point, give some buffer
+    if (maxEndTime === 0 && minStartTime === Infinity) return [0,1000]; 
+    if (minStartTime === maxEndTime) return [minStartTime - 500, maxEndTime + 500]; 
 
     return [minStartTime, maxEndTime];
   }, [workerGanttData]);
@@ -269,8 +269,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     }
     console.log('DashboardOverviewCharts: useEffect for Gantt initialization triggered.');
     console.log('Typeof Highcharts:', typeof Highcharts);
-    console.log('Imported HighchartsGantt (default import):', HighchartsGantt);
-    console.log('Typeof imported HighchartsGantt (default import):', typeof HighchartsGantt);
+    console.log('Imported HighchartsGantt (raw import):', HighchartsGantt);
+    console.log('Typeof imported HighchartsGantt (raw import):', typeof HighchartsGantt);
 
     if (Highcharts && typeof Highcharts === 'object') {
       let initialized = false;
@@ -308,7 +308,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
            }
         }
       } else {
-         if (Highcharts.ganttChart) {
+         if (Highcharts.ganttChart) { // Check if already available due to side-effects of import
             console.log('Gantt chart constructor was already available on Highcharts object (possibly due to side-effect import).');
             setGanttInitialized(true);
         } else {
@@ -403,7 +403,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           },
           xAxis: {
               type: 'datetime',
-              labels: { style: { color: 'hsl(var(--muted-foreground))' } },
+              labels: { enabled: false }, // X-axis labels disabled
               gridLineColor: 'hsl(var(--border))',
               min: ganttTimeDomain[0],
               max: ganttTimeDomain[1],
@@ -430,7 +430,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           plotOptions: {
             gantt: {
               dataLabels: {
-                enabled: false,
+                enabled: false, // Test names removed from bars
               },
               pathfinder: {
                 enabled: true 
