@@ -291,7 +291,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           console.error('Error calling HighchartsGantt.default(Highcharts):', e);
         }
       } else {
-         console.log('HighchartsGantt is not a function, nor is HighchartsGantt.default. Current value:', HighchartsGantt);
+         console.log('Re-evaluation: HighchartsGantt is not a function, nor is HighchartsGantt.default. Current value:', HighchartsGantt);
       }
 
       if (initialized) {
@@ -403,11 +403,11 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           },
           xAxis: {
               type: 'datetime',
-              labels: { enabled: false }, // X-axis labels disabled
-              gridLineColor: 'hsl(var(--border))',
+              labels: { enabled: false }, 
+              gridLineWidth: 0, // Remove X-axis grid lines
               min: ganttTimeDomain[0],
               max: ganttTimeDomain[1],
-              currentDateIndicator: true,
+              currentDateIndicator: false, // Remove current date indicator line and text
           },
           yAxis: {
               type: 'category',
@@ -430,7 +430,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           plotOptions: {
             gantt: {
               dataLabels: {
-                enabled: false, // Test names removed from bars
+                enabled: false, 
               },
               pathfinder: {
                 enabled: true 
@@ -851,4 +851,3 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </div>
   );
 }
-
