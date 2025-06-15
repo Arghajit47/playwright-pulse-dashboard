@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Info, GanttChartSquare } from 'lucide-react';
-import React, { useMemo, useEffect } from 'react'; // Added useEffect
+import React, { useMemo, useEffect } from 'react';
 
 // Import Highcharts
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import HighchartsGantt from 'highcharts/modules/gantt';
+import HighchartsGantt from 'highcharts/modules/gantt'; // Default import
 
 // --- Component Props and Data Interfaces ---
 interface DashboardOverviewChartsProps {
@@ -39,15 +39,24 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   // Initialize Gantt module on client-side after component mounts
   useEffect(() => {
     if (typeof window !== 'undefined') { // Ensure this runs only in the browser
-      if (typeof Highcharts === 'object' && Highcharts !== null) {
+      if (typeof Highcharts === 'object' && Highcharts !== null) { // Check if Highcharts main library is loaded
+        // Check if the imported Gantt module is directly a function
         if (typeof HighchartsGantt === 'function') {
           try {
-            HighchartsGantt(Highcharts);
+            HighchartsGantt(Highcharts); // Attempt to initialize
           } catch (e) {
-             console.error('Error applying Highcharts Gantt module:', e);
+             console.error('Error applying Highcharts Gantt module (direct call):', e);
+          }
+        // Check if the imported Gantt module is an object with a .default function property
+        } else if (HighchartsGantt && typeof (HighchartsGantt as any).default === 'function') {
+          try {
+            (HighchartsGantt as any).default(Highcharts); // Attempt to initialize via .default
+          } catch (e) {
+            console.error('Error applying Highcharts Gantt module (.default call):', e);
           }
         } else {
-          console.error('Failed to initialize Highcharts Gantt: Imported HighchartsGantt is not a function.');
+          // If neither of the above, then log the error with more details.
+          console.error('Failed to initialize Highcharts Gantt: Imported module is not a function and has no .default function. Typeof HighchartsGantt:', typeof HighchartsGantt, 'HighchartsGantt value:', HighchartsGantt);
         }
       } else {
         console.error('Highcharts object is not available for Gantt initialization.');
@@ -223,7 +232,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           data: slowestTests.map(t => ({
               y: t.duration,
               color: COLORS[t.status as keyof typeof COLORS] || COLORS.pending,
-              status: t.status 
+              status: t.status
           })),
       };
   }, [currentRun]);
@@ -253,11 +262,11 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           data: slowestTestsChartData.data,
       }]
   }), [highchartsBaseOptions, slowestTestsChartData]);
-  
+
   // --- Chart 5: Tests per Suite (Stacked Bar Chart) ---
   const testsPerSuiteChartData = useMemo(() => {
-    if (!currentRun?.results) return { categories: [], passed: [], failed: [], skipped: [], pending: [] };
-    
+    if (!currentRun?.results) return { categories: [], passed: [], failed: [], skipped: [], pending: [], showPending: false };
+
     const suiteDistributionRaw = currentRun.results.reduce((acc, test: DetailedTestResult) => {
         const suiteName = test.suiteName || 'Unknown Suite';
         if (!acc[suiteName]) {
@@ -321,10 +330,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     if (isNaN(runStartTime)) return [];
 
     return currentRun.results
-      .filter(test => 
-        test.workerId != null && 
+      .filter(test =>
+        test.workerId != null && // Use workerId (lowercase 'd')
         test.startTime && !isNaN(new Date(test.startTime).getTime()) &&
-        typeof test.duration === 'number' && test.duration >= 0 // Ensure duration is non-negative
+        typeof test.duration === 'number' && test.duration >= 0
       )
       .map(test => {
         const testStartTime = new Date(test.startTime).getTime();
@@ -333,21 +342,21 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           id: test.id,
           name: test.name.split(' > ').pop() || test.name,
           workerId: String(test.workerId), // Ensure workerId is string for categories
-          startOffset: startOffset < 0 ? 0 : startOffset, // Ensure no negative start offset
+          startOffset: startOffset < 0 ? 0 : startOffset,
           duration: test.duration,
           color: COLORS[test.status as keyof typeof COLORS] || COLORS.pending,
           status: test.status,
         };
       });
   }, [currentRun]);
-  
+
   const ganttTimeDomain = useMemo(() => {
-    if (workerGanttData.length === 0) return [0, 1000]; // Default if no data
+    if (workerGanttData.length === 0) return [0, 1000];
     const maxEndTime = Math.max(0, ...workerGanttData.map(d => d.startOffset + d.duration));
-    return [0, Math.max(1000, Math.ceil(maxEndTime / 1000) * 1000)]; // Round up to nearest second, ensure min 1s
+    return [0, Math.max(1000, Math.ceil(maxEndTime / 1000) * 1000)];
   }, [workerGanttData]);
-  
-  const workerCategories = useMemo(() => 
+
+  const workerCategories = useMemo(() =>
     Array.from(new Set(workerGanttData.map(d => d.workerId))).sort((a,b) => parseInt(a) - parseInt(b))
   , [workerGanttData]);
 
@@ -355,7 +364,6 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     ...highchartsBaseOptions,
     chart: {
       ...highchartsBaseOptions.chart,
-      // type: 'gantt', // constructorType handles this
       height: Math.max(200, workerCategories.length * 35 + 100)
     },
     title: { text: undefined },
@@ -447,12 +455,12 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
       else if (currentRun.results.some(t => (!t.startTime || isNaN(new Date(t.startTime).getTime())) && (t.workerId != null && typeof t.duration === 'number' && t.duration >=0))) {
         issues.push("some tests have invalid or missing 'startTime'");
       }
-      
+
       if (!hasAnyValidDuration) issues.push("no tests have a valid 'duration'");
       else if (currentRun.results.some(t => (typeof t.duration !== 'number' || t.duration < 0) && (t.workerId != null && t.startTime))) {
         issues.push("some tests have invalid or missing 'duration'");
       }
-      
+
       if (issues.length > 0) {
           ganttAlertMessage = `Data for the worker utilization chart could not be generated. Issues found: ${issues.join(', ')}.`;
       } else if (workerGanttData.length === 0 && currentRun.results.length > 0) {
@@ -462,7 +470,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
       }
     }
   }
-  
+
   // --- Render Logic ---
   if (loading) {
     return (
@@ -496,7 +504,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           </div>
         </CardHeader>
         <CardContent className="h-[300px]">
-            {testDistributionData.length > 0 ? 
+            {testDistributionData.length > 0 ?
                 <HighchartsReact highcharts={Highcharts} options={testDistributionOptions} /> :
                 <div className="flex items-center justify-center h-full"><p className="text-muted-foreground">No data for Test Distribution.</p></div>
             }
@@ -557,10 +565,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         </CardHeader>
         <CardContent className="min-h-[200px] overflow-x-auto">
           {canRenderGantt ? (
-            <HighchartsReact 
-              highcharts={Highcharts} 
-              constructorType={'ganttChart'} 
-              options={workerUtilizationOptions} 
+            <HighchartsReact
+              highcharts={Highcharts}
+              constructorType={'ganttChart'}
+              options={workerUtilizationOptions}
             />
           ) : (
             <Alert className="rounded-lg border-amber-500/50 bg-amber-50 dark:bg-amber-900/20">
