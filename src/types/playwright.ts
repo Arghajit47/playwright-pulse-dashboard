@@ -104,4 +104,3 @@ export interface FlakyTestDetail {
   firstSeen: string;
   lastSeen: string;
 }
-

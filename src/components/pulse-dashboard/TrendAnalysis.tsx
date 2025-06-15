@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import type { TooltipProps as RechartsTooltipProps } from 'recharts'; // Keep if used elsewhere, or remove if not
+import type { TooltipProps as RechartsTooltipProps } from 'recharts';
 import { TrendingUp, Terminal, Info, Users } from 'lucide-react'; 
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 
