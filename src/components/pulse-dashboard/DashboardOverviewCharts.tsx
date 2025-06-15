@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector } from 'recharts';
+import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsRechartsTooltip, Legend, ResponsiveContainer, Cell, LabelList, Sector, Rectangle } from 'recharts';
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts'; 
-import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download } from 'lucide-react';
+import { Terminal, CheckCircle, XCircle, SkipForward, Info, Chrome, Globe, Compass, AlertTriangle, Download, Workflow, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 
 
@@ -28,7 +28,6 @@ interface RechartsTooltipProps {
   label?: string | number;
 }
 
-// Local definition for ActiveShapeProps
 interface ActiveShapeProps {
   cx?: number;
   cy?: number;
@@ -38,10 +37,29 @@ interface ActiveShapeProps {
   startAngle?: number;
   endAngle?: number;
   fill?: string;
-  payload?: PieSectorDataItem; // This is the important part from PieSectorDataItem
+  payload?: PieSectorDataItem;
   percent?: number;
   value?: number;
-  name?: string; // Added name as it's used in ActiveShape text
+  name?: string;
+}
+
+interface WorkerGanttBarProps {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  fill?: string; // from Recharts, but we'll override based on status
+  payload?: GanttChartDataItem; // The specific data item for this bar
+}
+
+interface GanttChartDataItem {
+  workerId: string;
+  testId: string;
+  testName: string;
+  status: DetailedTestResult['status'];
+  startOffset: number; // in ms, from run start
+  duration: number; // in ms
+  // 'fill' will be determined by status
 }
 
 
@@ -56,18 +74,19 @@ const COLORS = {
   passed: 'hsl(var(--chart-3))',
   failed: 'hsl(var(--destructive))',
   skipped: 'hsl(var(--accent))',
-  timedOut: 'hsl(var(--destructive))',
-  pending: 'hsl(var(--muted-foreground))',
+  timedOut: 'hsl(var(--destructive))', // Same as failed for color
+  pending: 'hsl(var(--muted-foreground))', // Or a theme color like primary
   default1: 'hsl(var(--chart-1))',
   default2: 'hsl(var(--chart-2))',
   default3: 'hsl(var(--chart-4))',
   default4: 'hsl(var(--chart-5))',
-  default5: 'hsl(var(--chart-3))',
+  default5: 'hsl(var(--chart-3))', // Example, might be primary or other distinct color
 };
 
 
 function formatDurationForChart(ms: number): string {
   if (ms === 0) return '0s';
+  if (ms < 1000) return `${ms}ms`;
   const seconds = parseFloat((ms / 1000).toFixed(1));
   return `${seconds}s`;
 }
@@ -80,26 +99,26 @@ function formatTestNameForChart(fullName: string): string {
 
 const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps) => {
   if (active && payload && payload.length) {
-    const dataPoint = payload[0].payload as any; // This is the nested payload from the original data array
+    const dataPoint = payload[0].payload as any;
 
     const isStackedBarTooltip = dataPoint && dataPoint.total !== undefined && payload.length > 0;
-    // isPieChartTooltip relies on 'percentage' and 'name' being present on the dataPoint (original data object)
     const isPieChartTooltip = dataPoint && dataPoint.percentage !== undefined && dataPoint.name;
+    const isGanttTooltip = dataPoint && dataPoint.testName && dataPoint.workerId;
 
     let displayTitle: string;
-    if (isPieChartTooltip && dataPoint?.name) {
+    if (isGanttTooltip) {
+      displayTitle = dataPoint.testName;
+    } else if (isPieChartTooltip && dataPoint?.name) {
       displayTitle = dataPoint.name;
     } else if (dataPoint?.fullTestName) {
       displayTitle = formatTestNameForChart(dataPoint.fullTestName);
     } else {
-      displayTitle = String(label); // Fallback for bar charts using axis label
+      displayTitle = String(label); 
     }
     
-    // Fallback if displayTitle ended up as "undefined" but there's a name on the series item
     if (displayTitle === "undefined" && payload[0]?.name !== undefined) {
         displayTitle = String(payload[0].name);
     }
-     // Final safety for "undefined" string, can be made more generic like "Details"
     if (displayTitle === "undefined") {
         displayTitle = "Details"; 
     }
@@ -111,10 +130,18 @@ const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps) => {
         </p>
         {payload.map((entry: CustomTooltipPayloadItem, index: number) => (
           <p key={`item-${index}`} style={{ color: entry.color || (entry.payload as any)?.fill }} className="text-xs">
-            {`${entry.name || 'Value'}: ${entry.value?.toLocaleString()}${entry.unit || ''}`}
+            {isGanttTooltip && entry.name === 'duration' ? 'Duration' : entry.name || 'Value'}:{' '}
+            {isGanttTooltip && entry.name === 'duration' ? formatDurationForChart(entry.value as number) : entry.value?.toLocaleString()}
+            {entry.unit || ''}
             {isPieChartTooltip && dataPoint && entry.name === (dataPoint as any).name && ` (${(dataPoint as any).percentage}%)`}
           </p>
         ))}
+        {isGanttTooltip && dataPoint && (
+          <>
+            <p className="text-xs text-muted-foreground">Worker: {dataPoint.workerId}</p>
+            <p className="text-xs" style={{ color: COLORS[dataPoint.status as keyof typeof COLORS] || COLORS.default1 }}>Status: {dataPoint.status}</p>
+          </>
+        )}
         {isStackedBarTooltip && dataPoint && (
           <p className="text-xs font-bold mt-1 text-foreground">
             Total: {(dataPoint as any).total.toLocaleString()}
@@ -126,6 +153,34 @@ const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps) => {
   return null;
 };
 
+
+const CustomGanttBar = (props: WorkerGanttBarProps) => {
+  const { x = 0, y = 0, width = 0, height = 0, payload } = props;
+
+  if (!payload || width === 0) {
+    return null; // Don't render if no payload or zero width
+  }
+
+  let barFill = COLORS.default1; // Default color
+  if (payload.status) {
+    barFill = COLORS[payload.status as keyof typeof COLORS] || COLORS.default1;
+  }
+  
+  // Ensure width is not negative (can happen with tiny durations and scaling)
+  const barWidth = Math.max(0, width);
+
+  return (
+    <Rectangle
+      x={x}
+      y={y}
+      width={barWidth}
+      height={height}
+      fill={barFill}
+      radius={2} 
+      className="opacity-80 hover:opacity-100 transition-opacity"
+    />
+  );
+};
 
 
 function normalizeBrowserNameForIcon(rawBrowserName: string | undefined): string {
@@ -150,7 +205,6 @@ function normalizeBrowserNameForIcon(rawBrowserName: string | undefined): string
   if (lowerName.includes('safari') || lowerName.includes('webkit')) {
     return 'Safari';
   }
-
   return 'Unknown';
 }
 
@@ -219,13 +273,6 @@ const ActiveShape = (props: ActiveShapeProps) => {
 export function DashboardOverviewCharts({ currentRun, loading, error }: DashboardOverviewChartsProps) {
   const [activeIndex, setActiveIndex] = React.useState(0);
 
-  const testDistributionChartRef = useRef<HTMLDivElement>(null);
-  const browserChartRef = useRef<HTMLDivElement>(null);
-  const failedDurationChartRef = useRef<HTMLDivElement>(null);
-  const slowestTestsChartRef = useRef<HTMLDivElement>(null);
-  const testsPerSuiteChartRef = useRef<HTMLDivElement>(null);
-
-
   const onPieEnter = React.useCallback(
     (_data: PieSectorDataItem, index: number) => {
       setActiveIndex(index);
@@ -233,10 +280,37 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     [setActiveIndex]
   );
 
+  const workerGanttData = useMemo(() => {
+    if (!currentRun?.results || !currentRun.run) return [];
+
+    const runStartTime = new Date(currentRun.run.timestamp).getTime();
+    
+    return currentRun.results
+      .filter(test => test.workerID && test.startTime && test.duration > 0) // Ensure necessary data exists
+      .map(test => ({
+        workerId: test.workerID!,
+        testId: test.id,
+        testName: formatTestNameForChart(test.name),
+        status: test.status,
+        startOffset: new Date(test.startTime).getTime() - runStartTime,
+        duration: test.duration,
+      }));
+  }, [currentRun]);
+
+  const workerIdsForGantt = useMemo(() => {
+    return Array.from(new Set(workerGanttData.map(d => d.workerId))).sort();
+  }, [workerGanttData]);
+
+  const ganttTimeDomain = useMemo(() => {
+    if (workerGanttData.length === 0) return [0, 1000]; // Default if no data
+    const maxEndTime = Math.max(...workerGanttData.map(d => d.startOffset + d.duration));
+    return [0, Math.ceil(maxEndTime / 1000) * 1000]; // Round up to nearest second
+  }, [workerGanttData]);
+
   if (loading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
-        {[...Array(4)].map((_, i) => (
+        {[...Array(5)].map((_, i) => ( // Increased to 5 for worker chart skeleton
           <Card key={i} className="shadow-md">
             <CardHeader>
               <Skeleton className="h-5 w-3/4" />
@@ -276,7 +350,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   const testDistributionData = [
     { name: 'Passed', value: passed, fill: COLORS.passed },
-    { name: 'Failed', value: failed + timedOut, fill: COLORS.failed }, // Combine failed and timedOut
+    { name: 'Failed', value: failed + timedOut, fill: COLORS.failed },
     { name: 'Skipped', value: skipped, fill: COLORS.skipped },
     ...(pending > 0 ? [{ name: 'Pending', value: pending, fill: COLORS.pending }] : []),
   ]
@@ -347,6 +421,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const showPendingInBrowserChart = browserChartData.some(d => d.pending > 0);
   const showPendingInSuiteChart = testsPerSuiteChartData.some(s => s.pending > 0);
 
+
   return (
     <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
       <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -355,10 +430,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Test Distribution</CardTitle>
             <CardDescription className="text-xs">Passed, Failed, Skipped for the current run.</CardDescription>
           </div>
-          {/* Download button removed */}
         </CardHeader>
         <CardContent className="flex justify-center items-center min-h-[280px]">
-          <div ref={testDistributionChartRef} className="w-full h-[280px]">
+          <div className="w-full h-[280px]">
             {testDistributionData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
@@ -403,10 +477,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Tests by Browser</CardTitle>
             <CardDescription className="text-xs">Breakdown of test outcomes per browser.</CardDescription>
           </div>
-          {/* Download button removed */}
         </CardHeader>
         <CardContent>
-          <div ref={browserChartRef} className="w-full h-[250px]">
+          <div className="w-full h-[250px]">
           {browserChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <RechartsBarChart data={browserChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -453,10 +526,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Failed Tests Duration</CardTitle>
             <CardDescription className="text-xs">Duration of failed or timed out tests (Top 10).</CardDescription>
           </div>
-           {/* Download button removed */}
         </CardHeader>
         <CardContent>
-          <div ref={failedDurationChartRef} className="w-full h-[250px]">
+          <div className="w-full h-[250px]">
             {failedTestsDurationData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsBarChart data={failedTestsDurationData} margin={{ top: 5, right: 5, left: 5, bottom: 60 }}>
@@ -506,10 +578,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Slowest Tests (Top 5)</CardTitle>
             <CardDescription className="text-xs">Top 5 longest running tests in this run. Full names in tooltip.</CardDescription>
           </div>
-           {/* Download button removed */}
         </CardHeader>
         <CardContent>
-          <div ref={slowestTestsChartRef} className="w-full h-[250px]">
+          <div className="w-full h-[250px]">
             {slowestTestsData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsBarChart data={slowestTestsData} margin={{ top: 5, right: 5, left: 5, bottom: 30 }}>
@@ -517,7 +588,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                   <XAxis
                     dataKey="name"
                     tickLine={false}
-                    tickFormatter={() => ''}
+                    tickFormatter={() => ''} // Hide X-axis labels for this chart, full name in tooltip
                     stroke="hsl(var(--muted-foreground))"
                   />
                   <YAxis
@@ -564,10 +635,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
             <CardTitle className="text-lg font-semibold text-foreground">Tests per Suite</CardTitle>
             <CardDescription className="text-xs">Breakdown of test outcomes per suite.</CardDescription>
           </div>
-          {/* Download button removed */}
         </CardHeader>
         <CardContent className="max-h-[400px] overflow-y-auto">
-          <div ref={testsPerSuiteChartRef} className="w-full" style={{ height: Math.max(250, testsPerSuiteChartData.length * 45 + 60) }}> {/* Adjusted height for potentially more bars */}
+          <div className="w-full" style={{ height: Math.max(250, testsPerSuiteChartData.length * 45 + 60) }}>
           {testsPerSuiteChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <RechartsBarChart data={testsPerSuiteChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -598,8 +668,67 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           </div>
         </CardContent>
       </Card>
+      
+      {/* Worker Utilization Chart */}
+      {workerGanttData.length > 0 && workerIdsForGantt.length > 0 && (
+        <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-primary flex items-center">
+              <Users className="h-5 w-5 mr-2" /> Worker Utilization
+            </CardTitle>
+            <CardDescription className="text-xs">Timeline of test execution per worker.</CardDescription>
+          </CardHeader>
+          <CardContent className="max-h-[500px] overflow-y-auto">
+            <div className="w-full" style={{ height: Math.max(200, workerIdsForGantt.length * 50 + 60) }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsBarChart
+                  data={workerGanttData}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 20, bottom: 20 }}
+                  barCategoryGap="20%" // Gap between worker rows
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis
+                    type="number"
+                    dataKey="startOffset" // This isn't directly used for axis scale, domain is set
+                    domain={ganttTimeDomain}
+                    tickFormatter={(ms) => formatDurationForChart(ms)}
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={10}
+                    label={{ value: "Time from run start", position: 'insideBottom', offset: -10, fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <YAxis
+                    dataKey="workerId"
+                    type="category"
+                    domain={workerIdsForGantt}
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={10}
+                    width={80}
+                    interval={0}
+                  />
+                  <RechartsRechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.1 }} />
+                  <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} payload={[
+                      { value: 'Passed', type: 'square', id: 'ID01', color: COLORS.passed },
+                      { value: 'Failed/TimedOut', type: 'square', id: 'ID02', color: COLORS.failed },
+                      { value: 'Skipped', type: 'square', id: 'ID03', color: COLORS.skipped },
+                      { value: 'Pending', type: 'square', id: 'ID04', color: COLORS.pending },
+                  ]} />
+                  {/* This Bar is what draws the Gantt segments */}
+                  <Bar dataKey="duration" name="duration" stackId="a" shape={<CustomGanttBar />} minPointSize={2}>
+                    {/* Cells are not needed here because CustomGanttBar handles fill by status */}
+                  </Bar>
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            </div>
+            {currentRun.results.filter(t => !t.workerID).length > 0 && (
+                 <p className="text-xs text-muted-foreground mt-2">Note: {currentRun.results.filter(t => !t.workerID).length} tests did not have a workerID and are not shown.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
     </div>
   );
 }
 
+    

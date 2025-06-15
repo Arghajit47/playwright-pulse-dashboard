@@ -28,8 +28,8 @@ export interface DetailedTestResult {
   suiteName: string;
   status: 'passed' | 'failed' | 'skipped' | 'timedOut' | 'pending';
   duration: number;
-  startTime: string;
-  endTime: string;
+  startTime: string; // ISO string
+  endTime: string;   // ISO string
   browser: string;
   retries: number;
   steps: TestStep[];
@@ -40,6 +40,12 @@ export interface DetailedTestResult {
   screenshots: string[]; // Changed from ScreenshotAttachment[]
   videoPath?: string;
   tracePath?: string;
+  workerID?: string;
+}
+
+// Flexible type for environment information
+export interface EnvironmentInfo {
+  [key: string]: string | number | boolean | EnvironmentInfo | undefined | null | string[] | Record<string, string | number | boolean>;
 }
 
 export interface RunMetadata {
@@ -50,21 +56,23 @@ export interface RunMetadata {
   failed: number;
   skipped: number;
   duration: number;
-  timedOut?: number; 
-  pending?: number; 
-  flakinessRate?: number; // Added flakinessRate here
-  userProjectDir?: string; // Path to the user's project root
+  timedOut?: number;
+  pending?: number;
+  flakinessRate?: number;
+  userProjectDir?: string;
+  environment?: EnvironmentInfo;
 }
 
 export interface ReportFileMetadata {
   generatedAt: string;
-  userProjectDir?: string; // Path to the user's project root (where pulse-report is)
+  userProjectDir?: string;
 }
 
 export interface PlaywrightPulseReport {
   run: RunMetadata;
   results: DetailedTestResult[];
   metadata: ReportFileMetadata;
+  environment?: EnvironmentInfo;
 }
 
 export interface HistoricalTrend {
@@ -75,6 +83,7 @@ export interface HistoricalTrend {
   skipped: number;
   duration: number;
   flakinessRate?: number;
+  workerCount?: number; // Added workerCount
 }
 
 export interface FlakyTestOccurrence {
@@ -86,12 +95,13 @@ export interface FlakyTestDetail {
   id: string;
   name: string;
   suiteName: string;
-  occurrences: FlakyTestOccurrence[]; // Chronologically sorted
+  occurrences: FlakyTestOccurrence[];
   passedCount: number;
-  failedCount: number; // includes timedOut
+  failedCount: number;
   skippedCount: number;
   pendingCount: number;
   totalRuns: number;
   firstSeen: string;
   lastSeen: string;
 }
+

@@ -1,13 +1,14 @@
 
 'use client';
 
-import type { RunMetadata, PlaywrightPulseReport } from '@/types/playwright';
+import type { RunMetadata, PlaywrightPulseReport, EnvironmentInfo } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle, XCircle, SkipForward, AlertTriangle, Clock, Terminal, PieChart, BarChart3, ListFilter } from 'lucide-react';
 import { DashboardOverviewCharts } from './DashboardOverviewCharts';
-import type { TestStatusFilter } from './LiveTestResults'; // Assuming TestStatusFilter is exported
+import { SystemInformationWidget } from './SystemInformationWidget';
+import type { TestStatusFilter } from './LiveTestResults';
 
 interface SummaryMetricsProps {
   currentRun: PlaywrightPulseReport | null;
@@ -31,8 +32,9 @@ function formatDuration(ms: number): string {
 
 export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: SummaryMetricsProps) {
   const runMetadata = currentRun?.run;
+  const environmentData = currentRun?.run?.environment || currentRun?.environment; // Check both locations
 
-  if (error && !runMetadata) { // Only show top-level error if no data at all
+  if (error && !runMetadata) {
     return (
       <Alert variant="destructive" className="col-span-full md:col-span-2 lg:col-span-5">
         <Terminal className="h-4 w-4" />
@@ -44,20 +46,25 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
 
   if (loading && !runMetadata) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        {[...Array(5)].map((_, i) => (
-          <Card key={i} className="shadow-lg rounded-xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <Skeleton className="h-5 w-24" />
-              <Skeleton className="h-6 w-6" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
-              <Skeleton className="h-4 w-32 mt-1" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <Card key={i} className="shadow-lg rounded-xl">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-6 w-6" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-4 w-32 mt-1" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        {/* Skeleton for SystemInfo and Charts */}
+        <SystemInformationWidget environmentInfo={null} loading={true} error={null} />
+        <DashboardOverviewCharts currentRun={null} loading={true} error={null} />
+      </>
     );
   }
   
@@ -102,7 +109,7 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
             </CardContent>
           </Card>
         ))}
-         {loading && runMetadata && ( // Show skeleton for cards if data is partially loaded
+         {loading && runMetadata && ( 
           [...Array(5 - metrics.length)].map((_, i) => (
             <Card key={`loading-${i}`} className="shadow-lg rounded-xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -117,6 +124,7 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
           ))
         )}
       </div>
+      <SystemInformationWidget environmentInfo={environmentData} loading={loading} error={error} />
       <DashboardOverviewCharts currentRun={currentRun} loading={loading} error={error} />
     </>
   );

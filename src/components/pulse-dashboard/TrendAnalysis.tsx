@@ -4,11 +4,10 @@
 import * as React from 'react';
 import type { HistoricalTrend } from '@/types/playwright.js';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar, TooltipProps as RechartsTooltipProps } from 'recharts';
-import { TrendingUp, Terminal, Download, Info } from 'lucide-react';
+import { TrendingUp, Terminal, Info, Users } from 'lucide-react'; // Added Users icon
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 
 interface TrendAnalysisProps {
@@ -37,7 +36,7 @@ const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps<ValueTyp
 const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading, error }) => {
   const outcomesChartRef = React.useRef<HTMLDivElement>(null);
   const durationChartRef = React.useRef<HTMLDivElement>(null);
-  const flakinessChartRef = React.useRef<HTMLDivElement>(null);
+  const workerCountChartRef = React.useRef<HTMLDivElement>(null); // Ref for the new chart
 
   const formattedTrends = React.useMemo(() => {
     if (!trends || trends.length === 0) {
@@ -47,9 +46,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
       ...t,
       date: new Date(t.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }),
       durationSeconds: parseFloat((t.duration / 1000).toFixed(2)),
-      flakinessPercent: t.flakinessRate !== undefined && t.flakinessRate !== null
-        ? parseFloat((t.flakinessRate * 100).toFixed(1))
-        : undefined,
+      // workerCount is already a number or undefined from the API
     }));
   }, [trends]);
 
@@ -64,7 +61,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-8 p-6">
-          {[...Array(3)].map((_, i) => (
+          {[...Array(3)].map((_, i) => ( // Assuming 2 charts now + 1 if worker data exists
              <div key={i} className="bg-muted/30 p-4 rounded-lg shadow-inner">
                <Skeleton className="h-6 w-1/3 mb-4 rounded-md bg-muted/50" />
                <Skeleton className="h-64 w-full rounded-md bg-muted/50" />
@@ -107,6 +104,7 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
     );
   }
 
+  const workerCountDataAvailable = formattedTrends.some(t => typeof t.workerCount === 'number' && t.workerCount > 0);
 
   return (
     <Card className="shadow-xl rounded-xl backdrop-blur-md bg-card/80 border-border/50">
@@ -120,7 +118,6 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
         <div>
           <div className="flex justify-between items-center mb-4">
             <h4 className="text-xl font-semibold text-foreground">Test Outcomes Over Time</h4>
-            {/* Download button removed */}
           </div>
           <div ref={outcomesChartRef} className="w-full h-[350px] bg-muted/30 p-4 rounded-lg shadow-inner">
             <ResponsiveContainer width="100%" height="100%">
@@ -142,7 +139,6 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
         <div>
           <div className="flex justify-between items-center mb-4">
             <h4 className="text-xl font-semibold text-foreground">Test Duration Over Time</h4>
-            {/* Download button removed */}
           </div>
           <div ref={durationChartRef} className="w-full h-[350px] bg-muted/30 p-4 rounded-lg shadow-inner">
             <ResponsiveContainer width="100%" height="100%">
@@ -157,25 +153,46 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
             </ResponsiveContainer>
           </div>
         </div>
-
-        {formattedTrends.some(t => t.flakinessPercent !== undefined) && (
+        
+        {workerCountDataAvailable && (
            <div>
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-xl font-semibold text-foreground">Flakiness Rate Over Time</h4>
-             {/* Download button removed */}
+              <h4 className="text-xl font-semibold text-foreground flex items-center">
+                <Users className="h-5 w-5 mr-2 text-primary" /> Active Worker Count Over Time
+              </h4>
             </div>
-            <div ref={flakinessChartRef} className="w-full h-[350px] bg-muted/30 p-4 rounded-lg shadow-inner">
+            <div ref={workerCountChartRef} className="w-full h-[350px] bg-muted/30 p-4 rounded-lg shadow-inner">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={formattedTrends} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <LineChart 
+                    data={formattedTrends.filter(t => typeof t.workerCount === 'number')} 
+                    margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} unit="%" name="Percentage" />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))" 
+                    tick={{ fontSize: 12 }} 
+                    allowDecimals={false} 
+                    domain={['dataMin', 'dataMax']}
+                  />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', fillOpacity: 0.2 }}/>
                   <Legend wrapperStyle={{fontSize: "12px", paddingTop: "10px"}} />
-                  <Line type="monotone" dataKey="flakinessPercent" name="Flakiness Rate (%)" stroke="hsl(var(--chart-info))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 6 }} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="workerCount" 
+                    name="Active Workers" 
+                    stroke="hsl(var(--chart-info))" // Using chart-info, or pick another distinct color
+                    strokeWidth={2} 
+                    dot={{ r: 3 }} 
+                    activeDot={{ r: 6 }} 
+                    connectNulls={false} // Or true if you want to connect over missing data points
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Note: This chart shows the number of unique worker IDs detected in each historical run. Runs without worker information will not be plotted.
+            </p>
           </div>
         )}
 
@@ -186,4 +203,3 @@ const TrendAnalysisComponent: React.FC<TrendAnalysisProps> = ({ trends, loading,
 
 export const TrendAnalysis = React.memo(TrendAnalysisComponent);
 TrendAnalysis.displayName = 'TrendAnalysis';
-
