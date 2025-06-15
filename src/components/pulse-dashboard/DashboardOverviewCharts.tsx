@@ -17,7 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 // Highcharts imports for the Gantt chart
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import HighchartsGantt from 'highcharts/modules/gantt'; // Default import for the Gantt module
+import HighchartsGantt from 'highcharts/modules/gantt';
+
 
 interface CustomTooltipPayloadItem {
   name?: NameType;
@@ -221,30 +222,62 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const [ganttInitialized, setGanttInitialized] = useState(false);
   const [selectedWorkerForGantt, setSelectedWorkerForGantt] = useState<string>('all');
 
+  // Move hook definitions to the top
+  const workerGanttData = useMemo(() => {
+    if (!currentRun?.results) return [];
+    return currentRun.results.filter((t: DetailedTestResult) =>
+      typeof t.workerId !== 'undefined' && t.workerId !== null &&
+      t.startTime && !isNaN(new Date(t.startTime).getTime()) &&
+      typeof t.duration === 'number' && t.duration >= 0
+    );
+  }, [currentRun?.results]);
+
+  const allUniqueWorkerIds = useMemo(() => {
+    if (!currentRun?.results) return [];
+    const ids = Array.from(new Set(currentRun.results
+      .map(r => r.workerId)
+      .filter((id): id is string | number => id != null)
+      .map(id => String(id)) // Ensure worker IDs are strings for consistency
+    )).sort((a, b) => {
+        const numA = parseInt(a, 10);
+        const numB = parseInt(b, 10);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return a.localeCompare(b);
+    });
+    return ids;
+  }, [currentRun?.results]);
+
+  const ganttTimeDomain = useMemo(() => {
+    if (workerGanttData.length === 0) return [0, 1000]; // Default if no data
+    const maxEndTime = Math.max(0, ...workerGanttData.map(d => new Date(d.startTime).getTime() + d.duration));
+    const minStartTime = Math.min(Infinity, ...workerGanttData.map(d => new Date(d.startTime).getTime()));
+    if (maxEndTime === 0 && minStartTime === Infinity) return [0,1000];
+    return [minStartTime, maxEndTime];
+  }, [workerGanttData]);
+
+  const workerFilterDropdownOptions = useMemo(() => ['all', ...allUniqueWorkerIds], [allUniqueWorkerIds]);
+
+
   useEffect(() => {
     if (ganttInitialized || typeof window === 'undefined') {
       return;
     }
-  
     console.log('DashboardOverviewCharts: useEffect for Gantt initialization triggered.');
     console.log('Typeof Highcharts:', typeof Highcharts);
-    // HighchartsGantt is the default import from 'highcharts/modules/gantt'
-    console.log('Value of imported HighchartsGantt module:', HighchartsGantt);
+    console.log('Imported HighchartsGantt module:', HighchartsGantt);
     console.log('Typeof imported HighchartsGantt module:', typeof HighchartsGantt);
-  
+
     if (Highcharts && typeof Highcharts === 'object') {
       let initialized = false;
       if (typeof HighchartsGantt === 'function') {
         try {
-          HighchartsGantt(Highcharts); // Call the imported initializer
+          HighchartsGantt(Highcharts);
           initialized = true;
           console.log('Highcharts Gantt module initialized by calling the default import.');
         } catch (e) {
           console.error('Error calling HighchartsGantt(Highcharts):', e);
         }
       } else if (HighchartsGantt && typeof (HighchartsGantt as any).default === 'function') {
-        // This case handles scenarios where the module might be wrapped,
-        // and the actual initializer is on the .default property.
         try {
           (HighchartsGantt as any).default(Highcharts);
           initialized = true;
@@ -253,37 +286,32 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           console.error('Error calling HighchartsGantt.default(Highcharts):', e);
         }
       }
-  
+
       if (initialized) {
-        // Verify by checking for the ganttChart constructor
         if (typeof Highcharts.ganttChart === 'function') {
           setGanttInitialized(true);
           console.log('Highcharts.ganttChart constructor found. Gantt initialization confirmed.');
         } else {
-          // This is a fallback, means the explicit call didn't attach ganttChart as expected.
-          // It might be that simply importing 'highcharts/modules/gantt' was enough for side-effects.
           console.warn('Gantt module was called, but Highcharts.ganttChart is still not a function. Checking if already available due to side-effects.');
-           if (Highcharts.ganttChart) { // Re-check, maybe it appeared
+           if (Highcharts.ganttChart) {
              setGanttInitialized(true);
              console.log('Highcharts.ganttChart constructor now found. Gantt initialization confirmed.');
            } else {
-             console.error('Highcharts.ganttChart is NOT a function even after attempted initializations.');
+             console.error('Re-evaluation: Highcharts.ganttChart is NOT a function even after attempted initializations.');
            }
         }
       } else {
-        // This means neither HighchartsGantt nor HighchartsGantt.default was a function.
-        // Check if ganttChart is already on Highcharts (e.g. from side effect import if bundler handled it)
          if (Highcharts.ganttChart) {
             console.log('Gantt chart constructor was already available on Highcharts object (possibly due to side-effect import).');
             setGanttInitialized(true);
         } else {
-            console.error('Re-checked: Failed to initialize Highcharts Gantt. The imported module (HighchartsGantt) and its .default property are not functions. Value of HighchartsGantt:', HighchartsGantt);
+            console.error('Re-evaluation: Failed to initialize Highcharts Gantt: HighchartsGantt or HighchartsGantt.default is not a function.');
         }
       }
     } else {
-      console.error('Highcharts object itself is not available for Gantt initialization.');
+      console.error('Highcharts object or Gantt module is not available for initialization.');
     }
-  }, [ganttInitialized]); // ganttInitialized ensures this runs once after successful init or first attempt
+  }, [ganttInitialized]);
 
   const onPieEnter = useCallback(
     (_data: PieSectorDataItem, index: number) => {
@@ -292,34 +320,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     [setActiveIndex]
   );
 
-  const workerGanttData = useMemo(() => {
-    if (!currentRun?.results) return [];
-    return currentRun.results.filter((t: DetailedTestResult) =>
-      typeof t.workerId !== 'undefined' && t.workerId !== null &&
-      t.startTime && !isNaN(new Date(t.startTime).getTime()) &&
-      typeof t.duration === 'number' && t.duration >= 0 
-    );
-  }, [currentRun?.results]);
-
   const ganttDataExistsForAnyWorker = workerGanttData.length > 0 && currentRun?.run?.timestamp && !isNaN(new Date(currentRun.run.timestamp).getTime());
-
-  const allUniqueWorkerIds = useMemo(() => {
-    if (!currentRun?.results) return [];
-    const ids = Array.from(new Set(currentRun.results
-      .map(r => r.workerId)
-      .filter((id): id is string | number => id != null)
-      .map(id => String(id))
-    )).sort((a, b) => {
-        const numA = parseInt(a, 10);
-        const numB = parseInt(b, 10);
-        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-        return a.localeCompare(b); // Fallback to string comparison if not numbers
-    });
-    console.log("Unique Worker IDs for Gantt:", ids);
-    return ids;
-  }, [currentRun?.results]);
-
-  const workerFilterDropdownOptions = useMemo(() => ['all', ...allUniqueWorkerIds], [allUniqueWorkerIds]);
 
   const workerUtilizationOptions = useMemo((): Highcharts.Options => {
       if (!currentRun?.run || !currentRun.results || !ganttDataExistsForAnyWorker) {
@@ -352,13 +353,13 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                   return {
                       id: test.id,
                       name: formatTestNameForChart(test.name),
-                      start: testStartTime, // Use absolute time for Highcharts Gantt
+                      start: testStartTime,
                       end: testStartTime + test.duration,
                       color: COLORS[test.status as keyof typeof COLORS] || COLORS.default1,
                       status: test.status,
                       milestone: test.duration === 0,
                       workerId: String(test.workerId),
-                      y: allUniqueWorkerIds.indexOf(String(workerIdStr)) // Ensure correct 'y' for Highcharts category
+                      y: allUniqueWorkerIds.indexOf(String(workerIdStr))
                   };
               });
           
@@ -389,7 +390,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           chart: {
             backgroundColor: 'transparent',
             style: { fontFamily: 'inherit' },
-            height: Math.max(150, workersToProcess.length * 40 + 80), // Adjusted height
+            height: Math.max(150, workersToProcess.length * 40 + 80),
             zoomType: 'x',
           },
           tooltip: {
@@ -407,20 +408,21 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
               type: 'datetime',
               labels: { style: { color: 'hsl(var(--muted-foreground))' } },
               gridLineColor: 'hsl(var(--border))',
-              min: runStartTime, // Use absolute run start time as min
+              min: ganttTimeDomain[0],
+              max: ganttTimeDomain[1],
               currentDateIndicator: true,
           },
           yAxis: {
               type: 'category',
-              categories: workersToProcess.map(w => `Worker ${w}`), // Categories for the y-axis
+              categories: workersToProcess.map(w => `Worker ${w}`),
               labels: { style: { color: 'hsl(var(--muted-foreground))' } },
               gridLineColor: 'hsl(var(--border))',
               min: 0,
               max: Math.max(0, workersToProcess.length -1),
-              staticScale: 50, // Height per category
+              staticScale: 50,
           },
           legend: {
-              enabled: true, // Show legend if multiple workers or if desired
+              enabled: selectedWorkerForGantt === 'all' && workersToProcess.length > 1, 
               itemStyle: { color: 'hsl(var(--muted-foreground))' },
               itemHoverStyle: { color: 'hsl(var(--foreground))' },
           },
@@ -431,26 +433,15 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           plotOptions: {
             gantt: {
               dataLabels: {
-                enabled: true,
-                format: '{point.name}',
-                style: {
-                  fontSize: '10px',
-                  fontWeight: 'normal',
-                  textOutline: 'none',
-                  color: 'hsl(var(--foreground))'
-                },
-                align: 'left',
-                inside: true,
-                padding: 2,
-                allowOverlap: true,
+                enabled: false, // Set to false to hide labels on bars
               },
               pathfinder: {
-                enabled: true // Enable pathfinder for dependency lines if you add them later
+                enabled: true 
               }
             }
           }
       };
-  }, [currentRun, ganttDataExistsForAnyWorker, selectedWorkerForGantt, allUniqueWorkerIds]);
+  }, [currentRun, ganttDataExistsForAnyWorker, selectedWorkerForGantt, allUniqueWorkerIds, ganttTimeDomain]);
 
   if (loading) {
     return (
@@ -820,8 +811,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
               <Users className="h-5 w-5 mr-2" /> Worker Utilization
             </CardTitle>
           </div>
-          <CardDescription className="text-xs">Timeline of test execution per worker. Uses absolute time based on report.</CardDescription>
-          {allUniqueWorkerIds.length > 0 && ( // Show filter only if there are workers
+          <CardDescription className="text-xs">Timeline of test execution per worker. Uses absolute time based on report. Test names in tooltip.</CardDescription>
+          {allUniqueWorkerIds.length > 0 && (
             <div className="mt-3 space-y-1">
               <Label htmlFor="worker-gantt-filter" className="text-sm font-medium text-muted-foreground">Filter by Worker:</Label>
               <Select value={selectedWorkerForGantt} onValueChange={setSelectedWorkerForGantt}>
@@ -880,3 +871,4 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </div>
   );
 }
+
