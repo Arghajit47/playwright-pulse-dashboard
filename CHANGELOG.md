@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2025-06-17
+
+### Changed
+- **Worker Utilization View (Dashboard Overview)**:
+    - Replaced the previous Gantt chart implementation (which had used Highcharts and briefly Google Charts) with individual Donut Charts for each worker, rendered using Recharts.
+    - Each donut chart visualizes the tests run by a specific worker. Slices within the donut represent individual test durations and are colored according to test status (Passed, Failed, Skipped).
+    - Tooltips on donut chart segments now display test name, suite name, status, and duration for clarity.
+
+### Added
+- **Advanced Filtering for Worker Donut Charts (Dashboard Overview)**:
+    - Introduced a "Filter by test name" input field.
+    - Added a "Filter by suite" dropdown.
+    - Implemented a "Visible Workers" dropdown checklist to dynamically show/hide donut charts for specific workers.
+    - Included a "Reset Filters" button to clear all active filters for the worker utilization section.
+
+### Removed
+- **Highcharts Library**: Completely removed the Highcharts library and its Gantt chart module as a dependency, as it's no longer used for worker utilization or other charts. This simplifies the overall charting stack.
+
+---
+
 ## [0.1.9] - 2025-06-16
 
 ### Changed
@@ -133,3 +153,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI entry script: `bin/pulse-dashboard.js`.
 - Basic config files (`package.json`, `tsconfig`, etc.).
 - Initial component structure and layout.
+
