@@ -9,7 +9,7 @@ import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, X
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts';
 import { Terminal, CheckCircle, SkipForward, Info, Chrome, Globe, Compass, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import React, { useEffect, useState, useMemo, useCallback } from 'react'; // Import useEffect, useState, useMemo, useCallback
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent.d.ts';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,8 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 // Highcharts imports for the Gantt chart
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import HighchartsGantt from 'highcharts/modules/gantt';
-
+import HighchartsGantt from 'highcharts/modules/gantt'; // Default import for the Gantt module
 
 interface CustomTooltipPayloadItem {
   name?: NameType;
@@ -61,13 +60,13 @@ const COLORS = {
   passed: 'hsl(var(--chart-3))',
   failed: 'hsl(var(--destructive))',
   skipped: 'hsl(var(--accent))',
-  timedOut: 'hsl(var(--destructive))', // Same as failed
+  timedOut: 'hsl(var(--destructive))',
   pending: 'hsl(var(--muted-foreground))',
   default1: 'hsl(var(--chart-1))',
   default2: 'hsl(var(--chart-2))',
-  default3: 'hsl(var(--chart-4))', // Note: chart-4 is red, destructive is also red. Ensure consistency or differentiation if needed.
-  default4: 'hsl(var(--chart-5))', // Note: chart-5 is yellow, accent is also yellow.
-  default5: 'hsl(var(--chart-3))', // Green
+  default3: 'hsl(var(--chart-4))',
+  default4: 'hsl(var(--chart-5))',
+  default5: 'hsl(var(--chart-3))',
 };
 
 
@@ -127,7 +126,6 @@ const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps) => {
   }
   return null;
 };
-
 
 
 function normalizeBrowserNameForIcon(rawBrowserName: string | undefined): string {
@@ -224,23 +222,68 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const [selectedWorkerForGantt, setSelectedWorkerForGantt] = useState<string>('all');
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !ganttInitialized) {
-      if (typeof Highcharts === 'object' && Highcharts && HighchartsGantt) {
-        if (typeof HighchartsGantt === 'function') {
-          HighchartsGantt(Highcharts);
-          setGanttInitialized(true);
-        } else if (typeof (HighchartsGantt as any).default === 'function') {
+    if (ganttInitialized || typeof window === 'undefined') {
+      return;
+    }
+  
+    console.log('DashboardOverviewCharts: useEffect for Gantt initialization triggered.');
+    console.log('Typeof Highcharts:', typeof Highcharts);
+    // HighchartsGantt is the default import from 'highcharts/modules/gantt'
+    console.log('Value of imported HighchartsGantt module:', HighchartsGantt);
+    console.log('Typeof imported HighchartsGantt module:', typeof HighchartsGantt);
+  
+    if (Highcharts && typeof Highcharts === 'object') {
+      let initialized = false;
+      if (typeof HighchartsGantt === 'function') {
+        try {
+          HighchartsGantt(Highcharts); // Call the imported initializer
+          initialized = true;
+          console.log('Highcharts Gantt module initialized by calling the default import.');
+        } catch (e) {
+          console.error('Error calling HighchartsGantt(Highcharts):', e);
+        }
+      } else if (HighchartsGantt && typeof (HighchartsGantt as any).default === 'function') {
+        // This case handles scenarios where the module might be wrapped,
+        // and the actual initializer is on the .default property.
+        try {
           (HighchartsGantt as any).default(Highcharts);
+          initialized = true;
+          console.log('Highcharts Gantt module initialized by calling .default on the import.');
+        } catch (e) {
+          console.error('Error calling HighchartsGantt.default(Highcharts):', e);
+        }
+      }
+  
+      if (initialized) {
+        // Verify by checking for the ganttChart constructor
+        if (typeof Highcharts.ganttChart === 'function') {
           setGanttInitialized(true);
+          console.log('Highcharts.ganttChart constructor found. Gantt initialization confirmed.');
         } else {
-          console.error('Failed to initialize Highcharts Gantt: HighchartsGantt or HighchartsGantt.default is not a function.');
+          // This is a fallback, means the explicit call didn't attach ganttChart as expected.
+          // It might be that simply importing 'highcharts/modules/gantt' was enough for side-effects.
+          console.warn('Gantt module was called, but Highcharts.ganttChart is still not a function. Checking if already available due to side-effects.');
+           if (Highcharts.ganttChart) { // Re-check, maybe it appeared
+             setGanttInitialized(true);
+             console.log('Highcharts.ganttChart constructor now found. Gantt initialization confirmed.');
+           } else {
+             console.error('Highcharts.ganttChart is NOT a function even after attempted initializations.');
+           }
         }
       } else {
-        console.error('Highcharts object or Gantt module is not available for initialization.');
+        // This means neither HighchartsGantt nor HighchartsGantt.default was a function.
+        // Check if ganttChart is already on Highcharts (e.g. from side effect import if bundler handled it)
+         if (Highcharts.ganttChart) {
+            console.log('Gantt chart constructor was already available on Highcharts object (possibly due to side-effect import).');
+            setGanttInitialized(true);
+        } else {
+            console.error('Re-checked: Failed to initialize Highcharts Gantt. The imported module (HighchartsGantt) and its .default property are not functions. Value of HighchartsGantt:', HighchartsGantt);
+        }
       }
+    } else {
+      console.error('Highcharts object itself is not available for Gantt initialization.');
     }
-  }, [ganttInitialized]);
-
+  }, [ganttInitialized]); // ganttInitialized ensures this runs once after successful init or first attempt
 
   const onPieEnter = useCallback(
     (_data: PieSectorDataItem, index: number) => {
@@ -252,63 +295,89 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const workerGanttData = useMemo(() => {
     if (!currentRun?.results) return [];
     return currentRun.results.filter((t: DetailedTestResult) =>
-      t.workerId !== undefined &&
+      typeof t.workerId !== 'undefined' && t.workerId !== null &&
       t.startTime && !isNaN(new Date(t.startTime).getTime()) &&
-      typeof t.duration === 'number' && t.duration >= 0 // Allow 0 duration for milestones
+      typeof t.duration === 'number' && t.duration >= 0 
     );
   }, [currentRun?.results]);
 
-  const workerGanttDataSufficient = workerGanttData.length > 0;
+  const ganttDataExistsForAnyWorker = workerGanttData.length > 0 && currentRun?.run?.timestamp && !isNaN(new Date(currentRun.run.timestamp).getTime());
 
   const allUniqueWorkerIds = useMemo(() => {
     if (!currentRun?.results) return [];
-    return Array.from(new Set(currentRun.results
+    const ids = Array.from(new Set(currentRun.results
       .map(r => r.workerId)
       .filter((id): id is string | number => id != null)
-      .map(id => String(id)) 
-    )).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+      .map(id => String(id))
+    )).sort((a, b) => {
+        const numA = parseInt(a, 10);
+        const numB = parseInt(b, 10);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return a.localeCompare(b); // Fallback to string comparison if not numbers
+    });
+    console.log("Unique Worker IDs for Gantt:", ids);
+    return ids;
   }, [currentRun?.results]);
 
   const workerFilterDropdownOptions = useMemo(() => ['all', ...allUniqueWorkerIds], [allUniqueWorkerIds]);
 
-
   const workerUtilizationOptions = useMemo((): Highcharts.Options => {
-      if (!currentRun?.run || !currentRun.results || !workerGanttDataSufficient) return {};
+      if (!currentRun?.run || !currentRun.results || !ganttDataExistsForAnyWorker) {
+        return { series: [], lang: { noData: "Data for worker utilization chart is insufficient or run timestamp is invalid." } };
+      }
+
+      const runStartTime = new Date(currentRun.run.timestamp).getTime();
+      if (isNaN(runStartTime)) {
+        console.error("Invalid run start time for Gantt chart:", currentRun.run.timestamp);
+        return { series: [], lang: { noData: "Invalid run start time for Gantt chart." } };
+      }
 
       const workersToProcess = selectedWorkerForGantt === 'all'
         ? allUniqueWorkerIds
-        : allUniqueWorkerIds.filter(id => id === selectedWorkerForGantt);
+        : allUniqueWorkerIds.filter(id => String(id) === String(selectedWorkerForGantt));
+
+      if (selectedWorkerForGantt !== 'all' && workersToProcess.length === 0) {
+          return { series: [], lang: { noData: `Worker ${selectedWorkerForGantt} not found or has no data.` } };
+      }
 
       const seriesData = workersToProcess.map(workerIdStr => {
+          const tasksForWorker = currentRun.results
+              .filter(r => {
+                  const testStartTimeValid = r.startTime && !isNaN(new Date(r.startTime).getTime());
+                  const durationValid = typeof r.duration === 'number' && r.duration >= 0;
+                  return String(r.workerId) === String(workerIdStr) && testStartTimeValid && durationValid;
+              })
+              .map(test => {
+                  const testStartTime = new Date(test.startTime).getTime();
+                  return {
+                      id: test.id,
+                      name: formatTestNameForChart(test.name),
+                      start: testStartTime, // Use absolute time for Highcharts Gantt
+                      end: testStartTime + test.duration,
+                      color: COLORS[test.status as keyof typeof COLORS] || COLORS.default1,
+                      status: test.status,
+                      milestone: test.duration === 0,
+                      workerId: String(test.workerId),
+                      y: allUniqueWorkerIds.indexOf(String(workerIdStr)) // Ensure correct 'y' for Highcharts category
+                  };
+              });
+          
           return {
               type: 'gantt' as const,
               name: `Worker ${workerIdStr}`,
-              data: currentRun.results
-                  .filter(r => String(r.workerId) === workerIdStr && r.startTime && !isNaN(new Date(r.startTime).getTime()) && typeof r.duration === 'number' && r.duration >= 0)
-                  .map(test => {
-                      const start = new Date(test.startTime).getTime();
-                      return {
-                          id: test.id,
-                          name: formatTestNameForChart(test.name),
-                          start: start,
-                          end: start + test.duration,
-                          color: COLORS[test.status as keyof typeof COLORS] || COLORS.default1,
-                          status: test.status,
-                          milestone: test.duration === 0,
-                          workerId: String(test.workerId), // Add workerId to point options
-                      };
-                  }),
+              data: tasksForWorker,
           };
       }).filter(series => series.data.length > 0);
 
 
-      if (seriesData.length === 0 && selectedWorkerForGantt !== 'all') {
-        // Highcharts will show "No data to display" if series is empty.
-        // We'll provide a custom message.
+      if (seriesData.length === 0) {
+        const noDataMessage = selectedWorkerForGantt === 'all' 
+            ? "No tasks found for any worker in this run or tasks are invalid for Gantt display."
+            : `No tasks found for Worker ${selectedWorkerForGantt} in this run or tasks are invalid.`;
         return {
           title: { text: undefined },
           series: [],
-          lang: { noData: `No tasks found for Worker ${selectedWorkerForGantt} in this run.` },
+          lang: { noData: noDataMessage },
           chart: { backgroundColor: 'transparent', style: { fontFamily: 'inherit' } },
           credits: { enabled: false },
         };
@@ -320,7 +389,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           chart: {
             backgroundColor: 'transparent',
             style: { fontFamily: 'inherit' },
-            height: Math.max(150, workersToProcess.length * 40 + 60),
+            height: Math.max(150, workersToProcess.length * 40 + 80), // Adjusted height
+            zoomType: 'x',
           },
           tooltip: {
               formatter: function() {
@@ -337,30 +407,50 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
               type: 'datetime',
               labels: { style: { color: 'hsl(var(--muted-foreground))' } },
               gridLineColor: 'hsl(var(--border))',
-              min: currentRun.run.timestamp ? new Date(currentRun.run.timestamp).getTime() : undefined,
+              min: runStartTime, // Use absolute run start time as min
+              currentDateIndicator: true,
           },
           yAxis: {
               type: 'category',
-              categories: workersToProcess.map(w => `Worker ${w}`),
+              categories: workersToProcess.map(w => `Worker ${w}`), // Categories for the y-axis
               labels: { style: { color: 'hsl(var(--muted-foreground))' } },
               gridLineColor: 'hsl(var(--border))',
-              // Ensure at least one category is shown if workersToProcess is empty but we didn't hit the specific "no data for selected worker" case above
-              // This helps Highcharts avoid errors if categories list is empty.
               min: 0,
               max: Math.max(0, workersToProcess.length -1),
-
+              staticScale: 50, // Height per category
           },
           legend: {
+              enabled: true, // Show legend if multiple workers or if desired
               itemStyle: { color: 'hsl(var(--muted-foreground))' },
               itemHoverStyle: { color: 'hsl(var(--foreground))' },
           },
-          series: seriesData.length > 0 ? seriesData : [{ type: 'gantt', name: 'No Data', data: [] }], // Provide empty series if no data
+          series: seriesData,
           lang: {
             noData: "No tasks to display for the selected worker(s)."
+          },
+          plotOptions: {
+            gantt: {
+              dataLabels: {
+                enabled: true,
+                format: '{point.name}',
+                style: {
+                  fontSize: '10px',
+                  fontWeight: 'normal',
+                  textOutline: 'none',
+                  color: 'hsl(var(--foreground))'
+                },
+                align: 'left',
+                inside: true,
+                padding: 2,
+                allowOverlap: true,
+              },
+              pathfinder: {
+                enabled: true // Enable pathfinder for dependency lines if you add them later
+              }
+            }
           }
       };
-  }, [currentRun, workerGanttDataSufficient, selectedWorkerForGantt, allUniqueWorkerIds]);
-
+  }, [currentRun, ganttDataExistsForAnyWorker, selectedWorkerForGantt, allUniqueWorkerIds]);
 
   if (loading) {
     return (
@@ -730,8 +820,8 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
               <Users className="h-5 w-5 mr-2" /> Worker Utilization
             </CardTitle>
           </div>
-          <CardDescription className="text-xs">Timeline of test execution per worker.</CardDescription>
-          {workerGanttDataSufficient && allUniqueWorkerIds.length > 0 && (
+          <CardDescription className="text-xs">Timeline of test execution per worker. Uses absolute time based on report.</CardDescription>
+          {allUniqueWorkerIds.length > 0 && ( // Show filter only if there are workers
             <div className="mt-3 space-y-1">
               <Label htmlFor="worker-gantt-filter" className="text-sm font-medium text-muted-foreground">Filter by Worker:</Label>
               <Select value={selectedWorkerForGantt} onValueChange={setSelectedWorkerForGantt}>
@@ -753,26 +843,31 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
           {!ganttInitialized && (
             <Skeleton className="h-[300px] w-full rounded-lg" />
           )}
-          {ganttInitialized && !workerGanttDataSufficient && (
+          {ganttInitialized && !ganttDataExistsForAnyWorker && (
              <Alert className="rounded-lg">
                 <Info className="h-4 w-4" />
-                <AlertTitle>Insufficient Data for Worker Utilization</AlertTitle>
+                <AlertTitle>Insufficient Data for Worker Utilization Chart</AlertTitle>
                 <AlertDescription>
-                  Not enough valid data (worker ID, start time, duration) found in the current run to generate the worker utilization chart.
-                  Please ensure your report includes these details for your tests.
+                  Could not generate the worker utilization chart due to missing or invalid data. Please ensure:
+                  <ul className="list-disc list-outside pl-5 mt-1 text-xs">
+                    <li>Tests in 'playwright-pulse-report.json' have a valid 'workerId'. (Current: {currentRun?.results?.some(t => t.workerId != null) ? "Some found" : "None found"})</li>
+                    <li>Tests have a valid 'startTime' (ISO date string). (Current: {currentRun?.results?.some(t => t.startTime && !isNaN(new Date(t.startTime).getTime())) ? "Some found" : "None found"})</li>
+                    <li>Tests have a 'duration' (number in ms, >= 0). (Current: {currentRun?.results?.some(t => typeof t.duration === 'number' && t.duration >=0) ? "Some found" : "None found"})</li>
+                    <li>The overall report 'run.timestamp' is a valid ISO date string. (Current: {currentRun?.run?.timestamp && !isNaN(new Date(currentRun.run.timestamp).getTime()) ? "Valid" : "Invalid or Missing"})</li>
+                  </ul>
                 </AlertDescription>
               </Alert>
           )}
-          {ganttInitialized && workerGanttDataSufficient && workerUtilizationOptions.series && workerUtilizationOptions.series.length === 0 && selectedWorkerForGantt !== 'all' && (
+          {ganttInitialized && ganttDataExistsForAnyWorker && (!workerUtilizationOptions.series || workerUtilizationOptions.series.length === 0) && (
              <Alert className="rounded-lg">
                 <Users className="h-4 w-4" />
-                <AlertTitle>No Tasks for Selected Worker</AlertTitle>
+                <AlertTitle>No Tasks to Display</AlertTitle>
                 <AlertDescription>
-                  Worker {selectedWorkerForGantt} has no tasks in this run, or their tasks are not valid for Gantt display.
+                  {workerUtilizationOptions.lang?.noData || "No tasks found for the selected worker(s) or tasks are invalid for Gantt display."}
                 </AlertDescription>
               </Alert>
           )}
-          {ganttInitialized && workerGanttDataSufficient && (workerUtilizationOptions.series && workerUtilizationOptions.series.length > 0 || selectedWorkerForGantt === 'all') && (
+          {ganttInitialized && ganttDataExistsForAnyWorker && workerUtilizationOptions.series && workerUtilizationOptions.series.length > 0 && (
             <HighchartsReact
                 highcharts={Highcharts}
                 constructorType={'ganttChart'}
@@ -785,4 +880,3 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     </div>
   );
 }
-
