@@ -9,15 +9,7 @@ It can be: **Run as a Standalone CLI Tool**: Install globally or use with `npx` 
 
 ## Key Features
 
--   **Live Results View**: Displays up-to-the-second results from the latest Playwright test run, with detailed views for each test.
--   **Summary Metrics**: At-a-glance overview of the current test run, including total tests, pass/fail/skipped counts, and overall duration. Clickable cards allow quick filtering of the live results.
--   **Trend Analysis**: Visualizes historical test run data, showing trends for test outcomes (passed, failed, skipped) and execution duration over time.
--   **Detailed Test Information**: For each test, view status, duration, retries, attachments, logs, and individual test history.
--   **Failure Categorization**: Automatically groups failed tests from the current run into common categories.
--   **Flaky Test Analysis**: Identifies tests that have exhibited inconsistent pass/fail behavior based on historical runs.
--   **Filtering Capabilities**: Filter live test results by status, name/suite, tags, browser, and retries.
--   **Theme Customization**: Switch between light and dark themes.
--   **Worker Utilizarion**: Chart to visualize no. of workers with respective test performed by them and test duration & test status.
+[![pulse-dashboard-key-features](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg)](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg)
 
 ## How to Use Pulse Dashboard
 
@@ -39,13 +31,15 @@ Install the package globally or use `npx` to run the dashboard directly.
     ```
     This will download and run the latest version of Pulse Dashboard without a global installation.
 
+    **[NOTE: user does not need to navigate inside `pulse-report` folder]**
+
 *   **Global Installation (if you use it frequently):**
     ```bash
     npm install -g pulse-dashboard
     ```
-    Then, navigate to your project directory that contains the `pulse-report` folder and run:
+    Then, navigate to your project directory that contains the `pulse-report` folder (not inside `pulse-report` folder) and run:
     ```bash
-    pulse-dashboard
+    npm run pulse-dashboard
     ```
 
 The dashboard will start (usually on `http://localhost:9002`) and serve data from the `pulse-report` directory located in your current working directory.
@@ -53,31 +47,11 @@ The dashboard will start (usually on `http://localhost:9002`) and serve data fro
 **Data Directory Structure for CLI Usage:**
 When you run `pulse-dashboard` or `npx pulse-dashboard`, it expects the following structure in the directory **from where you run the command**:
 
-```
-/your-project-root
-  /pulse-report  <-- THIS FOLDER MUST EXIST HERE
-    playwright-pulse-report.json
-    /history       <-- Optional: for historical trends
-      trend-2023-10-26T10-30-00.json
-      trend-2023-10-27T11-00-00.json
-      ...
-    /attachments   <-- Optional: for screenshots, videos, traces
-      /RUN_ID_1
-        screenshot.png
-      /RUN_ID_2
-        video.webm
-      ...
-  ... (other project files)
-```
+[![pulse-dashboard-client-folder-structure](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-client-folder-structure.svg)](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-client-folder-structure.svg)
 
 ## Technical Stack (of this Dashboard Project/Component Package)
 
--   **Framework**: Next.js
--   **UI Library**: React
--   **Component Library**: ShadCN UI
--   **Styling**: Tailwind CSS
--   **Charting**: Recharts
--   **Language**: TypeScript
+[![pulse-dashboard-framework](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-framework.svg)](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-framework.svg)
 
 ## NPM Scripts (for developing this project)
 
@@ -86,7 +60,7 @@ When you run `pulse-dashboard` or `npx pulse-dashboard`, it expects the followin
 
 ## Thank You
 
-Special Thanks to [@suman-vishwakarma](https://www.linkedin.com/in/suman-vishwakarma-426108185/) for continuous UAT feedback and [@sagnik-ghosh](https://www.linkedin.com/in/sagnikghosh99/) for continuous development related help.
+Special Thanks to **[@Suman Vishwakarma](https://www.linkedin.com/in/suman-vishwakarma-426108185/)** for continuous UAT feedback and **[@Sagnik Ghosh](https://www.linkedin.com/in/sagnikghosh99/)** for continuous development related help.
 
 ## License
 

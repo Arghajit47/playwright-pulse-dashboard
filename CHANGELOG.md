@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.0] - 2025-06-17
+## [1.1.0] - 2025-06-16
 
 ### Changed
 - **Worker Utilization View (Dashboard Overview)**:
@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Tooltips on donut chart segments now display test name, suite name, status, and duration for clarity.
 
 ### Added
+- **Advance System Information (Dashboard Overview)**:
+    - Introduced 'Details about the test execution environment', like; Host, Os, Cpu Model & Cores, Memory, Node, V8, Cwd.
+
 - **Advanced Filtering for Worker Donut Charts (Dashboard Overview)**:
     - Introduced a "Filter by test name" input field.
     - Added a "Filter by suite" dropdown.
@@ -27,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.9] - 2025-06-16
+## [1.0.0] - 2025-06-14
 
 ### Changed
 - **Worker Utilization Chart (Dashboard Overview)**:
@@ -38,6 +41,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - "Active Worker Count Over Time" chart added to the Trend Analysis view, visualizing the number of unique workers per historical run.
 - `workerCount` field added to the `HistoricalTrend` type and populated by the `/api/historical-trends` route.
+
+---
+
+## [0.1.9] - 2025-06-13
+
+### Fixed
+- Fixed Test Details > Attachment [Screenshots, Video, Trace] paths.
 
 ---
 
