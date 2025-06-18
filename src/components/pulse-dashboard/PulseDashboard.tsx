@@ -129,7 +129,15 @@ export function PulseDashboard() {
                   tooltip={{children: item.label, side: 'right', align: 'center'}}
                 >
                   <item.icon className="h-5 w-5" />
-                  <span style={item.labelColorVar ? { color: `hsl(var(${item.labelColorVar}))` } : undefined}>
+                  <span
+                    style={
+                      activeView === item.id
+                        ? undefined // Active: inherit color from button's active state
+                        : item.labelColorVar
+                        ? { color: `hsl(var(${item.labelColorVar}))` } // Inactive: use labelColorVar
+                        : undefined
+                    }
+                  >
                     {item.label}
                   </span>
                 </SidebarMenuButton>
@@ -151,7 +159,13 @@ export function PulseDashboard() {
                   <settingsMenuItem.icon className="h-5 w-5" />
                   <span 
                     className="group-data-[collapsible=icon]:hidden"
-                    style={settingsMenuItem.labelColorVar ? { color: `hsl(var(${settingsMenuItem.labelColorVar}))` } : undefined}
+                    style={
+                      activeView === settingsMenuItem.id
+                        ? undefined // Active: inherit color from button's active state
+                        : settingsMenuItem.labelColorVar
+                        ? { color: `hsl(var(${settingsMenuItem.labelColorVar}))` } // Inactive: use labelColorVar
+                        : undefined
+                    }
                   >
                     {settingsMenuItem.label}
                   </span>
@@ -249,3 +263,4 @@ export function PulseDashboard() {
     </SidebarProvider>
   );
 }
+
