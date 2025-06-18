@@ -50,8 +50,8 @@ body {
     --sidebar-background: 220 50% 96%; /* Slightly cooler, distinct from main bg */
     --sidebar-foreground: 220 25% 30%; /* Darker text for sidebar */
     --sidebar-border: 220 30% 85%; /* Soft border for sidebar */
-    --sidebar-accent: hsl(var(--primary)); /* Primary color for active items */
-    --sidebar-accent-foreground: hsl(var(--primary-foreground)); /* Text on active items */
+    --sidebar-accent: 220 45% 90%; /* Distinct active item background: darker, more saturated light cool gray */
+    --sidebar-accent-foreground: 220 25% 20%; /* Distinct active item text: very dark blue/gray for contrast */
     --sidebar-hover-background: 220 40% 92%; /* Slightly darker for hover */
     --sidebar-hover-foreground: 220 25% 25%; /* Prominent text on hover */
     --sidebar-ring: hsl(var(--ring));
@@ -119,8 +119,8 @@ body {
     --sidebar-background: 220 28% 10%; /* Slightly distinct dark for sidebar */
     --sidebar-foreground: 220 20% 85%; /* Light text for sidebar */
     --sidebar-border: 220 20% 20%; /* Darker, subtle border for sidebar */
-    --sidebar-accent: hsl(var(--primary)); /* Primary color for active items */
-    --sidebar-accent-foreground: hsl(var(--primary-foreground)); /* Text on active items */
+    --sidebar-accent: 220 25% 18%; /* Distinct active item background: lighter, pronounced dark blue */
+    --sidebar-accent-foreground: 220 15% 95%; /* Distinct active item text: very light for contrast */
     --sidebar-hover-background: 220 25% 15%; /* Slightly lighter for hover */
     --sidebar-hover-foreground: 220 20% 92%; /* Brighter text on hover */
     --sidebar-ring: hsl(var(--ring));
@@ -200,3 +200,4 @@ body {
 .recharts-wrapper:focus, .recharts-surface:focus {
   outline: none !important;
 }
+
