@@ -155,7 +155,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
       return;
     }
 
-    const headers = ["id", "runId", "name", "suiteName", "status", "duration", "startTime", "endTime", "browser", "retries", "tags", "stdout", "stderr", "workerId"];
+    const headers = ["id", "name", "suiteName", "status", "duration", "startTime", "endTime", "browser", "retries", "tags", "stdout", "stderr", "workerId"];
     
     let csvContent = headers.join(',') + '\n';
 
@@ -163,9 +163,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
       const row = headers.map(header => {
         let value: any;
         switch(header) {
-          case 'runId':
-            value = item.runId || (report.run && report.run.id) || ''; 
-            break;
+          // 'runId' case removed
           case 'tags':
             value = item.tags ? item.tags.join('; ') : '';
             break;
@@ -199,7 +197,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    const fileName = (report.run && report.run.id ? `${report.run.id}.csv` : `live-test-results.csv`);
+    const fileName = (report.run && report.run.id ? `run-${report.run.id}.csv` : `live-test-results.csv`);
     link.setAttribute("download", fileName);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
@@ -497,3 +495,4 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     </Card>
   );
 }
+
