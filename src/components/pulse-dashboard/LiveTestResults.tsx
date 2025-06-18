@@ -163,7 +163,6 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
       const row = headers.map(header => {
         let value: any;
         switch(header) {
-          // 'runId' case removed
           case 'tags':
             value = item.tags ? item.tags.join('; ') : '';
             break;
@@ -197,7 +196,14 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    const fileName = (report.run && report.run.id ? `run-${report.run.id}.csv` : `live-test-results.csv`);
+
+    let fileRunIdPart = 'unknown_run';
+    if (report.run && report.run.id) {
+      // Use only the part of the ID before the first hyphen
+      fileRunIdPart = report.run.id.split('-')[0];
+    }
+    const fileName = `run-${fileRunIdPart}.csv`;
+
     link.setAttribute("download", fileName);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
