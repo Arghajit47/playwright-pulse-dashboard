@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Terminal, Info, ChevronDown, XCircle, FilterX, Repeat1, ListChecks, CheckCircle2, SkipForward, Clock } from "lucide-react";
+import { Terminal, Info, ChevronDown, XCircle, FilterX, Repeat1, ListChecks, CheckCircle2, SkipForward, Clock, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -76,7 +76,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         test.tags?.forEach((tag: string) => uniqueTags.add(tag));
         if (test.browser) uniqueBrowsers.add(test.browser);
         if (test.suiteName) uniqueSuites.add(test.suiteName);
-        else uniqueSuites.add("Untitled Suite"); // Ensure "Untitled Suite" is an option if any exist
+        else uniqueSuites.add("Untitled Suite"); 
       });
 
       setAllTags(Array.from(uniqueTags).sort());
@@ -148,6 +148,67 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     })).sort((a, b) => b.stats.failed - a.stats.failed || b.stats.total - a.stats.total || a.title.localeCompare(b.title));
   }, [report, statusFilter, searchTerm, selectedTags, selectedBrowser, selectedSuite, showRetriesOnly]);
 
+
+  const handleExportCsv = () => {
+    if (!report || !report.results || report.results.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+
+    const headers = ["id", "runId", "name", "suiteName", "status", "duration", "startTime", "endTime", "browser", "retries", "tags", "stdout", "stderr", "workerId"];
+    
+    let csvContent = headers.join(',') + '\n';
+
+    report.results.forEach(item => {
+      const row = headers.map(header => {
+        let value: any;
+        switch(header) {
+          case 'runId':
+            value = item.runId || (report.run && report.run.id) || ''; 
+            break;
+          case 'tags':
+            value = item.tags ? item.tags.join('; ') : '';
+            break;
+          case 'stdout':
+            value = item.stdout ? item.stdout.join('\\n') : ''; 
+            break;
+          case 'stderr':
+            value = item.errorMessage || ''; 
+            break;
+          case 'workerId':
+            value = item.workerId !== undefined && item.workerId !== null ? String(item.workerId) : '';
+            break;
+          default:
+            value = item[header as keyof DetailedTestResult];
+        }
+
+        if (typeof value === 'object' && value !== null) {
+          value = JSON.stringify(value);
+        }
+        
+        if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+          value = `"${value.replace(/"/g, '""')}"`;
+        }
+        
+        return value !== undefined && value !== null ? value : '';
+      });
+      csvContent += row.join(',') + '\n';
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    const fileName = (report.run && report.run.id ? `${report.run.id}.csv` : `live-test-results.csv`);
+    link.setAttribute("download", fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+
   if (loading) {
     return (
       <Card className="shadow-xl">
@@ -190,13 +251,15 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
   if (!report || !report.results || report.results.length === 0) {
     return (
       <Card className="shadow-xl">
-        <CardHeader>
-          <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
-           {(report?.metadata?.generatedAt || report?.run?.timestamp) && (
-            <CardDescription>
-              Last updated: {new Date(report.metadata?.generatedAt || report.run?.timestamp || Date.now()).toLocaleString()}
-            </CardDescription>
-          )}
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
+            {(report?.metadata?.generatedAt || report?.run?.timestamp) && (
+              <CardDescription>
+                Last updated: {new Date(report.metadata?.generatedAt || report.run?.timestamp || Date.now()).toLocaleString()}
+              </CardDescription>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
            <Alert className="shadow-sm rounded-lg">
@@ -211,13 +274,19 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
 
   return (
     <Card className="shadow-xl">
-      <CardHeader>
-        <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
-        {(report.metadata?.generatedAt || report.run?.timestamp) && (
-          <CardDescription>
-            Last updated: {new Date(report.metadata.generatedAt || report.run.timestamp).toLocaleString()}
-          </CardDescription>
-        )}
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
+          {(report.metadata?.generatedAt || report.run?.timestamp) && (
+            <CardDescription>
+              Last updated: {new Date(report.metadata.generatedAt || report.run.timestamp).toLocaleString()}
+            </CardDescription>
+          )}
+        </div>
+        <Button onClick={handleExportCsv} variant="outline" size="sm" className="ml-auto rounded-md">
+          <Download className="mr-2 h-4 w-4" />
+          Export as CSV
+        </Button>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="p-6 border rounded-xl bg-muted/50 shadow-lg space-y-4">
@@ -320,7 +389,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center space-x-2 pt-5"> {/* Adjusted pt- for alignment */}
+            <div className="flex items-center space-x-2 pt-5"> 
               <Checkbox
                 id="retries-filter"
                 checked={showRetriesOnly}
@@ -402,7 +471,6 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                         )}
                       </div>
                     </div>
-                    {/* Chevron is part of AccordionTrigger */}
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="p-4 pt-0">
@@ -429,4 +497,3 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     </Card>
   );
 }
-
