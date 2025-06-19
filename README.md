@@ -11,6 +11,20 @@ It can be: **Run as a Standalone CLI Tool**: Install globally or use with `npx` 
 
 [![pulse-dashboard-key-features](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg)](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg)
 
+*   **Real-time Dashboard**: View summary metrics (total, passed, failed, skipped, duration), test distribution charts, and system information from the latest test run.
+*   **Live Test Results**: Browse and filter test results by status, name, suite, tags, and browser. View detailed information for each test, including execution steps, error messages, and retries.
+*   **Trend Analysis**: Visualize historical data for test outcomes and duration over time to identify patterns and regressions.
+*   **Flaky Test Analysis**: Identify tests that have shown inconsistent pass/fail behavior across historical runs.
+*   **Failure Categorization**: Group common failure types based on error messages to quickly pinpoint systemic issues.
+*   **Attachment Viewing**:
+    *   **Screenshots**: Displays images captured during test execution (sourced from the `screenshots: string[]` field in each test result).
+    *   **Videos**: Allows viewing of video recordings of test runs (sourced from the `videoPath: string[]` field).
+    *   **Trace Files**: Provides download links for Playwright trace files for in-depth debugging (sourced from the `tracePath: string` field).
+    *   **Other File Types**: The UI includes tabs for HTML, PDF, JSON, Text/CSV, and other generic file types. *Note: To populate these tabs, your `playwright-pulse-report.json` would need to include an `attachments` array (or similar structured data) within each test result, where each element is an object like `{ name: string, path: string, contentType: string }`. Currently, these specific tabs are not populated directly from the `screenshots`, `videoPath`, or `tracePath` fields.*
+*   **Export to CSV**: Download the current run's test results as a CSV file for external analysis.
+*   **Customizable Theme**: Toggle between light and dark modes for optimal viewing.
+*   **Responsive Design**: Access the dashboard on various devices.
+
 ## How to Use Pulse Dashboard
 
 ### 1. As a Standalone CLI Tool (Recommended for quick report viewing)

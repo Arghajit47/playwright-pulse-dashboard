@@ -17,6 +17,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+
 
 const testStatuses = ['all', 'passed', 'failed', 'skipped', 'timedOut', 'pending'] as const;
 export type TestStatusFilter = typeof testStatuses[number];
@@ -59,6 +61,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
   const [selectedSuite, setSelectedSuite] = useState<string>('all');
   const [allSuites, setAllSuites] = useState<string[]>(['all']);
   const [showRetriesOnly, setShowRetriesOnly] = useState<boolean>(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (initialFilter) {
@@ -151,15 +154,30 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
 
   const handleExportCsv = () => {
     if (!report || !report.results || report.results.length === 0) {
-      alert("No data available to export.");
+      toast({
+        title: "Export Failed",
+        description: "No data available to export.",
+        variant: "destructive",
+      });
       return;
     }
 
     const headers = ["id", "name", "suiteName", "status", "duration", "startTime", "endTime", "browser", "retries", "tags", "stdout", "stderr", "workerId"];
     
-    let csvContent = headers.join(',') + '\n';
+    const escapeCsvCell = (cellData: any): string => {
+      if (cellData === null || cellData === undefined) {
+        return '';
+      }
+      let cellString = String(cellData);
+      if (cellString.includes(',') || cellString.includes('"') || cellString.includes('\n')) {
+        cellString = `"${cellString.replace(/"/g, '""')}"`;
+      }
+      return cellString;
+    };
 
-    report.results.forEach(item => {
+    let csvContent = headers.map(escapeCsvCell).join(',') + '\n';
+
+    report.results.forEach((item: DetailedTestResult) => {
       const row = headers.map(header => {
         let value: any;
         switch(header) {
@@ -178,16 +196,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
           default:
             value = item[header as keyof DetailedTestResult];
         }
-
-        if (typeof value === 'object' && value !== null) {
-          value = JSON.stringify(value);
-        }
-        
-        if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-          value = `"${value.replace(/"/g, '""')}"`;
-        }
-        
-        return value !== undefined && value !== null ? value : '';
+        return escapeCsvCell(value);
       });
       csvContent += row.join(',') + '\n';
     });
@@ -197,26 +206,20 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     const link = document.createElement("a");
     link.setAttribute("href", url);
     
-    let fileRunIdPart;
+    let fileRunIdPart = 'data'; 
     if (report.run && report.run.id && typeof report.run.id === 'string' && report.run.id.trim() !== '') {
       const idStr = report.run.id.trim();
       const parts = idStr.split('-');
       if (parts.length > 1 && parts[0].toLowerCase() === 'run' && parts[1] && parts[1].trim() !== '') {
-        fileRunIdPart = parts[1];
+          fileRunIdPart = parts[1]; 
       } else if (parts.length > 0 && parts[0].trim() !== '') {
-        fileRunIdPart = parts[0];
+          fileRunIdPart = parts[0]; 
       }
-    }
-
-    if (!fileRunIdPart) { 
-      if (report.run && report.run.timestamp) {
-        try {
-          fileRunIdPart = String(new Date(report.run.timestamp).getTime());
-        } catch (e) {
-          fileRunIdPart = 'data'; 
-        }
-      } else {
-        fileRunIdPart = 'data'; 
+    } else if (report.run && report.run.timestamp) {
+      try {
+        fileRunIdPart = String(new Date(report.run.timestamp).getTime());
+      } catch (e) {
+        // fallback to 'data' already set
       }
     }
     const fileName = `run-${fileRunIdPart}.csv`;
@@ -227,6 +230,11 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+
+    toast({
+        title: "Export Successful",
+        description: `${fileName} has been downloaded.`,
+    });
   };
 
 
@@ -518,4 +526,3 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     </Card>
   );
 }
-

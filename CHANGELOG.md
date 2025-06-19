@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.1] - 2025-06-16
+
+### Added
+- **Export Test Results as CSV**: Implemented functionality in the "Test Results" view to download the current run's test data as a CSV file.
+- **Responsive Attachment Tabs**: Ensured the attachment type tabs in the "Test Details" view are horizontally scrollable on smaller screens.
+
+### Changed
+- **Attachment Handling Documentation**: Updated `README.md` to clarify how different attachment types (screenshots, videos, traces, and other potential types) are sourced and displayed.
+
+### Fixed
+- Corrected CSV export filename generation to be more robust and handle various `run.id` formats.
+- Resolved a runtime error ("test.videoPath.split is not a function") in "Test Details" view by adding a type check before attempting string operations on `videoPath`.
+- Ensured case-insensitive matching for attachment `contentType` and relevant `name` properties to improve visibility of attachments from JSON reports.
+
+---
+
 ## [1.1.0] - 2025-06-16
 
 ### Changed
@@ -163,4 +179,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI entry script: `bin/pulse-dashboard.js`.
 - Basic config files (`package.json`, `tsconfig`, etc.).
 - Initial component structure and layout.
-
