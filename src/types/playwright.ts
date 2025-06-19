@@ -1,11 +1,4 @@
 
-export interface ScreenshotAttachment {
-  name: string;
-  path: string;
-  contentType: string;
-  'data-ai-hint'?: string;
-}
-
 export interface TestStep {
   id: string;
   title: string;
@@ -37,10 +30,9 @@ export interface DetailedTestResult {
   stdout?: string[] | null;
   codeSnippet: string;
   tags: string[];
-  screenshots?: ScreenshotAttachment[]; // Sourced from test.screenshots (array of objects)
-  videoPath?: string;                 // Sourced from test.videoPath (single string)
-  tracePath?: string;                 // Sourced from test.tracePath (single string)
-  // Generic attachments field removed, specific fields above are used.
+  screenshots?: string[]; // Array of paths
+  videoPath?: string[];   // Array of paths
+  tracePath?: string;   // Single path
   workerId?: string | number;
   totalWorkers?: number;
   configFile?: string;

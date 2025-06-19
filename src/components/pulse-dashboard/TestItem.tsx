@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { DetailedTestResult, ScreenshotAttachment } from '@/types/playwright.js';
+import type { DetailedTestResult } from '@/types/playwright.js';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
@@ -12,6 +12,13 @@ import { useMemo } from 'react';
 
 interface TestItemProps {
   test: DetailedTestResult;
+}
+
+interface DisplayAttachmentQuickLook {
+  name: string;
+  path: string;
+  contentType: string;
+  'data-ai-hint'?: string;
 }
 
 function StatusIcon({ status }: { status: DetailedTestResult['status'] }) {
@@ -58,10 +65,22 @@ function getStatusBadgeStyle(status: DetailedTestResult['status']): React.CSSPro
   }
 }
 
+function getAttachmentNameFromPath(path: string, defaultName: string = 'Attachment'): string {
+  if (!path || typeof path !== 'string') return defaultName;
+  const parts = path.split(/[/\\]/);
+  return parts.pop() || defaultName;
+}
+
 
 export function TestItem({ test }: TestItemProps) {
-  const quickLookScreenshots = useMemo(() => {
-    return (test.screenshots || []).slice(0, 4);
+  const quickLookScreenshots: DisplayAttachmentQuickLook[] = useMemo(() => {
+    if (!test.screenshots || !Array.isArray(test.screenshots)) return [];
+    return test.screenshots.slice(0, 4).map((path, index) => ({
+      name: getAttachmentNameFromPath(path, `Screenshot ${index + 1}`),
+      path: path,
+      contentType: 'image/png', // Assuming image type
+      'data-ai-hint': 'test screenshot thumbnail'
+    }));
   }, [test.screenshots]);
 
   const hasDetailsInAccordion = test.errorMessage || quickLookScreenshots.length > 0;
@@ -109,18 +128,18 @@ export function TestItem({ test }: TestItemProps) {
                 <div>
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
-                    {quickLookScreenshots.map((attachment: ScreenshotAttachment, index: number) => {
+                    {quickLookScreenshots.map((attachment, index) => {
                         const imageSrc = getUtilAssetPath(attachment.path);
                         if (imageSrc === '#') return null;
                         return (
                          <a key={`img-thumb-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-md overflow-hidden group border hover:border-primary shadow-sm">
                             <Image
                                 src={imageSrc}
-                                alt={attachment.name || `Screenshot ${index + 1}`}
+                                alt={attachment.name}
                                 fill={true}
                                 style={{objectFit: "cover"}}
                                 className="group-hover:scale-105 transition-transform duration-300"
-                                data-ai-hint={attachment['data-ai-hint'] || "test screenshot thumbnail"}
+                                data-ai-hint={attachment['data-ai-hint']}
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                 <Eye className="h-6 w-6 text-white"/>
