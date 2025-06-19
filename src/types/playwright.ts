@@ -37,6 +37,9 @@ export interface DetailedTestResult {
   stdout?: string[] | null;
   codeSnippet: string;
   tags: string[];
+  screenshots?: string[];
+  videoPath?: string[];
+  tracePath?: string;
   attachments?: PlaywrightAttachment[]; // Replaces screenshots, videoPath, tracePath
   workerId?: string | number;
   totalWorkers?: number;

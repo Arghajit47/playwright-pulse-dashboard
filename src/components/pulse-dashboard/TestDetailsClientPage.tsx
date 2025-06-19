@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
 import { useTestData } from '@/hooks/useTestData';
-import type { DetailedTestResult, PlaywrightPulseReport, TestStep, ScreenshotAttachment } from '@/types/playwright';
+import type { DetailedTestResult, PlaywrightPulseReport, TestStep, PlaywrightAttachment } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -165,11 +166,23 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     fetchTestHistory();
   }, [testId]);
 
-  // --- MODIFIED & NEW ATTACHMENT LOGIC ---
-  const screenshotAttachments = useMemo(() => test?.screenshots || [], [test]);
-  const videoAttachments = useMemo(() => test?.videoPath || [], [test]);
-  const traceAttachmentPath = useMemo(() => test?.tracePath, [test]);
-  const genericAttachments = useMemo(() => test?.attachments || [], [test]);
+  const screenshotAttachments = useMemo(() => {
+    return (test?.attachments || []).filter(att => att.contentType.startsWith('image/'));
+  }, [test]);
+
+  const videoAttachments = useMemo(() => {
+    return (test?.attachments || []).filter(att => att.contentType.startsWith('video/'));
+  }, [test]);
+  
+  const traceAttachment = useMemo(() => {
+    return (test?.attachments || []).find(att => att.contentType === 'application/zip' || att.name.endsWith('.trace.zip'));
+  }, [test]);
+
+  const genericAttachments = useMemo(() => (test?.attachments || []).filter(
+    att => !att.contentType.startsWith('image/') && 
+           !att.contentType.startsWith('video/') && 
+           !(att.contentType === 'application/zip' || att.name.endsWith('.trace.zip'))
+  ), [test]);
   
   const htmlAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.includes('html')), [genericAttachments]);
   const pdfAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.includes('pdf')), [genericAttachments]);
@@ -178,13 +191,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   const otherAttachments = useMemo(() => genericAttachments.filter(a => !a.contentType.includes('html') && !a.contentType.includes('pdf') && !a.contentType.includes('json') && !a.contentType.startsWith('text/')), [genericAttachments]);
   
   const totalAttachmentsCount = useMemo(() => {
-    return (
-      screenshotAttachments.length +
-      videoAttachments.length +
-      (traceAttachmentPath ? 1 : 0) +
-      genericAttachments.length
-    );
-  }, [screenshotAttachments, videoAttachments, traceAttachmentPath, genericAttachments]);
+    return (test?.attachments || []).length;
+  }, [test]);
 
 
   if (loadingCurrent && !test) {
@@ -263,7 +271,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     <TabsList className="inline-grid w-max grid-flow-col mb-4 rounded-lg">
                     <TabsTrigger value="sub-screenshots" disabled={screenshotAttachments.length === 0}><ImageIcon className="h-4 w-4 mr-2" />Screenshots ({screenshotAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-video" disabled={videoAttachments.length === 0}><Film className="h-4 w-4 mr-2" />Videos ({videoAttachments.length})</TabsTrigger>
-                    <TabsTrigger value="sub-trace" disabled={!traceAttachmentPath}><Archive className="h-4 w-4 mr-2" />Trace {traceAttachmentPath ? '(1)' : '(0)'}</TabsTrigger>
+                    <TabsTrigger value="sub-trace" disabled={!traceAttachment}><Archive className="h-4 w-4 mr-2" />Trace {traceAttachment ? '(1)' : '(0)'}</TabsTrigger>
                     <TabsTrigger value="sub-html" disabled={htmlAttachments.length === 0}><FileCode className="h-4 w-4 mr-2" />HTML ({htmlAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-pdf" disabled={pdfAttachments.length === 0}><FileText className="h-4 w-4 mr-2" />PDF ({pdfAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-json" disabled={jsonAttachments.length === 0}><FileJson className="h-4 w-4 mr-2" />JSON ({jsonAttachments.length})</TabsTrigger>
@@ -272,23 +280,21 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     </TabsList>
                 </ScrollArea>
                 
-                {/* --- Screenshots Tab (Unchanged) --- */}
                 <TabsContent value="sub-screenshots" className="mt-4">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
-                  {screenshotAttachments.length > 0 ? (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">{screenshotAttachments.map((attachment, index) => {const imageSrc = getUtilAssetPath(attachment.path); if (imageSrc === '#') return null; return (<a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg"><Image src={imageSrc} alt={`Screenshot ${index + 1}`} fill={true} style={{objectFit: "cover"}} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={attachment['data-ai-hint'] || "test screenshot"}/><div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2"><p className="text-white text-xs text-center break-all">{`Screenshot ${index + 1}`}</p></div></a>);})}</div>) : (<p className="text-muted-foreground">No screenshots available for this test.</p>)}
+                  {screenshotAttachments.length > 0 ? (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">{screenshotAttachments.map((attachment, index) => {const imageSrc = getUtilAssetPath(attachment.path); if (imageSrc === '#') return null; return (<a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg"><Image src={imageSrc} alt={attachment.name || `Screenshot ${index + 1}`} fill={true} style={{objectFit: "cover"}} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={attachment['data-ai-hint'] || "test screenshot"}/><div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2"><p className="text-white text-xs text-center break-all">{attachment.name || `Screenshot ${index + 1}`}</p></div></a>);})}</div>) : (<p className="text-muted-foreground">No screenshots available for this test.</p>)}
                 </TabsContent>
 
-                {/* --- MODIFIED: Videos Tab --- */}
                 <TabsContent value="sub-video" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Video Recordings</h3>
                     <div className="space-y-4">
                         {videoAttachments.length > 0 ? (
-                            videoAttachments.map((videoPath, index) => (
+                            videoAttachments.map((attachment, index) => (
                                 <div key={index} className="p-4 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between">
-                                    <p className="text-sm font-medium text-foreground truncate" title={videoPath}>Video Recording {index + 1}</p>
+                                    <p className="text-sm font-medium text-foreground truncate" title={attachment.name}>Video Recording {index + 1}</p>
                                     <div className="flex items-center gap-2">
-                                        <Button asChild variant="ghost" size="sm"><a href={getUtilAssetPath(videoPath)} target="_blank" rel="noopener noreferrer">View</a></Button>
-                                        <Button asChild variant="outline" size="sm"><a href={getUtilAssetPath(videoPath)} download><Download className="h-4 w-4 mr-2"/>Download</a></Button>
+                                        <Button asChild variant="ghost" size="sm"><a href={getUtilAssetPath(attachment.path)} target="_blank" rel="noopener noreferrer">View</a></Button>
+                                        <Button asChild variant="outline" size="sm"><a href={getUtilAssetPath(attachment.path)} download={attachment.name}><Download className="h-4 w-4 mr-2"/>Download</a></Button>
                                     </div>
                                 </div>
                             ))
@@ -298,10 +304,31 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     </div>
                 </TabsContent>
 
-                {/* --- Trace Tab (Unchanged) --- */}
-                <TabsContent value="sub-trace" className="mt-4"><h3 className="text-lg font-semibold text-foreground mb-4">Trace File</h3>{traceAttachmentPath ? (<div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm"><a href={getUtilAssetPath(traceAttachmentPath)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base" download><Download className="h-5 w-5 mr-2" /> Download Trace File (.zip)</a><p className="text-xs text-muted-foreground">Path: {traceAttachmentPath}</p><Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>Using Trace Files</AlertTitle><AlertDescription>Trace files (.zip) can be viewed using the Playwright CLI: <code className="bg-muted px-1 py-0.5 rounded-sm">npx playwright show-trace /path/to/your/trace.zip</code>. Or by uploading them to <a href="https://trace.playwright.dev/" target="_blank" rel="noopener noreferrer" className="underline">trace.playwright.dev</a>.</AlertDescription></Alert></div>) : (<Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Trace File Available</AlertTitle><AlertDescription>There is no Playwright trace file associated with this test run.</AlertDescription></Alert>)}</TabsContent>
+                <TabsContent value="sub-trace" className="mt-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Trace File</h3>
+                  {traceAttachment ? (
+                    <div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
+                      <a href={getUtilAssetPath(traceAttachment.path)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base" download={traceAttachment.name}>
+                        <Download className="h-5 w-5 mr-2" /> Download Trace File ({traceAttachment.name})
+                      </a>
+                      <p className="text-xs text-muted-foreground">Path: {traceAttachment.path}</p>
+                      <Alert className="rounded-lg">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Using Trace Files</AlertTitle>
+                        <AlertDescription>
+                          Trace files (.zip) can be viewed using the Playwright CLI: <code className="bg-muted px-1 py-0.5 rounded-sm">npx playwright show-trace /path/to/your/trace.zip</code>. Or by uploading them to <a href="https://trace.playwright.dev/" target="_blank" rel="noopener noreferrer" className="underline">trace.playwright.dev</a>.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  ) : (
+                    <Alert className="rounded-lg">
+                      <Info className="h-4 w-4" />
+                      <AlertTitle>No Trace File Available</AlertTitle>
+                      <AlertDescription>There is no Playwright trace file associated with this test run.</AlertDescription>
+                    </Alert>
+                  )}
+                </TabsContent>
 
-                {/* --- NEW ATTACHMENT TABS --- */}
                 {[
                   { value: 'sub-html', title: 'HTML Files', attachments: htmlAttachments },
                   { value: 'sub-pdf', title: 'PDF Documents', attachments: pdfAttachments },
@@ -357,3 +384,5 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
+
+    
