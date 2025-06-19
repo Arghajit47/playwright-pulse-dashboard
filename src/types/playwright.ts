@@ -19,10 +19,10 @@ export interface DetailedTestResult {
   runId: string;
   name: string;
   suiteName: string;
-  status: 'passed' | 'failed' | 'skipped' | 'timedOut' | 'pending';
+  status: "passed" | "failed" | "skipped" | "timedOut" | "pending";
   duration: number;
   startTime: string; // ISO string
-  endTime: string;   // ISO string
+  endTime: string; // ISO string
   browser: string;
   retries: number;
   steps: TestStep[];
@@ -31,8 +31,9 @@ export interface DetailedTestResult {
   codeSnippet: string;
   tags: string[];
   screenshots?: string[]; // Array of paths
-  videoPath?: string[];   // Array of paths
-  tracePath?: string;   // Single path
+  videoPath?: string[]; // Array of paths
+  tracePath?: string; // Single path
+  attachments?: any;
   workerId?: string | number;
   totalWorkers?: number;
   configFile?: string;
