@@ -30,6 +30,7 @@ interface CustomDotProps extends DotProps {
   payload?: TestRunHistoryData;
 }
 
+// A unified type for displaying any kind of attachment
 interface DisplayAttachment {
   name: string;
   path: string;
@@ -53,7 +54,7 @@ const HistoryTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as TestRunHistoryData;
     return (
-      <div className="custom-recharts-tooltip">
+      <div className="bg-card p-3 border border-border rounded-md shadow-lg">
         <p className="label text-sm font-semibold text-foreground">{`Date: ${new Date(data.date).toLocaleDateString()}`}</p>
         <p className="text-xs text-foreground">{`Duration: ${formatDuration(data.duration)}`}</p>
         <p className="text-xs" style={{ color: data.status === 'passed' ? 'hsl(var(--chart-3))' : data.status === 'failed' || data.status === 'timedOut' ? 'hsl(var(--destructive))' : 'hsl(var(--accent))' }}>
@@ -184,18 +185,25 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     return test.screenshots.map((path, index) => ({
       name: getAttachmentNameFromPath(path, `Screenshot ${index + 1}`),
       path: path,
-      contentType: 'image/png', // Assuming image type, could infer from extension if needed
-      'data-ai-hint': `screenshot ${index + 1}` // Generic hint
+      contentType: 'image/png', // Assuming default, can be improved
+      'data-ai-hint': `screenshot ${index + 1}`
     }));
   }, [test]);
-
+  
   const videoDisplayItems: DisplayAttachment[] = useMemo(() => {
     if (!test || !test.videoPath || !Array.isArray(test.videoPath)) return [];
-    return test.videoPath.map((path, index) => ({
+    return test.videoPath.map((path, index) => {
+      if (typeof path !== 'string') { // Safety check if an element is not a string
+        console.warn(`Invalid video path element at index ${index}:`, path);
+        return { name: `Invalid Video ${index + 1}`, path: '#', contentType: 'video/mp4', 'data-ai-hint': 'invalid video' };
+      }
+      return {
         name: getAttachmentNameFromPath(path, `Video ${index + 1}`),
         path: path,
-        contentType: 'video/mp4' // Assuming mp4
-    }));
+        contentType: 'video/mp4',
+        'data-ai-hint': `video ${index + 1}`
+      };
+    });
   }, [test]);
   
   const traceDisplayItem: DisplayAttachment | null = useMemo(() => {
@@ -206,29 +214,39 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
       contentType: 'application/zip'
     };
   }, [test]);
-  
-  // Placeholders for other attachment types - these will be empty as data source is specific now
-  const htmlAttachments: DisplayAttachment[] = []; 
-  const pdfAttachments: DisplayAttachment[] = [];
-  const jsonAttachments: DisplayAttachment[] = [];
-  const textCsvAttachments: DisplayAttachment[] = [];
-  const otherAttachments: DisplayAttachment[] = [];
+
+  // Assuming 'otherAttachments' are now sourced from test.attachments if it exists
+  const allOtherAttachments: DisplayAttachment[] = useMemo(() => {
+    if (!test || !test.attachments || !Array.isArray(test.attachments)) return [];
+    return test.attachments.map((att, index) => ({
+        name: att.name || getAttachmentNameFromPath(att.path, `Attachment ${index + 1}`),
+        path: att.path,
+        contentType: att.contentType || 'application/octet-stream',
+        'data-ai-hint': att['data-ai-hint']
+    }));
+  }, [test]);
+
+
+  const htmlAttachments: DisplayAttachment[] = useMemo(() => allOtherAttachments.filter(a => a.contentType.toLowerCase().includes('html')), [allOtherAttachments]);
+  const pdfAttachments: DisplayAttachment[] = useMemo(() => allOtherAttachments.filter(a => a.contentType.toLowerCase().includes('pdf')), [allOtherAttachments]);
+  const jsonAttachments: DisplayAttachment[] = useMemo(() => allOtherAttachments.filter(a => a.contentType.toLowerCase().includes('json')), [allOtherAttachments]);
+  const textCsvAttachments: DisplayAttachment[] = useMemo(() => allOtherAttachments.filter(a => a.contentType.toLowerCase().startsWith('text/')), [allOtherAttachments]);
+  const otherGenericAttachments: DisplayAttachment[] = useMemo(() => allOtherAttachments.filter(a => !htmlAttachments.includes(a) && !pdfAttachments.includes(a) && !jsonAttachments.includes(a) && !textCsvAttachments.includes(a)), [allOtherAttachments, htmlAttachments, pdfAttachments, jsonAttachments, textCsvAttachments]);
+
 
   const totalAttachmentsCount = useMemo(() => {
-    return (screenshotDisplayItems.length) +
-           (videoDisplayItems.length) +
-           (traceDisplayItem ? 1 : 0) +
-           htmlAttachments.length +
-           pdfAttachments.length +
-           jsonAttachments.length +
-           textCsvAttachments.length +
-           otherAttachments.length;
-  }, [screenshotDisplayItems, videoDisplayItems, traceDisplayItem, htmlAttachments, pdfAttachments, jsonAttachments, textCsvAttachments, otherAttachments]);
+    return (
+      screenshotDisplayItems.length +
+      videoDisplayItems.length +
+      (traceDisplayItem ? 1 : 0) +
+      allOtherAttachments.length // Now directly using the length of allOtherAttachments
+    );
+  }, [screenshotDisplayItems, videoDisplayItems, traceDisplayItem, allOtherAttachments]);
 
 
   if (loadingCurrent && !test) {
     return (
-      <div className="container mx-auto px-4 py-8 space-y-6">
+      <div className="container mx-auto py-8 space-y-6">
         <Skeleton className="h-10 w-48 mb-4 rounded-md" />
         <Card className="shadow-xl rounded-lg"><CardHeader><Skeleton className="h-8 w-3/4 mb-2 rounded-md" /><Skeleton className="h-4 w-1/2 rounded-md" /></CardHeader><CardContent className="space-y-4"><Skeleton className="h-10 w-1/3 mb-4 rounded-md" /><Skeleton className="h-40 w-full rounded-md" /></CardContent></Card>
       </div>
@@ -296,7 +314,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {test.steps && test.steps.length > 0 ? (<ScrollArea className="h-[600px] w-full"><div className="pr-4">{test.steps.map((step: TestStep, index: number) => (<TestStepItemRecursive key={step.id || index} step={step} />))}</div></ScrollArea>) : (<p className="text-muted-foreground p-3 md:p-0">No detailed execution steps available for this test.</p>)}
             </TabsContent>
 
-            <TabsContent value="attachments" className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner">
+            <TabsContent value="attachments" className="mt-4 border rounded-lg bg-card shadow-inner">
               <Tabs defaultValue="sub-screenshots" className="w-full">
                 <ScrollArea className="w-full whitespace-nowrap rounded-lg">
                     <TabsList className="inline-grid w-max grid-flow-col mb-4 rounded-lg">
@@ -307,7 +325,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     <TabsTrigger value="sub-pdf" disabled={pdfAttachments.length === 0}><FileText className="h-4 w-4 mr-2" />PDF ({pdfAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-json" disabled={jsonAttachments.length === 0}><FileJson className="h-4 w-4 mr-2" />JSON ({jsonAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-text" disabled={textCsvAttachments.length === 0}><FileText className="h-4 w-4 mr-2" />Text/CSV ({textCsvAttachments.length})</TabsTrigger>
-                    <TabsTrigger value="sub-other" disabled={otherAttachments.length === 0}><FileIcon className="h-4 w-4 mr-2" />Others ({otherAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="sub-other" disabled={otherGenericAttachments.length === 0}><FileIcon className="h-4 w-4 mr-2" />Others ({otherGenericAttachments.length})</TabsTrigger>
                     </TabsList>
                 </ScrollArea>
 
@@ -328,7 +346,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                                 </div>
                             </div>
                         )) : (
-                            <Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Video Available</AlertTitle><AlertDescription>There is no video recording associated with this test run.</AlertDescription></Alert>
+                            <Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Videos Available</AlertTitle><AlertDescription>There is no video recording associated with this test run.</AlertDescription></Alert>
                         )}
                     </div>
                 </TabsContent>
@@ -363,11 +381,31 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   { value: 'sub-pdf', title: 'PDF Documents', attachments: pdfAttachments },
                   { value: 'sub-json', title: 'JSON Files', attachments: jsonAttachments },
                   { value: 'sub-text', title: 'Text & CSV Files', attachments: textCsvAttachments },
-                  { value: 'sub-other', title: 'Other Files', attachments: otherAttachments },
+                  { value: 'sub-other', title: 'Other Files', attachments: otherGenericAttachments },
                 ].map(tab => (
                   <TabsContent key={tab.value} value={tab.value} className="mt-4">
                     <h3 className="text-lg font-semibold text-foreground mb-4">{tab.title}</h3>
-                     <Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Files Available</AlertTitle><AlertDescription>No attachments of this type were found for this test.</AlertDescription></Alert>
+                    <div className="space-y-3">
+                      {tab.attachments.length > 0 ? (
+                        tab.attachments.map((attachment, index) => (
+                          <div key={index} className="p-3 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 truncate">
+                              <AttachmentIcon contentType={attachment.contentType} />
+                              <div className="truncate">
+                                <p className="text-sm font-medium text-foreground truncate" title={attachment.name}>{attachment.name}</p>
+                                <p className="text-xs text-muted-foreground">{attachment.contentType}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center flex-shrink-0 gap-2">
+                              <Button asChild variant="ghost" size="sm"><a href={getUtilAssetPath(attachment.path)} target="_blank" rel="noopener noreferrer">View</a></Button>
+                              <Button asChild variant="outline" size="sm"><a href={getUtilAssetPath(attachment.path)} download={attachment.name}><Download className="h-4 w-4 mr-2"/>Download</a></Button>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Files Available</AlertTitle><AlertDescription>No attachments of this type were found for this test.</AlertDescription></Alert>
+                      )}
+                    </div>
                   </TabsContent>
                 ))}
 
