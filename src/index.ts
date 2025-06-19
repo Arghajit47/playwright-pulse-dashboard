@@ -1,3 +1,4 @@
+
 // Main component export
 export { PulseDashboard } from './components/pulse-dashboard/PulseDashboard.js';
 
@@ -8,9 +9,9 @@ export type {
   DetailedTestResult,
   RunMetadata,
   TestStep,
+  TestAttachment, // Updated from ScreenshotAttachment
   FlakyTestDetail,
   FlakyTestOccurrence,
-  ScreenshotAttachment, // If consumers need to understand the structure of screenshot objects (though it's string[] now)
 } from './types/playwright.js';
 
 export type { TestStatusFilter } from './components/pulse-dashboard/LiveTestResults.js';

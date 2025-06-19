@@ -3,7 +3,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTestData } from '@/hooks/useTestData';
-import type { DetailedTestResult, PlaywrightPulseReport, TestStep } from '@/types/playwright';
+import type { DetailedTestResult, PlaywrightPulseReport, TestStep, TestAttachment } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,9 +13,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, ImageIcon, FileText, LineChart, Info, Download, Film, Archive, Terminal } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { TestStepItemRecursive } from './TestStepItemRecursive';
-import { getRawHistoricalReports } from '@/app/actions'; 
+import { getRawHistoricalReports } from '@/app/actions';
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, DotProps } from 'recharts';
 import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
 
@@ -35,9 +35,9 @@ const StatusDot = (props: CustomDotProps) => {
   if (!cx || !cy || !payload) return null;
 
   let color = 'hsl(var(--muted-foreground))'; // Default color
-  if (payload.status === 'passed') color = 'hsl(var(--chart-3))'; 
-  else if (payload.status === 'failed' || payload.status === 'timedOut') color = 'hsl(var(--destructive))'; 
-  else if (payload.status === 'skipped') color = 'hsl(var(--accent))'; 
+  if (payload.status === 'passed') color = 'hsl(var(--chart-3))';
+  else if (payload.status === 'failed' || payload.status === 'timedOut') color = 'hsl(var(--destructive))';
+  else if (payload.status === 'skipped') color = 'hsl(var(--accent))';
 
   return <circle cx={cx} cy={cy} r={5} fill={color} stroke="hsl(var(--card))" strokeWidth={1}/>;
 };
@@ -132,12 +132,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
       setLoadingHistory(true);
       setErrorHistory(null);
       try {
-        const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports(); 
-        
+        const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports();
+
         const historyData: TestRunHistoryData[] = [];
 
         rawReports.forEach(report => {
-          const historicalTest = report.results.find((r: DetailedTestResult) => r.id === testId); 
+          const historicalTest = report.results.find((r: DetailedTestResult) => r.id === testId);
           if (historicalTest) {
             historyData.push({
               date: report.run.timestamp,
@@ -160,6 +160,25 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     fetchTestHistory();
   }, [testId]);
 
+  const screenshotAttachments = useMemo(() => {
+    return test?.attachments?.filter(att => att.contentType.startsWith('image/')) || [];
+  }, [test]);
+
+  const videoAttachment = useMemo(() => {
+    return test?.attachments?.find(att => att.contentType.startsWith('video/'));
+  }, [test]);
+
+  const traceAttachment = useMemo(() => {
+    return test?.attachments?.find(att => att.contentType === 'application/zip' || (att.name && att.name.endsWith('.trace.zip')));
+  }, [test]);
+
+  const totalAttachmentsCount = useMemo(() => {
+    let count = screenshotAttachments.length;
+    if (videoAttachment) count++;
+    if (traceAttachment) count++;
+    return count;
+  }, [screenshotAttachments, videoAttachment, traceAttachment]);
+
 
   if (loadingCurrent && !test) {
     return (
@@ -179,7 +198,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     );
   }
 
-  if (errorCurrent && !test) { 
+  if (errorCurrent && !test) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Alert variant="destructive" className="rounded-lg">
@@ -206,18 +225,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
       </div>
     );
   }
-  
-  const currentScreenshots = (test.screenshots || [])
-    .map((p: string) => (typeof p === 'string' ? p.trim() : ''))
-    .filter((p: string) => p && p !== '');
+
   const displayName = formatTestName(test.name);
-  const hasVideo = !!test.videoPath;
-  const hasTrace = !!test.tracePath;
-
-  let totalAttachmentsCount = currentScreenshots.length;
-  if (hasVideo) totalAttachmentsCount++;
-  if (hasTrace) totalAttachmentsCount++;
-
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
@@ -240,7 +249,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                         <span className="text-muted-foreground">Loading...</span>
                     ) : currentRun?.run?.timestamp ? (
                         <span className="font-medium">{new Date(currentRun.run.timestamp).toLocaleString()}</span>
-                    ) : errorCurrent && !currentRun?.run?.timestamp ? ( 
+                    ) : errorCurrent && !currentRun?.run?.timestamp ? (
                         <span className="text-destructive font-medium">Error loading date</span>
                     ) : (
                         <span className="font-medium">Not available</span>
@@ -307,39 +316,39 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <TabsList className="grid w-full grid-cols-3 mb-4 rounded-lg">
                   <TabsTrigger value="sub-screenshots">
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    Screenshots ({currentScreenshots.length})
+                    Screenshots ({screenshotAttachments.length})
                   </TabsTrigger>
-                  <TabsTrigger value="sub-video" disabled={!hasVideo}>
+                  <TabsTrigger value="sub-video" disabled={!videoAttachment}>
                     <Film className="h-4 w-4 mr-2" />
-                    Video {hasVideo ? '(1)' : '(0)'}
+                    Video {videoAttachment ? '(1)' : '(0)'}
                   </TabsTrigger>
-                  <TabsTrigger value="sub-trace" disabled={!hasTrace}>
+                  <TabsTrigger value="sub-trace" disabled={!traceAttachment}>
                     <Archive className="h-4 w-4 mr-2" />
-                    Trace {hasTrace ? '(1)' : '(0)'}
+                    Trace {traceAttachment ? '(1)' : '(0)'}
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="sub-screenshots" className="mt-4">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
-                  {currentScreenshots.length > 0 ? (
+                  {screenshotAttachments.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {currentScreenshots.map((path: string, index: number) => {
-                        const imageSrc = getUtilAssetPath(path);
-                        if (imageSrc === '#') { 
+                      {screenshotAttachments.map((attachment: TestAttachment, index: number) => {
+                        const imageSrc = getUtilAssetPath(attachment.path);
+                        if (imageSrc === '#') {
                             return null;
                         }
                         return (
                           <a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg">
                             <Image
                               src={imageSrc}
-                              alt={`Screenshot ${index + 1}`}
+                              alt={attachment.name || `Screenshot ${index + 1}`}
                               fill={true}
                               style={{objectFit: "cover"}}
                               className="group-hover:scale-105 transition-transform duration-300"
-                              data-ai-hint="test screenshot"
+                              data-ai-hint={attachment['data-ai-hint'] || "test screenshot"}
                             />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2">
-                              <p className="text-white text-xs text-center break-all">{`Screenshot ${index + 1}`}</p>
+                              <p className="text-white text-xs text-center break-all">{attachment.name || `Screenshot ${index + 1}`}</p>
                             </div>
                           </a>
                         );
@@ -352,17 +361,18 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                 <TabsContent value="sub-video" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Video Recording</h3>
-                  {hasVideo && test.videoPath ? (
+                  {videoAttachment ? (
                     <div className="p-4 border rounded-lg bg-muted/30 shadow-sm">
                       <a
-                        href={getUtilAssetPath(test.videoPath)}
+                        href={getUtilAssetPath(videoAttachment.path)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
                       >
-                        <Download className="h-5 w-5 mr-2" /> View/Download Video
+                        <Download className="h-5 w-5 mr-2" /> View/Download {videoAttachment.name || 'Video'}
                       </a>
-                      <p className="text-xs text-muted-foreground mt-2">Path: {test.videoPath}</p>
+                      <p className="text-xs text-muted-foreground mt-2">Path: {videoAttachment.path}</p>
+                      <p className="text-xs text-muted-foreground">Type: {videoAttachment.contentType}</p>
                     </div>
                   ) : (
                     <Alert className="rounded-lg">
@@ -375,18 +385,19 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                 <TabsContent value="sub-trace" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Trace File</h3>
-                  {hasTrace && test.tracePath ? (
+                  {traceAttachment ? (
                     <div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
                        <a
-                        href={getUtilAssetPath(test.tracePath)}
+                        href={getUtilAssetPath(traceAttachment.path)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
-                        download 
+                        download
                       >
-                        <Download className="h-5 w-5 mr-2" /> Download Trace File (.zip)
+                        <Download className="h-5 w-5 mr-2" /> Download {traceAttachment.name || 'Trace File'} (.zip)
                       </a>
-                      <p className="text-xs text-muted-foreground">Path: {test.tracePath}</p>
+                      <p className="text-xs text-muted-foreground">Path: {traceAttachment.path}</p>
+                      <p className="text-xs text-muted-foreground">Type: {traceAttachment.contentType}</p>
                        <Alert className="rounded-lg">
                           <Info className="h-4 w-4" />
                           <AlertTitle>Using Trace Files</AlertTitle>
@@ -442,7 +453,6 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   <LineChart className="h-5 w-5 mr-2 text-primary"/>
                   Individual Test Run History
                 </h3>
-                {/* Download button removed */}
               </div>
               {loadingHistory && (
                 <div className="space-y-3">

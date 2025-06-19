@@ -14,11 +14,11 @@ export interface TestStep {
   errorMessage?: string | null;
 }
 
-export interface ScreenshotAttachment {
+export interface TestAttachment {
   name: string;
   path: string;
-  contentType: string; // e.g., 'image/png'
-  'data-ai-hint'?: string;
+  contentType: string; // e.g., 'image/png', 'video/webm', 'application/zip'
+  'data-ai-hint'?: string; // Keep this for image type attachments
 }
 
 export interface DetailedTestResult {
@@ -37,14 +37,11 @@ export interface DetailedTestResult {
   stdout?: string[] | null;
   codeSnippet: string;
   tags: string[];
-  screenshots: string[]; // Changed from ScreenshotAttachment[]
-  videoPath?: string;
-  tracePath?: string;
-  workerId?: string | number; // Changed from workerID to workerId and allows number
-  // Fields from user sample, not currently used in dashboard UI but good to note
+  attachments?: TestAttachment[]; // New field for all attachments
+  workerId?: string | number;
   totalWorkers?: number;
   configFile?: string;
-  metadata?: string; // This could be a JSON string or an object, needs clarification if used
+  metadata?: string;
 }
 
 // Flexible type for environment information

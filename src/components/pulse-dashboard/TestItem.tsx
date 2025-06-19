@@ -1,13 +1,14 @@
 
 'use client';
 
-import type { DetailedTestResult } from '@/types/playwright.js';
+import type { DetailedTestResult, TestAttachment } from '@/types/playwright.js';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle2, XCircle, AlertCircle, Clock, Eye, ChevronRight, Info } from 'lucide-react';
 import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
+import { useMemo } from 'react';
 
 interface TestItemProps {
   test: DetailedTestResult;
@@ -59,10 +60,11 @@ function getStatusBadgeStyle(status: DetailedTestResult['status']): React.CSSPro
 
 
 export function TestItem({ test }: TestItemProps) {
-  const currentScreenshots = (test.screenshots || [])
-    .map((p: string) => (typeof p === 'string' ? p.trim() : ''))
-    .filter((p: string) => p && p !== '');
-  const hasDetailsInAccordion = test.errorMessage || currentScreenshots.length > 0;
+  const quickLookScreenshots = useMemo(() => {
+    return test.attachments?.filter(att => att.contentType.startsWith('image/')).slice(0, 4) || [];
+  }, [test.attachments]);
+
+  const hasDetailsInAccordion = test.errorMessage || quickLookScreenshots.length > 0;
   const displayName = formatTestName(test.name);
 
   return (
@@ -75,7 +77,7 @@ export function TestItem({ test }: TestItemProps) {
           </Link>
         </div>
         <div className="flex items-center space-x-3 ml-2 flex-shrink-0">
-          <Badge 
+          <Badge
             variant="outline"
             className="capitalize text-xs px-2 py-0.5 rounded-full border"
             style={getStatusBadgeStyle(test.status)}
@@ -103,22 +105,22 @@ export function TestItem({ test }: TestItemProps) {
                   </pre>
                 </div>
               )}
-              {currentScreenshots.length > 0 && (
+              {quickLookScreenshots.length > 0 && (
                 <div>
                   <h4 className="font-semibold text-xs text-primary mb-1">Screenshots:</h4>
                    <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
-                    {currentScreenshots.slice(0,4).map((path: string, index: number) => {
-                        const imageSrc = getUtilAssetPath(path);
+                    {quickLookScreenshots.map((attachment: TestAttachment, index: number) => {
+                        const imageSrc = getUtilAssetPath(attachment.path);
                         if (imageSrc === '#') return null;
                         return (
                          <a key={`img-thumb-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-md overflow-hidden group border hover:border-primary shadow-sm">
-                            <Image 
+                            <Image
                                 src={imageSrc}
-                                alt={`Screenshot ${index + 1}`} 
+                                alt={attachment.name || `Screenshot ${index + 1}`}
                                 fill={true}
                                 style={{objectFit: "cover"}}
                                 className="group-hover:scale-105 transition-transform duration-300"
-                                data-ai-hint="test screenshot thumbnail"
+                                data-ai-hint={attachment['data-ai-hint'] || "test screenshot thumbnail"}
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                 <Eye className="h-6 w-6 text-white"/>
@@ -129,7 +131,7 @@ export function TestItem({ test }: TestItemProps) {
                     </div>
                 </div>
               )}
-               {(!test.errorMessage && currentScreenshots.length === 0) && (
+               {(!test.errorMessage && quickLookScreenshots.length === 0) && (
                   <p className="text-xs text-muted-foreground">No error or screenshots for quick look. Click to view full details.</p>
                )}
             </AccordionContent>
