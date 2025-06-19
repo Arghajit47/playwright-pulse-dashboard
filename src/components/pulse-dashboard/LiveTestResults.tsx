@@ -197,10 +197,27 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     const link = document.createElement("a");
     link.setAttribute("href", url);
 
-    let fileRunIdPart = 'unknown_run';
-    if (report.run && report.run.id) {
-      // Use only the part of the ID before the first hyphen
-      fileRunIdPart = report.run.id.split('-')[0];
+    let fileRunIdPart;
+    if (report.run && report.run.id && typeof report.run.id === 'string' && report.run.id.trim() !== '') {
+      const idStr = report.run.id.trim();
+      const parts = idStr.split('-');
+      if (parts.length > 1 && parts[0].toLowerCase() === 'run' && parts[1] && parts[1].trim() !== '') {
+        fileRunIdPart = parts[1];
+      } else if (parts.length > 0 && parts[0].trim() !== '') {
+        fileRunIdPart = parts[0];
+      }
+    }
+
+    if (!fileRunIdPart) { 
+      if (report.run && report.run.timestamp) {
+        try {
+          fileRunIdPart = String(new Date(report.run.timestamp).getTime());
+        } catch (e) {
+          fileRunIdPart = 'data'; 
+        }
+      } else {
+        fileRunIdPart = 'data'; 
+      }
     }
     const fileName = `run-${fileRunIdPart}.csv`;
 
