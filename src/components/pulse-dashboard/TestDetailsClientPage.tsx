@@ -3,7 +3,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTestData } from '@/hooks/useTestData';
-import type { DetailedTestResult, PlaywrightPulseReport, TestStep, TestAttachment } from '@/types/playwright';
+import type { DetailedTestResult, PlaywrightPulseReport, TestStep, ScreenshotAttachment } from '@/types/playwright'; // Reverted TestAttachment to ScreenshotAttachment
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -160,24 +160,25 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     fetchTestHistory();
   }, [testId]);
 
+  // Reverted logic for attachments
   const screenshotAttachments = useMemo(() => {
-    return test?.attachments?.filter(att => att.contentType.startsWith('image/')) || [];
+    return test?.screenshots || []; // Uses original test.screenshots
   }, [test]);
 
-  const videoAttachment = useMemo(() => {
-    return test?.attachments?.find(att => att.contentType.startsWith('video/'));
+  const videoAttachmentPath = useMemo(() => {
+    return test?.videoPath; // Uses original test.videoPath
   }, [test]);
 
-  const traceAttachment = useMemo(() => {
-    return test?.attachments?.find(att => att.contentType === 'application/zip' || (att.name && att.name.endsWith('.trace.zip')));
+  const traceAttachmentPath = useMemo(() => {
+    return test?.tracePath; // Uses original test.tracePath
   }, [test]);
 
   const totalAttachmentsCount = useMemo(() => {
     let count = screenshotAttachments.length;
-    if (videoAttachment) count++;
-    if (traceAttachment) count++;
+    if (videoAttachmentPath) count++;
+    if (traceAttachmentPath) count++;
     return count;
-  }, [screenshotAttachments, videoAttachment, traceAttachment]);
+  }, [screenshotAttachments, videoAttachmentPath, traceAttachmentPath]);
 
 
   if (loadingCurrent && !test) {
@@ -318,13 +319,13 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     <ImageIcon className="h-4 w-4 mr-2" />
                     Screenshots ({screenshotAttachments.length})
                   </TabsTrigger>
-                  <TabsTrigger value="sub-video" disabled={!videoAttachment}>
+                  <TabsTrigger value="sub-video" disabled={!videoAttachmentPath}>
                     <Film className="h-4 w-4 mr-2" />
-                    Video {videoAttachment ? '(1)' : '(0)'}
+                    Video {videoAttachmentPath ? '(1)' : '(0)'}
                   </TabsTrigger>
-                  <TabsTrigger value="sub-trace" disabled={!traceAttachment}>
+                  <TabsTrigger value="sub-trace" disabled={!traceAttachmentPath}>
                     <Archive className="h-4 w-4 mr-2" />
-                    Trace {traceAttachment ? '(1)' : '(0)'}
+                    Trace {traceAttachmentPath ? '(1)' : '(0)'}
                   </TabsTrigger>
                 </TabsList>
 
@@ -332,7 +333,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
                   {screenshotAttachments.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {screenshotAttachments.map((attachment: TestAttachment, index: number) => {
+                      {screenshotAttachments.map((attachment: ScreenshotAttachment, index: number) => { // Uses ScreenshotAttachment
                         const imageSrc = getUtilAssetPath(attachment.path);
                         if (imageSrc === '#') {
                             return null;
@@ -341,14 +342,14 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                           <a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg">
                             <Image
                               src={imageSrc}
-                              alt={attachment.name || `Screenshot ${index + 1}`}
+                              alt={`Screenshot ${index + 1}`} // name property does not exist on ScreenshotAttachment in original
                               fill={true}
                               style={{objectFit: "cover"}}
                               className="group-hover:scale-105 transition-transform duration-300"
                               data-ai-hint={attachment['data-ai-hint'] || "test screenshot"}
                             />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2">
-                              <p className="text-white text-xs text-center break-all">{attachment.name || `Screenshot ${index + 1}`}</p>
+                              <p className="text-white text-xs text-center break-all">{`Screenshot ${index + 1}`}</p>
                             </div>
                           </a>
                         );
@@ -361,18 +362,18 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                 <TabsContent value="sub-video" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Video Recording</h3>
-                  {videoAttachment ? (
+                  {videoAttachmentPath ? (
                     <div className="p-4 border rounded-lg bg-muted/30 shadow-sm">
                       <a
-                        href={getUtilAssetPath(videoAttachment.path)}
+                        href={getUtilAssetPath(videoAttachmentPath)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
                       >
-                        <Download className="h-5 w-5 mr-2" /> View/Download {videoAttachment.name || 'Video'}
+                        <Download className="h-5 w-5 mr-2" /> View/Download Video
                       </a>
-                      <p className="text-xs text-muted-foreground mt-2">Path: {videoAttachment.path}</p>
-                      <p className="text-xs text-muted-foreground">Type: {videoAttachment.contentType}</p>
+                      <p className="text-xs text-muted-foreground mt-2">Path: {videoAttachmentPath}</p>
+                      {/* contentType is not available on videoPath string */}
                     </div>
                   ) : (
                     <Alert className="rounded-lg">
@@ -385,19 +386,19 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                 <TabsContent value="sub-trace" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Trace File</h3>
-                  {traceAttachment ? (
+                  {traceAttachmentPath ? (
                     <div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
                        <a
-                        href={getUtilAssetPath(traceAttachment.path)}
+                        href={getUtilAssetPath(traceAttachmentPath)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-primary hover:underline text-base"
                         download
                       >
-                        <Download className="h-5 w-5 mr-2" /> Download {traceAttachment.name || 'Trace File'} (.zip)
+                        <Download className="h-5 w-5 mr-2" /> Download Trace File (.zip)
                       </a>
-                      <p className="text-xs text-muted-foreground">Path: {traceAttachment.path}</p>
-                      <p className="text-xs text-muted-foreground">Type: {traceAttachment.contentType}</p>
+                      <p className="text-xs text-muted-foreground">Path: {traceAttachmentPath}</p>
+                      {/* contentType is not available on tracePath string */}
                        <Alert className="rounded-lg">
                           <Info className="h-4 w-4" />
                           <AlertTitle>Using Trace Files</AlertTitle>
@@ -519,4 +520,3 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
-

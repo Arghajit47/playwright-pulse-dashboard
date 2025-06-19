@@ -1,4 +1,10 @@
 
+export interface ScreenshotAttachment {
+  path: string;
+  contentType: string;
+  'data-ai-hint'?: string;
+}
+
 export interface TestStep {
   id: string;
   title: string;
@@ -12,13 +18,6 @@ export interface TestStep {
   hookType?: 'before' | 'after' | string;
   steps: TestStep[];
   errorMessage?: string | null;
-}
-
-export interface TestAttachment {
-  name: string;
-  path: string;
-  contentType: string; // e.g., 'image/png', 'video/webm', 'application/zip'
-  'data-ai-hint'?: string; // Keep this for image type attachments
 }
 
 export interface DetailedTestResult {
@@ -37,7 +36,9 @@ export interface DetailedTestResult {
   stdout?: string[] | null;
   codeSnippet: string;
   tags: string[];
-  attachments?: TestAttachment[]; // New field for all attachments
+  screenshots: ScreenshotAttachment[]; // Restored: Was array of ScreenshotAttachment objects
+  videoPath?: string;                 // Restored
+  tracePath?: string;                 // Restored
   workerId?: string | number;
   totalWorkers?: number;
   configFile?: string;
@@ -105,4 +106,3 @@ export interface FlakyTestDetail {
   firstSeen: string;
   lastSeen: string;
 }
-
