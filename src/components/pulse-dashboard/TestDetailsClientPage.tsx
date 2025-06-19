@@ -314,7 +314,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {test.steps && test.steps.length > 0 ? (<ScrollArea className="h-[600px] w-full"><div className="pr-4">{test.steps.map((step: TestStep, index: number) => (<TestStepItemRecursive key={step.id || index} step={step} />))}</div></ScrollArea>) : (<p className="text-muted-foreground p-3 md:p-0">No detailed execution steps available for this test.</p>)}
             </TabsContent>
 
-            <TabsContent value="attachments" className="mt-4 border rounded-lg bg-card shadow-inner">
+            <TabsContent value="attachments" className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner">
               <Tabs defaultValue="sub-screenshots" className="w-full">
                 <ScrollArea className="w-full whitespace-nowrap rounded-lg">
                     <TabsList className="inline-grid w-max grid-flow-col mb-4 rounded-lg">
