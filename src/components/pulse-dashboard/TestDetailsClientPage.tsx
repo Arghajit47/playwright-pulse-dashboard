@@ -3,7 +3,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTestData } from '@/hooks/useTestData';
-import type { DetailedTestResult, PlaywrightPulseReport, TestStep, ScreenshotAttachment } from '@/types/playwright'; // Reverted TestAttachment to ScreenshotAttachment
+import type { DetailedTestResult, PlaywrightPulseReport, TestStep, ScreenshotAttachment } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -160,17 +160,16 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     fetchTestHistory();
   }, [testId]);
 
-  // Reverted logic for attachments
   const screenshotAttachments = useMemo(() => {
-    return test?.screenshots || []; // Uses original test.screenshots
+    return test?.screenshots || [];
   }, [test]);
 
   const videoAttachmentPath = useMemo(() => {
-    return test?.videoPath; // Uses original test.videoPath
+    return test?.videoPath;
   }, [test]);
 
   const traceAttachmentPath = useMemo(() => {
-    return test?.tracePath; // Uses original test.tracePath
+    return test?.tracePath;
   }, [test]);
 
   const totalAttachmentsCount = useMemo(() => {
@@ -333,7 +332,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
                   {screenshotAttachments.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {screenshotAttachments.map((attachment: ScreenshotAttachment, index: number) => { // Uses ScreenshotAttachment
+                      {screenshotAttachments.map((attachment: ScreenshotAttachment, index: number) => {
                         const imageSrc = getUtilAssetPath(attachment.path);
                         if (imageSrc === '#') {
                             return null;
@@ -342,7 +341,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                           <a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg">
                             <Image
                               src={imageSrc}
-                              alt={`Screenshot ${index + 1}`} // name property does not exist on ScreenshotAttachment in original
+                              alt={`Screenshot ${index + 1}`}
                               fill={true}
                               style={{objectFit: "cover"}}
                               className="group-hover:scale-105 transition-transform duration-300"
@@ -373,7 +372,6 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                         <Download className="h-5 w-5 mr-2" /> View/Download Video
                       </a>
                       <p className="text-xs text-muted-foreground mt-2">Path: {videoAttachmentPath}</p>
-                      {/* contentType is not available on videoPath string */}
                     </div>
                   ) : (
                     <Alert className="rounded-lg">
@@ -398,7 +396,6 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                         <Download className="h-5 w-5 mr-2" /> Download Trace File (.zip)
                       </a>
                       <p className="text-xs text-muted-foreground">Path: {traceAttachmentPath}</p>
-                      {/* contentType is not available on tracePath string */}
                        <Alert className="rounded-lg">
                           <Info className="h-4 w-4" />
                           <AlertTitle>Using Trace Files</AlertTitle>
@@ -520,3 +517,4 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
+

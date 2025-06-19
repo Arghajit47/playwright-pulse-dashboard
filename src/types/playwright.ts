@@ -36,9 +36,9 @@ export interface DetailedTestResult {
   stdout?: string[] | null;
   codeSnippet: string;
   tags: string[];
-  screenshots: ScreenshotAttachment[]; // Restored: Was array of ScreenshotAttachment objects
-  videoPath?: string;                 // Restored
-  tracePath?: string;                 // Restored
+  screenshots: ScreenshotAttachment[]; // Uses ScreenshotAttachment objects
+  videoPath?: string;
+  tracePath?: string;
   workerId?: string | number;
   totalWorkers?: number;
   configFile?: string;
@@ -106,3 +106,4 @@ export interface FlakyTestDetail {
   firstSeen: string;
   lastSeen: string;
 }
+

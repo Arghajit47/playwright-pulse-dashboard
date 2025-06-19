@@ -9,7 +9,7 @@ export type {
   DetailedTestResult,
   RunMetadata,
   TestStep,
-  ScreenshotAttachment, // Reverted to ScreenshotAttachment
+  ScreenshotAttachment,
   FlakyTestDetail,
   FlakyTestOccurrence,
 } from './types/playwright.js';
@@ -22,3 +22,4 @@ export type { TestStatusFilter } from './components/pulse-dashboard/LiveTestResu
 
 // Note: Server Actions and API route handlers are not exported as part of this client-side package.
 // The consuming Next.js application must implement the required backend endpoints and data provision.
+
