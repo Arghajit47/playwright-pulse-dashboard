@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Terminal, Info, ChevronDown, XCircle, FilterX, Repeat1, ListChecks, CheckCircle2, SkipForward, Clock, Download } from "lucide-react";
+import { Terminal, Info, ChevronDown, XCircle, FilterX, Repeat1, ListChecks, CheckCircle2, SkipForward, Clock, FileSpreadsheet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -196,7 +196,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-
+    
     let fileRunIdPart;
     if (report.run && report.run.id && typeof report.run.id === 'string' && report.run.id.trim() !== '') {
       const idStr = report.run.id.trim();
@@ -304,8 +304,8 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
             </CardDescription>
           )}
         </div>
-        <Button onClick={handleExportCsv} variant="outline" size="sm" className="ml-auto rounded-md">
-          <Download className="mr-2 h-4 w-4" />
+        <Button onClick={handleExportCsv} variant="outline" size="sm" className="ml-auto rounded-md shadow-md">
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
           Export as CSV
         </Button>
       </CardHeader>
