@@ -3,7 +3,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTestData } from '@/hooks/useTestData';
-import type { DetailedTestResult, PlaywrightPulseReport, TestStep, PlaywrightAttachment } from '@/types/playwright';
+import type { DetailedTestResult, PlaywrightPulseReport, TestStep, ScreenshotAttachment } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -112,7 +112,7 @@ function AttachmentIcon({ contentType }: { contentType: string }) {
     if (lowerContentType.includes('html')) return <FileCode className="h-6 w-6 text-blue-500" />;
     if (lowerContentType.includes('pdf')) return <FileText className="h-6 w-6 text-red-500" />;
     if (lowerContentType.includes('json')) return <FileJson className="h-6 w-6 text-yellow-500" />;
-    if (lowerContentType.includes('csv') || lowerContentType.startsWith('text/plain')) return <FileSpreadsheet className="h-6 w-6 text-green-500" />; // Combined Text/CSV
+    if (lowerContentType.includes('csv') || lowerContentType.startsWith('text/plain')) return <FileSpreadsheet className="h-6 w-6 text-green-500" />;
     if (lowerContentType.startsWith('text/')) return <FileText className="h-6 w-6 text-gray-500" />;
     return <FileIcon className="h-6 w-6 text-gray-400" />;
 }
@@ -167,33 +167,42 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     fetchTestHistory();
   }, [testId]);
 
-  const screenshotAttachments = useMemo(() => {
-    return (test?.attachments || []).filter(att => att.contentType.toLowerCase().startsWith('image/'));
+  const screenshotAttachments = useMemo(() => test?.screenshots || [], [test]);
+  const videoItem = useMemo(() => {
+    if (!test?.videoPath) return null;
+    return {
+      name: test.videoPath.split(/[/\\]/).pop() || 'Video Recording',
+      path: test.videoPath,
+      contentType: 'video/mp4' // Assuming mp4, could be inferrred or passed if available
+    };
   }, [test]);
 
-  const videoAttachments = useMemo(() => {
-    return (test?.attachments || []).filter(att => att.contentType.toLowerCase().startsWith('video/'));
+  const traceFile = useMemo(() => {
+    if (!test?.tracePath) return null;
+    return {
+      name: test.tracePath.split(/[/\\]/).pop() || 'trace.zip',
+      path: test.tracePath,
+      contentType: 'application/zip'
+    };
   }, [test]);
-
-  const traceAttachment = useMemo(() => {
-    return (test?.attachments || []).find(att => att.contentType.toLowerCase() === 'application/zip' || att.name.toLowerCase().endsWith('.trace.zip'));
-  }, [test]);
-
-  const genericAttachments = useMemo(() => (test?.attachments || []).filter(
-    att => !att.contentType.toLowerCase().startsWith('image/') &&
-           !att.contentType.toLowerCase().startsWith('video/') &&
-           !(att.contentType.toLowerCase() === 'application/zip' || att.name.toLowerCase().endsWith('.trace.zip'))
-  ), [test]);
-
-  const htmlAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.toLowerCase().includes('html')), [genericAttachments]);
-  const pdfAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.toLowerCase().includes('pdf')), [genericAttachments]);
-  const jsonAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.toLowerCase().includes('json')), [genericAttachments]);
-  const textCsvAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.toLowerCase().startsWith('text/') || a.contentType.toLowerCase().includes('csv')), [genericAttachments]);
-  const otherAttachments = useMemo(() => genericAttachments.filter(a => !a.contentType.toLowerCase().includes('html') && !a.contentType.toLowerCase().includes('pdf') && !a.contentType.toLowerCase().includes('json') && !a.contentType.toLowerCase().startsWith('text/') && !a.contentType.toLowerCase().includes('csv')), [genericAttachments]);
+  
+  // These will be empty for now as their data source (generic attachments) is removed.
+  const htmlAttachments: ScreenshotAttachment[] = []; 
+  const pdfAttachments: ScreenshotAttachment[] = [];
+  const jsonAttachments: ScreenshotAttachment[] = [];
+  const textCsvAttachments: ScreenshotAttachment[] = [];
+  const otherAttachments: ScreenshotAttachment[] = [];
 
   const totalAttachmentsCount = useMemo(() => {
-    return (test?.attachments || []).length;
-  }, [test]);
+    return (screenshotAttachments.length) +
+           (videoItem ? 1 : 0) +
+           (traceFile ? 1 : 0) +
+           htmlAttachments.length +
+           pdfAttachments.length +
+           jsonAttachments.length +
+           textCsvAttachments.length +
+           otherAttachments.length;
+  }, [screenshotAttachments, videoItem, traceFile]);
 
 
   if (loadingCurrent && !test) {
@@ -271,8 +280,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 <ScrollArea className="w-full whitespace-nowrap rounded-lg">
                     <TabsList className="inline-grid w-max grid-flow-col mb-4 rounded-lg">
                     <TabsTrigger value="sub-screenshots" disabled={screenshotAttachments.length === 0}><ImageIcon className="h-4 w-4 mr-2" />Screenshots ({screenshotAttachments.length})</TabsTrigger>
-                    <TabsTrigger value="sub-video" disabled={videoAttachments.length === 0}><Film className="h-4 w-4 mr-2" />Videos ({videoAttachments.length})</TabsTrigger>
-                    <TabsTrigger value="sub-trace" disabled={!traceAttachment}><Archive className="h-4 w-4 mr-2" />Trace {traceAttachment ? '(1)' : '(0)'}</TabsTrigger>
+                    <TabsTrigger value="sub-video" disabled={!videoItem}><Film className="h-4 w-4 mr-2" />Videos ({videoItem ? 1 : 0})</TabsTrigger>
+                    <TabsTrigger value="sub-trace" disabled={!traceFile}><Archive className="h-4 w-4 mr-2" />Trace {traceFile ? '(1)' : '(0)'}</TabsTrigger>
                     <TabsTrigger value="sub-html" disabled={htmlAttachments.length === 0}><FileCode className="h-4 w-4 mr-2" />HTML ({htmlAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-pdf" disabled={pdfAttachments.length === 0}><FileText className="h-4 w-4 mr-2" />PDF ({pdfAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-json" disabled={jsonAttachments.length === 0}><FileJson className="h-4 w-4 mr-2" />JSON ({jsonAttachments.length})</TabsTrigger>
@@ -287,32 +296,30 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </TabsContent>
 
                 <TabsContent value="sub-video" className="mt-4">
-                   <h3 className="text-lg font-semibold text-foreground mb-4">Video Recordings</h3>
+                   <h3 className="text-lg font-semibold text-foreground mb-4">Video Recording</h3>
                     <div className="space-y-4">
-                        {videoAttachments.length > 0 ? (
-                            videoAttachments.map((attachment, index) => (
-                                <div key={index} className="p-4 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between">
-                                    <p className="text-sm font-medium text-foreground truncate" title={attachment.name}>Video Recording {index + 1}</p>
-                                    <div className="flex items-center gap-2">
-                                        <Button asChild variant="ghost" size="sm"><a href={getUtilAssetPath(attachment.path)} target="_blank" rel="noopener noreferrer">View</a></Button>
-                                        <Button asChild variant="outline" size="sm"><a href={getUtilAssetPath(attachment.path)} download={attachment.name}><Download className="h-4 w-4 mr-2"/>Download</a></Button>
-                                    </div>
+                        {videoItem ? (
+                            <div className="p-4 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between">
+                                <p className="text-sm font-medium text-foreground truncate" title={videoItem.name}>{videoItem.name}</p>
+                                <div className="flex items-center gap-2">
+                                    <Button asChild variant="ghost" size="sm"><a href={getUtilAssetPath(videoItem.path)} target="_blank" rel="noopener noreferrer">View</a></Button>
+                                    <Button asChild variant="outline" size="sm"><a href={getUtilAssetPath(videoItem.path)} download={videoItem.name}><Download className="h-4 w-4 mr-2"/>Download</a></Button>
                                 </div>
-                            ))
+                            </div>
                         ) : (
-                            <Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Videos Available</AlertTitle><AlertDescription>There are no video recordings associated with this test run.</AlertDescription></Alert>
+                            <Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Video Available</AlertTitle><AlertDescription>There is no video recording associated with this test run.</AlertDescription></Alert>
                         )}
                     </div>
                 </TabsContent>
 
                 <TabsContent value="sub-trace" className="mt-4">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Trace File</h3>
-                  {traceAttachment ? (
+                  {traceFile ? (
                     <div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
-                      <a href={getUtilAssetPath(traceAttachment.path)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base" download={traceAttachment.name}>
-                        <Download className="h-5 w-5 mr-2" /> Download Trace File ({traceAttachment.name})
+                      <a href={getUtilAssetPath(traceFile.path)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base" download={traceFile.name}>
+                        <Download className="h-5 w-5 mr-2" /> Download Trace File ({traceFile.name})
                       </a>
-                      <p className="text-xs text-muted-foreground">Path: {traceAttachment.path}</p>
+                      <p className="text-xs text-muted-foreground">Path: {traceFile.path}</p>
                       <Alert className="rounded-lg">
                         <Info className="h-4 w-4" />
                         <AlertTitle>Using Trace Files</AlertTitle>
@@ -329,7 +336,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     </Alert>
                   )}
                 </TabsContent>
-
+                
+                {/* Placeholder for other attachment types if data source is identified later */}
                 {[
                   { value: 'sub-html', title: 'HTML Files', attachments: htmlAttachments },
                   { value: 'sub-pdf', title: 'PDF Documents', attachments: pdfAttachments },
@@ -339,27 +347,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 ].map(tab => (
                   <TabsContent key={tab.value} value={tab.value} className="mt-4">
                     <h3 className="text-lg font-semibold text-foreground mb-4">{tab.title}</h3>
-                    <div className="space-y-3">
-                      {tab.attachments.length > 0 ? (
-                        tab.attachments.map((attachment, index) => (
-                          <div key={index} className="p-3 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-3 truncate">
-                              <AttachmentIcon contentType={attachment.contentType} />
-                              <div className="truncate">
-                                <p className="text-sm font-medium text-foreground truncate" title={attachment.name}>{attachment.name}</p>
-                                <p className="text-xs text-muted-foreground">{attachment.contentType}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center flex-shrink-0 gap-2">
-                              <Button asChild variant="ghost" size="sm"><a href={getUtilAssetPath(attachment.path)} target="_blank" rel="noopener noreferrer">View</a></Button>
-                              <Button asChild variant="outline" size="sm"><a href={getUtilAssetPath(attachment.path)} download={attachment.name}><Download className="h-4 w-4 mr-2"/>Download</a></Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Files Available</AlertTitle><AlertDescription>No attachments of this type were found for this test.</AlertDescription></Alert>
-                      )}
-                    </div>
+                     <Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Files Available</AlertTitle><AlertDescription>No attachments of this type were found for this test (data for this tab would come from a generic 'attachments' field if present).</AlertDescription></Alert>
                   </TabsContent>
                 ))}
 
