@@ -62,7 +62,7 @@ function getStatusBadgeStyle(status: DetailedTestResult['status']): React.CSSPro
 export function TestItem({ test }: TestItemProps) {
   const quickLookScreenshots = useMemo(() => {
     return (test.attachments || [])
-      .filter(att => att.contentType.startsWith('image/'))
+      .filter(att => att.contentType.toLowerCase().startsWith('image/'))
       .slice(0, 4);
   }, [test.attachments]);
 
@@ -143,4 +143,3 @@ export function TestItem({ test }: TestItemProps) {
     </div>
   );
 }
-

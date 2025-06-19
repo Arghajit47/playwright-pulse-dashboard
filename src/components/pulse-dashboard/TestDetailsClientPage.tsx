@@ -108,11 +108,12 @@ function getStatusBadgeStyle(status: DetailedTestResult['status']): React.CSSPro
 }
 
 function AttachmentIcon({ contentType }: { contentType: string }) {
-    if (contentType.includes('html')) return <FileCode className="h-6 w-6 text-blue-500" />;
-    if (contentType.includes('pdf')) return <FileText className="h-6 w-6 text-red-500" />;
-    if (contentType.includes('json')) return <FileJson className="h-6 w-6 text-yellow-500" />;
-    if (contentType.includes('csv')) return <FileSpreadsheet className="h-6 w-6 text-green-500" />;
-    if (contentType.startsWith('text/')) return <FileText className="h-6 w-6 text-gray-500" />;
+    const lowerContentType = contentType.toLowerCase();
+    if (lowerContentType.includes('html')) return <FileCode className="h-6 w-6 text-blue-500" />;
+    if (lowerContentType.includes('pdf')) return <FileText className="h-6 w-6 text-red-500" />;
+    if (lowerContentType.includes('json')) return <FileJson className="h-6 w-6 text-yellow-500" />;
+    if (lowerContentType.includes('csv') || lowerContentType.startsWith('text/plain')) return <FileSpreadsheet className="h-6 w-6 text-green-500" />; // Combined Text/CSV
+    if (lowerContentType.startsWith('text/')) return <FileText className="h-6 w-6 text-gray-500" />;
     return <FileIcon className="h-6 w-6 text-gray-400" />;
 }
 
@@ -167,29 +168,29 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   }, [testId]);
 
   const screenshotAttachments = useMemo(() => {
-    return (test?.attachments || []).filter(att => att.contentType.startsWith('image/'));
+    return (test?.attachments || []).filter(att => att.contentType.toLowerCase().startsWith('image/'));
   }, [test]);
 
   const videoAttachments = useMemo(() => {
-    return (test?.attachments || []).filter(att => att.contentType.startsWith('video/'));
+    return (test?.attachments || []).filter(att => att.contentType.toLowerCase().startsWith('video/'));
   }, [test]);
-  
+
   const traceAttachment = useMemo(() => {
-    return (test?.attachments || []).find(att => att.contentType === 'application/zip' || att.name.endsWith('.trace.zip'));
+    return (test?.attachments || []).find(att => att.contentType.toLowerCase() === 'application/zip' || att.name.toLowerCase().endsWith('.trace.zip'));
   }, [test]);
 
   const genericAttachments = useMemo(() => (test?.attachments || []).filter(
-    att => !att.contentType.startsWith('image/') && 
-           !att.contentType.startsWith('video/') && 
-           !(att.contentType === 'application/zip' || att.name.endsWith('.trace.zip'))
+    att => !att.contentType.toLowerCase().startsWith('image/') &&
+           !att.contentType.toLowerCase().startsWith('video/') &&
+           !(att.contentType.toLowerCase() === 'application/zip' || att.name.toLowerCase().endsWith('.trace.zip'))
   ), [test]);
-  
-  const htmlAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.includes('html')), [genericAttachments]);
-  const pdfAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.includes('pdf')), [genericAttachments]);
-  const jsonAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.includes('json')), [genericAttachments]);
-  const textCsvAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.startsWith('text/')), [genericAttachments]);
-  const otherAttachments = useMemo(() => genericAttachments.filter(a => !a.contentType.includes('html') && !a.contentType.includes('pdf') && !a.contentType.includes('json') && !a.contentType.startsWith('text/')), [genericAttachments]);
-  
+
+  const htmlAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.toLowerCase().includes('html')), [genericAttachments]);
+  const pdfAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.toLowerCase().includes('pdf')), [genericAttachments]);
+  const jsonAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.toLowerCase().includes('json')), [genericAttachments]);
+  const textCsvAttachments = useMemo(() => genericAttachments.filter(a => a.contentType.toLowerCase().startsWith('text/') || a.contentType.toLowerCase().includes('csv')), [genericAttachments]);
+  const otherAttachments = useMemo(() => genericAttachments.filter(a => !a.contentType.toLowerCase().includes('html') && !a.contentType.toLowerCase().includes('pdf') && !a.contentType.toLowerCase().includes('json') && !a.contentType.toLowerCase().startsWith('text/') && !a.contentType.toLowerCase().includes('csv')), [genericAttachments]);
+
   const totalAttachmentsCount = useMemo(() => {
     return (test?.attachments || []).length;
   }, [test]);
@@ -279,7 +280,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     <TabsTrigger value="sub-other" disabled={otherAttachments.length === 0}><FileIcon className="h-4 w-4 mr-2" />Others ({otherAttachments.length})</TabsTrigger>
                     </TabsList>
                 </ScrollArea>
-                
+
                 <TabsContent value="sub-screenshots" className="mt-4">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
                   {screenshotAttachments.length > 0 ? (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">{screenshotAttachments.map((attachment, index) => {const imageSrc = getUtilAssetPath(attachment.path); if (imageSrc === '#') return null; return (<a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg"><Image src={imageSrc} alt={attachment.name || `Screenshot ${index + 1}`} fill={true} style={{objectFit: "cover"}} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={attachment['data-ai-hint'] || "test screenshot"}/><div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2"><p className="text-white text-xs text-center break-all">{attachment.name || `Screenshot ${index + 1}`}</p></div></a>);})}</div>) : (<p className="text-muted-foreground">No screenshots available for this test.</p>)}
@@ -384,5 +385,3 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
-
-    
