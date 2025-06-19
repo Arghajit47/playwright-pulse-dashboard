@@ -9,7 +9,7 @@ export type {
   DetailedTestResult,
   RunMetadata,
   TestStep,
-  ScreenshotAttachment,
+  PlaywrightAttachment, // Updated from ScreenshotAttachment
   FlakyTestDetail,
   FlakyTestOccurrence,
 } from './types/playwright.js';

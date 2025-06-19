@@ -1,8 +1,9 @@
 
-export interface ScreenshotAttachment {
-  path: string;
-  contentType: string;
-  'data-ai-hint'?: string;
+export interface PlaywrightAttachment {
+  name: string; // File name, e.g., "screenshot1.png", "trace.zip", "output.html"
+  path: string; // Relative path for the asset
+  contentType: string; // MIME type
+  'data-ai-hint'?: string; // Optional, mainly for images
 }
 
 export interface TestStep {
@@ -36,9 +37,7 @@ export interface DetailedTestResult {
   stdout?: string[] | null;
   codeSnippet: string;
   tags: string[];
-  screenshots: ScreenshotAttachment[]; // Uses ScreenshotAttachment objects
-  videoPath?: string;
-  tracePath?: string;
+  attachments?: PlaywrightAttachment[]; // Replaces screenshots, videoPath, tracePath
   workerId?: string | number;
   totalWorkers?: number;
   configFile?: string;
