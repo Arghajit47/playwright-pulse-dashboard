@@ -171,10 +171,31 @@
             margin-top: 40px; padding: 24px;
             background-color: var(--color-bg-content);
             border-top: 1px solid var(--color-border);
-            text-align: center; color: var(--color-text-secondary);
+            text-align: center;
+        }
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            color: var(--color-text-secondary);
             font-size: 0.9em;
         }
-        footer a { color: var(--color-primary); text-decoration: none; font-weight: 500; }
+        .footer-logo {
+            height: 30px;
+            width: auto;
+        }
+        .footer-content p {
+            margin: 0; /* Remove default paragraph margin */
+        }
+        .footer-content a { color: var(--color-primary); text-decoration: none; font-weight: 500; }
+        
+        @media (max-width: 480px) {
+            .footer-content {
+                flex-direction: column; /* Stack logo and text on small screens */
+                gap: 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -213,7 +234,10 @@
                 <article id="content-display-area"></article>
             </div>
             <footer>
-                <p>© 2025 Pulse Dashboard. Crafted by <a href="https://github.com/arghajit47" target="_blank" rel="noopener noreferrer">Arghajit Singha</a> with precision</p>
+                <div class="footer-content">
+                    <img src="https://i.postimg.cc/XqVn1NhF/pulse.png" alt="Pulse Logo" class="footer-logo"/>
+                    <p>© 2025 Pulse Dashboard. Crafted by <a href="https://github.com/arghajit47" target="_blank" rel="noopener noreferrer">Arghajit Singha</a> with precision</p>
+                </div>
             </footer>
         </main>
     </div>
@@ -226,7 +250,7 @@
             <p><strong>Pulse Dashboard</strong> is a reusable Next.js component and standalone CLI tool designed to provide real-time monitoring and historical analysis of Playwright test executions. It helps development and QA teams to quickly identify issues, track test performance over time, and gain insights into failure patterns.</p>
             <p>It can be: <strong>Run as a Standalone CLI Tool</strong>: Install globally or use with <code>npx</code> to quickly view reports.</p>
             <p>[Note: <strong>Pulse Dashboard</strong> uses playwright-pulse-report generated data]</p>
-            <h2>Installation</h2>
+            <h2>👉🏼 Installation</h2>
             <p>Getting started with Pulse is simple. You can install it as an npm package and run it with a single command.</p>
             <h4>1. Install the package</h4>
             <p>Use npm package manager to add Pulse to your project.</p>
@@ -240,6 +264,12 @@
                 <pre><code class="language-bash">npx start-dashboard</code></pre>
                 <button class="copy-btn" data-copy-text="npx start-dashboard" title="Copy to clipboard"><i class="fa-regular fa-copy"></i></button>
             </div>
+            <h2>👉🏼 Key Features</h2>
+            <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg" alt="Key Features" class="doc-image">
+            <h2>👉🏼 Client Side Folder Structure</h2>
+            <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-client-folder-structure.svg" alt="Client Side Folder Structure" class="doc-image">
+            <h2>👉🏼 Technical Stack</h2>
+            <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-framework.svg" alt="Technical Stack" class="doc-image">
         </div>
     </template>
     
