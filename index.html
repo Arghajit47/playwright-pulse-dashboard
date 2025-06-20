@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en" class="light-theme">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-rh="true">Pulse Dashboard - Project Documentation</title>
+    
+    <!-- Google Fonts for a modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+    <!-- Icon Font -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- CSS Variables for Theming --- */
+        :root {
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+            --navbar-height: 60px;
+        }
+
+        .logo {
+            height: 50px;
+            width: 80px;
+        }
+
+        .light-theme {
+            --color-bg: #f7f9fc;
+            --color-bg-content: #ffffff;
+            --color-text-primary: #2d3748;
+            --color-text-secondary: #5a6578;
+            --color-primary: #3182ce;
+            --color-primary-light: #ebf8ff;
+            --color-border: #e2e8f0;
+            --color-code-bg: #edf2f7;
+            --color-shadow: rgba(45, 55, 72, 0.1);
+            --color-success: #38a169;
+        }
+
+        .dark-theme {
+            --color-bg: #1a202c;
+            --color-bg-content: #2d3748;
+            --color-text-primary: #e2e8f0;
+            --color-text-secondary: #a0aec0;
+            --color-primary: #63b3ed;
+            --color-primary-light: #2c5282;
+            --color-border: #4a5568;
+            --color-code-bg: #283141;
+            --color-shadow: rgba(0, 0, 0, 0.2);
+            --color-success: #68d391;
+        }
+
+        /* --- Global & Reset Styles --- */
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0; padding: 0; background-color: var(--color-bg);
+            color: var(--color-text-primary); font-family: var(--font-sans);
+            line-height: 1.7; transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Layout Structure --- */
+        .navbar {
+            background-color: var(--color-bg-content); border-bottom: 1px solid var(--color-border);
+            height: var(--navbar-height); width: 100%; position: fixed; top: 0; left: 0;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+            z-index: 100; transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .navbar-brand a { font-weight: 700; font-size: 1.2rem; text-decoration: none; color: var(--color-text-primary); }
+        .docs-wrapper { display: flex; padding-top: var(--navbar-height); }
+        
+        .sidebar {
+            position: fixed; top: var(--navbar-height); left: 0; width: 280px;
+            height: calc(100vh - var(--navbar-height)); overflow-y: auto; padding: 24px;
+            border-right: 1px solid var(--color-border); background-color: var(--color-bg-content);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        main { flex-grow: 1; padding-left: 280px; }
+        .main-content-container { max-width: 800px; margin: 40px auto; padding: 0 24px; }
+
+        /* --- Typography & Content Styles --- */
+        h1, h2, h3, h4 { font-weight: 700; color: var(--color-text-primary); }
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); }
+        h2 { font-size: 1.8rem; margin-top: 48px; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); }
+        h3 { font-size: 1.4rem; margin-top: 32px; margin-bottom: 16px; }
+        h4 { font-size: 1.1rem; margin-top: 24px; margin-bottom: 12px; }
+        
+        p { margin-bottom: 1rem; color: var(--color-text-secondary); }
+        a { color: var(--color-primary); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+        a:hover { text-decoration: underline; color: var(--color-primary); }
+        ul { padding-left: 20px; } li { margin-bottom: 0.5rem; color: var(--color-text-secondary); }
+        code { background-color: var(--color-code-bg); color: var(--color-text-primary); padding: 3px 6px; border-radius: 6px; font-family: var(--font-mono); font-size: 0.9em; transition: background-color 0.3s; }
+        pre { background-color: var(--color-code-bg); padding: 16px; border-radius: 8px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.9em; transition: background-color 0.3s; }
+
+        /* --- Component Styles --- */
+        .section { margin-bottom: 32px; }
+        .doc-image { max-width: 100%; border-radius: 8px; margin: 24px 0; border: 1px solid var(--color-border); box-shadow: 0 4px 12px var(--color-shadow); }
+
+        /* Sidebar Navigation */
+        .sidebar-nav ul { list-style: none; padding: 0; }
+        .sidebar-nav a { display: block; padding: 8px; border-radius: 6px; color: var(--color-text-secondary); font-weight: 500; transition: background-color 0.2s, color 0.2s; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background-color: var(--color-primary-light); color: var(--color-primary); text-decoration: none; }
+
+        /* Theme Toggle Button */
+        .theme-toggle { cursor: pointer; background: none; border: 1px solid var(--color-border); border-radius: 8px; padding: 8px; display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); transition: background-color 0.3s, border-color 0.3s; }
+        .theme-toggle:hover { background-color: var(--color-bg); }
+        
+        /* Copy to Clipboard Styles */
+        .copyable-code { position: relative; }
+        .copyable-code pre { padding-right: 50px; }
+        .copy-btn {
+            position: absolute; top: 50%; right: 12px; transform: translateY(-50%);
+            background: none; border: none; color: var(--color-text-secondary);
+            cursor: pointer; padding: 8px; border-radius: 6px;
+            transition: color 0.2s, background-color 0.2s;
+        }
+        .copy-btn:hover { color: var(--color-text-primary); background-color: rgba(0,0,0,0.05); }
+        .dark-theme .copy-btn:hover { background-color: rgba(255,255,255,0.1); }
+        .copy-btn .fa-check { color: var(--color-success); }
+        
+        /* Accordion Styles */
+        .accordion-item {
+            border-bottom: 1px solid var(--color-border);
+        }
+        .accordion-trigger {
+            background: none; border: none; width: 100%; text-align: left;
+            padding: 20px 0; font-size: 1.2rem; font-weight: 600;
+            color: var(--color-text-primary); cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .accordion-icon {
+            transition: transform 0.3s ease;
+            font-size: 0.9em;
+        }
+        .accordion-trigger[aria-expanded="true"] .accordion-icon {
+            transform: rotate(180deg);
+        }
+        .accordion-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .accordion-panel-content {
+            padding: 0 0 20px 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); width: 0; padding: 0; border: none; }
+            main { padding-left: 0; }
+            .main-content-container { margin: 24px auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand" style="
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+    ">
+    <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images//pulse-logo.png" 
+         class="logo" 
+         alt="Pulse Logo"
+         style="height: 32px; width: auto;">
+    <a href="#getting-started" style="
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: inherit;
+        text-decoration: none;
+    ">Pulse Dashboard</a>
+</div>
+        <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode"><!-- Icon loaded by JS --></button>
+    </nav>
+
+    <div class="docs-wrapper">
+        <aside class="sidebar">
+            <nav class="sidebar-nav" aria-label="Docs sidebar">
+                <ul>
+                    <li><a href="#getting-started">Getting Started</a></li>
+                    <li><a href="#dashboard">Dashboard Overview</a></li>
+                    <li><a href="#test-results">Test Results</a></li>
+                    <li><a href="#trend-analysis">Trend Analysis</a></li>
+                    <li><a href="#flaky-tests">Flaky Tests</a></li>
+                    <li><a href="#failure-categorization">Failure Categorization</a></li>
+                    <li><a href="#test-details-page">Test Details Page</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main>
+            <div class="main-content-container">
+                <article id="content-display-area"><!-- Dynamic content loaded here --></article>
+            </div>
+        </main>
+    </div>
+
+    <!-- CONTENT TEMPLATES -->
+
+    <template id="template-getting-started">
+ <header><h1>Getting Started</h1></header>
+        <div class="section">
+            <p><strong>Pulse Dashboard</strong> is a reusable Next.js component and standalone CLI tool designed to provide real-time monitoring and historical analysis of Playwright test executions. It helps development and QA teams to quickly identify issues, track test performance over time, and gain insights into failure patterns.</p>
+            <p>It can be: <strong>Run as a Standalone CLI Tool</strong>: Install globally or use with <code>npx</code> to quickly view reports.</p>
+            <p>[Note: <strong>Pulse Dashboard</strong> uses playwright-pulse-report generated data]</p>
+            
+            <h2>Installation</h2>
+            <p>Getting started with Pulse is simple. You can install it as an npm package and run it with a single command.</p>
+            <h4>1. Install the package</h4>
+            <p>Use npm package manager to add Pulse to your project.</p>
+            <div class="copyable-code">
+                <pre><code class="language-bash">npm install pulse-dashboard@latest</code></pre>
+                <button class="copy-btn" data-copy-text="npm install pulse-dashboard@latest" title="Copy to clipboard"><i class="fa-regular fa-copy"></i></button>
+            </div>
+            <h4>2. Run the dashboard</h4>
+            <p>After installation, start the dashboard using the following npx command from your project's root directory.</p>
+            <div class="copyable-code">
+                <pre><code class="language-bash">npx start-dashboard</code></pre>
+                <button class="copy-btn" data-copy-text="npx start-dashboard" title="Copy to clipboard"><i class="fa-regular fa-copy"></i></button>
+            </div>
+        </div>
+    </template>
+    
+    <template id="template-dashboard">
+        <h2>Dashboard Overview</h2>
+        <p>The dashboard provides a high-level, real-time overview of your latest test run. It is the central hub for at-a-glance information about your test suite's health.</p>
+        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Dashboard.png" alt="Pulse Dashboard Overview" class="doc-image">
+        <h3>Key Metrics</h3>
+        <ul>
+            <li><strong>Summary Cards:</strong> Quick stats on Total, Passed, Failed, and Skipped tests, along with the total duration.</li>
+            <li><strong>Test Runner System Information:</strong> A detailed preview of the system where the test suite ran.</li>
+            <li><strong>Charts & Graphs:</strong> Visual breakdowns of test distribution, browser-wise test distribution, slowest tests, and tests per suite.</li>
+            <li><strong>Worker Utilization:</strong> Real-time status of each test runner worker, showing their current progress and pass/fail rates.</li>
+        </ul>
+    </template>
+
+    <template id="template-test-results">
+        <h2>Test Results</h2>
+        <p> <strong>👉🏼</strong> The Test Results page allows user to browse and filter the outcomes of the latest test run. You can expand each suite to see the individual tests within it.</p>
+        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Test%20Results.png" alt="Pulse Test Results Page" class="doc-image">
+        <p> <strong>👉🏼</strong> Expanded Test Results provides user a quick look for the failed test cases, including the proper formated test error log and with attached failure screenshot.</p>
+        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-details-expanded.png" alt="Pulse Test Results - expanded details Page" class="doc-image">
+    </template>
+
+    <template id="template-trend-analysis">
+        <h2>Trend Analysis</h2>
+        <p>This page provides historical data visualization, allowing you to track test performance and stability over time.</p>
+        <p> <strong>👉🏼 Test Outcomes Over Time:</strong> This chart provides an detailed analysis of the test suite runs, for current & existing historical run trends, in chronological order.</p>
+        <p> <strong>👉🏼 Test Duration Over Time:</strong> This chart provides total duration of the test suite runs, for current & existing historical run trends, in chronological order.</p>
+        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-run-history.png" alt="Pulse Trend Analysis Page" class="doc-image">
+    </template>
+
+    <template id="template-flaky-tests">
+        <h2>Flaky Tests</h2>
+        <p>Flaky tests are tests that exhibit inconsistent behavior. This page helps you identify and analyze them by showing their historical pass/fail rates.</p>
+        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-flaky-tests.png" alt="Pulse Flaky Tests Page" class="doc-image">
+    </template>
+
+    <template id="template-failure-categorization">
+        <h2>Failure Categorization</h2>
+        <p>This powerful feature automatically groups failed tests by the common type of error that occurred, helping you quickly identify the most common root causes of failures.</p>
+        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Failure%20catagorize.png" alt="Pulse Failure Categorization Page" class="doc-image">
+    </template>
+    
+    <template id="template-test-details-page">
+        <h2>Test Details Page</h2>
+        <p>This page provides an in-depth, granular view of a single test execution. It is the primary tool for debugging a specific test failure. The page is organized into several expandable sections.</p>
+        
+        <div class="accordion-container">
+            <!-- Accordion Item 1: Execution Steps -->
+            <div class="accordion-item">
+                <button class="accordion-trigger" aria-expanded="false" aria-controls="panel-1">
+                    <span>1. Execution Steps</span>
+                    <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="accordion-panel" id="panel-1" role="region">
+                    <div class="accordion-panel-content">
+                        <p>A step-by-step log of every action performed during the test. Failed steps and error messages are highlighted in red for easy identification.</p>
+                        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-execution-steps.png" alt="Test Execution Steps" class="doc-image">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accordion Item 2: Attachments -->
+            <div class="accordion-item">
+                <button class="accordion-trigger" aria-expanded="false" aria-controls="panel-2">
+                    <span>2. Attachments</span>
+                    <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="accordion-panel" id="panel-2" role="region">
+                    <div class="accordion-panel-content">
+                        <p>Access to all artifacts captured during the test run, such as screenshots on failure, videos of the execution, and detailed Playwright trace files for debugging. Also provides a visual scope for `test.info().attach()` files.</p>
+                        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-json.png" alt="pulse dashboard attachments json" class="doc-image">
+                        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-pdf.png" alt="pulse dashboard attachments pdf" class="doc-image">
+                        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-screenshots.png" alt="pulse dashboard attachments screenshots" class="doc-image">
+                        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-videos.png" alt="pulse dashboard attachments videos" class="doc-image">
+                        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-text_csv.png" alt="pulse dashboard attachments text-csv" class="doc-image">
+                        <!-- Placeholder for attachment image if available -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Accordion Item 3: Logs -->
+            <div class="accordion-item">
+                <button class="accordion-trigger" aria-expanded="false" aria-controls="panel-3">
+                    <span>3. Logs</span>
+                    <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="accordion-panel" id="panel-3" role="region">
+                    <div class="accordion-panel-content">
+                        <p>View any console output (from `console.log`) and standard error streams that were generated by the test or the application during the run.</p>
+                        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-logs.png" alt="pulse dashboard logs" class="doc-image">
+                        <!-- Placeholder for logs image if available -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Accordion Item 4: Test Run History -->
+            <div class="accordion-item">
+                <button class="accordion-trigger" aria-expanded="false" aria-controls="panel-4">
+                    <span>4. Test Run History</span>
+                    <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="accordion-panel" id="panel-4" role="region">
+                    <div class="accordion-panel-content">
+                        <p>A historical view of this specific test's performance and status across previous runs. This helps identify if a failure is new, recurring, or intermittent (flaky).</p>
+                        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-run-history.png" alt="pulse dashboard attachments test run history" class="doc-image">
+                        <!-- Placeholder for history image if available -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('theme-toggle');
+            const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+            const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+            
+            function setTheme(isLight) {
+                document.documentElement.classList.toggle('light-theme', isLight);
+                document.documentElement.classList.toggle('dark-theme', !isLight);
+                themeToggle.innerHTML = isLight ? sunIcon : moonIcon;
+            }
+            
+            themeToggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('light-theme')));
+            setTheme(true);
+
+            const contentDisplay = document.getElementById('content-display-area');
+            const sidebarNav = document.querySelector('.sidebar-nav');
+
+            function loadContent(hash) {
+                const pageId = (hash || '#introduction').substring(1);
+                const templateId = `template-${pageId}`;
+                const template = document.getElementById(templateId);
+                let targetHash = hash || '#introduction';
+
+                contentDisplay.innerHTML = '';
+                if (template) {
+                    contentDisplay.appendChild(template.content.cloneNode(true));
+                } else {
+                    contentDisplay.appendChild(document.getElementById('template-introduction').content.cloneNode(true));
+                    targetHash = '#introduction';
+                }
+                updateActiveLink(targetHash);
+                window.scrollTo(0, 0);
+            }
+
+            function updateActiveLink(hash) {
+                sidebarNav.querySelectorAll('a').forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === hash);
+                });
+            }
+
+            sidebarNav.addEventListener('click', (event) => {
+                const link = event.target.closest('a');
+                if (link) {
+                    event.preventDefault();
+                    const hash = link.getAttribute('href'); 
+                    if (window.location.hash !== hash) {
+                        history.pushState(null, '', hash);
+                        loadContent(hash);
+                    }
+                }
+            });
+
+            // Event delegation for dynamic content
+            document.addEventListener('click', event => {
+                // Copy button logic
+                const copyBtn = event.target.closest('.copy-btn');
+                if (copyBtn) {
+                    const textToCopy = copyBtn.dataset.copyText;
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        const originalIcon = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        copyBtn.title = 'Copied!';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalIcon;
+                            copyBtn.title = 'Copy to clipboard';
+                        }, 2000);
+                    }).catch(err => console.error('Failed to copy text: ', err));
+                    return;
+                }
+
+                // Accordion logic
+                const accordionTrigger = event.target.closest('.accordion-trigger');
+                if (accordionTrigger) {
+                    const panel = accordionTrigger.nextElementSibling;
+                    const isExpanded = accordionTrigger.getAttribute('aria-expanded') === 'true';
+                    
+                    accordionTrigger.setAttribute('aria-expanded', !isExpanded);
+                    if (!isExpanded) {
+                        panel.style.maxHeight = panel.scrollHeight + 'px';
+                    } else {
+                        panel.style.maxHeight = null;
+                    }
+                }
+            });
+
+            window.addEventListener('popstate', () => loadContent(window.location.hash));
+            loadContent(window.location.hash);
+        });
+</script>
+    <footer style="
+        margin-top: 60px;
+        padding: 24px;
+        background-color: var(--color-bg-content);
+        border-top: 1px solid var(--color-border);
+        text-align: center;
+        color: var(--color-text-secondary);
+        font-size: 0.9em;
+    ">
+        <p>&copy; 2025 Pulse Dashboard. Crafted by <a href="https://github.com/arghajit47" style="
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        " onmouseover="this.style.color='var(--color-primary-light)'" onmouseout="this.style.color='var(--color-primary)'">Arghajit Singha</a> with precision</p>
+        <!-- Replace the href with your actual GitHub repository link -->
+        <!-- You can add more footer content here, like social links or copyright information -->
+    </footer>
+</body>
+</html>
