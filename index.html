@@ -358,17 +358,17 @@
             const sidebarNav = document.querySelector('.sidebar-nav');
 
             function loadContent(hash) {
-                const pageId = (hash || '#introduction').substring(1);
+                const pageId = (hash || '#getting-started').substring(1);
                 const templateId = `template-${pageId}`;
                 const template = document.getElementById(templateId);
-                let targetHash = hash || '#introduction';
+                let targetHash = hash || '#getting-started';
 
                 contentDisplay.innerHTML = '';
                 if (template) {
                     contentDisplay.appendChild(template.content.cloneNode(true));
                 } else {
                     contentDisplay.appendChild(document.getElementById('template-introduction').content.cloneNode(true));
-                    targetHash = '#introduction';
+                    targetHash = '#getting-started';
                 }
                 updateActiveLink(targetHash);
                 window.scrollTo(0, 0);
