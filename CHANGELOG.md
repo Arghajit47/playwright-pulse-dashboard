@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.1] - 2025-06-16
+## [1.1.1] - 2025-06-21
 
 ### Added
 - **Export Test Results as CSV**: Implemented functionality in the "Test Results" view to download the current run's test data as a CSV file.
