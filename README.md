@@ -40,18 +40,23 @@ Install the package globally or use `npx` to run the dashboard directly.
 
 *   **Using npx (Recommended for easy, one-time use):**
     Navigate to your project directory that contains the `pulse-report` folder (with your `playwright-pulse-report.json` inside it), and run:
+
     ```bash
     npx pulse-dashboard
     ```
+
     This will download and run the latest version of Pulse Dashboard without a global installation.
 
     **[NOTE: user does not need to navigate inside `pulse-report` folder]**
 
 *   **Global Installation (if you use it frequently):**
+
     ```bash
     npm install -g pulse-dashboard
     ```
+
     Then, navigate to your project directory that contains the `pulse-report` folder (not inside `pulse-report` folder) and run:
+
     ```bash
     npm run pulse-dashboard
     ```
@@ -71,12 +76,11 @@ When you run `pulse-dashboard` or `npx pulse-dashboard`, it expects the followin
 
 -   `npm run pulse-dashboard`: Starts the Next.js development server for standalone source viewing.
 
-
 ## Thank You
 
 Special Thanks to **[@Suman Vishwakarma](https://www.linkedin.com/in/suman-vishwakarma-426108185/)** for continuous UAT feedback and **[@Sagnik Ghosh](https://www.linkedin.com/in/sagnikghosh99/)** for continuous development related help.
 
-## **[View the Live Documentation]**(https://postman-test-bit.github.io/pulse-dashboard/)
+## **[View the Live Documentation](https://postman-test-bit.github.io/pulse-dashboard/)**
 
 ## License
 
