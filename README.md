@@ -80,7 +80,7 @@ When you run `pulse-dashboard` or `npx pulse-dashboard`, it expects the followin
 
 Special Thanks to **[@Suman Vishwakarma](https://www.linkedin.com/in/suman-vishwakarma-426108185/)** for continuous UAT feedback and **[@Sagnik Ghosh](https://www.linkedin.com/in/sagnikghosh99/)** for continuous development related help.
 
-## **[View the Live Documentation](https://postman-test-bit.github.io/pulse-dashboard/)**
+## **[View the Live Documentation](https://arghajit47.github.io/playwright-pulse-dashboard/)**
 
 ## License
 

@@ -81,7 +81,7 @@ export function SettingsView() {
             <span>Learn more from Documentation Website: </span>
             <a
               className="text-l font-headline text-primary underline hover:text-primary-dark transition-colors"
-              href="https://playwright-pulse-report.netlify.app/"
+              href="https://arghajit47.github.io/playwright-pulse-dashboard/"
               target="_blank"
               rel="noopener noreferrer"
             >

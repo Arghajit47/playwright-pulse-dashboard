@@ -63,7 +63,7 @@ export function SettingsView() {
           </p>
           <div className="flex items-center justify-between p-4 border rounded-lg bg-card/70 shadow-sm">
             <span>Learn more from Documentation Website: </span>
-            <a className="text-l font-headline text-primary underline hover:text-primary-dark transition-colors" href="https://playwright-pulse-report.netlify.app/" target="_blank" rel="noopener noreferrer">
+            <a className="text-l font-headline text-primary underline hover:text-primary-dark transition-colors" href="https://arghajit47.github.io/playwright-pulse-dashboard/" target="_blank" rel="noopener noreferrer">
               Pulse Dashboard
             </a>
           </div>
