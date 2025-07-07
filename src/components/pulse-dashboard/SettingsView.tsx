@@ -46,30 +46,48 @@ export function SettingsView() {
   return (
     <Card className="shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl font-headline text-primary">Settings</CardTitle>
-        <CardDescription>Customize the appearance of the dashboard.</CardDescription>
+        <CardTitle className="text-2xl font-headline text-primary">
+          Settings
+        </CardTitle>
+        <CardDescription>
+          Customize the appearance of the dashboard.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           <div className="flex items-center justify-between p-4 border rounded-lg bg-card/70 shadow-sm">
-            <Label htmlFor="theme-toggle" className="text-base font-medium text-foreground">
+            <Label
+              htmlFor="theme-toggle"
+              className="text-base font-medium text-foreground"
+            >
               Theme
             </Label>
             <div className="flex items-center space-x-2">
-                <span className="text-sm text-muted-foreground">
-                    {isDarkMode ? 'Dark Mode' : 'Light Mode'}
-                </span>
-                <Switch
-                    id="theme-toggle"
-                    checked={isDarkMode}
-                    onCheckedChange={toggleTheme}
-                    aria-label="Toggle theme"
-                />
+              <span className="text-sm text-muted-foreground">
+                {isDarkMode ? "Dark Mode" : "Light Mode"}
+              </span>
+              <Switch
+                id="theme-toggle"
+                checked={isDarkMode}
+                onCheckedChange={toggleTheme}
+                aria-label="Toggle theme"
+              />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground mt-4 text-center">
+          <p className="text-sm text-muted-foreground mt-4 text-center text-base font-medium text-foreground">
             Your theme preference is saved in your browser.
           </p>
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-card/70 shadow-sm">
+            <span>Learn more from Documentation Website: </span>
+            <a
+              className="text-l font-headline text-primary underline hover:text-primary-dark transition-colors"
+              href="https://playwright-pulse-report.netlify.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Pulse Dashboard
+            </a>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -1,427 +1,912 @@
 <!DOCTYPE html>
 <html lang="en" class="light-theme">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Elevate your Playwright test analysis with the Pulse Dashboard. Our official guide shows you how to monitor results, track trends, and debug failures faster than ever.">
-    <title data-rh="true">Pulse Dashboard - Project Documentation</title>
-    
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Elevate your Playwright test analysis with the Pulse Dashboard. Our official guide shows you how to monitor results, track trends, and debug failures faster than ever."
+    />
+    <title data-rh="true">Pulse Dashboard</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://i.postimg.cc/v817w4sg/logo.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="https://i.postimg.cc/v817w4sg/logo.png"
+    />
     <!-- Google Fonts for a modern look -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code&display=swap"
+      rel="stylesheet"
+    />
     <!-- Icon Font -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
 
     <style>
-        /* --- CSS Variables for Theming --- */
-        :root {
-            --font-sans: 'Inter', sans-serif;
-            --font-mono: 'Fira+Code', monospace;
-            --navbar-height: 60px;
+      /* --- CSS Variables for Theming --- */
+      :root {
+        --font-sans: "Inter", sans-serif;
+        --font-mono: "Fira+Code", monospace;
+        --navbar-height: 60px;
+      }
+
+      .light-theme {
+        --color-bg: #f7f9fc;
+        --color-bg-content: #ffffff;
+        --color-text-primary: #2d3748;
+        --color-text-secondary: #5a6578;
+        --color-primary: #3182ce;
+        --color-primary-light: #ebf8ff;
+        --color-border: #e2e8f0;
+        --color-code-bg: #edf2f7;
+        --color-shadow: rgba(45, 55, 72, 0.1);
+        --color-success: #38a169;
+      }
+
+      .dark-theme {
+        --color-bg: #1a202c;
+        --color-bg-content: #2d3748;
+        --color-text-primary: #e2e8f0;
+        --color-text-secondary: #a0aec0;
+        --color-primary: #63b3ed;
+        --color-primary-light: #2c5282;
+        --color-border: #4a5568;
+        --color-code-bg: #283141;
+        --color-shadow: rgba(0, 0, 0, 0.2);
+        --color-success: #68d391;
+      }
+
+      /* --- Global & Reset Styles --- */
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--color-bg);
+        color: var(--color-text-primary);
+        font-family: var(--font-sans);
+        line-height: 1.7;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      /* --- Layout Structure --- */
+      .navbar {
+        background-color: var(--color-bg-content);
+        border-bottom: 1px solid var(--color-border);
+        height: var(--navbar-height);
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        z-index: 1000;
+        transition: background-color 0.3s, border-color 0.3s;
+      }
+
+      .navbar-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+      }
+      .navbar-brand .logo {
+        height: 40px;
+        width: 55px;
+        transition: opacity 0.3s ease-in-out; /* Smooth fade-in effect */
+      }
+      .navbar-brand .title {
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: #489ef9;
+        text-decoration: none;
+      }
+
+      .docs-wrapper {
+        display: flex;
+        padding-top: var(--navbar-height);
+      }
+
+      .sidebar {
+        position: fixed;
+        top: var(--navbar-height);
+        left: 0;
+        width: 280px;
+        height: calc(100vh - var(--navbar-height));
+        overflow-y: auto;
+        padding: 24px;
+        border-right: 1px solid var(--color-border);
+        background-color: var(--color-bg-content);
+        transition: transform 0.3s ease, background-color 0.3s,
+          border-color 0.3s;
+        z-index: 999;
+      }
+
+      main {
+        flex-grow: 1;
+        padding-left: 280px;
+        transition: padding-left 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - var(--navbar-height));
+      }
+      .main-content-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 24px;
+        flex-grow: 1;
+      }
+
+      /* --- Typography & Content Styles --- */
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-weight: 700;
+        color: var(--color-text-primary);
+      }
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--color-border);
+      }
+      h2 {
+        font-size: 1.8rem;
+        margin-top: 48px;
+        margin-bottom: 20px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--color-border);
+      }
+      p {
+        margin-bottom: 1rem;
+        color: var(--color-text-secondary);
+      }
+      code {
+        background-color: var(--color-code-bg);
+        color: var(--color-text-primary);
+        padding: 3px 6px;
+        border-radius: 6px;
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        transition: background-color 0.3s;
+      }
+      pre {
+        background-color: var(--color-code-bg);
+        padding: 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        transition: background-color 0.3s;
+      }
+
+      /* --- Component Styles --- */
+      .doc-image {
+        max-width: 100%;
+        border-radius: 8px;
+        margin: 24px 0;
+        border: 1px solid var(--color-border);
+        box-shadow: 0 4px 12px var(--color-shadow);
+      }
+
+      /* Sidebar Navigation */
+      .sidebar-nav ul {
+        list-style: none;
+        padding: 0;
+      }
+      .sidebar-nav a {
+        display: block;
+        padding: 8px;
+        border-radius: 6px;
+        color: var(--color-text-secondary);
+        font-weight: 500;
+        transition: background-color 0.2s, color 0.2s;
+      }
+      .sidebar-nav a:hover,
+      .sidebar-nav a.active {
+        background-color: var(--color-primary-light);
+        color: var(--color-primary);
+        text-decoration: none;
+      }
+
+      /* Theme Toggle Button */
+      .theme-toggle {
+        cursor: pointer;
+        background: none;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-text-secondary);
+        transition: background-color 0.3s, border-color 0.3s;
+      }
+      .theme-toggle:hover {
+        background-color: var(--color-bg);
+      }
+
+      /* Copy to Clipboard Styles */
+      .copyable-code {
+        position: relative;
+      }
+      .copyable-code pre {
+        padding-right: 50px;
+      }
+      .copy-btn {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 6px;
+        transition: color 0.2s, background-color 0.2s;
+      }
+      .copy-btn:hover {
+        color: var(--color-text-primary);
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+      .dark-theme .copy-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+      .copy-btn .fa-check {
+        color: var(--color-success);
+      }
+
+      /* Accordion Styles */
+      .accordion-item {
+        border-bottom: 1px solid var(--color-border);
+      }
+      .accordion-trigger {
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        padding: 20px 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .accordion-icon {
+        transition: transform 0.3s ease;
+        font-size: 0.9em;
+      }
+      .accordion-trigger[aria-expanded="true"] .accordion-icon {
+        transform: rotate(180deg);
+      }
+      .accordion-panel {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+      }
+      .accordion-panel-content {
+        padding: 0 0 20px 0;
+      }
+
+      /* --- Mobile Responsive Styles --- */
+      .mobile-nav-toggle {
+        display: none;
+      }
+      .sidebar-overlay {
+        display: none;
+      }
+
+      @media (max-width: 992px) {
+        /* .navbar-brand .title { display: none; } */
+
+        .mobile-nav-toggle {
+          display: block;
+          background: none;
+          border: none;
+          font-size: 1.5rem;
+          color: var(--color-text-primary);
+          cursor: pointer;
+          padding: 0;
+          margin-right: 16px;
         }
-
-        .light-theme {
-            --color-bg: #f7f9fc;
-            --color-bg-content: #ffffff;
-            --color-text-primary: #2d3748;
-            --color-text-secondary: #5a6578;
-            --color-primary: #3182ce;
-            --color-primary-light: #ebf8ff;
-            --color-border: #e2e8f0;
-            --color-code-bg: #edf2f7;
-            --color-shadow: rgba(45, 55, 72, 0.1);
-            --color-success: #38a169;
+        .navbar-left {
+          gap: 0;
         }
-
-        .dark-theme {
-            --color-bg: #1a202c;
-            --color-bg-content: #2d3748;
-            --color-text-primary: #e2e8f0;
-            --color-text-secondary: #a0aec0;
-            --color-primary: #63b3ed;
-            --color-primary-light: #2c5282;
-            --color-border: #4a5568;
-            --color-code-bg: #283141;
-            --color-shadow: rgba(0, 0, 0, 0.2);
-            --color-success: #68d391;
-        }
-
-        /* --- Global & Reset Styles --- */
-        * { box-sizing: border-box; }
-
-        html, body {
-            margin: 0; padding: 0; background-color: var(--color-bg);
-            color: var(--color-text-primary); font-family: var(--font-sans);
-            line-height: 1.7; transition: background-color 0.3s, color 0.3s;
-        }
-
-        /* --- Layout Structure --- */
         .navbar {
-            background-color: var(--color-bg-content); border-bottom: 1px solid var(--color-border);
-            height: var(--navbar-height); width: 100%; position: fixed; top: 0; left: 0;
-            display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
-            z-index: 1000; transition: background-color 0.3s, border-color 0.3s;
+          padding: 0 16px;
         }
 
-        .navbar-left { display: flex; align-items: center; gap: 16px; }
-        .navbar-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .navbar-brand .logo { height: 32px; width: auto; }
-        .navbar-brand .title { font-weight: bold; font-size: 1.2rem; color: var(--color-text-primary); text-decoration: none; }
-
-        .docs-wrapper { display: flex; padding-top: var(--navbar-height); }
-        
         .sidebar {
-            position: fixed; top: var(--navbar-height); left: 0; width: 280px;
-            height: calc(100vh - var(--navbar-height)); overflow-y: auto; padding: 24px;
-            border-right: 1px solid var(--color-border); background-color: var(--color-bg-content);
-            transition: transform 0.3s ease, background-color 0.3s, border-color 0.3s;
-            z-index: 999;
+          transform: translateX(-100%);
+          border-right: none;
+        }
+        body.sidebar-open .sidebar {
+          transform: translateX(0);
+          box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
         }
 
-        main { flex-grow: 1; padding-left: 280px; transition: padding-left 0.3s ease; display: flex; flex-direction: column; min-height: calc(100vh - var(--navbar-height));}
-        .main-content-container { max-width: 800px; margin: 40px auto; padding: 0 24px; flex-grow: 1; }
-
-        /* --- Typography & Content Styles --- */
-        h1, h2, h3, h4 { font-weight: 700; color: var(--color-text-primary); }
-        h1 { font-size: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); }
-        h2 { font-size: 1.8rem; margin-top: 48px; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); }
-        p { margin-bottom: 1rem; color: var(--color-text-secondary); }
-        code { background-color: var(--color-code-bg); color: var(--color-text-primary); padding: 3px 6px; border-radius: 6px; font-family: var(--font-mono); font-size: 0.9em; transition: background-color 0.3s; }
-        pre { background-color: var(--color-code-bg); padding: 16px; border-radius: 8px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.9em; transition: background-color 0.3s; }
-
-        /* --- Component Styles --- */
-        .doc-image { max-width: 100%; border-radius: 8px; margin: 24px 0; border: 1px solid var(--color-border); box-shadow: 0 4px 12px var(--color-shadow); }
-
-        /* Sidebar Navigation */
-        .sidebar-nav ul { list-style: none; padding: 0; }
-        .sidebar-nav a { display: block; padding: 8px; border-radius: 6px; color: var(--color-text-secondary); font-weight: 500; transition: background-color 0.2s, color 0.2s; }
-        .sidebar-nav a:hover, .sidebar-nav a.active { background-color: var(--color-primary-light); color: var(--color-primary); text-decoration: none; }
-
-        /* Theme Toggle Button */
-        .theme-toggle { cursor: pointer; background: none; border: 1px solid var(--color-border); border-radius: 8px; padding: 8px; display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); transition: background-color 0.3s, border-color 0.3s; }
-        .theme-toggle:hover { background-color: var(--color-bg); }
-        
-        /* Copy to Clipboard Styles */
-        .copyable-code { position: relative; }
-        .copyable-code pre { padding-right: 50px; }
-        .copy-btn {
-            position: absolute; top: 50%; right: 12px; transform: translateY(-50%);
-            background: none; border: none; color: var(--color-text-secondary);
-            cursor: pointer; padding: 8px; border-radius: 6px;
-            transition: color 0.2s, background-color 0.2s;
+        .sidebar-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5);
+          z-index: 998;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.3s ease;
         }
-        .copy-btn:hover { color: var(--color-text-primary); background-color: rgba(0,0,0,0.05); }
-        .dark-theme .copy-btn:hover { background-color: rgba(255,255,255,0.1); }
-        .copy-btn .fa-check { color: var(--color-success); }
-        
-        /* Accordion Styles */
-        .accordion-item { border-bottom: 1px solid var(--color-border); }
-        .accordion-trigger {
-            background: none; border: none; width: 100%; text-align: left;
-            padding: 20px 0; font-size: 1.2rem; font-weight: 600;
-            color: var(--color-text-primary); cursor: pointer;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .accordion-icon { transition: transform 0.3s ease; font-size: 0.9em; }
-        .accordion-trigger[aria-expanded="true"] .accordion-icon { transform: rotate(180deg); }
-        .accordion-panel { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .accordion-panel-content { padding: 0 0 20px 0; }
-
-        /* --- Mobile Responsive Styles --- */
-        .mobile-nav-toggle { display: none; }
-        .sidebar-overlay { display: none; }
-
-        @media (max-width: 992px) {
-            .navbar-brand .title { display: none; }
-
-            .mobile-nav-toggle {
-                display: block; background: none; border: none; font-size: 1.5rem;
-                color: var(--color-text-primary); cursor: pointer; padding: 0; margin-right: 16px;
-            }
-            .navbar-left { gap: 0; }
-            .navbar { padding: 0 16px; }
-
-            .sidebar {
-                transform: translateX(-100%);
-                border-right: none;
-            }
-            body.sidebar-open .sidebar {
-                transform: translateX(0);
-                box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-            }
-
-            .sidebar-overlay {
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                z-index: 998; opacity: 0; pointer-events: none;
-                transition: opacity 0.3s ease;
-            }
-            body.sidebar-open .sidebar-overlay {
-                display: block; opacity: 1; pointer-events: auto;
-            }
-
-            main { padding-left: 0; }
-            .main-content-container { margin: 24px auto; padding: 0 16px; }
-            h1 { font-size: 2rem; }
-            h2 { font-size: 1.5rem; }
+        body.sidebar-open .sidebar-overlay {
+          display: block;
+          opacity: 1;
+          pointer-events: auto;
         }
 
-        /* --- Footer --- */
-        footer {
-            margin-top: 40px; padding: 24px;
-            background-color: var(--color-bg-content);
-            border-top: 1px solid var(--color-border);
-            text-align: center;
+        main {
+          padding-left: 0;
         }
+        .main-content-container {
+          margin: 24px auto;
+          padding: 0 16px;
+        }
+        h1 {
+          font-size: 2rem;
+        }
+        h2 {
+          font-size: 1.5rem;
+        }
+      }
+
+      /* --- Footer --- */
+      footer {
+        margin-top: 40px;
+        padding: 24px;
+        background-color: var(--color-bg-content);
+        border-top: 1px solid var(--color-border);
+        text-align: center;
+      }
+      .footer-content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        color: var(--color-text-secondary);
+        font-size: 0.9em;
+      }
+      .footer-logo {
+        height: 30px;
+        width: auto;
+      }
+      .footer-content p {
+        margin: 0; /* Remove default paragraph margin */
+      }
+      .footer-content a {
+        color: var(--color-primary);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      @media (max-width: 480px) {
         .footer-content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            color: var(--color-text-secondary);
-            font-size: 0.9em;
+          flex-direction: column; /* Stack logo and text on small screens */
+          gap: 8px;
         }
-        .footer-logo {
-            height: 30px;
-            width: auto;
-        }
-        .footer-content p {
-            margin: 0; /* Remove default paragraph margin */
-        }
-        .footer-content a { color: var(--color-primary); text-decoration: none; font-weight: 500; }
-        
-        @media (max-width: 480px) {
-            .footer-content {
-                flex-direction: column; /* Stack logo and text on small screens */
-                gap: 8px;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <nav class="navbar">
-        <div class="navbar-left">
-            <button class="mobile-nav-toggle" aria-label="Open navigation">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <a href="#getting-started" class="navbar-brand">
-                <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images//pulse-logo.png" class="logo" alt="Pulse Logo">
-                <span class="title">Pulse Dashboard</span>
-            </a>
-        </div>
-        <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode"></button>
+      <div class="navbar-left">
+        <button class="mobile-nav-toggle" aria-label="Open navigation">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <a href="#getting-started" class="navbar-brand">
+          <img
+            src="https://i.postimg.cc/v817w4sg/logo.png"
+            class="logo"
+            alt="Pulse Logo"
+          />
+          <span class="title">Pulse Dashboard</span>
+        </a>
+      </div>
+      <button
+        class="theme-toggle"
+        id="theme-toggle"
+        title="Toggle light/dark mode"
+      ></button>
     </nav>
 
     <div class="docs-wrapper">
-        <aside class="sidebar">
-            <nav class="sidebar-nav" aria-label="Docs sidebar">
-                <ul>
-                    <li><a href="#getting-started">Getting Started</a></li>
-                    <li><a href="#dashboard">Dashboard Overview</a></li>
-                    <li><a href="#test-results">Test Results</a></li>
-                    <li><a href="#trend-analysis">Trend Analysis</a></li>
-                    <li><a href="#flaky-tests">Flaky Tests</a></li>
-                    <li><a href="#failure-categorization">Failure Categorization</a></li>
-                    <li><a href="#test-details-page">Test Details Page</a></li>
-                </ul>
-            </nav>
-        </aside>
-        <div class="sidebar-overlay"></div>
+      <aside class="sidebar">
+        <nav class="sidebar-nav" aria-label="Docs sidebar">
+          <ul>
+            <li><a href="#getting-started">Getting Started</a></li>
+            <li><a href="#dashboard">Dashboard Overview</a></li>
+            <li><a href="#test-results">Test Results</a></li>
+            <li><a href="#trend-analysis">Trend Analysis</a></li>
+            <li><a href="#flaky-tests">Flaky Tests</a></li>
+            <li>
+              <a href="#failure-categorization">Failure Categorization</a>
+            </li>
+            <li><a href="#test-details-page">Test Details Page</a></li>
+          </ul>
+        </nav>
+      </aside>
+      <div class="sidebar-overlay"></div>
 
-        <main>
-            <div class="main-content-container">
-                <article id="content-display-area"></article>
-            </div>
-            <footer>
-                <div class="footer-content">
-                    <img src="https://i.postimg.cc/XqVn1NhF/pulse.png" alt="Pulse Logo" class="footer-logo"/>
-                    <p>© 2025 Pulse Dashboard. Crafted by <a href="https://github.com/arghajit47" target="_blank" rel="noopener noreferrer">Arghajit Singha</a> with precision</p>
-                </div>
-            </footer>
-        </main>
+      <main>
+        <div class="main-content-container">
+          <article id="content-display-area"></article>
+        </div>
+        <footer>
+          <div class="footer-content">
+            <p>
+              © 2025 Pulse Dashboard. Crafted by
+              <a
+                href="https://github.com/arghajit47"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Arghajit Singha</a
+              >
+              with precision
+            </p>
+          </div>
+        </footer>
+      </main>
     </div>
 
     <!-- CONTENT TEMPLATES -->
 
     <template id="template-getting-started">
-        <header><h1>Getting Started</h1></header>
-        <div class="section">
-            <p><strong>Pulse Dashboard</strong> is a reusable Next.js component and standalone CLI tool designed to provide real-time monitoring and historical analysis of Playwright test executions. It helps development and QA teams to quickly identify issues, track test performance over time, and gain insights into failure patterns.</p>
-            <p>It can be: <strong>Run as a Standalone CLI Tool</strong>: Install globally or use with <code>npx</code> to quickly view reports.</p>
-            <p>[Note: <strong>Pulse Dashboard</strong> uses playwright-pulse-report generated data]</p>
-            <h2>👉🏼 Installation</h2>
-            <p>Getting started with Pulse is simple. You can install it as an npm package and run it with a single command.</p>
-            <h4>1. Install the package</h4>
-            <p>Use npm package manager to add Pulse to your project.</p>
-            <div class="copyable-code">
-                <pre><code class="language-bash">npm install pulse-dashboard@latest</code></pre>
-                <button class="copy-btn" data-copy-text="npm install pulse-dashboard@latest" title="Copy to clipboard"><i class="fa-regular fa-copy"></i></button>
-            </div>
-            <h4>2. Run the dashboard</h4>
-            <p>After installation, start the dashboard using the following npx command from your project's root directory.</p>
-            <div class="copyable-code">
-                <pre><code class="language-bash">npx start-dashboard</code></pre>
-                <button class="copy-btn" data-copy-text="npx start-dashboard" title="Copy to clipboard"><i class="fa-regular fa-copy"></i></button>
-            </div>
-            <h2>👉🏼 Key Features</h2>
-            <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg" alt="Key Features" class="doc-image">
-            <h2>👉🏼 Client Side Folder Structure</h2>
-            <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-client-folder-structure.svg" alt="Client Side Folder Structure" class="doc-image">
-            <h2>👉🏼 Technical Stack</h2>
-            <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-framework.svg" alt="Technical Stack" class="doc-image">
+      <header><h1>Getting Started</h1></header>
+      <div class="section">
+        <p>
+          <strong>Pulse Dashboard</strong> is a reusable Next.js component and
+          standalone CLI tool designed to provide real-time monitoring and
+          historical analysis of Playwright test executions. It helps
+          development and QA teams to quickly identify issues, track test
+          performance over time, and gain insights into failure patterns.
+        </p>
+        <p>
+          It can be: <strong>Run as a Standalone CLI Tool</strong>: Install
+          globally or use with <code>npx</code> to quickly view reports.
+        </p>
+        <p>
+          [Note: <strong>Pulse Dashboard</strong> uses playwright-pulse-report
+          generated data]
+        </p>
+        <h2>👉🏼 Installation</h2>
+        <p>
+          Getting started with Pulse is simple. You can install it as an npm
+          package and run it with a single command.
+        </p>
+        <h4>1. Install the package</h4>
+        <p>Use npm package manager to add Pulse to your project.</p>
+        <div class="copyable-code">
+          <pre><code class="language-bash">npm install pulse-dashboard@latest</code></pre>
+          <button
+            class="copy-btn"
+            data-copy-text="npm install pulse-dashboard@latest"
+            title="Copy to clipboard"
+          >
+            <i class="fa-regular fa-copy"></i>
+          </button>
         </div>
+        <h4>2. Run the dashboard</h4>
+        <p>
+          After installation, start the dashboard using the following npx
+          command from your project's root directory.
+        </p>
+        <div class="copyable-code">
+          <pre><code class="language-bash">npx start-dashboard</code></pre>
+          <button
+            class="copy-btn"
+            data-copy-text="npx start-dashboard"
+            title="Copy to clipboard"
+          >
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        </div>
+        <h2>👉🏼 Key Features</h2>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg"
+          alt="Key Features"
+          class="doc-image"
+        />
+        <h2>👉🏼 Client Side Folder Structure</h2>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-client-folder-structure.svg"
+          alt="Client Side Folder Structure"
+          class="doc-image"
+        />
+        <h2>👉🏼 Technical Stack</h2>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-framework.svg"
+          alt="Technical Stack"
+          class="doc-image"
+        />
+      </div>
     </template>
-    
+
     <template id="template-dashboard">
-        <h2>Dashboard Overview</h2>
-        <p>The dashboard provides a high-level, real-time overview of your latest test run. It is the central hub for at-a-glance information about your test suite's health.</p>
-        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Dashboard.png" alt="Pulse Dashboard Overview" class="doc-image">
-        <h3>Key Metrics</h3>
-        <ul>
-            <li><strong>Summary Cards:</strong> Quick stats on Total, Passed, Failed, and Skipped tests, along with the total duration.</li>
-            <li><strong>Test Runner System Information:</strong> A detailed preview of the system where the test suite ran.</li>
-            <li><strong>Charts & Graphs:</strong> Visual breakdowns of test distribution, browser-wise test distribution, slowest tests, and tests per suite.</li>
-            <li><strong>Worker Utilization:</strong> Real-time status of each test runner worker, showing their current progress and pass/fail rates.</li>
-        </ul>
+      <h2>Dashboard Overview</h2>
+      <p>
+        The dashboard provides a high-level, real-time overview of your latest
+        test run. It is the central hub for at-a-glance information about your
+        test suite's health.
+      </p>
+      <img
+        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Dashboard.png"
+        alt="Pulse Dashboard Overview"
+        class="doc-image"
+      />
+      <h3>Key Metrics</h3>
+      <ul>
+        <li>
+          <strong>Summary Cards:</strong> Quick stats on Total, Passed, Failed,
+          and Skipped tests, along with the total duration.
+        </li>
+        <li>
+          <strong>Test Runner System Information:</strong> A detailed preview of
+          the system where the test suite ran.
+        </li>
+        <li>
+          <strong>Charts & Graphs:</strong> Visual breakdowns of test
+          distribution, browser-wise test distribution, slowest tests, and tests
+          per suite.
+        </li>
+        <li>
+          <strong>Worker Utilization:</strong> Real-time status of each test
+          runner worker, showing their current progress and pass/fail rates.
+        </li>
+      </ul>
     </template>
 
     <template id="template-test-results">
-        <h2>Test Results</h2>
-        <p> <strong>👉🏼</strong> The Test Results page allows user to browse and filter the outcomes of the latest test run. You can expand each suite to see the individual tests within it.</p>
-        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Test%20Results.png" alt="Pulse Test Results Page" class="doc-image">
-        <p> <strong>👉🏼</strong> Expanded Test Results provides user a quick look for the failed test cases, including the proper formated test error log and with attached failure screenshot.</p>
-        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-details-expanded.png" alt="Pulse Test Results - expanded details Page" class="doc-image">
+      <h2>Test Results</h2>
+      <p>
+        <strong>👉🏼</strong> The Test Results page allows user to browse and
+        filter the outcomes of the latest test run. You can expand each suite to
+        see the individual tests within it.
+      </p>
+      <img
+        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Test%20Results.png"
+        alt="Pulse Test Results Page"
+        class="doc-image"
+      />
+      <p>
+        <strong>👉🏼</strong> Expanded Test Results provides user a quick look for
+        the failed test cases, including the proper formated test error log and
+        with attached failure screenshot.
+      </p>
+      <img
+        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-details-expanded.png"
+        alt="Pulse Test Results - expanded details Page"
+        class="doc-image"
+      />
     </template>
 
     <template id="template-trend-analysis">
-        <h2>Trend Analysis</h2>
-        <p>This page provides historical data visualization, allowing you to track test performance and stability over time.</p>
-        <p> <strong>👉🏼 Test Outcomes Over Time:</strong> This chart provides an detailed analysis of the test suite runs, for current & existing historical run trends, in chronological order.</p>
-        <p> <strong>👉🏼 Test Duration Over Time:</strong> This chart provides total duration of the test suite runs, for current & existing historical run trends, in chronological order.</p>
-        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-run-history.png" alt="Pulse Trend Analysis Page" class="doc-image">
+      <h2>Trend Analysis</h2>
+      <p>
+        This page provides historical data visualization, allowing you to track
+        test performance and stability over time.
+      </p>
+      <p>
+        <strong>👉🏼 Test Outcomes Over Time:</strong> This chart provides an
+        detailed analysis of the test suite runs, for current & existing
+        historical run trends, in chronological order.
+      </p>
+      <p>
+        <strong>👉🏼 Test Duration Over Time:</strong> This chart provides total
+        duration of the test suite runs, for current & existing historical run
+        trends, in chronological order.
+      </p>
+      <img
+        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-run-history.png"
+        alt="Pulse Trend Analysis Page"
+        class="doc-image"
+      />
     </template>
 
     <template id="template-flaky-tests">
-        <h2>Flaky Tests</h2>
-        <p>Flaky tests are tests that exhibit inconsistent behavior. This page helps you identify and analyze them by showing their historical pass/fail rates.</p>
-        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-flaky-tests.png" alt="Pulse Flaky Tests Page" class="doc-image">
+      <h2>Flaky Tests</h2>
+      <p>
+        Flaky tests are tests that exhibit inconsistent behavior. This page
+        helps you identify and analyze them by showing their historical
+        pass/fail rates.
+      </p>
+      <img
+        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-flaky-tests.png"
+        alt="Pulse Flaky Tests Page"
+        class="doc-image"
+      />
     </template>
 
     <template id="template-failure-categorization">
-        <h2>Failure Categorization</h2>
-        <p>This powerful feature automatically groups failed tests by the common type of error that occurred, helping you quickly identify the most common root causes of failures.</p>
-        <img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Failure%20catagorize.png" alt="Pulse Failure Categorization Page" class="doc-image">
-    </template>
-    
-    <template id="template-test-details-page">
-        <h2>Test Details Page</h2>
-        <p>This page provides an in-depth, granular view of a single test execution. It is the primary tool for debugging a specific test failure. The page is organized into several expandable sections.</p>
-        <div class="accordion-container">
-            <div class="accordion-item"><button class="accordion-trigger" aria-expanded="false" aria-controls="panel-1"><span>1. Execution Steps</span><i class="fa-solid fa-chevron-down accordion-icon"></i></button><div class="accordion-panel" id="panel-1" role="region"><div class="accordion-panel-content"><p>A step-by-step log of every action performed during the test. Failed steps and error messages are highlighted in red for easy identification.</p><img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-execution-steps.png" alt="Test Execution Steps" class="doc-image"></div></div></div>
-            <div class="accordion-item"><button class="accordion-trigger" aria-expanded="false" aria-controls="panel-2"><span>2. Attachments</span><i class="fa-solid fa-chevron-down accordion-icon"></i></button><div class="accordion-panel" id="panel-2" role="region"><div class="accordion-panel-content"><p>Access to all artifacts captured during the test run, such as screenshots on failure, videos of the execution, and detailed Playwright trace files for debugging. Also provides a visual scope for <code>test.info().attach()</code> files.</p><img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-json.png" alt="pulse dashboard attachments json" class="doc-image"><img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-pdf.png" alt="pulse dashboard attachments pdf" class="doc-image"><img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-screenshots.png" alt="pulse dashboard attachments screenshots" class="doc-image"><img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-videos.png" alt="pulse dashboard attachments videos" class="doc-image"><img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-text_csv.png" alt="pulse dashboard attachments text-csv" class="doc-image"></div></div></div>
-            <div class="accordion-item"><button class="accordion-trigger" aria-expanded="false" aria-controls="panel-3"><span>3. Logs</span><i class="fa-solid fa-chevron-down accordion-icon"></i></button><div class="accordion-panel" id="panel-3" role="region"><div class="accordion-panel-content"><p>View any console output (from <code>console.log</code>) and standard error streams that were generated by the test or the application during the run.</p><img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-logs.png" alt="pulse dashboard logs" class="doc-image"></div></div></div>
-            <div class="accordion-item"><button class="accordion-trigger" aria-expanded="false" aria-controls="panel-4"><span>4. Test Run History</span><i class="fa-solid fa-chevron-down accordion-icon"></i></button><div class="accordion-panel" id="panel-4" role="region"><div class="accordion-panel-content"><p>A historical view of this specific test's performance and status across previous runs. This helps identify if a failure is new, recurring, or intermittent (flaky).</p><img src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-run-history.png" alt="pulse dashboard attachments test run history" class="doc-image"></div></div></div>
-        </div>
+      <h2>Failure Categorization</h2>
+      <p>
+        This powerful feature automatically groups failed tests by the common
+        type of error that occurred, helping you quickly identify the most
+        common root causes of failures.
+      </p>
+      <img
+        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Failure%20catagorize.png"
+        alt="Pulse Failure Categorization Page"
+        class="doc-image"
+      />
     </template>
 
+    <template id="template-test-details-page">
+      <h2>Test Details Page</h2>
+      <p>
+        This page provides an in-depth, granular view of a single test
+        execution. It is the primary tool for debugging a specific test failure.
+        The page is organized into several expandable sections.
+      </p>
+      <div class="accordion-container">
+        <div class="accordion-item">
+          <button
+            class="accordion-trigger"
+            aria-expanded="false"
+            aria-controls="panel-1"
+          >
+            <span>1. Execution Steps</span
+            ><i class="fa-solid fa-chevron-down accordion-icon"></i>
+          </button>
+          <div class="accordion-panel" id="panel-1" role="region">
+            <div class="accordion-panel-content">
+              <p>
+                A step-by-step log of every action performed during the test.
+                Failed steps and error messages are highlighted in red for easy
+                identification.
+              </p>
+              <img
+                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-execution-steps.png"
+                alt="Test Execution Steps"
+                class="doc-image"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button
+            class="accordion-trigger"
+            aria-expanded="false"
+            aria-controls="panel-2"
+          >
+            <span>2. Attachments</span
+            ><i class="fa-solid fa-chevron-down accordion-icon"></i>
+          </button>
+          <div class="accordion-panel" id="panel-2" role="region">
+            <div class="accordion-panel-content">
+              <p>
+                Access to all artifacts captured during the test run, such as
+                screenshots on failure, videos of the execution, and detailed
+                Playwright trace files for debugging. Also provides a visual
+                scope for <code>test.info().attach()</code> files.
+              </p>
+              <img
+                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-json.png"
+                alt="pulse dashboard attachments json"
+                class="doc-image"
+              /><img
+                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-pdf.png"
+                alt="pulse dashboard attachments pdf"
+                class="doc-image"
+              /><img
+                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-screenshots.png"
+                alt="pulse dashboard attachments screenshots"
+                class="doc-image"
+              /><img
+                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-videos.png"
+                alt="pulse dashboard attachments videos"
+                class="doc-image"
+              /><img
+                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-text_csv.png"
+                alt="pulse dashboard attachments text-csv"
+                class="doc-image"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button
+            class="accordion-trigger"
+            aria-expanded="false"
+            aria-controls="panel-3"
+          >
+            <span>3. Logs</span
+            ><i class="fa-solid fa-chevron-down accordion-icon"></i>
+          </button>
+          <div class="accordion-panel" id="panel-3" role="region">
+            <div class="accordion-panel-content">
+              <p>
+                View any console output (from <code>console.log</code>) and
+                standard error streams that were generated by the test or the
+                application during the run.
+              </p>
+              <img
+                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-logs.png"
+                alt="pulse dashboard logs"
+                class="doc-image"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button
+            class="accordion-trigger"
+            aria-expanded="false"
+            aria-controls="panel-4"
+          >
+            <span>4. Test Run History</span
+            ><i class="fa-solid fa-chevron-down accordion-icon"></i>
+          </button>
+          <div class="accordion-panel" id="panel-4" role="region">
+            <div class="accordion-panel-content">
+              <p>
+                A historical view of this specific test's performance and status
+                across previous runs. This helps identify if a failure is new,
+                recurring, or intermittent (flaky).
+              </p>
+              <img
+                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-run-history.png"
+                alt="pulse dashboard attachments test run history"
+                class="doc-image"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- Theme Toggle ---
-            const themeToggle = document.getElementById('theme-toggle');
-            const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
-            const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
-            
-            function setTheme(isLight) {
-                document.documentElement.classList.toggle('light-theme', isLight);
-                document.documentElement.classList.toggle('dark-theme', !isLight);
-                themeToggle.innerHTML = isLight ? sunIcon : moonIcon;
-            }
-            themeToggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('light-theme')));
-            setTheme(true);
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Theme Toggle ---
+        const themeToggle = document.getElementById("theme-toggle");
+        const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+        const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
 
-            // --- Mobile Navigation ---
-            const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
-            const sidebarOverlay = document.querySelector('.sidebar-overlay');
-            
-            function toggleSidebar() {
-                document.body.classList.toggle('sidebar-open');
-            }
-            mobileNavToggle.addEventListener('click', toggleSidebar);
-            sidebarOverlay.addEventListener('click', toggleSidebar);
+        function setTheme(isLight) {
+          document.documentElement.classList.toggle("light-theme", isLight);
+          document.documentElement.classList.toggle("dark-theme", !isLight);
+          themeToggle.innerHTML = isLight ? sunIcon : moonIcon;
+        }
+        themeToggle.addEventListener("click", () =>
+          setTheme(!document.documentElement.classList.contains("light-theme"))
+        );
+        setTheme(true);
 
-            // --- Page Content Loading & Routing ---
-            const contentDisplay = document.getElementById('content-display-area');
-            const sidebarNav = document.querySelector('.sidebar-nav');
+        // --- Mobile Navigation ---
+        const mobileNavToggle = document.querySelector(".mobile-nav-toggle");
+        const sidebarOverlay = document.querySelector(".sidebar-overlay");
 
-            function loadContent(hash) {
-                const pageId = (hash || '#getting-started').substring(1);
-                const templateId = `template-${pageId}`;
-                const template = document.getElementById(templateId);
-                let targetHash = hash || '#getting-started';
+        function toggleSidebar() {
+          document.body.classList.toggle("sidebar-open");
+        }
+        mobileNavToggle.addEventListener("click", toggleSidebar);
+        sidebarOverlay.addEventListener("click", toggleSidebar);
 
-                contentDisplay.innerHTML = '';
-                if (template) {
-                    contentDisplay.appendChild(template.content.cloneNode(true));
-                } else {
-                    contentDisplay.appendChild(document.getElementById('template-getting-started').content.cloneNode(true));
-                    targetHash = '#getting-started';
-                }
-                updateActiveLink(targetHash);
-                window.scrollTo(0, 0);
-            }
+        // --- Page Content Loading & Routing ---
+        const contentDisplay = document.getElementById("content-display-area");
+        const sidebarNav = document.querySelector(".sidebar-nav");
 
-            function updateActiveLink(hash) {
-                sidebarNav.querySelectorAll('a').forEach(link => {
-                    link.classList.toggle('active', link.getAttribute('href') === hash);
-                });
-            }
+        function loadContent(hash) {
+          const pageId = (hash || "#getting-started").substring(1);
+          const templateId = `template-${pageId}`;
+          const template = document.getElementById(templateId);
+          let targetHash = hash || "#getting-started";
 
-            sidebarNav.addEventListener('click', (event) => {
-                const link = event.target.closest('a');
-                if (link) {
-                    event.preventDefault();
-                    const hash = link.getAttribute('href'); 
-                    if (window.location.hash !== hash) {
-                        history.pushState(null, '', hash);
-                        loadContent(hash);
-                    }
-                    if (document.body.classList.contains('sidebar-open')) {
-                        toggleSidebar();
-                    }
-                }
+          contentDisplay.innerHTML = "";
+          if (template) {
+            contentDisplay.appendChild(template.content.cloneNode(true));
+          } else {
+            contentDisplay.appendChild(
+              document
+                .getElementById("template-getting-started")
+                .content.cloneNode(true)
+            );
+            targetHash = "#getting-started";
+          }
+          updateActiveLink(targetHash);
+          window.scrollTo(0, 0);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+          const logo = document.querySelector(".navbar-brand .logo");
+
+          // Check if the image is already loaded (cached)
+          if (logo.complete) {
+            logo.classList.add("loaded");
+          } else {
+            // If not, wait for it to load
+            logo.addEventListener("load", function () {
+              logo.classList.add("loaded");
             });
-            
-            // --- Global Event Delegation for Dynamic Content ---
-            document.addEventListener('click', event => {
-                const copyBtn = event.target.closest('.copy-btn');
-                const accordionTrigger = event.target.closest('.accordion-trigger');
-
-                if (copyBtn) {
-                    const textToCopy = copyBtn.dataset.copyText;
-                    navigator.clipboard.writeText(textToCopy).then(() => {
-                        const originalIcon = copyBtn.innerHTML;
-                        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
-                        copyBtn.title = 'Copied!';
-                        setTimeout(() => {
-                            copyBtn.innerHTML = originalIcon;
-                            copyBtn.title = 'Copy to clipboard';
-                        }, 2000);
-                    }).catch(err => console.error('Failed to copy text: ', err));
-                } else if (accordionTrigger) {
-                    const panel = accordionTrigger.nextElementSibling;
-                    const isExpanded = accordionTrigger.getAttribute('aria-expanded') === 'true';
-                    accordionTrigger.setAttribute('aria-expanded', !isExpanded);
-                    panel.style.maxHeight = isExpanded ? null : panel.scrollHeight + 'px';
-                }
-            });
-
-            // --- Initial Load ---
-            window.addEventListener('popstate', () => loadContent(window.location.hash));
-            loadContent(window.location.hash);
+          }
         });
+
+        function updateActiveLink(hash) {
+          sidebarNav.querySelectorAll("a").forEach((link) => {
+            link.classList.toggle("active", link.getAttribute("href") === hash);
+          });
+        }
+
+        sidebarNav.addEventListener("click", (event) => {
+          const link = event.target.closest("a");
+          if (link) {
+            event.preventDefault();
+            const hash = link.getAttribute("href");
+            if (window.location.hash !== hash) {
+              history.pushState(null, "", hash);
+              loadContent(hash);
+            }
+            if (document.body.classList.contains("sidebar-open")) {
+              toggleSidebar();
+            }
+          }
+        });
+
+        // --- Global Event Delegation for Dynamic Content ---
+        document.addEventListener("click", (event) => {
+          const copyBtn = event.target.closest(".copy-btn");
+          const accordionTrigger = event.target.closest(".accordion-trigger");
+
+          if (copyBtn) {
+            const textToCopy = copyBtn.dataset.copyText;
+            navigator.clipboard
+              .writeText(textToCopy)
+              .then(() => {
+                const originalIcon = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                copyBtn.title = "Copied!";
+                setTimeout(() => {
+                  copyBtn.innerHTML = originalIcon;
+                  copyBtn.title = "Copy to clipboard";
+                }, 2000);
+              })
+              .catch((err) => console.error("Failed to copy text: ", err));
+          } else if (accordionTrigger) {
+            const panel = accordionTrigger.nextElementSibling;
+            const isExpanded =
+              accordionTrigger.getAttribute("aria-expanded") === "true";
+            accordionTrigger.setAttribute("aria-expanded", !isExpanded);
+            panel.style.maxHeight = isExpanded
+              ? null
+              : panel.scrollHeight + "px";
+          }
+        });
+
+        // --- Initial Load ---
+        window.addEventListener("popstate", () =>
+          loadContent(window.location.hash)
+        );
+        loadContent(window.location.hash);
+      });
     </script>
-</body>
+  </body>
 </html>

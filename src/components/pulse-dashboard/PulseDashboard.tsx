@@ -102,31 +102,47 @@ export function PulseDashboard() {
 
   return (
     <SidebarProvider defaultOpen>
-      <Sidebar collapsible="icon" className="border-r border-sidebar-border shadow-lg">
+      <Sidebar
+        collapsible="icon"
+        className="border-r border-sidebar-border shadow-lg"
+      >
         <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-2 flex items-center justify-between group-data-[collapsible=icon]:justify-center border-b border-sidebar-border">
-           <Link href="/" className="flex items-center" onClick={() => setActiveView('dashboard')}>
+          <Link
+            href="/"
+            className="flex items-center"
+            onClick={() => setActiveView("dashboard")}
+          >
             <Image
-                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images//pulse-logo.png"
-                alt="Pulse Dashboard Logo"
-                width={120} // Adjusted width for the new logo
-                height={30} // Adjusted height for the new logo
-                style={{ objectFit: 'fill' }} // Ensures the logo scales nicely
-                className="transition-all duration-200"
-                data-ai-hint="pulse logo"
+              src="https://i.postimg.cc/v817w4sg/logo.png"
+              alt="Pulse Dashboard Logo"
+              width={120} // Adjusted width for the new logo
+              height={30} // Adjusted height for the new logo
+              style={{ objectFit: "fill" }} // Ensures the logo scales nicely
+              className="transition-all duration-200"
+              data-ai-hint="pulse logo"
             />
+            <span
+              style={{ marginLeft: "10px", color: "#489ef9", fontWeight: 900 }}
+            >
+              PULSE DASHBOARD
+            </span>
           </Link>
           <SidebarTrigger className="md:hidden" />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {mainMenuItems.map(item => (
+            {mainMenuItems.map((item) => (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
                   onClick={() => {
                     setActiveView(item.id);
                   }}
                   isActive={activeView === item.id}
-                  tooltip={{children: item.label, side: 'right', align: 'center'}}
+                  tooltip={{
+                    children: item.label,
+                    side: "right",
+                    align: "center",
+                  }}
                 >
                   <item.icon className="h-5 w-5" />
                   <span
@@ -154,16 +170,22 @@ export function PulseDashboard() {
                     setActiveView(settingsMenuItem.id);
                   }}
                   isActive={activeView === settingsMenuItem.id}
-                  tooltip={{children: settingsMenuItem.label, side: 'right', align: 'center'}}
+                  tooltip={{
+                    children: settingsMenuItem.label,
+                    side: "right",
+                    align: "center",
+                  }}
                 >
                   <settingsMenuItem.icon className="h-5 w-5" />
-                  <span 
+                  <span
                     className="group-data-[collapsible=icon]:hidden"
                     style={
                       activeView === settingsMenuItem.id
                         ? undefined // Active: inherit color from button's active state
                         : settingsMenuItem.labelColorVar
-                        ? { color: `hsl(var(${settingsMenuItem.labelColorVar}))` } // Inactive: use labelColorVar
+                        ? {
+                            color: `hsl(var(${settingsMenuItem.labelColorVar}))`,
+                          } // Inactive: use labelColorVar
                         : undefined
                     }
                   >
@@ -177,8 +199,10 @@ export function PulseDashboard() {
             <SidebarSeparator className="my-1 group-data-[collapsible=icon]:hidden" />
             <div className="flex items-center justify-center gap-1.5 text-xs p-2">
               <ShieldCheck className="h-3.5 w-3.5 text-sidebar-foreground/70" />
-              <span className="font-medium text-sidebar-foreground">Pulse</span>
-              <span className="text-muted-foreground/80">v1.0</span>
+              <span className="font-medium text-sidebar-foreground">
+                Version
+              </span>
+              <span className="text-muted-foreground/80">1.1.2</span>
             </div>
           </div>
         </SidebarFooter>
@@ -190,44 +214,49 @@ export function PulseDashboard() {
               {activeMenuItem?.label || "Pulse Dashboard"}
             </h1>
             <p className="text-md text-muted-foreground mt-1">
-              {activeMenuItem?.description || "Real-time Playwright Test Execution Monitoring & Analysis Overview"}
+              {activeMenuItem?.description ||
+                "Real-time Playwright Test Execution Monitoring & Analysis Overview"}
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               Latest Run Date:{" "}
               {loadingCurrent ? (
                 <span className="text-muted-foreground">Loading...</span>
               ) : currentRun?.run?.timestamp ? (
-                <span className="text-muted-foreground font-medium">{new Date(currentRun.run.timestamp).toLocaleString()}</span>
+                <span className="text-muted-foreground font-medium">
+                  {new Date(currentRun.run.timestamp).toLocaleString()}
+                </span>
               ) : errorCurrent ? (
-                <span className="text-destructive font-medium">Error loading data</span>
+                <span className="text-destructive font-medium">
+                  Error loading data
+                </span>
               ) : (
-                <span className="text-muted-foreground font-medium">Not available</span>
+                <span className="text-muted-foreground font-medium">
+                  Not available
+                </span>
               )}
             </p>
           </header>
 
-          <main className="flex-grow mt-6">
-            {componentToRender}
-          </main>
+          <main className="flex-grow mt-6">{componentToRender}</main>
 
           <footer
             style={{
-              padding: '0.5rem',
-              boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.05)',
-              textAlign: 'center',
+              padding: "0.5rem",
+              boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.05)",
+              textAlign: "center",
               fontFamily: "'Segoe UI', system-ui, sans-serif",
-              marginTop: 'auto', // Ensures footer is at the bottom
+              marginTop: "auto", // Ensures footer is at the bottom
             }}
-            className="text-foreground" 
+            className="text-foreground"
           >
             <div
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.9rem',
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                fontSize: "0.9rem",
                 fontWeight: 600,
-                letterSpacing: '0.5px',
+                letterSpacing: "0.5px",
               }}
             >
               <span>Created by</span>
@@ -238,20 +267,20 @@ export function PulseDashboard() {
                 style={{
                   color: linkColor,
                   fontWeight: 700,
-                  fontStyle: 'italic',
-                  textDecoration: 'none',
-                  transition: 'all 0.2s ease',
+                  fontStyle: "italic",
+                  textDecoration: "none",
+                  transition: "all 0.2s ease",
                 }}
-                onMouseOver={() => setLinkColor('#BF5C37')}
-                onMouseOut={() => setLinkColor('#7737BF')}
+                onMouseOver={() => setLinkColor("#BF5C37")}
+                onMouseOut={() => setLinkColor("#7737BF")}
               >
                 Arghajit Singha
               </a>
             </div>
             <div
               style={{
-                marginTop: '0.5rem',
-                fontSize: '0.75rem',
+                marginTop: "0.5rem",
+                fontSize: "0.75rem",
               }}
               className="text-muted-foreground"
             >
