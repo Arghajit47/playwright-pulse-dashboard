@@ -6,7 +6,7 @@
   "description": "A Next.js Dashboard application for real-time monitoring and historical analysis of Playwright test executions. This component provides the UI for visualizing Playwright test results and can be run as a standalone CLI tool.",
   "author": "Arghajit Singha",
   "license": "Apache-2.0",
-  "homepage": "https://postman-test-bit.github.io/pulse-dashboard/#getting-started",
+  "homepage": "https://arghajit47.github.io/playwright-pulse-dashboard/",
   "keywords": [
     "react",
     "nextjs",
