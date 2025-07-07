@@ -85,3 +85,4 @@ Special Thanks to **[@Suman Vishwakarma](https://www.linkedin.com/in/suman-vishw
 ## License
 
 This project is licensed under the Apache 2.0 License.
+# playwright-pulse-dashboard
