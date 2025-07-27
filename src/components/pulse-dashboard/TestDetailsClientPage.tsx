@@ -139,6 +139,45 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [errorHistory, setErrorHistory] = useState<string | null>(null);
   const historyChartRef = useRef<HTMLDivElement>(null);
+  const [aiSuggestion, setAiSuggestion] = useState<any>(null);
+  const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
+  const [aiSuggestionError, setAiSuggestionError] = useState<string | null>(null);
+
+  const handleGenerateSuggestion = async () => {
+    if (!test) return;
+
+    setIsGeneratingSuggestion(true);
+    setAiSuggestion(null);
+    setAiSuggestionError(null);
+
+    try {
+      const response = await fetch("https://ai-test-analyser.netlify.app/api/analyze", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          testName: test.name,
+          failureLogsAndErrors: test.errorMessage || '',
+          codeSnippet: test.codeSnippet || '',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
+        throw new Error(errorData.message || `API request failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+      setAiSuggestion(result);
+
+    } catch (error) {
+      console.error('Error generating AI suggestion:', error);
+      setAiSuggestionError(error instanceof Error ? error.message : 'An unknown error occurred.');
+    } finally {
+      setIsGeneratingSuggestion(false);
+    }
+  };
 
 
   useEffect(() => {
@@ -426,11 +465,37 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               <TabsContent value="ai-suggestions" className="mt-4 p-4 border rounded-lg bg-card shadow-inner">
                 <div className="flex flex-col items-center justify-center text-center p-6">
                   <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center"><Sparkles className="h-5 w-5 mr-2 text-primary"/>AI-Powered Failure Analysis</h3>
-                  <p className="text-muted-foreground text-sm mb-6 max-w-md">Get suggestions from AI to help diagnose the root cause of this test failure and find potential solutions.</p>
-                  <Button>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Generate suggestion From AI
-                  </Button>
+                  
+                  {!(isGeneratingSuggestion || aiSuggestion || aiSuggestionError) && (
+                    <>
+                      <p className="text-muted-foreground text-sm mb-6 max-w-md">Get suggestions from AI to help diagnose the root cause of this test failure and find potential solutions.</p>
+                      <Button onClick={handleGenerateSuggestion} disabled={isGeneratingSuggestion}>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Generate suggestion From AI
+                      </Button>
+                    </>
+                  )}
+
+                  {isGeneratingSuggestion && (
+                    <div className="flex flex-col items-center justify-center">
+                      <Sparkles className="h-8 w-8 text-primary animate-pulse mb-3" />
+                      <p className="text-muted-foreground">Generating suggestion... Please wait.</p>
+                    </div>
+                  )}
+
+                  {aiSuggestionError && (
+                    <Alert variant="destructive">
+                      <AlertTitle>Error Generating Suggestion</AlertTitle>
+                      <AlertDescription>{aiSuggestionError}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  {aiSuggestion && (
+                    <div className="text-left w-full mt-4">
+                      {/* Placeholder for displaying the AI suggestion. You will provide the structure in the next command. */}
+                      <pre className="bg-muted/50 p-4 rounded-lg whitespace-pre-wrap">{JSON.stringify(aiSuggestion, null, 2)}</pre>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             )}
