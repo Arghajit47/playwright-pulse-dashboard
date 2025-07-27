@@ -151,7 +151,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     setAiSuggestionError(null);
 
     try {
-      const response = await fetch("https://ai-test-analyser.netlify.app/api/analyze", {
+      const response = await fetch("/api/analyze-test", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
