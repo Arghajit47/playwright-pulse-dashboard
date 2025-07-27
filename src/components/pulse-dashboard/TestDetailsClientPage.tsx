@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, ImageIcon, FileText, LineChart, Info, Download, Film, Archive, Terminal, FileJson, FileSpreadsheet, FileCode, File as FileIcon, Sparkles } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, ImageIcon, FileText, LineChart, Info, Download, Film, Archive, Terminal, FileJson, FileSpreadsheet, FileCode, File as FileIcon, Sparkles, Lightbulb, Wrench } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -463,7 +463,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
             {isFailedTest && (
               <TabsContent value="ai-suggestions" className="mt-4 p-4 border rounded-lg bg-card shadow-inner">
-                <div className="flex flex-col items-center justify-center text-center p-6">
+                <div className="flex flex-col items-center justify-center text-center p-2 md:p-6">
                   <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center"><Sparkles className="h-5 w-5 mr-2 text-primary"/>AI-Powered Failure Analysis</h3>
                   
                   {!(isGeneratingSuggestion || aiSuggestion || aiSuggestionError) && (
@@ -471,29 +471,84 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                       <p className="text-muted-foreground text-sm mb-6 max-w-md">Get suggestions from AI to help diagnose the root cause of this test failure and find potential solutions.</p>
                       <Button onClick={handleGenerateSuggestion} disabled={isGeneratingSuggestion}>
                         <Sparkles className="h-4 w-4 mr-2" />
-                        Generate suggestion From AI
+                        Generate Suggestion
                       </Button>
                     </>
                   )}
 
                   {isGeneratingSuggestion && (
-                    <div className="flex flex-col items-center justify-center">
-                      <Sparkles className="h-8 w-8 text-primary animate-pulse mb-3" />
+                    <div className="flex flex-col items-center justify-center py-10">
+                      <Sparkles className="h-8 w-8 text-primary animate-pulse mb-4" />
                       <p className="text-muted-foreground">Generating suggestion... Please wait.</p>
                     </div>
                   )}
 
                   {aiSuggestionError && (
-                    <Alert variant="destructive">
-                      <AlertTitle>Error Generating Suggestion</AlertTitle>
-                      <AlertDescription>{aiSuggestionError}</AlertDescription>
-                    </Alert>
+                    <div className="w-full text-left">
+                      <Alert variant="destructive">
+                        <AlertTitle>Error Generating Suggestion</AlertTitle>
+                        <AlertDescription>{aiSuggestionError}</AlertDescription>
+                      </Alert>
+                       <Button onClick={handleGenerateSuggestion} variant="outline" size="sm" className="mt-4">
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Try Again
+                      </Button>
+                    </div>
                   )}
 
                   {aiSuggestion && (
-                    <div className="text-left w-full mt-4">
-                      {/* Placeholder for displaying the AI suggestion. You will provide the structure in the next command. */}
-                      <pre className="bg-muted/50 p-4 rounded-lg whitespace-pre-wrap">{JSON.stringify(aiSuggestion, null, 2)}</pre>
+                    <div className="text-left w-full mt-6 space-y-6">
+                      <Alert variant="default" className="border-primary/30 bg-primary/5">
+                        <Lightbulb className="h-5 w-5 text-primary" />
+                        <AlertTitle className="text-primary font-semibold">Root Cause Analysis</AlertTitle>
+                        <AlertDescription className="text-primary/90">
+                          {aiSuggestion.rootCause || "No root cause analysis provided."}
+                        </AlertDescription>
+                      </Alert>
+
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-2">Affected Tests:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {aiSuggestion.affectedTests?.map((testName: string) => (
+                            <Badge key={testName} variant="secondary">{testName}</Badge>
+                          )) || <p className="text-sm text-muted-foreground">N/A</p>}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-3 flex items-center">
+                          <Wrench className="h-4 w-4 mr-2" />
+                          Suggested Fixes
+                        </h4>
+                        <div className="space-y-4">
+                          {aiSuggestion.suggestedFixes?.map((fix: { description: string, codeSnippet: string }, index: number) => (
+                            <Card key={index} className="bg-card/50 shadow-md">
+                              <CardHeader>
+                                <CardTitle className="text-base">Suggestion #{index + 1}</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="text-sm text-muted-foreground mb-3">{fix.description}</p>
+                                {fix.codeSnippet && (
+                                  <div>
+                                    <h5 className="text-xs font-semibold text-foreground mb-1 flex items-center"><FileCode className="h-3 w-3 mr-1.5" />Code Snippet:</h5>
+                                    <pre className="bg-muted text-sm p-3 rounded-md whitespace-pre-wrap font-code overflow-x-auto">
+                                      <code>{fix.codeSnippet}</code>
+                                    </pre>
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                           {(!aiSuggestion.suggestedFixes || aiSuggestion.suggestedFixes.length === 0) && (
+                               <p className="text-sm text-muted-foreground">No specific fixes were suggested.</p>
+                           )}
+                        </div>
+                      </div>
+
+                       <Button onClick={handleGenerateSuggestion} variant="outline" size="sm" className="mt-4">
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Regenerate Suggestion
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -506,5 +561,3 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     </div>
   );
 }
-
-    
