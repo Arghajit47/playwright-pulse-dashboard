@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, ImageIcon, FileText, LineChart, Info, Download, Film, Archive, Terminal, FileJson, FileSpreadsheet, FileCode, File as FileIcon } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, ImageIcon, FileText, LineChart, Info, Download, Film, Archive, Terminal, FileJson, FileSpreadsheet, FileCode, File as FileIcon, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -180,45 +180,38 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     fetchTestHistory();
   }, [testId]);
 
-  const screenshotDisplayItems: DisplayAttachment[] = useMemo(() => {
-    if (!test || !test.screenshots || !Array.isArray(test.screenshots)) return [];
+  const screenshotAttachments: DisplayAttachment[] = useMemo(() => {
+    if (!test || !Array.isArray(test.screenshots)) return [];
     return test.screenshots.map((path, index) => ({
       name: getAttachmentNameFromPath(path, `Screenshot ${index + 1}`),
       path: path,
-      contentType: 'image/png', // Assuming default, can be improved
+      contentType: 'image/png',
       'data-ai-hint': `screenshot ${index + 1}`
     }));
   }, [test]);
-  
-  const videoDisplayItems: DisplayAttachment[] = useMemo(() => {
-    if (!test || !test.videoPath || !Array.isArray(test.videoPath)) return [];
-    return test.videoPath.map((path, index) => {
-      if (typeof path !== 'string') { // Safety check if an element is not a string
-        console.warn(`Invalid video path element at index ${index}:`, path);
-        return { name: `Invalid Video ${index + 1}`, path: '#', contentType: 'video/mp4', 'data-ai-hint': 'invalid video' };
-      }
-      return {
-        name: getAttachmentNameFromPath(path, `Video ${index + 1}`),
-        path: path,
-        contentType: 'video/mp4',
-        'data-ai-hint': `video ${index + 1}`
-      };
-    });
+
+  const videoAttachments: DisplayAttachment[] = useMemo(() => {
+    if (!test || !Array.isArray(test.videoPath)) return [];
+    return test.videoPath.map((path, index) => ({
+      name: getAttachmentNameFromPath(path, `Video ${index + 1}`),
+      path: path,
+      contentType: 'video/mp4',
+      'data-ai-hint': `video ${index + 1}`
+    }));
   }, [test]);
-  
-  const traceDisplayItem: DisplayAttachment | null = useMemo(() => {
-    if (!test || !test.tracePath || typeof test.tracePath !== 'string') return null;
+
+  const traceAttachment: DisplayAttachment | null = useMemo(() => {
+    if (!test || typeof test.tracePath !== 'string' || !test.tracePath) return null;
     return {
       name: getAttachmentNameFromPath(test.tracePath, 'trace.zip'),
       path: test.tracePath,
       contentType: 'application/zip'
     };
   }, [test]);
-
-  // Assuming 'otherAttachments' are now sourced from test.attachments if it exists
+  
   const allOtherAttachments: DisplayAttachment[] = useMemo(() => {
-    if (!test || !test.attachments || !Array.isArray(test.attachments)) return [];
-    return test.attachments.map((att, index) => ({
+    if (!test || !Array.isArray(test.attachments)) return [];
+    return test.attachments.map((att: any, index: number) => ({
         name: att.name || getAttachmentNameFromPath(att.path, `Attachment ${index + 1}`),
         path: att.path,
         contentType: att.contentType || 'application/octet-stream',
@@ -236,13 +229,14 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
   const totalAttachmentsCount = useMemo(() => {
     return (
-      screenshotDisplayItems.length +
-      videoDisplayItems.length +
-      (traceDisplayItem ? 1 : 0) +
-      allOtherAttachments.length // Now directly using the length of allOtherAttachments
+      screenshotAttachments.length +
+      videoAttachments.length +
+      (traceAttachment ? 1 : 0) +
+      allOtherAttachments.length
     );
-  }, [screenshotDisplayItems, videoDisplayItems, traceDisplayItem, allOtherAttachments]);
+  }, [screenshotAttachments, videoAttachments, traceAttachment, allOtherAttachments]);
 
+  const isFailedTest = test?.status === 'failed' || test?.status === 'timedOut';
 
   if (loadingCurrent && !test) {
     return (
@@ -301,11 +295,14 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="steps" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 rounded-lg">
+            <TabsList className={cn("grid w-full mb-4 rounded-lg", isFailedTest ? "grid-cols-2 md:grid-cols-5" : "grid-cols-2 md:grid-cols-4")}>
               <TabsTrigger value="steps">Execution Steps ({test.steps?.length || 0})</TabsTrigger>
               <TabsTrigger value="attachments">Attachments ({totalAttachmentsCount})</TabsTrigger>
               <TabsTrigger value="logs"><FileText className="h-4 w-4 mr-2"/>Logs</TabsTrigger>
               <TabsTrigger value="history">Test Run History</TabsTrigger>
+              {isFailedTest && (
+                <TabsTrigger value="ai-suggestions"><Sparkles className="h-4 w-4 mr-2" />AI Suggestions</TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="steps" className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner">
@@ -317,27 +314,27 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <TabsContent value="attachments" className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner">
               <Tabs defaultValue="sub-screenshots" className="w-full">
                 <ScrollArea className="w-full whitespace-nowrap rounded-lg">
-                    <TabsList className="inline-grid w-max grid-flow-col mb-4 rounded-lg">
-                    <TabsTrigger value="sub-screenshots" disabled={screenshotDisplayItems.length === 0}><ImageIcon className="h-4 w-4 mr-2" />Screenshots ({screenshotDisplayItems.length})</TabsTrigger>
-                    <TabsTrigger value="sub-video" disabled={videoDisplayItems.length === 0}><Film className="h-4 w-4 mr-2" />Videos ({videoDisplayItems.length})</TabsTrigger>
-                    <TabsTrigger value="sub-trace" disabled={!traceDisplayItem}><Archive className="h-4 w-4 mr-2" />Trace {traceDisplayItem ? '(1)' : '(0)'}</TabsTrigger>
+                  <TabsList className="inline-grid w-max grid-flow-col mb-4 rounded-lg">
+                    <TabsTrigger value="sub-screenshots" disabled={screenshotAttachments.length === 0}><ImageIcon className="h-4 w-4 mr-2" />Screenshots ({screenshotAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="sub-video" disabled={videoAttachments.length === 0}><Film className="h-4 w-4 mr-2" />Videos ({videoAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="sub-trace" disabled={!traceAttachment}><Archive className="h-4 w-4 mr-2" />Trace {traceAttachment ? '(1)' : '(0)'}</TabsTrigger>
                     <TabsTrigger value="sub-html" disabled={htmlAttachments.length === 0}><FileCode className="h-4 w-4 mr-2" />HTML ({htmlAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-pdf" disabled={pdfAttachments.length === 0}><FileText className="h-4 w-4 mr-2" />PDF ({pdfAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-json" disabled={jsonAttachments.length === 0}><FileJson className="h-4 w-4 mr-2" />JSON ({jsonAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-text" disabled={textCsvAttachments.length === 0}><FileText className="h-4 w-4 mr-2" />Text/CSV ({textCsvAttachments.length})</TabsTrigger>
                     <TabsTrigger value="sub-other" disabled={otherGenericAttachments.length === 0}><FileIcon className="h-4 w-4 mr-2" />Others ({otherGenericAttachments.length})</TabsTrigger>
-                    </TabsList>
+                  </TabsList>
                 </ScrollArea>
 
                 <TabsContent value="sub-screenshots" className="mt-4">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
-                  {screenshotDisplayItems.length > 0 ? (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">{screenshotDisplayItems.map((attachment, index) => {const imageSrc = getUtilAssetPath(attachment.path); if (imageSrc === '#') return null; return (<a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg"><Image src={imageSrc} alt={attachment.name || `Screenshot ${index + 1}`} fill={true} style={{objectFit: "cover"}} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={attachment['data-ai-hint'] || "test screenshot"}/><div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2"><p className="text-white text-xs text-center break-all">{attachment.name || `Screenshot ${index + 1}`}</p></div></a>);})}</div>) : (<p className="text-muted-foreground">No screenshots available for this test.</p>)}
+                  {screenshotAttachments.length > 0 ? (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">{screenshotAttachments.map((attachment, index) => {const imageSrc = getUtilAssetPath(attachment.path); if (imageSrc === '#') return null; return (<a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg"><Image src={imageSrc} alt={attachment.name || `Screenshot ${index + 1}`} fill={true} style={{objectFit: "cover"}} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={attachment['data-ai-hint'] || "test screenshot"}/><div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2"><p className="text-white text-xs text-center break-all">{attachment.name || `Screenshot ${index + 1}`}</p></div></a>);})}</div>) : (<p className="text-muted-foreground">No screenshots available for this test.</p>)}
                 </TabsContent>
 
                 <TabsContent value="sub-video" className="mt-4">
                    <h3 className="text-lg font-semibold text-foreground mb-4">Video Recording(s)</h3>
                     <div className="space-y-4">
-                        {videoDisplayItems.length > 0 ? videoDisplayItems.map((attachment, index) => (
+                        {videoAttachments.length > 0 ? videoAttachments.map((attachment, index) => (
                             <div key={`video-${index}`} className="p-4 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between">
                                 <p className="text-sm font-medium text-foreground truncate" title={attachment.name}>{attachment.name}</p>
                                 <div className="flex items-center gap-2">
@@ -353,12 +350,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                 <TabsContent value="sub-trace" className="mt-4">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Trace File</h3>
-                  {traceDisplayItem ? (
+                  {traceAttachment ? (
                     <div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
-                      <a href={getUtilAssetPath(traceDisplayItem.path)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base" download={traceDisplayItem.name}>
-                        <Download className="h-5 w-5 mr-2" /> Download Trace File ({traceDisplayItem.name})
+                      <a href={getUtilAssetPath(traceAttachment.path)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base" download={traceAttachment.name}>
+                        <Download className="h-5 w-5 mr-2" /> Download Trace File ({traceAttachment.name})
                       </a>
-                      <p className="text-xs text-muted-foreground">Path: {traceDisplayItem.path}</p>
+                      <p className="text-xs text-muted-foreground">Path: {traceAttachment.path}</p>
                       <Alert className="rounded-lg">
                         <Info className="h-4 w-4" />
                         <AlertTitle>Using Trace Files</AlertTitle>
@@ -425,9 +422,24 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {!loadingHistory && !errorHistory && testHistory.length > 0 && (<div ref={historyChartRef} className="w-full h-[300px] bg-card p-4 rounded-lg shadow-inner"><ResponsiveContainer width="100%" height="100%"><RechartsLineChart data={testHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="date" tickFormatter={(tick) => new Date(tick).toLocaleDateString('en-CA', {month: 'short', day: 'numeric'})} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" height={40}/><YAxis tickFormatter={(tick) => formatDuration(tick)} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} width={80}/><RechartsTooltip content={<HistoryTooltip />}/><Legend wrapperStyle={{fontSize: "12px"}}/><Line type="monotone" dataKey="duration" name="Duration" stroke="hsl(var(--primary))" strokeWidth={2} dot={<StatusDot />} activeDot={{ r: 7 }}/></RechartsLineChart></ResponsiveContainer></div>)}
             </TabsContent>
 
+            {isFailedTest && (
+              <TabsContent value="ai-suggestions" className="mt-4 p-4 border rounded-lg bg-card shadow-inner">
+                <div className="flex flex-col items-center justify-center text-center p-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center"><Sparkles className="h-5 w-5 mr-2 text-primary"/>AI-Powered Failure Analysis</h3>
+                  <p className="text-muted-foreground text-sm mb-6 max-w-md">Get suggestions from AI to help diagnose the root cause of this test failure and find potential solutions.</p>
+                  <Button>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Generate suggestion From AI
+                  </Button>
+                </div>
+              </TabsContent>
+            )}
+
           </Tabs>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+    
