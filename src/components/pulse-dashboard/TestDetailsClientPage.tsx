@@ -159,7 +159,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         body: JSON.stringify({
           testName: test.name,
           failureLogsAndErrors: test.errorMessage || '',
-          codeSnippet: test.codeSnippet || '',
+          codeSnippet: test.snippet || '',
         }),
       });
 
@@ -322,7 +322,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </CardTitle>
                 {test.suiteName && <CardDescription className="mt-1 text-md">From suite: {test.suiteName}</CardDescription>}
                  <p className="text-sm text-muted-foreground mt-2">Latest Run Date: {loadingCurrent ? <span className="text-muted-foreground">Loading...</span> : currentRun?.run?.timestamp ? <span className="font-medium">{new Date(currentRun.run.timestamp).toLocaleString()}</span> : errorCurrent && !currentRun?.run?.timestamp ? <span className="text-destructive font-medium">Error loading date</span> : <span className="font-medium">Not available</span>}</p>
-                 <div className="mt-1 text-xs text-muted-foreground"><p>ID: {test.id}</p>{test.browser && <p>Browser: {test.browser}</p>}{test.codeSnippet && <p>Defined at: {test.codeSnippet}</p>}</div>
+                 <div className="mt-1 text-xs text-muted-foreground"><p>ID: {test.id}</p>{test.browser && <p>Browser: {test.browser}</p>}</div>
             </div>
             <div className="text-right flex-shrink-0">
                  <Badge variant="outline" className="capitalize text-sm px-3 py-1 rounded-full border" style={getStatusBadgeStyle(test.status)}>{test.status}</Badge>
@@ -451,15 +451,15 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <TabsContent value="logs" className="mt-4 p-4 border rounded-lg bg-card space-y-6 shadow-inner">
               <div><h3 className="text-lg font-semibold text-foreground mb-3 flex items-center"><Terminal className="h-5 w-5 mr-2 text-primary"/>Console Logs / Standard Output</h3><ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm"><pre className="text-sm whitespace-pre-wrap break-words font-code"><span dangerouslySetInnerHTML={{ __html: ansiToHtml((test.stdout && Array.isArray(test.stdout) && test.stdout.length > 0) ? test.stdout.join('\n') : "No standard output logs captured for this test.")}} /></pre></ScrollArea></div>
               <div><h3 className="text-lg font-semibold text-foreground mb-3 flex items-center"><AlertCircle className="h-5 w-5 mr-2 text-destructive"/>Error Messages / Standard Error</h3><ScrollArea className="h-48 w-full rounded-lg border bg-destructive/5 shadow-sm"><pre className="text-sm p-3 whitespace-pre-wrap break-all font-code"><span dangerouslySetInnerHTML={{ __html: ansiToHtml(test.errorMessage || "No errors captured for this test.")}} /></pre></ScrollArea></div>
-              {test.codeSnippet && (
+              {test.snippet && (
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
                     <FileCode className="h-5 w-5 mr-2 text-primary" />
-                    Test Case Code
+                    Test Case Snippet
                   </h3>
                   <ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm">
                     <pre className="text-sm whitespace-pre-wrap break-words font-code">
-                      <code>{test.codeSnippet}</code>
+                      <span dangerouslySetInnerHTML={{ __html: ansiToHtml(test.snippet) }} />
                     </pre>
                   </ScrollArea>
                 </div>
