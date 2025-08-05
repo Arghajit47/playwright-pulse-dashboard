@@ -451,6 +451,19 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <TabsContent value="logs" className="mt-4 p-4 border rounded-lg bg-card space-y-6 shadow-inner">
               <div><h3 className="text-lg font-semibold text-foreground mb-3 flex items-center"><Terminal className="h-5 w-5 mr-2 text-primary"/>Console Logs / Standard Output</h3><ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm"><pre className="text-sm whitespace-pre-wrap break-words font-code"><span dangerouslySetInnerHTML={{ __html: ansiToHtml((test.stdout && Array.isArray(test.stdout) && test.stdout.length > 0) ? test.stdout.join('\n') : "No standard output logs captured for this test.")}} /></pre></ScrollArea></div>
               <div><h3 className="text-lg font-semibold text-foreground mb-3 flex items-center"><AlertCircle className="h-5 w-5 mr-2 text-destructive"/>Error Messages / Standard Error</h3><ScrollArea className="h-48 w-full rounded-lg border bg-destructive/5 shadow-sm"><pre className="text-sm p-3 whitespace-pre-wrap break-all font-code"><span dangerouslySetInnerHTML={{ __html: ansiToHtml(test.errorMessage || "No errors captured for this test.")}} /></pre></ScrollArea></div>
+              {test.codeSnippet && (
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+                    <FileCode className="h-5 w-5 mr-2 text-primary" />
+                    Test Case Code
+                  </h3>
+                  <ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm">
+                    <pre className="text-sm whitespace-pre-wrap break-words font-code">
+                      <code>{test.codeSnippet}</code>
+                    </pre>
+                  </ScrollArea>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="history" className="mt-4 p-4 border rounded-lg bg-card shadow-inner">
