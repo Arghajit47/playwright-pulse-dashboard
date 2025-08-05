@@ -57,7 +57,7 @@ export function TestStepItemRecursive({ step, level = 0 }: TestStepItemRecursive
       {step.errorMessage && (
         <div className="pl-6 mt-1">
           <p className="text-xs font-semibold text-destructive mb-0.5">Error:</p>
-          <pre className="bg-destructive/10 text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-32 overflow-y-auto">
+          <pre className="bg-destructive/10 text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code">
             <span dangerouslySetInnerHTML={{ __html: ansiToHtml(step.errorMessage) }} />
           </pre>
         </div>
