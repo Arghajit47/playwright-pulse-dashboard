@@ -72,13 +72,13 @@ export function ansiToHtml(text) {
 
   const applyStyles = () => {
     if (openSpan) {
-      html += "&lt;/span&gt;";
+      html += "</span>";
       openSpan = false;
     }
     if (currentStylesArray.length > 0) {
       const styleString = currentStylesArray.filter((s) => s).join(";");
       if (styleString) {
-        html += `&lt;span style="${styleString}"&gt;`;
+        html += `<span style="${styleString}">`;
         openSpan = true;
       }
     }
@@ -137,7 +137,7 @@ export function ansiToHtml(text) {
     }
   }
   if (openSpan) {
-    html += "&lt;/span&gt;";
+    html += "</span>";
   }
   return html;
 }
@@ -163,13 +163,13 @@ function convertPlaywrightErrorToHTML(str) {
       .replace(/^(\s+)/gm, (match) =>
         match.replace(/ /g, "&nbsp;").replace(/\t/g, "&nbsp;&nbsp;")
       )
-      .replace(/&lt;red&gt;/g, '&lt;span style="color: red;"&gt;')
-      .replace(/&lt;green&gt;/g, '&lt;span style="color: green;"&gt;')
-      .replace(/&lt;dim&gt;/g, '&lt;span style="opacity: 0.6;"&gt;')
-      .replace(/&lt;intensity&gt;/g, '&lt;span style="font-weight: bold;"&gt;')
-      .replace(/&lt;\/color&gt;/g, "&lt;/span&gt;")
-      .replace(/&lt;\/intensity&gt;/g, "&lt;/span&gt;")
-      .replace(/\n/g, "&lt;br&gt;");
+      .replace(/<red>/g, '<span style="color: red;">')
+      .replace(/<green>/g, '<span style="color: green;">')
+      .replace(/<dim>/g, '<span style="opacity: 0.6;">')
+      .replace(/<intensity>/g, '<span style="font-weight: bold;">')
+      .replace(/<\/color>/g, "</span>")
+      .replace(/<\/intensity>/g, "</span>")
+      .replace(/\n/g, "<br>");
 }
 function formatDuration(ms, options = {}) {
   const {
@@ -243,7 +243,7 @@ function formatDuration(ms, options = {}) {
 }
 function generateTestTrendsChart(trendData) {
   if (!trendData || !trendData.overall || trendData.overall.length === 0) {
-    return '&lt;div class="no-data"&gt;No overall trend data available for test counts.&lt;/div&gt;';
+    return '<div class="no-data">No overall trend data available for test counts.</div>';
   }
 
   const chartId = `testTrendsChart-${Date.now()}-${Math.random()
@@ -292,10 +292,10 @@ function generateTestTrendsChart(trendData) {
   const runsForTooltipString = JSON.stringify(runsForTooltip);
 
   return `
-      &lt;div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}"&gt;
-          &lt;div class="no-data"&gt;Loading Test Volume Trends...&lt;/div&gt;
-      &lt;/div&gt;
-      &lt;script&gt;
+      <div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}">
+          <div class="no-data">Loading Test Volume Trends...</div>
+      </div>
+      <script>
           window.${renderFunctionName} = function() {
               const chartContainer = document.getElementById('${chartId}');
               if (!chartContainer) { console.error("Chart container ${chartId} not found for lazy loading."); return; }
@@ -315,9 +315,9 @@ function generateTestTrendsChart(trendData) {
                                   const runsData = ${runsForTooltipString};
                                   const pointIndex = this.points[0].point.x;
                                   const run = runsData[pointIndex];
-                                  let tooltip = '&lt;strong&gt;Run ' + (run.runId || pointIndex + 1) + '&lt;/strong&gt;&lt;br&gt;' + 'Date: ' + new Date(run.timestamp).toLocaleString() + '&lt;br&gt;&lt;br&gt;';
-                                  this.points.forEach(point => { tooltip += '&lt;span style="color:' + point.color + '"&gt;●&lt;/span&gt; ' + point.series.name + ': &lt;b&gt;' + point.y + '&lt;/b&gt;&lt;br&gt;'; });
-                                  tooltip += '&lt;br&gt;Duration: ' + formatDuration(run.duration);
+                                  let tooltip = '<strong>Run ' + (run.runId || pointIndex + 1) + '</strong><br>' + 'Date: ' + new Date(run.timestamp).toLocaleString() + '<br><br>';
+                                  this.points.forEach(point => { tooltip += '<span style="color:' + point.color + '">●</span> ' + point.series.name + ': <b>' + point.y + '</b><br>'; });
+                                  tooltip += '<br>Duration: ' + formatDuration(run.duration);
                                   return tooltip;
                               }
                           },
@@ -327,18 +327,18 @@ function generateTestTrendsChart(trendData) {
                       Highcharts.chart('${chartId}', chartOptions);
                   } catch (e) {
                       console.error("Error rendering chart ${chartId} (lazy):", e);
-                      chartContainer.innerHTML = '&lt;div class="no-data"&gt;Error rendering test trends chart.&lt;/div&gt;';
+                      chartContainer.innerHTML = '<div class="no-data">Error rendering test trends chart.</div>';
                   }
               } else {
-                  chartContainer.innerHTML = '&lt;div class="no-data"&gt;Charting library not available for test trends.&lt;/div&gt;';
+                  chartContainer.innerHTML = '<div class="no-data">Charting library not available for test trends.</div>';
               }
           };
-      &lt;/script&gt;
+      </script>
   `;
 }
 function generateDurationTrendChart(trendData) {
   if (!trendData || !trendData.overall || trendData.overall.length === 0) {
-    return '&lt;div class="no-data"&gt;No overall trend data available for durations.&lt;/div&gt;';
+    return '<div class="no-data">No overall trend data available for durations.</div>';
   }
   const chartId = `durationTrendChart-${Date.now()}-${Math.random()
     .toString(36)
@@ -372,10 +372,10 @@ function generateDurationTrendChart(trendData) {
   }]`;
 
   return `
-      &lt;div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}"&gt;
-          &lt;div class="no-data"&gt;Loading Duration Trends...&lt;/div&gt;
-      &lt;/div&gt;
-      &lt;script&gt;
+      <div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}">
+          <div class="no-data">Loading Duration Trends...</div>
+      </div>
+      <script>
           window.${renderFunctionName} = function() {
               const chartContainer = document.getElementById('${chartId}');
               if (!chartContainer) { console.error("Chart container ${chartId} not found for lazy loading."); return; }
@@ -399,9 +399,9 @@ function generateDurationTrendChart(trendData) {
                                   const runsData = ${runsForTooltipString};
                                   const pointIndex = this.points[0].point.x;
                                   const run = runsData[pointIndex];
-                                  let tooltip = '&lt;strong&gt;Run ' + (run.runId || pointIndex + 1) + '&lt;/strong&gt;&lt;br&gt;' + 'Date: ' + new Date(run.timestamp).toLocaleString() + '&lt;br&gt;';
-                                  this.points.forEach(point => { tooltip += '&lt;span style="color:' + point.series.color + '"&gt;●&lt;/span&gt; ' + point.series.name + ': &lt;b&gt;' + formatDuration(point.y) + '&lt;/b&gt;&lt;br&gt;'; });
-                                  tooltip += '&lt;br&gt;Tests: ' + run.totalTests;
+                                  let tooltip = '<strong>Run ' + (run.runId || pointIndex + 1) + '</strong><br>' + 'Date: ' + new Date(run.timestamp).toLocaleString() + '<br>';
+                                  this.points.forEach(point => { tooltip += '<span style="color:' + point.series.color + '">●</span> ' + point.series.name + ': <b>' + formatDuration(point.y) + '</b><br>'; });
+                                  tooltip += '<br>Tests: ' + run.totalTests;
                                   return tooltip;
                               }
                           },
@@ -411,13 +411,13 @@ function generateDurationTrendChart(trendData) {
                       Highcharts.chart('${chartId}', chartOptions);
                   } catch (e) {
                       console.error("Error rendering chart ${chartId} (lazy):", e);
-                      chartContainer.innerHTML = '&lt;div class="no-data"&gt;Error rendering duration trend chart.&lt;/div&gt;';
+                      chartContainer.innerHTML = '<div class="no-data">Error rendering duration trend chart.</div>';
                   }
               } else {
-                  chartContainer.innerHTML = '&lt;div class="no-data"&gt;Charting library not available for duration trends.&lt;/div&gt;';
+                  chartContainer.innerHTML = '<div class="no-data">Charting library not available for duration trends.</div>';
               }
           };
-      &lt;/script&gt;
+      </script>
   `;
 }
 function formatDate(dateStrOrDate) {
@@ -440,12 +440,12 @@ function formatDate(dateStrOrDate) {
 }
 function generateTestHistoryChart(history) {
   if (!history || history.length === 0)
-    return '&lt;div class="no-data-chart"&gt;No data for chart&lt;/div&gt;';
+    return '<div class="no-data-chart">No data for chart</div>';
   const validHistory = history.filter(
     (h) => h && typeof h.duration === "number" && h.duration >= 0
   );
   if (validHistory.length === 0)
-    return '&lt;div class="no-data-chart"&gt;No valid data for chart&lt;/div&gt;';
+    return '<div class="no-data-chart">No valid data for chart</div>';
 
   const chartId = `testHistoryChart-${Date.now()}-${Math.random()
     .toString(36)
@@ -491,10 +491,10 @@ function generateTestHistoryChart(history) {
   const seriesDataPointsString = JSON.stringify(seriesDataPoints);
 
   return `
-      &lt;div id="${chartId}" style="width: 320px; height: 100px;" class="lazy-load-chart" data-render-function-name="${renderFunctionName}"&gt;
-          &lt;div class="no-data-chart"&gt;Loading History...&lt;/div&gt;
-      &lt;/div&gt;
-      &lt;script&gt;
+      <div id="${chartId}" style="width: 320px; height: 100px;" class="lazy-load-chart" data-render-function-name="${renderFunctionName}">
+          <div class="no-data-chart">Loading History...</div>
+      </div>
+      <script>
           window.${renderFunctionName} = function() {
               const chartContainer = document.getElementById('${chartId}');
               if (!chartContainer) { console.error("Chart container ${chartId} not found for lazy loading."); return; }
@@ -522,15 +522,15 @@ function generateTestHistoryChart(history) {
                               useHTML: true, backgroundColor: 'rgba(10,10,10,0.92)', borderColor: 'rgba(10,10,10,0.92)', style: { color: '#f5f5f5', padding: '8px' },
                               formatter: function() {
                                   const pointData = this.point;
-                                  let statusBadgeHtml = '&lt;span style="padding: 2px 5px; border-radius: 3px; font-size: 0.9em; font-weight: 600; color: white; text-transform: uppercase; background-color: ';
+                                  let statusBadgeHtml = '<span style="padding: 2px 5px; border-radius: 3px; font-size: 0.9em; font-weight: 600; color: white; text-transform: uppercase; background-color: ';
                                   switch(String(pointData.status).toLowerCase()) {
                                       case 'passed': statusBadgeHtml += 'var(--success-color)'; break;
                                       case 'failed': statusBadgeHtml += 'var(--danger-color)'; break;
                                       case 'skipped': statusBadgeHtml += 'var(--warning-color)'; break;
                                       default: statusBadgeHtml += 'var(--dark-gray-color)';
                                   }
-                                  statusBadgeHtml += ';"&gt;' + String(pointData.status).toUpperCase() + '&lt;/span&gt;';
-                                  return '&lt;strong&gt;Run ' + (pointData.runId || (this.point.index + 1)) + '&lt;/strong&gt;&lt;br&gt;' + 'Status: ' + statusBadgeHtml + '&lt;br&gt;' + 'Duration: ' + formatDuration(pointData.y);
+                                  statusBadgeHtml += ';">' + String(pointData.status).toUpperCase() + '</span>';
+                                  return '<strong>Run ' + (pointData.runId || (this.point.index + 1)) + '</strong><br>' + 'Status: ' + statusBadgeHtml + '<br>' + 'Duration: ' + formatDuration(pointData.y);
                               }
                           },
                           series: [{ data: ${seriesDataPointsString}, showInLegend: false }],
@@ -539,19 +539,19 @@ function generateTestHistoryChart(history) {
                       Highcharts.chart('${chartId}', chartOptions);
                   } catch (e) {
                       console.error("Error rendering chart ${chartId} (lazy):", e);
-                      chartContainer.innerHTML = '&lt;div class="no-data-chart"&gt;Error rendering history chart.&lt;/div&gt;';
+                      chartContainer.innerHTML = '<div class="no-data-chart">Error rendering history chart.</div>';
                   }
               } else {
-                  chartContainer.innerHTML = '&lt;div class="no-data-chart"&gt;Charting library not available for history.&lt;/div&gt;';
+                  chartContainer.innerHTML = '<div class="no-data-chart">Charting library not available for history.</div>';
               }
           };
-      &lt;/script&gt;
+      </script>
   `;
 }
 function generatePieChart(data, chartWidth = 300, chartHeight = 300) {
   const total = data.reduce((sum, d) => sum + d.value, 0);
   if (total === 0) {
-    return '&lt;div class="pie-chart-wrapper"&gt;&lt;h3&gt;Test Distribution&lt;/h3&gt;&lt;div class="no-data"&gt;No data for Test Distribution chart.&lt;/div&gt;&lt;/div&gt;';
+    return '<div class="pie-chart-wrapper"><h3>Test Distribution</h3><div class="no-data">No data for Test Distribution chart.</div></div>';
   }
   const passedEntry = data.find((d) => d.label === "Passed");
   const passedPercentage = Math.round(
@@ -624,7 +624,7 @@ function generatePieChart(data, chartWidth = 300, chartHeight = 300) {
           style: { fontSize: '${centerSubtitleFontSize}', color: 'var(--text-color-secondary)' }
       },
       tooltip: {
-          pointFormat: '{series.name}: &lt;b&gt;{point.percentage:.1f}%&lt;/b&gt; ({point.y})',
+          pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b> ({point.y})',
           backgroundColor: 'rgba(10,10,10,0.92)',
           borderColor: 'rgba(10,10,10,0.92)',
           style: { color: '#f5f5f5' }
@@ -654,12 +654,12 @@ function generatePieChart(data, chartWidth = 300, chartHeight = 300) {
   `;
 
   return `
-      &lt;div class="pie-chart-wrapper" style="align-items: center; max-height: 450px"&gt;
-          &lt;div style="display: flex; align-items: start; width: 100%;"&gt;&lt;h3&gt;Test Distribution&lt;/h3&gt;&lt;/div&gt;
-          &lt;div id="${chartId}" style="width: ${chartWidth}px; height: ${
+      <div class="pie-chart-wrapper" style="align-items: center; max-height: 450px">
+          <div style="display: flex; align-items: start; width: 100%;"><h3>Test Distribution</h3></div>
+          <div id="${chartId}" style="width: ${chartWidth}px; height: ${
     chartHeight - 40
-  }px;"&gt;&lt;/div&gt;
-          &lt;script&gt;
+  }px;"></div>
+          <script>
               document.addEventListener('DOMContentLoaded', function() {
                   if (typeof Highcharts !== 'undefined') {
                       try {
@@ -667,14 +667,14 @@ function generatePieChart(data, chartWidth = 300, chartHeight = 300) {
                           Highcharts.chart('${chartId}', chartOptions);
                       } catch (e) {
                           console.error("Error rendering chart ${chartId}:", e);
-                          document.getElementById('${chartId}').innerHTML = '&lt;div class="no-data"&gt;Error rendering pie chart.&lt;/div&gt;';
+                          document.getElementById('${chartId}').innerHTML = '<div class="no-data">Error rendering pie chart.</div>';
                       }
                   } else {
-                      document.getElementById('${chartId}').innerHTML = '&lt;div class="no-data"&gt;Charting library not available.&lt;/div&gt;';
+                      document.getElementById('${chartId}').innerHTML = '<div class="no-data">Charting library not available.</div>';
                   }
               });
-          &lt;/script&gt;
-      &lt;/div&gt;
+          </script>
+      </div>
   `;
 }
 function generateEnvironmentDashboard(environment, dashboardHeight = 600) {
@@ -690,8 +690,8 @@ function generateEnvironmentDashboard(environment, dashboardHeight = 600) {
   const cardContentPadding = 16; // px
 
   return `
-    &lt;div class="environment-dashboard-wrapper" id="${dashboardId}"&gt;
-      &lt;style&gt;
+    <div class="environment-dashboard-wrapper" id="${dashboardId}">
+      <style>
         .environment-dashboard-wrapper *,
         .environment-dashboard-wrapper *::before,
         .environment-dashboard-wrapper *::after {
@@ -861,120 +861,120 @@ function generateEnvironmentDashboard(environment, dashboardHeight = 600) {
           opacity: 0.7; 
           border-color: var(--border-color);
         }
-      &lt;/style&gt;
+      </style>
       
-      &lt;div class="env-dashboard-header"&gt;
-        &lt;div&gt;
-          &lt;h3 class="env-dashboard-title"&gt;System Environment&lt;/h3&gt;
-          &lt;p class="env-dashboard-subtitle"&gt;Snapshot of the execution environment&lt;/p&gt;
-        &lt;/div&gt;
-        &lt;span class="env-chip env-chip-primary"&gt;${environment.host}&lt;/span&gt;
-      &lt;/div&gt;
+      <div class="env-dashboard-header">
+        <div>
+          <h3 class="env-dashboard-title">System Environment</h3>
+          <p class="env-dashboard-subtitle">Snapshot of the execution environment</p>
+        </div>
+        <span class="env-chip env-chip-primary">${environment.host}</span>
+      </div>
       
-      &lt;div class="env-card"&gt;
-        &lt;div class="env-card-header"&gt;
-          &lt;svg viewBox="0 0 24 24"&gt;&lt;path d="M4 6h16V4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8h-2v10H4V6zm18-2h-4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2H6a2 2 0 0 0-2 2v2h20V6a2 2 0 0 0-2-2zM8 12h8v2H8v-2zm0 4h8v2H8v-2z"/&gt;&lt;/svg&gt;
+      <div class="env-card">
+        <div class="env-card-header">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16V4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8h-2v10H4V6zm18-2h-4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2H6a2 2 0 0 0-2 2v2h20V6a2 2 0 0 0-2-2zM8 12h8v2H8v-2zm0 4h8v2H8v-2z"/></svg>
           Hardware
-        &lt;/div&gt;
-        &lt;div class="env-card-content"&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;CPU Model&lt;/span&gt;
-            &lt;span class="env-detail-value"&gt;${environment.cpu.model}&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;CPU Cores&lt;/span&gt;
-            &lt;span class="env-detail-value"&gt;
-              &lt;div class="env-cpu-cores"&gt;
+        </div>
+        <div class="env-card-content">
+          <div class="env-detail-row">
+            <span class="env-detail-label">CPU Model</span>
+            <span class="env-detail-value">${environment.cpu.model}</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">CPU Cores</span>
+            <span class="env-detail-value">
+              <div class="env-cpu-cores">
                 ${Array.from(
                   { length: Math.max(0, environment.cpu.cores || 0) },
                   (_, i) =>
-                    `&lt;div class="env-core-indicator ${
+                    `<div class="env-core-indicator ${
                       i >=
                       (environment.cpu.cores >= 8 ? 8 : environment.cpu.cores)
                         ? "inactive"
                         : ""
-                    }" title="Core ${i + 1}"&gt;&lt;/div&gt;`
+                    }" title="Core ${i + 1}"></div>`
                 ).join("")}
-                &lt;span&gt;${environment.cpu.cores || "N/A"} cores&lt;/span&gt;
-              &lt;/div&gt;
-            &lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;Memory&lt;/span&gt;
-            &lt;span class="env-detail-value"&gt;${formattedMemory}&lt;/span&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+                <span>${environment.cpu.cores || "N/A"} cores</span>
+              </div>
+            </span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">Memory</span>
+            <span class="env-detail-value">${formattedMemory}</span>
+          </div>
+        </div>
+      </div>
       
-      &lt;div class="env-card"&gt;
-        &lt;div class="env-card-header"&gt;
-          &lt;svg viewBox="0 0 24 24"&gt;&lt;path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-0.01 18c-2.76 0-5.26-1.12-7.07-2.93A7.973 7.973 0 0 1 4 12c0-2.21.9-4.21 2.36-5.64A7.994 7.994 0 0 1 11.99 4c4.41 0 8 3.59 8 8 0 2.76-1.12 5.26-2.93 7.07A7.973 7.973 0 0 1 11.99 20zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/&gt;&lt;/svg&gt;
+      <div class="env-card">
+        <div class="env-card-header">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-0.01 18c-2.76 0-5.26-1.12-7.07-2.93A7.973 7.973 0 0 1 4 12c0-2.21.9-4.21 2.36-5.64A7.994 7.994 0 0 1 11.99 4c4.41 0 8 3.59 8 8 0 2.76-1.12 5.26-2.93 7.07A7.973 7.973 0 0 1 11.99 20zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
           Operating System
-        &lt;/div&gt;
-        &lt;div class="env-card-content"&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;OS Type&lt;/span&gt;
-            &lt;span class="env-detail-value"&gt;${
+        </div>
+        <div class="env-card-content">
+          <div class="env-detail-row">
+            <span class="env-detail-label">OS Type</span>
+            <span class="env-detail-value">${
               environment.os.split(" ")[0] === "darwin"
                 ? "darwin (macOS)"
                 : environment.os.split(" ")[0] || "Unknown"
-            }&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;OS Version&lt;/span&gt;
-            &lt;span class="env-detail-value"&gt;${
+            }</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">OS Version</span>
+            <span class="env-detail-value">${
               environment.os.split(" ")[1] || "N/A"
-            }&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;Hostname&lt;/span&gt;
-            &lt;span class="env-detail-value" title="${environment.host}"&gt;${
+            }</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">Hostname</span>
+            <span class="env-detail-value" title="${environment.host}">${
     environment.host
-  }&lt;/span&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+  }</span>
+          </div>
+        </div>
+      </div>
       
-      &lt;div class="env-card"&gt;
-        &lt;div class="env-card-header"&gt;
-          &lt;svg viewBox="0 0 24 24"&gt;&lt;path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/&gt;&lt;/svg&gt;
+      <div class="env-card">
+        <div class="env-card-header">
+          <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
           Node.js Runtime
-        &lt;/div&gt;
-        &lt;div class="env-card-content"&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;Node Version&lt;/span&gt;
-            &lt;span class="env-detail-value"&gt;${environment.node}&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;V8 Engine&lt;/span&gt;
-            &lt;span class="env-detail-value"&gt;${environment.v8}&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;Working Dir&lt;/span&gt;
-            &lt;span class="env-detail-value" title="${environment.cwd}"&gt;${
+        </div>
+        <div class="env-card-content">
+          <div class="env-detail-row">
+            <span class="env-detail-label">Node Version</span>
+            <span class="env-detail-value">${environment.node}</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">V8 Engine</span>
+            <span class="env-detail-value">${environment.v8}</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">Working Dir</span>
+            <span class="env-detail-value" title="${environment.cwd}">${
     environment.cwd.length > 25
       ? "..." + environment.cwd.slice(-22)
       : environment.cwd
-  }&lt;/span&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+  }</span>
+          </div>
+        </div>
+      </div>
       
-      &lt;div class="env-card"&gt;
-        &lt;div class="env-card-header"&gt;
-          &lt;svg viewBox="0 0 24 24"&gt;&lt;path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h.71C7.37 8.69 9.48 7 12 7c2.76 0 5 2.24 5 5v1h2c1.66 0 3 1.34 3 3s-1.34 3-3 3z"/&gt;&lt;/svg&gt;
+      <div class="env-card">
+        <div class="env-card-header">
+          <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h.71C7.37 8.69 9.48 7 12 7c2.76 0 5 2.24 5 5v1h2c1.66 0 3 1.34 3 3s-1.34 3-3 3z"/></svg>
           System Summary
-        &lt;/div&gt;
-        &lt;div class="env-card-content"&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;Platform Arch&lt;/span&gt;
-            &lt;span class="env-detail-value"&gt;
-              &lt;span class="env-chip ${
+        </div>
+        <div class="env-card-content">
+          <div class="env-detail-row">
+            <span class="env-detail-label">Platform Arch</span>
+            <span class="env-detail-value">
+              <span class="env-chip ${
                 environment.os.includes("darwin") &&
                 environment.cpu.model.toLowerCase().includes("apple")
                   ? "env-chip-success"
                   : "env-chip-warning"
-              }"&gt;
+              }">
                 ${
                   environment.os.includes("darwin") &&
                   environment.cpu.model.toLowerCase().includes("apple")
@@ -984,31 +984,31 @@ function generateEnvironmentDashboard(environment, dashboardHeight = 600) {
                     ? "ARM-based"
                     : "x86/Other"
                 }
-              &lt;/span&gt;
-            &lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;Memory per Core&lt;/span&gt;
-            &lt;span class="env-detail-value"&gt;${
+              </span>
+            </span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">Memory per Core</span>
+            <span class="env-detail-value">${
               environment.cpu.cores > 0
                 ? (
                     parseFloat(environment.memory) / environment.cpu.cores
                   ).toFixed(2) + " GB"
                 : "N/A"
-            }&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="env-detail-row"&gt;
-            &lt;span class="env-detail-label"&gt;Run Context&lt;/span&gt;
-            &lt;span class="env-detail-value"&gt;CI/Local Test&lt;/span&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
+            }</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">Run Context</span>
+            <span class="env-detail-value">CI/Local Test</span>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 }
 function generateWorkerDistributionChart(results) {
   if (!results || results.length === 0) {
-    return '&lt;div class="no-data"&gt;No test results data available to display worker distribution.&lt;/div&gt;';
+    return '<div class="no-data">No test results data available to display worker distribution.</div>';
   }
 
   // 1. Sort results by startTime to ensure chronological order
@@ -1030,7 +1030,7 @@ function generateWorkerDistributionChart(results) {
       acc[workerId][status]++;
     }
 
-    const testTitleParts = test.name.split(" &gt; ");
+    const testTitleParts = test.name.split(" > ");
     const testTitle =
       testTitleParts[testTitleParts.length - 1] || "Unnamed Test";
     // Store both name and status for each test
@@ -1046,7 +1046,7 @@ function generateWorkerDistributionChart(results) {
   });
 
   if (workerIds.length === 0) {
-    return '&lt;div class="no-data"&gt;Could not determine worker distribution from test data.&lt;/div&gt;';
+    return '<div class="no-data">Could not determine worker distribution from test data.</div>';
   }
 
   const chartId = `workerDistChart-${Date.now()}-${Math.random()
@@ -1082,7 +1082,7 @@ function generateWorkerDistributionChart(results) {
 
   // The HTML now includes the chart container, the modal, and styles for the modal
   return `
-    &lt;style&gt;
+    <style>
       .worker-modal-overlay {
         position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%;
         overflow: auto; background-color: rgba(0,0,0,0.6);
@@ -1113,28 +1113,28 @@ function generateWorkerDistributionChart(results) {
        #worker-modal-body-${chartId} li:last-child {
          border-bottom: none;
       }
-       #worker-modal-body-${chartId} li &gt; span {
+       #worker-modal-body-${chartId} li > span {
          display: inline-block;
          width: 70px;
          font-weight: bold;
          text-align: right;
          margin-right: 10px;
       }
-    &lt;/style&gt;
+    </style>
 
-    &lt;div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}" style="min-height: 350px;"&gt;
-      &lt;div class="no-data"&gt;Loading Worker Distribution Chart...&lt;/div&gt;
-    &lt;/div&gt;
+    <div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}" style="min-height: 350px;">
+      <div class="no-data">Loading Worker Distribution Chart...</div>
+    </div>
 
-    &lt;div id="worker-modal-${chartId}" class="worker-modal-overlay"&gt;
-      &lt;div class="worker-modal-content"&gt;
-        &lt;span class="worker-modal-close"&gt;×&lt;/span&gt;
-        &lt;h3 id="worker-modal-title-${chartId}" style="text-align: center; margin-top: 0; margin-bottom: 25px; font-size: 1.25em; font-weight: 600; color: #fff"&gt;&lt;/h3&gt;
-        &lt;div id="worker-modal-body-${chartId}"&gt;&lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
+    <div id="worker-modal-${chartId}" class="worker-modal-overlay">
+      <div class="worker-modal-content">
+        <span class="worker-modal-close">×</span>
+        <h3 id="worker-modal-title-${chartId}" style="text-align: center; margin-top: 0; margin-bottom: 25px; font-size: 1.25em; font-weight: 600; color: #fff"></h3>
+        <div id="worker-modal-body-${chartId}"></div>
+      </div>
+    </div>
 
-    &lt;script&gt;
+    <script>
       // Namespace for modal functions to avoid global scope pollution
       window.${modalJsNamespace} = {};
 
@@ -1152,21 +1152,21 @@ function generateWorkerDistributionChart(results) {
           if (!worker) return;
           modalTitle.textContent = 'Test Details for ' + worker.name;
 
-          let testListHtml = '&lt;ul&gt;';
-          if (worker.tests && worker.tests.length &gt; 0) {
+          let testListHtml = '<ul>';
+          if (worker.tests && worker.tests.length > 0) {
             worker.tests.forEach(test => {
                 let color = 'inherit';
                 if (test.status === 'passed') color = 'var(--success-color)';
                 else if (test.status === 'failed') color = 'var(--danger-color)';
                 else if (test.status === 'skipped') color = 'var(--warning-color)';
 
-                const escapedName = test.name.replace(/&/g, '&amp;').replace(/&lt;/g, '&lt;').replace(/&gt;/g, '&gt;');
-                testListHtml += `&lt;li style="color: \${color};"&gt;&lt;span style="color: \${color}"&gt;[\${test.status.toUpperCase()}]&lt;/span&gt; \${escapedName}&lt;/li&gt;`;
+                const escapedName = test.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                testListHtml += \`<li style="color: \${color};"><span style="color: \${color}">[\${test.status.toUpperCase()}]</span> \${escapedName}</li>\`;
             });
           } else {
-            testListHtml += '&lt;li&gt;No detailed test data available for this worker.&lt;/li&gt;';
+            testListHtml += '<li>No detailed test data available for this worker.</li>';
           }
-          testListHtml += '&lt;/ul&gt;';
+          testListHtml += '</ul>';
 
           modalBody.innerHTML = testListHtml;
           modal.style.display = 'flex';
@@ -1223,9 +1223,9 @@ function generateWorkerDistributionChart(results) {
               },
               tooltip: {
                 shared: true,
-                headerFormat: '&lt;b&gt;{point.key}&lt;/b&gt; (Click for details)&lt;br/&gt;',
-                pointFormat: '&lt;span style="color:{series.color}"&gt;●&lt;/span&gt; {series.name}: &lt;b&gt;{point.y}&lt;/b&gt;&lt;br/&gt;',
-                footerFormat: 'Total: &lt;b&gt;{point.total}&lt;/b&gt;'
+                headerFormat: '<b>{point.key}</b> (Click for details)<br/>',
+                pointFormat: '<span style="color:{series.color}">●</span> {series.name}: <b>{point.y}</b><br/>',
+                footerFormat: 'Total: <b>{point.total}</b>'
               },
               series: ${seriesString},
               credits: { enabled: false }
@@ -1233,22 +1233,22 @@ function generateWorkerDistributionChart(results) {
             Highcharts.chart('${chartId}', chartOptions);
           } catch (e) {
             console.error("Error rendering chart ${chartId}:", e);
-            chartContainer.innerHTML = '&lt;div class="no-data"&gt;Error rendering worker distribution chart.&lt;/div&gt;';
+            chartContainer.innerHTML = '<div class="no-data">Error rendering worker distribution chart.</div>';
           }
         } else {
-          chartContainer.innerHTML = '&lt;div class="no-data"&gt;Charting library not available for worker distribution.&lt;/div&gt;';
+          chartContainer.innerHTML = '<div class="no-data">Charting library not available for worker distribution.</div>';
         }
       };
-    &lt;/script&gt;
+    </script>
   `;
 }
 const infoTooltip = `
-  &lt;span class="info-tooltip" style="display: inline-block; margin-left: 8px;"&gt;
-    &lt;span class="info-icon" 
+  <span class="info-tooltip" style="display: inline-block; margin-left: 8px;">
+    <span class="info-icon" 
           style="cursor: pointer; font-size: 1.25rem;"
-          onclick="window.workerInfoPrompt()"&gt;ℹ️&lt;/span&gt;
-  &lt;/span&gt;
-  &lt;script&gt;
+          onclick="window.workerInfoPrompt()">ℹ️</span>
+  </span>
+  <script>
     window.workerInfoPrompt = function() {
       const message = 'Why is worker -1 special?\\n\\n' +
                      'Playwright assigns skipped tests to worker -1 because:\\n' +
@@ -1258,7 +1258,7 @@ const infoTooltip = `
                      'This is an intentional optimization by Playwright.';
       alert(message);
     }
-  &lt;/script&gt;
+  </script>
 `;
 function generateTestHistoryContent(trendData) {
   if (
@@ -1266,7 +1266,7 @@ function generateTestHistoryContent(trendData) {
     !trendData.testRuns ||
     Object.keys(trendData.testRuns).length === 0
   ) {
-    return '&lt;div class="no-data"&gt;No historical test data available.&lt;/div&gt;';
+    return '<div class="no-data">No historical test data available.</div>';
   }
 
   const allTestNamesAndPaths = new Map();
@@ -1274,7 +1274,7 @@ function generateTestHistoryContent(trendData) {
     if (Array.isArray(run)) {
       run.forEach((test) => {
         if (test && test.testName && !allTestNamesAndPaths.has(test.testName)) {
-          const parts = test.testName.split(" &gt; ");
+          const parts = test.testName.split(" > ");
           const title = parts[parts.length - 1];
           allTestNamesAndPaths.set(test.testName, title);
         }
@@ -1283,7 +1283,7 @@ function generateTestHistoryContent(trendData) {
   });
 
   if (allTestNamesAndPaths.size === 0) {
-    return '&lt;div class="no-data"&gt;No historical test data found after processing.&lt;/div&gt;';
+    return '<div class="no-data">No historical test data found after processing.</div>';
   }
 
   const testHistory = Array.from(allTestNamesAndPaths.entries())
@@ -1313,19 +1313,19 @@ function generateTestHistoryContent(trendData) {
     .filter((item) => item.history.length > 0);
 
   return `
-    &lt;div class="test-history-container"&gt;
-      &lt;div class="filters" style="border-color: black; border-style: groove;"&gt;
-    &lt;input type="text" id="history-filter-name" placeholder="Search by test title..." style="border-color: black; border-style: outset;"&gt;
-    &lt;select id="history-filter-status"&gt;
-        &lt;option value=""&gt;All Statuses&lt;/option&gt;
-        &lt;option value="passed"&gt;Passed&lt;/option&gt;
-        &lt;option value="failed"&gt;Failed&lt;/option&gt;
-        &lt;option value="skipped"&gt;Skipped&lt;/option&gt;
-    &lt;/select&gt;
-    &lt;button id="clear-history-filters" class="clear-filters-btn"&gt;Clear Filters&lt;/button&gt;
-&lt;/div&gt;
+    <div class="test-history-container">
+      <div class="filters" style="border-color: black; border-style: groove;">
+    <input type="text" id="history-filter-name" placeholder="Search by test title..." style="border-color: black; border-style: outset;">
+    <select id="history-filter-status">
+        <option value="">All Statuses</option>
+        <option value="passed">Passed</option>
+        <option value="failed">Failed</option>
+        <option value="skipped">Skipped</option>
+    </select>
+    <button id="clear-history-filters" class="clear-filters-btn">Clear Filters</button>
+</div>
       
-      &lt;div class="test-history-grid"&gt;
+      <div class="test-history-grid">
         ${testHistory
           .map((test) => {
             const latestRun =
@@ -1333,48 +1333,50 @@ function generateTestHistoryContent(trendData) {
                 ? test.history[test.history.length - 1]
                 : { status: "unknown" };
             return `
-            &lt;div class="test-history-card" data-test-name="${sanitizeHTML(
+            <div class="test-history-card" data-test-name="${sanitizeHTML(
               test.testTitle.toLowerCase()
-            )}" data-latest-status="${latestRun.status}"&gt;
-              &lt;div class="test-history-header"&gt;
-                &lt;p title="${sanitizeHTML(test.testTitle)}"${capitalize(
+            )}" data-latest-status="${latestRun.status}">
+              <div class="test-history-header">
+                <p title="${sanitizeHTML(test.testTitle)}">${capitalize(
               sanitizeHTML(test.testTitle)
-            )}&lt;/p&gt;
-                &lt;span class="status-badge ${getStatusClass(latestRun.status)}"${String(latestRun.status).toUpperCase()}&lt;/span&gt;
-              &lt;/div&gt;
-              &lt;div class="test-history-trend"&gt;
+            )}</p>
+                <span class="status-badge ${getStatusClass(latestRun.status)}">
+                  ${String(latestRun.status).toUpperCase()}
+                </span>
+              </div>
+              <div class="test-history-trend">
                 ${generateTestHistoryChart(test.history)} 
-              &lt;/div&gt;
-              &lt;details class="test-history-details-collapsible"&gt;
-                &lt;summary&gt;Show Run Details (${test.history.length})&lt;/summary&gt;
-                &lt;div class="test-history-details"&gt;
-                  &lt;table&gt;
-                    &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Run&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;Duration&lt;/th&gt;&lt;th&gt;Date&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
-                    &lt;tbody&gt;
+              </div>
+              <details class="test-history-details-collapsible">
+                <summary>Show Run Details (${test.history.length})</summary>
+                <div class="test-history-details">
+                  <table>
+                    <thead><tr><th>Run</th><th>Status</th><th>Duration</th><th>Date</th></tr></thead>
+                    <tbody>
                       ${test.history
                         .slice()
                         .reverse()
                         .map(
                           (run) => `
-                        &lt;tr&gt;
-                          &lt;td&gt;${run.runId}&lt;/td&gt;
-                          &lt;td&gt;&lt;span class="status-badge-small ${getStatusClass(
+                        <tr>
+                          <td>${run.runId}</td>
+                          <td><span class="status-badge-small ${getStatusClass(
                             run.status
-                          )}"${String(run.status).toUpperCase()}&lt;/span&gt;&lt;/td&gt;
-                          &lt;td&gt;${formatDuration(run.duration)}&lt;/td&gt;
-                          &lt;td&gt;${formatDate(run.timestamp)}&lt;/td&gt;
-                        &lt;/tr&gt;`
+                          )}">${String(run.status).toUpperCase()}</span></td>
+                          <td>${formatDuration(run.duration)}</td>
+                          <td>${formatDate(run.timestamp)}</td>
+                        </tr>`
                         )
                         .join("")}
-                    &lt;/tbody&gt;
-                  &lt;/table&gt;
-                &lt;/div&gt;
-              &lt;/details&gt;
-            &lt;/div&gt;`;
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            </div>`;
           })
           .join("")}
-      &lt;/div&gt;
-    &lt;/div&gt;
+      </div>
+    </div>
   `;
 }
 function getStatusClass(status) {
@@ -1407,7 +1409,7 @@ function getSuitesData(results) {
 
   results.forEach((test) => {
     const browser = test.browser || "unknown";
-    const suiteParts = test.name.split(" &gt; ");
+    const suiteParts = test.name.split(" > ");
     let suiteNameCandidate = "Default Suite";
     if (suiteParts.length > 2) {
       suiteNameCandidate = suiteParts[1];
@@ -1457,74 +1459,74 @@ function getAttachmentIcon(contentType) {
   if (normalizedType.includes("pdf")) return "📄";
   if (normalizedType.includes("json")) return "{ }";
   if (/html/.test(normalizedType)) return "🌐"; // Fixed: regex for any HTML type
-  if (normalizedType.includes("xml")) return "&lt;&gt;";
+  if (normalizedType.includes("xml")) return "<>";
   if (normalizedType.includes("csv")) return "📊";
   if (normalizedType.startsWith("text/")) return "📝";
   return "📎";
 }
 function generateSuitesWidget(suitesData) {
   if (!suitesData || suitesData.length === 0) {
-    return '&lt;div class="suites-widget"&gt;&lt;div class="suites-header"&gt;&lt;h2&gt;Test Suites&lt;/h2&gt;&lt;/div&gt;&lt;div class="no-data"&gt;No suite data available.&lt;/div&gt;&lt;/div&gt;';
+    return `<div class="suites-widget"><div class="suites-header"><h2>Test Suites</h2></div><div class="no-data">No suite data available.</div></div>`;
   }
   return `
-&lt;div class="suites-widget"&gt;
-  &lt;div class="suites-header"&gt;
-    &lt;h2&gt;Test Suites&lt;/h2&gt;
-    &lt;span class="summary-badge"&gt;${
+<div class="suites-widget">
+  <div class="suites-header">
+    <h2>Test Suites</h2>
+    <span class="summary-badge">${
       suitesData.length
     } suites • ${suitesData.reduce(
     (sum, suite) => sum + suite.count,
     0
-  )} tests&lt;/span&gt;
-  &lt;/div&gt;
-  &lt;div class="suites-grid"&gt;
+  )} tests</span>
+  </div>
+  <div class="suites-grid">
     ${suitesData
       .map(
         (suite) => `
-    &lt;div class="suite-card status-${suite.statusOverall}"&gt;
-      &lt;div class="suite-card-header"&gt;
-        &lt;h3 class="suite-name" title="${sanitizeHTML(
+    <div class="suite-card status-${suite.statusOverall}">
+      <div class="suite-card-header">
+        <h3 class="suite-name" title="${sanitizeHTML(
           suite.name
-        )} (${sanitizeHTML(suite.browser)})"${sanitizeHTML(suite.name)}&lt;/h3&gt;
-      &lt;/div&gt;
-      &lt;div&gt;🖥️ &lt;span class="browser-tag"${sanitizeHTML(
+        )} (${sanitizeHTML(suite.browser)})">${sanitizeHTML(suite.name)}</h3>
+      </div>
+      <div>🖥️ <span class="browser-tag">${sanitizeHTML(
         suite.browser
-      )}&lt;/span&gt;&lt;/div&gt;
-      &lt;div class="suite-card-body"&gt;
-        &lt;span class="test-count"${
+      )}</span></div>
+      <div class="suite-card-body">
+        <span class="test-count">${suite.count} test${
           suite.count !== 1 ? "s" : ""
-        }&lt;/span&gt;
-        &lt;div class="suite-stats"&gt;
+        }</span>
+        <div class="suite-stats">
             ${
               suite.passed > 0
-                ? `&lt;span class="stat-passed" title="Passed"&gt;&lt;svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16"&gt;&lt;path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/&gt;&lt;/svg&gt; ${suite.passed}&lt;/span&gt;`
+                ? `<span class="stat-passed" title="Passed"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg> ${suite.passed}</span>`
                 : ""
             }
             ${
               suite.failed > 0
-                ? `&lt;span class="stat-failed" title="Failed"&gt;&lt;svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16"&gt;&lt;path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8 7.293 5.354 4.646z"/&gt;&lt;/svg&gt; ${suite.failed}&lt;/span&gt;`
+                ? `<span class="stat-failed" title="Failed"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg> ${suite.failed}</span>`
                 : ""
             }
             ${
               suite.skipped > 0
-                ? `&lt;span class="stat-skipped" title="Skipped"&gt;&lt;svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16"&gt;&lt;path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/&gt;&lt;/svg&gt; ${suite.skipped}&lt;/span&gt;`
+                ? `<span class="stat-skipped" title="Skipped"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg> ${suite.skipped}</span>`
                 : ""
             }
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;`
+        </div>
+      </div>
+    </div>`
       )
       .join("")}
-  &lt;/div&gt;
-&lt;/div&gt;`;
+  </div>
+</div>`;
 }
 function generateAIFailureAnalyzerTab(results) {
   const failedTests = (results || []).filter(test => test.status === 'failed');
 
   if (failedTests.length === 0) {
     return `
-      &lt;h2 class="tab-main-title"&gt;AI Failure Analysis&lt;/h2&gt;
-      &lt;div class="no-data"&gt;Congratulations! No failed tests in this run.&lt;/div&gt;
+      <h2 class="tab-main-title">AI Failure Analysis</h2>
+      <div class="no-data">Congratulations! No failed tests in this run.</div>
     `;
   }
 
@@ -1532,79 +1534,79 @@ function generateAIFailureAnalyzerTab(results) {
   const btoa = (str) => Buffer.from(str).toString('base64');
 
   return `
-    &lt;h2 class="tab-main-title"&gt;AI Failure Analysis&lt;/h2&gt;
-    &lt;div class="ai-analyzer-stats"&gt;
-        &lt;div class="stat-item"&gt;
-            &lt;span class="stat-number"&gt;${failedTests.length}&lt;/span&gt;
-            &lt;span class="stat-label"&gt;Failed Tests&lt;/span&gt;
-        &lt;/div&gt;
-        &lt;div class="stat-item"&gt;
-            &lt;span class="stat-number"&gt;${new Set(failedTests.map(t => t.browser)).size}&lt;/span&gt;
-            &lt;span class="stat-label"&gt;Browsers&lt;/span&gt;
-        &lt;/div&gt;
-        &lt;div class="stat-item"&gt;
-            &lt;span class="stat-number"&gt;${(Math.round(failedTests.reduce((sum, test) => sum + (test.duration || 0), 0) / 1000))}s&lt;/span&gt;
-            &lt;span class="stat-label"&gt;Total Duration&lt;/span&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-    &lt;p class="ai-analyzer-description"&gt;
+    <h2 class="tab-main-title">AI Failure Analysis</h2>
+    <div class="ai-analyzer-stats">
+        <div class="stat-item">
+            <span class="stat-number">${failedTests.length}</span>
+            <span class="stat-label">Failed Tests</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">${new Set(failedTests.map(t => t.browser)).size}</span>
+            <span class="stat-label">Browsers</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">${(Math.round(failedTests.reduce((sum, test) => sum + (test.duration || 0), 0) / 1000))}s</span>
+            <span class="stat-label">Total Duration</span>
+        </div>
+    </div>
+    <p class="ai-analyzer-description">
         Analyze failed tests using AI to get suggestions and potential fixes. Click the AI Fix button for specific failed test.
-    &lt;/p&gt;
+    </p>
     
-    &lt;div class="compact-failure-list"&gt;
+    <div class="compact-failure-list">
       ${failedTests.map(test => {
-    const testTitle = test.name.split(" &gt; ").pop() || "Unnamed Test";
+    const testTitle = test.name.split(" > ").pop() || "Unnamed Test";
     const testJson = btoa(JSON.stringify(test)); // Base64 encode the test object
     const truncatedError = (test.errorMessage || "No error message").slice(0, 150) +
       (test.errorMessage && test.errorMessage.length > 150 ? "..." : "");
 
     return `
-        &lt;div class="compact-failure-item"&gt;
-            &lt;div class="failure-header"&gt;
-                &lt;div class="failure-main-info"&gt;
-                    &lt;h3 class="failure-title" title="${sanitizeHTML(test.name)}"${sanitizeHTML(testTitle)}&lt;/h3&gt;
-                    &lt;div class="failure-meta"&gt;
-                        &lt;span class="browser-indicator"${sanitizeHTML(test.browser || 'unknown')}&lt;/span&gt;
-                        &lt;span class="duration-indicator"${formatDuration(test.duration)}&lt;/span&gt;
-                    &lt;/div&gt;
-                &lt;/div&gt;
-                &lt;button class="compact-ai-btn" onclick="getAIFix(this)" data-test-json="${testJson}"&gt;
-                    &lt;span class="ai-text"&gt;AI Fix&lt;/span&gt;
-                &lt;/button&gt;
-            &lt;/div&gt;
-            &lt;div class="failure-error-preview"&gt;
-                &lt;div class="error-snippet"${formatPlaywrightError(truncatedError)}&lt;/div&gt;
-                &lt;button class="expand-error-btn" onclick="toggleErrorDetails(this)"&gt;
-                    &lt;span class="expand-text"&gt;Show Full Error&lt;/span&gt;
-                    &lt;span class="expand-icon"&gt;▼&lt;/span&gt;
-                &lt;/button&gt;
-            &lt;/div&gt;
-            &lt;div class="full-error-details" style="display: none;"&gt;
-                &lt;div class="full-error-content"&gt;
+        <div class="compact-failure-item">
+            <div class="failure-header">
+                <div class="failure-main-info">
+                    <h3 class="failure-title" title="${sanitizeHTML(test.name)}">${sanitizeHTML(testTitle)}</h3>
+                    <div class="failure-meta">
+                        <span class="browser-indicator">${sanitizeHTML(test.browser || 'unknown')}</span>
+                        <span class="duration-indicator">${formatDuration(test.duration)}</span>
+                    </div>
+                </div>
+                <button class="compact-ai-btn" onclick="getAIFix(this)" data-test-json="${testJson}">
+                    <span class="ai-text">AI Fix</span>
+                </button>
+            </div>
+            <div class="failure-error-preview">
+                <div class="error-snippet">${formatPlaywrightError(truncatedError)}</div>
+                <button class="expand-error-btn" onclick="toggleErrorDetails(this)">
+                    <span class="expand-text">Show Full Error</span>
+                    <span class="expand-icon">▼</span>
+                </button>
+            </div>
+            <div class="full-error-details" style="display: none;">
+                <div class="full-error-content">
                     ${formatPlaywrightError(test.errorMessage || "No detailed error message available")}
-                &lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
+                </div>
+            </div>
+        </div>
         `
   }).join('')}
-    &lt;/div&gt;
+    </div>
 
-    &lt;!-- AI Fix Modal --&gt;
-    &lt;div id="ai-fix-modal" class="ai-modal-overlay" onclick="closeAiModal()"&gt;
-      &lt;div class="ai-modal-content" onclick="event.stopPropagation()"&gt;
-        &lt;div class="ai-modal-header"&gt;
-            &lt;h3 id="ai-fix-modal-title"&gt;AI Analysis&lt;/h3&gt;
-            &lt;span class="ai-modal-close" onclick="closeAiModal()"&gt;×&lt;/span&gt;
-        &lt;/div&gt;
-        &lt;div class="ai-modal-body" id="ai-fix-modal-content"&gt;
-            &lt;!-- Content will be injected by JavaScript --&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
+    <!-- AI Fix Modal -->
+    <div id="ai-fix-modal" class="ai-modal-overlay" onclick="closeAiModal()">
+      <div class="ai-modal-content" onclick="event.stopPropagation()">
+        <div class="ai-modal-header">
+            <h3 id="ai-fix-modal-title">AI Analysis</h3>
+            <span class="ai-modal-close" onclick="closeAiModal()">×</span>
+        </div>
+        <div class="ai-modal-body" id="ai-fix-modal-content">
+            <!-- Content will be injected by JavaScript -->
+        </div>
+      </div>
+    </div>
   `;
 }
 /**
- * Generates the HTML report with lazy loading for tabs and test details.
+ * Generates the HTML report.
  * @param {object} reportData - The data for the report.
  * @param {object} trendData - The data for the trend chart.
  * @returns {string} The HTML report.
@@ -1621,289 +1623,28 @@ function generateHTML(reportData, trendData = null) {
     timestamp: new Date().toISOString(),
   };
 
-  // Prepare data for client-side rendering
-  const pulseData = {
-    runSummary,
-    results: results || [],
-    suitesData,
-    trendData: trendData || { overall: [], testRuns: {} },
-    pieData: [
-      { label: "Passed", value: runSummary.passed },
-      { label: "Failed", value: runSummary.failed },
-      { label: "Skipped", value: runSummary.skipped || 0 },
-    ]
-  };
-  
-  // Helper function to generate test details HTML (will be used client-side)
-  const generateTestDetailsHTMLFunction = `
-    function generateTestDetailsHTML(testIndex) {
-      const test = window._pulseData.results[testIndex];
-      if (!test) return '&lt;div class="no-data"&gt;Test data not found.&lt;/div&gt;';
-      
-      const browser = test.browser || "unknown";
-      
-      const generateStepsHTML = (steps, depth = 0) => {
-        if (!steps || steps.length === 0)
-          return "&lt;div class='no-steps'&gt;No steps recorded for this test.&lt;/div&gt;";
-        return steps.map((step) => {
-          const hasNestedSteps = step.steps && step.steps.length > 0;
-          const isHook = step.hookType;
-          const stepClass = isHook ? \`step-hook step-hook-\${step.hookType}\` : "";
-          const hookIndicator = isHook ? \` (\${step.hookType} hook)\` : "";
-          return \`&lt;div class="step-item" style="--depth: \${depth};"&gt;
-            &lt;div class="step-header \${stepClass}" role="button" aria-expanded="false"&gt;
-              &lt;span class="step-icon"&gt;\${getStatusIcon(step.status)}&lt;/span&gt;
-              &lt;span class="step-title"&gt;\${sanitizeHTML(step.title)}\${hookIndicator}&lt;/span&gt;
-              &lt;span class="step-duration"&gt;\${formatDuration(step.duration)}&lt;/span&gt;
-            &lt;/div&gt;
-            &lt;div class="step-details" style="display: none;"&gt;
-              \${step.codeLocation ? \`&lt;div class="step-info code-section"&gt;&lt;strong&gt;Location:&lt;/strong&gt; \${sanitizeHTML(step.codeLocation)}&lt;/div&gt;\` : ""}
-              \${step.errorMessage ? \`&lt;div class="test-error-summary"&gt;
-                \${step.stackTrace ? \`&lt;div class="stack-trace"&gt;\${formatPlaywrightError(step.stackTrace)}&lt;/div&gt;\` : ""}
-                &lt;button class="copy-error-btn" onclick="copyErrorToClipboard(this)"&gt;Copy Error Prompt&lt;/button&gt;
-              &lt;/div&gt;\` : ""}
-              \${hasNestedSteps ? \`&lt;div class="nested-steps"&gt;\${generateStepsHTML(step.steps, depth + 1)}&lt;/div&gt;\` : ""}
-            &lt;/div&gt;
-          &lt;/div&gt;\`;
-        }).join("");
-      };
-      
-      let html = \`
-        &lt;p&gt;&lt;strong&gt;Full Path:&lt;/strong&gt; \${sanitizeHTML(test.name)}&lt;/p&gt;
-        &lt;p&gt;&lt;strong&gt;Test run Worker ID:&lt;/strong&gt; \${sanitizeHTML(test.workerId)} 
-           [&lt;strong&gt;Total No. of Workers:&lt;/strong&gt; \${sanitizeHTML(test.totalWorkers)}]&lt;/p&gt;
-        \${test.errorMessage ? \`&lt;div class="test-error-summary"&gt;
-          \${formatPlaywrightError(test.errorMessage)}
-          &lt;button class="copy-error-btn" onclick="copyErrorToClipboard(this)"&gt;Copy Error Prompt&lt;/button&gt;
-        &lt;/div&gt;\` : ""}
-        \${test.snippet ? \`&lt;div class="code-section"&gt;&lt;h4&gt;Error Snippet&lt;/h4&gt;
-          &lt;pre&gt;&lt;code&gt;\${formatPlaywrightError(test.snippet)}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;\` : ""}
-        &lt;h4&gt;Steps&lt;/h4&gt;
-        &lt;div class="steps-list"&gt;\${generateStepsHTML(test.steps)}&lt;/div&gt;
-      \`;
-      
-      // Add stdout if exists
-      if (test.stdout && test.stdout.length > 0) {
-        const logId = \`stdout-log-\${test.id || testIndex}\`;
-        html += \`&lt;div class="console-output-section"&gt;
-          &lt;h4&gt;Console Output (stdout)
-            &lt;button class="copy-btn" onclick="copyLogContent('\${logId}', this)"&gt;Copy Console&lt;/button&gt;
-          &lt;/h4&gt;
-          &lt;div class="log-wrapper"&gt;
-            &lt;pre id="\${logId}" class="console-log stdout-log" style="background-color: #2d2d2d; color: wheat; padding: 1.25em; border-radius: 0.85em; line-height: 1.2;"&gt;
-              \${formatPlaywrightError(test.stdout.map(line => sanitizeHTML(line)).join("\\n"))}
-            &lt;/pre&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;\`;
-      }
-      
-      // Add stderr if exists
-      if (test.stderr && test.stderr.length > 0) {
-        html += \`&lt;div class="console-output-section"&gt;
-          &lt;h4&gt;Console Output (stderr)&lt;/h4&gt;
-          &lt;pre class="console-log stderr-log"&gt;\${test.stderr.map(line => sanitizeHTML(line)).join("\\n")}&lt;/pre&gt;
-        &lt;/div&gt;\`;
-      }
-      
-      // Add screenshots - these are already base64 encoded in the data
-      if (test.screenshots && test.screenshots.length > 0) {
-        html += \`&lt;div class="attachments-section"&gt;
-          &lt;h4&gt;Screenshots&lt;/h4&gt;
-          &lt;div class="attachments-grid"&gt;
-            \${test.screenshots.map((screenshot, index) => \`
-              &lt;div class="attachment-item"&gt;
-                &lt;img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" 
-                     data-src="\${screenshot}" 
-                     alt="Screenshot \${index + 1}" 
-                     class="lazy-load-image"&gt;
-                &lt;div class="attachment-info"&gt;
-                  &lt;div class="trace-actions"&gt;
-                    &lt;a href="\${screenshot}" target="_blank" download="screenshot-\${index}.png"&gt;Download&lt;/a&gt;
-                  &lt;/div&gt;
-                &lt;/div&gt;
-              &lt;/div&gt;
-            \`).join("")}
-          &lt;/div&gt;
-        &lt;/div&gt;\`;
-      }
-      
-      // Add videos
-      if (test.videoPath && test.videoPath.length > 0) {
-        html += \`&lt;div class="attachments-section"&gt;
-          &lt;h4&gt;Videos&lt;/h4&gt;
-          &lt;div class="attachments-grid"&gt;
-            \${test.videoPath.map((video, index) => \`
-              &lt;div class="attachment-item video-item"&gt;
-                &lt;video controls preload="none" class="lazy-load-video"&gt;
-                  &lt;source data-src="\${video.dataUri}" type="\${video.mimeType}"&gt;
-                &lt;/video&gt;
-                &lt;div class="attachment-info"&gt;
-                  &lt;div class="trace-actions"&gt;
-                    &lt;a href="\${video.dataUri}" target="_blank" download="video-\${index}.\${video.extension}"&gt;Download&lt;/a&gt;
-                  &lt;/div&gt;
-                &lt;/div&gt;
-              &lt;/div&gt;
-            \`).join("")}
-          &lt;/div&gt;
-        &lt;/div&gt;\`;
-      }
-      
-      // Add trace file
-      if (test.tracePath) {
-        html += \`&lt;div class="attachments-section"&gt;
-          &lt;h4&gt;Trace File&lt;/h4&gt;
-          &lt;div class="attachments-grid"&gt;
-            &lt;div class="attachment-item generic-attachment"&gt;
-              &lt;div class="attachment-icon"&gt;📄&lt;/div&gt;
-              &lt;div class="attachment-caption"&gt;
-                &lt;span class="attachment-name"&gt;trace.zip&lt;/span&gt;
-              &lt;/div&gt;
-              &lt;div class="attachment-info"&gt;
-                &lt;div class="trace-actions"&gt;
-                  &lt;a href="#" data-href="\${test.tracePath}" class="lazy-load-attachment" download="trace.zip"&gt;Download Trace&lt;/a&gt;
-                &lt;/div&gt;
-              &lt;/div&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;\`;
-      }
-      
-      // Add other attachments
-      if (test.attachments && test.attachments.length > 0) {
-        html += \`&lt;div class="attachments-section"&gt;
-          &lt;h4&gt;Other Attachments&lt;/h4&gt;
-          &lt;div class="attachments-grid"&gt;
-            \${test.attachments.map(attachment => \`
-              &lt;div class="attachment-item generic-attachment"&gt;
-                &lt;div class="attachment-icon"&gt;\${getAttachmentIcon(attachment.contentType)}&lt;/div&gt;
-                &lt;div class="attachment-caption"&gt;
-                  &lt;span class="attachment-name" title="\${sanitizeHTML(attachment.name)}"\${sanitizeHTML(attachment.name)}&lt;/span&gt;
-                  &lt;span class="attachment-type"&gt;\${sanitizeHTML(attachment.contentType)}&lt;/span&gt;
-                &lt;/div&gt;
-                &lt;div class="attachment-info"&gt;
-                  &lt;div class="trace-actions"&gt;
-                    &lt;a href="\${attachment.dataUri}" target="_blank" class="view-full"&gt;View&lt;/a&gt;
-                    &lt;a href="\${attachment.dataUri}" download="\${sanitizeHTML(attachment.name)}"\&gt;Download&lt;/a&gt;
-                  &lt;/div&gt;
-                &lt;/div&gt;
-              &lt;/div&gt;
-            \`).join("")}
-          &lt;/div&gt;
-        &lt;/div&gt;\`;
-      }
-      
-      // Add code snippet if exists
-      if (test.codeSnippet) {
-        html += \`&lt;div class="code-section"&gt;
-          &lt;h4&gt;Code Snippet&lt;/h4&gt;
-          &lt;pre&gt;&lt;code&gt;\${sanitizeHTML(test.codeSnippet)}&lt;/code&gt;&lt;/pre&gt;
-        &lt;/div&gt;\`;
-      }
-      
-      return html;
-    }
-  `;
-  // Process attachments to base64 for embedding in JSON
-  const processedResults = (results || []).map(test => {
-    const processed = { ...test };
-    
-    // Process screenshots
-    if (test.screenshots && test.screenshots.length > 0) {
-      processed.screenshots = test.screenshots.map(screenshotPath => {
-        try {
-          const imagePath = path.resolve(DEFAULT_OUTPUT_DIR, screenshotPath);
-          if (!fsExistsSync(imagePath)) return null;
-          const base64ImageData = readFileSync(imagePath).toString("base64");
-          return `data:image/png;base64,${base64ImageData}`;
-        } catch (e) {
-          return null;
-        }
-      }).filter(Boolean);
-    }
-    
-    // Process videos
-    if (test.videoPath && test.videoPath.length > 0) {
-      processed.videoPath = test.videoPath.map(videoPath => {
-        try {
-          const videoFilePath = path.resolve(DEFAULT_OUTPUT_DIR, videoPath);
-          if (!fsExistsSync(videoFilePath)) return null;
-          const videoBase64 = readFileSync(videoFilePath).toString("base64");
-          const fileExtension = path.extname(videoPath).slice(1).toLowerCase();
-          const mimeType = {
-            mp4: "video/mp4",
-            webm: "video/webm",
-            ogg: "video/ogg",
-            mov: "video/quicktime",
-            avi: "video/x-msvideo",
-          }[fileExtension] || "video/mp4";
-          return {
-            dataUri: `data:\${mimeType};base64,${videoBase64}`,
-            mimeType,
-            extension: fileExtension
-          };
-        } catch (e) {
-          return null;
-        }
-      }).filter(Boolean);
-    }
-    
-    // Process trace
-    if (test.tracePath) {
-      try {
-        const traceFilePath = path.resolve(DEFAULT_OUTPUT_DIR, test.tracePath);
-        if (fsExistsSync(traceFilePath)) {
-          const traceBase64 = readFileSync(traceFilePath).toString("base64");
-          processed.tracePath = `data:application/zip;base64,${traceBase64}`;
-        }
-      } catch (e) {
-        processed.tracePath = null;
-      }
-    }
-    
-    // Process other attachments
-    if (test.attachments && test.attachments.length > 0) {
-      processed.attachments = test.attachments.map(attachment => {
-        try {
-          const attachmentPath = path.resolve(DEFAULT_OUTPUT_DIR, attachment.path);
-          if (!fsExistsSync(attachmentPath)) return null;
-          const attachmentBase64 = readFileSync(attachmentPath).toString("base64");
-          return {
-            ...attachment,
-            dataUri: `data:\${attachment.contentType};base64,${attachmentBase64}`
-          };
-        } catch (e) {
-          return null;
-        }
-      }).filter(Boolean);
-    }
-    
-    return processed;
-  });
+  const totalTestsOr1 = runSummary.totalTests || 1;
+  const passPercentage = Math.round((runSummary.passed / totalTestsOr1) * 100);
+  const failPercentage = Math.round((runSummary.failed / totalTestsOr1) * 100);
+  const skipPercentage = Math.round(
+    ((runSummary.skipped || 0) / totalTestsOr1) * 100
+  );
+  const avgTestDuration =
+    runSummary.totalTests > 0
+      ? formatDuration(runSummary.duration / runSummary.totalTests)
+      : "0.0s";
 
-  pulseData.results = processedResults;
-
-  // Generate server-side tab content strings
-  const dashboardHTML = generateDashboardTabHTML(pulseData);
-  const testRunSummaryHTML = generateTestRunSummaryTabHTML(pulseData);
-  const aiFailureAnalyzerHTML = generateAIFailureAnalyzerTab(pulseData.results);
-  
-  // Create an object to hold the pre-rendered tab contents
-  const tabContents = {
-    dashboard: dashboardHTML,
-    'test-runs': testRunSummaryHTML,
-    'ai-failure-analyzer': aiFailureAnalyzerHTML
-  };
   return `
-&lt;!DOCTYPE html&gt;
-&lt;html lang="en"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;link rel="icon" type="image/png" href="https://i.postimg.cc/v817w4sg/logo.png"&gt;
-    &lt;link rel="apple-touch-icon" href="https://i.postimg.cc/v817w4sg/logo.png"&gt;
-    &lt;script src="https://code.highcharts.com/highcharts.js" defer&gt;&lt;/script&gt;
-    &lt;title&gt;Playwright Pulse Report (Static Report)&lt;/title&gt;
-    &lt;style&gt;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/v817w4sg/logo.png">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/v817w4sg/logo.png">
+    <script src="https://code.highcharts.com/highcharts.js" defer></script>
+    <title>Playwright Pulse Report (Static Report)</title>
+    <style>
         :root { 
           --primary-color: #3f51b5; --secondary-color: #ff4081; --accent-color: #673ab7; --accent-color-alt: #FF9800;
           --success-color: #4CAF50; --danger-color: #F44336; --warning-color: #FFC107; --info-color: #2196F3;
@@ -1918,7 +1659,7 @@ function generateHTML(reportData, trendData = null) {
         .highcharts-title, .highcharts-subtitle { font-family: var(--font-family); }
         .highcharts-axis-labels text, .highcharts-legend-item text { fill: var(--text-color-secondary) !important; font-size: 12px !important; }
         .highcharts-axis-title { fill: var(--text-color) !important; }
-        .highcharts-tooltip &gt; span { background-color: rgba(10,10,10,0.92) !important; border-color: rgba(10,10,10,0.92) !important; color: #f5f5f5 !important; padding: 10px !important; border-radius: 6px !important; }
+        .highcharts-tooltip > span { background-color: rgba(10,10,10,0.92) !important; border-color: rgba(10,10,10,0.92) !important; color: #f5f5f5 !important; padding: 10px !important; border-radius: 6px !important; }
         body { font-family: var(--font-family); margin: 0; background-color: var(--background-color); color: var(--text-color); line-height: 1.65; font-size: 16px; }
         .container { padding: 30px; border-radius: var(--border-radius); box-shadow: var(--box-shadow); background: repeating-linear-gradient(#f1f8e9, #f9fbe7, #fce4ec); }
         .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding-bottom: 25px; border-bottom: 1px solid var(--border-color); margin-bottom: 25px; }
@@ -2045,6 +1786,7 @@ function generateHTML(reportData, trendData = null) {
         .ai-failure-card { background: var(--card-background-color); border: 1px solid var(--border-color); border-left: 5px solid var(--danger-color); border-radius: var(--border-radius); box-shadow: var(--box-shadow-light); display: flex; flex-direction: column; }
         .ai-failure-card-header { padding: 15px 20px; border-bottom: 1px solid var(--light-gray-color); display: flex; align-items: center; justify-content: space-between; gap: 15px; }
         .ai-failure-card-header h3 { margin: 0; font-size: 1.1em; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ai-failure-card-body { padding: 20px; }
         .ai-fix-btn { background-color: var(--primary-color); color: white; border: none; padding: 10px 18px; font-size: 1em; font-weight: 600; border-radius: 6px; cursor: pointer; transition: background-color 0.2s ease, transform 0.2s ease; display: inline-flex; align-items: center; gap: 8px; }
         .ai-fix-btn:hover { background-color: var(--accent-color); transform: translateY(-2px); }
         .ai-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; z-index: 1050; animation: fadeIn 0.3s; }
@@ -2106,126 +1848,648 @@ function generateHTML(reportData, trendData = null) {
         .attachment-caption { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; }
         .attachment-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
         .attachment-type { font-size: 0.8rem; color: var(--text-color-secondary); }
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;div class="container"&gt;
-        &lt;header class="header"&gt;
-            &lt;div class="header-title"&gt;
-                &lt;img id="report-logo" src="https://i.postimg.cc/v817w4sg/logo.png" alt="Report Logo"&gt;
-                &lt;h1&gt;Playwright Pulse Report&lt;/h1&gt;
-            &lt;/div&gt;
-            &lt;div class="run-info"&gt;&lt;strong&gt;Run Date:&lt;/strong&gt; ${formatDate(
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-title">
+                <img id="report-logo" src="https://i.postimg.cc/v817w4sg/logo.png" alt="Report Logo">
+                <h1>Playwright Pulse Report</h1>
+            </div>
+            <div class="run-info"><strong>Run Date:</strong> ${formatDate(
               runSummary.timestamp
-            )}&lt;br&gt;&lt;strong&gt;Total Duration:&lt;/strong&gt; ${formatDuration(
+            )}<br><strong>Total Duration:</strong> ${formatDuration(
     runSummary.duration
-  )}&lt;/div&gt;
-        &lt;/header&gt;
-        &lt;div class="tabs"&gt;
-            &lt;button class="tab-button active" data-tab="dashboard"&gt;Dashboard&lt;/button&gt;
-            &lt;button class="tab-button" data-tab="test-runs"&gt;Test Run Summary&lt;/button&gt;
-            &lt;button class="tab-button" data-tab="test-history"&gt;Test History&lt;/button&gt;
-            &lt;button class="tab-button" data-tab="ai-failure-analyzer"&gt;AI Failure Analyzer&lt;/button&gt;
-        &lt;/div&gt;
-        &lt;div id="dashboard" class="tab-content active"&gt;
-             &lt;div class="tab-loading-placeholder"&gt;Loading dashboard...&lt;/div&gt;
-        &lt;/div&gt;
-        &lt;div id="test-runs" class="tab-content"&gt;
-             &lt;div class="tab-loading-placeholder"&gt;Loading test run summary...&lt;/div&gt;
-        &lt;/div&gt;
-        &lt;div id="test-history" class="tab-content"&gt;
-          &lt;h2 class="tab-main-title"&gt;Execution Trends&lt;/h2&gt;
-          &lt;div class="trend-charts-row"&gt;
-            &lt;div class="trend-chart"&gt;&lt;h3 class="chart-title-header"&gt;Test Volume &amp; Outcome Trends&lt;/h3&gt;
-              ${
-                trendData && trendData.overall && trendData.overall.length > 0
-                  ? generateTestTrendsChart(trendData)
-                  : '&lt;div class="no-data"&gt;Overall trend data not available for test counts.&lt;/div&gt;'
-              }
-            &lt;/div&gt;
-            &lt;div class="trend-chart"&gt;&lt;h3 class="chart-title-header"&gt;Execution Duration Trends&lt;/h3&gt;
-              ${
-                trendData && trendData.overall && trendData.overall.length > 0
-                  ? generateDurationTrendChart(trendData)
-                  : '&lt;div class="no-data"&gt;Overall trend data not available for durations.&lt;/div&gt;'
-              }
-              &lt;/div&gt;
-          &lt;/div&gt;
-          &lt;h2 class="tab-main-title"&gt;Test Distribution by Worker ${infoTooltip}&lt;/h2&gt;
-          &lt;div class="trend-charts-row"&gt;
-             &lt;div class="trend-chart"&gt;
+  )}</div>
+        </header>
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'dashboard')">Dashboard</button>
+            <button class="tab-button" onclick="openTab(event, 'test-runs')">Test Run Summary</button>
+            <button class="tab-button" onclick="openTab(event, 'test-history')">Test History</button>
+            <button class="tab-button" onclick="openTab(event, 'ai-failure-analyzer')">AI Failure Analyzer</button>
+        </div>
+        <div id="dashboard" class="tab-content" style="display:block;">
+            <div class="dashboard-grid">
+                <div class="summary-card">
+                    <h3>Total Tests</h3>
+                    <div class="value">${runSummary.totalTests}</div>
+                </div>
+                <div class="summary-card status-passed">
+                    <h3>Passed</h3>
+                    <div class="value">${runSummary.passed}</div>
+                    <div class="trend-percentage">${passPercentage}%</div>
+                </div>
+                <div class="summary-card status-failed">
+                    <h3>Failed</h3>
+                    <div class="value">${runSummary.failed}</div>
+                    <div class="trend-percentage">${failPercentage}%</div>
+                </div>
+                <div class="summary-card status-skipped">
+                    <h3>Skipped</h3>
+                    <div class="value">${runSummary.skipped || 0}</div>
+                    <div class="trend-percentage">${skipPercentage}%</div>
+                </div>
+                <div class="summary-card">
+                  <h3>Avg. Test Time</h3>
+                  <div class="value">${avgTestDuration}</div>
+                </div>
+                <div class="summary-card">
+                  <h3>Run Duration</h3>
+                  <div class="value">${formatDuration(runSummary.duration)}</div>
+                </div>
+            </div>
+            <div class="dashboard-bottom-row">
+              <div style="display: grid; gap: 20px">
+                ${generatePieChart(
+                  [
+                    { label: "Passed", value: runSummary.passed },
+                    { label: "Failed", value: runSummary.failed },
+                    { label: "Skipped", value: runSummary.skipped || 0 },
+                  ],
+                  400,
+                  390
+                )} 
+                ${
+                  runSummary.environment &&
+                  Object.keys(runSummary.environment).length > 0
+                    ? generateEnvironmentDashboard(runSummary.environment)
+                    : '<div class="no-data">Environment data not available.</div>'
+                }
+              </div> 
+                ${generateSuitesWidget(suitesData)}
+            </div>
+        </div>
+        <div id="test-runs" class="tab-content">
+            <div class="filters">
+                <input type="text" id="filter-name" placeholder="Filter by test name/path..." style="border-color: black; border-style: outset;">
+                <select id="filter-status">
+                    <option value="">All Statuses</option>
+                    <option value="passed">Passed</option>
+                    <option value="failed">Failed</option>
+                    <option value="skipped">Skipped</option>
+                </select>
+                <select id="filter-browser">
+                    <option value="">All Browsers</option>
+                    ${Array.from(
+                      new Set(results.map((test) => test.browser || "unknown"))
+                    )
+                      .map(
+                        (browser) =>
+                          `<option value="${sanitizeHTML(
+                            browser
+                          )}">${sanitizeHTML(browser)}</option>`
+                      )
+                      .join("")}
+                </select>
+                <button id="expand-all-tests">Expand All</button>
+                <button id="collapse-all-tests">Collapse All</button>
+                <button id="clear-run-summary-filters" class="clear-filters-btn">Clear Filters</button>
+            </div>
+            <div class="test-cases-list">
+            ${results
+              .map((test, index) => {
+                const browser = test.browser || "unknown";
+                const testFileParts = test.name.split(" > ");
+                const testTitle =
+                  testFileParts[testFileParts.length - 1] || "Unnamed Test";
+                return `
+                <div class="test-case" data-status="${
+                  test.status
+                }" data-browser="${sanitizeHTML(browser)}" data-tags="${(
+                  test.tags || []
+                )
+                  .join(",")
+                  .toLowerCase()}">
+                    <div class="test-case-header" onclick="toggleDetails(this)">
+                        <div class="test-case-summary">
+                           <span class="status-badge ${getStatusClass(
+                             test.status
+                           )}">${String(test.status).toUpperCase()}</span>
+                           <span class="test-case-title" title="${sanitizeHTML(
+                             test.name
+                           )}">${sanitizeHTML(testTitle)}</span>
+                           <span class="test-case-browser">(${sanitizeHTML(
+                             browser
+                           )})</span>
+                        </div>
+                        <div class="test-case-meta">
+                            ${
+                              test.tags && test.tags.length > 0
+                                ? test.tags
+                                    .map(
+                                      (t) =>
+                                        `<span class="tag">${sanitizeHTML(
+                                          t
+                                        )}</span>`
+                                    )
+                                    .join(" ")
+                                : ""
+                            }
+                            <span class="test-duration">${formatDuration(
+                              test.duration
+                            )}</span>
+                        </div>
+                    </div>
+                    <div class="test-case-content">
+                        ${[
+                          `<p><strong>Full Path:</strong> ${sanitizeHTML(
+                            test.name
+                          )}</p>`,
+                          `<p><strong>Test run Worker ID:</strong> ${sanitizeHTML(
+                            test.workerId
+                          )} 
+                           [<strong>Total No. of Workers:</strong> ${sanitizeHTML(
+                             test.totalWorkers
+                           )}]</p>`,
+                          test.errorMessage
+                            ? `<div class="test-error-summary">
+                               ${formatPlaywrightError(test.errorMessage)}
+                               <button class="copy-error-btn" onclick="copyErrorToClipboard(this)">Copy Error Prompt</button>
+                            </div>`
+                            : "",
+                          test.snippet
+                            ? `<div class="code-section"><h4>Error Snippet</h4><pre><code>${formatPlaywrightError(
+                                test.snippet
+                              )}</code></pre></div>`
+                            : "",
+                          `<h4>Steps</h4><div class="steps-list">${(
+                            test.steps || []
+                          )
+                            .map(
+                              (step) => `
+                              <div class="step-item" style="--depth: 0;">
+                                <div class="step-header" onclick="toggleDetails(this)">
+                                  <span class="step-icon">${getStatusIcon(
+                                    step.status
+                                  )}</span>
+                                  <span class="step-title">${sanitizeHTML(
+                                    step.title
+                                  )}</span>
+                                  <span class="step-duration">${formatDuration(
+                                    step.duration
+                                  )}</span>
+                                </div>
+                                <div class="step-details">
+                                  ${
+                                    step.codeLocation
+                                      ? `<div class="step-info code-section"><strong>Location:</strong> ${sanitizeHTML(
+                                          step.codeLocation
+                                        )}</div>`
+                                      : ""
+                                  }
+                                  ${
+                                    step.errorMessage
+                                      ? `<div class="test-error-summary">
+                                        ${
+                                          step.stackTrace
+                                            ? `<div class="stack-trace">${formatPlaywrightError(
+                                                step.stackTrace
+                                              )}</div>`
+                                            : ""
+                                        }
+                                        <button class="copy-error-btn" onclick="copyErrorToClipboard(this)">Copy Error Prompt</button>
+                                      </div>`
+                                      : ""
+                                  }
+                                  ${
+                                    step.steps && step.steps.length > 0
+                                      ? `<div class="nested-steps">${step.steps
+                                          .map(
+                                            (
+                                              subStep
+                                            ) => `<div class="step-item" style="--depth: 1;">
+                                              <div class="step-header" onclick="toggleDetails(this)">
+                                                <span class="step-icon">${getStatusIcon(
+                                                  subStep.status
+                                                )}</span>
+                                                <span class="step-title">${sanitizeHTML(
+                                                  subStep.title
+                                                )}</span>
+                                                <span class="step-duration">${formatDuration(
+                                                  subStep.duration
+                                                )}</span>
+                                              </div>
+                                            </div>`
+                                          )
+                                          .join("")}</div>`
+                                      : ""
+                                  }
+                                </div>
+                              </div>`
+                            )
+                            .join("")}</div>`,
+                          test.stdout && test.stdout.length > 0
+                            ? `<div class="console-output-section">
+                              <h4>Console Output (stdout)
+                                <button class="copy-btn" onclick="copyLogContent('stdout-log-${index}', this)">Copy Console</button>
+                              </h4>
+                              <div class="log-wrapper">
+                                <pre id="stdout-log-${index}" class="console-log stdout-log" style="background-color: #2d2d2d; color: wheat; padding: 1.25em; border-radius: 0.85em; line-height: 1.2;">
+                                  ${formatPlaywrightError(
+                                    test.stdout
+                                      .map((line) => sanitizeHTML(line))
+                                      .join("\n")
+                                  )}
+                                </pre>
+                              </div>
+                            </div>`
+                            : "",
+                          test.stderr && test.stderr.length > 0
+                            ? `<div class="console-output-section">
+                              <h4>Console Output (stderr)</h4>
+                              <pre class="console-log stderr-log">${test.stderr
+                                .map((line) => sanitizeHTML(line))
+                                .join("\n")}</pre>
+                            </div>`
+                            : "",
+                          test.screenshots && test.screenshots.length > 0
+                            ? `<div class="attachments-section">
+                              <h4>Screenshots</h4>
+                              <div class="attachments-grid">
+                                ${test.screenshots
+                                  .map(
+                                    (screenshot, index) =>
+                                      `<div class="attachment-item">
+                                        <a href="data:image/png;base64,${readFileSync(
+                                          path.resolve(
+                                            DEFAULT_OUTPUT_DIR,
+                                            screenshot
+                                          )
+                                        ).toString(
+                                          "base64"
+                                        )}" target="_blank"><img src="data:image/png;base64,${readFileSync(
+                                          path.resolve(
+                                            DEFAULT_OUTPUT_DIR,
+                                            screenshot
+                                          )
+                                        ).toString(
+                                          "base64"
+                                        )}" alt="Screenshot ${index + 1}"></a>
+                                      </div>`
+                                  )
+                                  .join("")}
+                              </div>
+                            </div>`
+                            : "",
+                          test.videoPath && test.videoPath.length > 0
+                            ? `<div class="attachments-section">
+                              <h4>Videos</h4>
+                              <div class="attachments-grid">
+                                ${test.videoPath
+                                  .map(
+                                    (video, index) =>
+                                      `<div class="attachment-item video-item">
+                                        <video controls>
+                                          <source src="data:video/${path
+                                            .extname(video)
+                                            .slice(
+                                              1
+                                            )};base64,${readFileSync(
+                                        path.resolve(DEFAULT_OUTPUT_DIR, video)
+                                      ).toString("base64")}" type="video/${path
+                                        .extname(video)
+                                        .slice(1)}">
+                                        </video>
+                                        <div class="attachment-info">
+                                          <a href="data:video/${path
+                                            .extname(video)
+                                            .slice(
+                                              1
+                                            )};base64,${readFileSync(
+                                        path.resolve(DEFAULT_OUTPUT_DIR, video)
+                                      ).toString(
+                                        "base64"
+                                      )}" download="video-${index}${path.extname(
+                                        video
+                                      )}">Download</a>
+                                        </div>
+                                      </div>`
+                                  )
+                                  .join("")}
+                              </div>
+                            </div>`
+                            : "",
+                          test.tracePath
+                            ? `<div class="attachments-section">
+                              <h4>Trace File</h4>
+                              <div class="attachments-grid">
+                                <div class="attachment-item trace-item">
+                                  <div class="trace-preview">
+                                      <span class="trace-icon">📄</span>
+                                      <div class="trace-name">${path.basename(
+                                        test.tracePath
+                                      )}</div>
+                                  </div>
+                                  <div class="attachment-info">
+                                      <div class="trace-actions">
+                                          <a href="https://trace.playwright.dev/" target="_blank" class="view-trace">View on trace.playwright.dev</a>
+                                          <a href="data:application/zip;base64,${readFileSync(
+                                            path.resolve(
+                                              DEFAULT_OUTPUT_DIR,
+                                              test.tracePath
+                                            )
+                                          ).toString(
+                                            "base64"
+                                          )}" class="download-trace" download="trace.zip">Download Trace</a>
+                                      </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>`
+                            : "",
+                          test.attachments && test.attachments.length > 0
+                            ? `<div class="attachments-section">
+                              <h4>Other Attachments</h4>
+                              <div class="attachments-grid">
+                                ${test.attachments
+                                  .map(
+                                    (attachment) =>
+                                      `<div class="attachment-item generic-attachment">
+                                        <div class="attachment-icon">${getAttachmentIcon(
+                                          attachment.contentType
+                                        )}</div>
+                                        <div class="attachment-caption">
+                                          <span class="attachment-name" title="${sanitizeHTML(
+                                            attachment.name
+                                          )}">${sanitizeHTML(
+                                        attachment.name
+                                      )}</span>
+                                          <span class="attachment-type">${sanitizeHTML(
+                                            attachment.contentType
+                                          )}</span>
+                                        </div>
+                                        <div class="attachment-info">
+                                          <div class="trace-actions">
+                                            <a href="data:${
+                                              attachment.contentType
+                                            };base64,${readFileSync(
+                                        path.resolve(
+                                          DEFAULT_OUTPUT_DIR,
+                                          attachment.path
+                                        )
+                                      ).toString(
+                                        "base64"
+                                      )}" target="_blank" class="view-full">View</a>
+                                            <a href="data:${
+                                              attachment.contentType
+                                            };base64,${readFileSync(
+                                        path.resolve(
+                                          DEFAULT_OUTPUT_DIR,
+                                          attachment.path
+                                        )
+                                      ).toString(
+                                        "base64"
+                                      )}" download="${sanitizeHTML(
+                                        attachment.name
+                                      )}">Download</a>
+                                          </div>
+                                        </div>
+                                      </div>`
+                                  )
+                                  .join("")}
+                              </div>
+                            </div>`
+                            : "",
+                          test.codeSnippet
+                            ? `<div class="code-section">
+                              <h4>Code Snippet</h4>
+                              <pre><code>${sanitizeHTML(
+                                test.codeSnippet
+                              )}</code></pre>
+                            </div>`
+                            : "",
+                        ].join("")}
+                    </div>
+                </div>`;
+              })
+              .join("")}
+            </div>
+        </div>
+        
+        <div id="test-history" class="tab-content">
+           <h2 class="tab-main-title">Execution Trends</h2>
+            <div class="trend-charts-row">
+                <div class="trend-chart">
+                    <h3 class="chart-title-header">Test Volume & Outcome Trends</h3>
+                    ${
+                      trendData &&
+                      trendData.overall &&
+                      trendData.overall.length > 0
+                        ? generateTestTrendsChart(trendData)
+                        : '<div class="no-data">Overall trend data not available for test counts.</div>'
+                    }
+                </div>
+                <div class="trend-chart">
+                    <h3 class="chart-title-header">Execution Duration Trends</h3>
+                     ${
+                       trendData &&
+                       trendData.overall &&
+                       trendData.overall.length > 0
+                         ? generateDurationTrendChart(trendData)
+                         : '<div class="no-data">Overall trend data not available for durations.</div>'
+                     }
+                </div>
+            </div>
+            <h2 class="tab-main-title">Test Distribution by Worker ${infoTooltip}</h2>
+             <div class="trend-charts-row">
+             <div class="trend-chart">
                 ${generateWorkerDistributionChart(results)}
-            &lt;/div&gt;
-          &lt;/div&gt;
-          &lt;h2 class="tab-main-title"&gt;Individual Test History&lt;/h2&gt;
-          ${
-            trendData &&
-            trendData.testRuns &&
-            Object.keys(trendData.testRuns).length > 0
-              ? generateTestHistoryContent(trendData)
-              : '&lt;div class="no-data"&gt;Individual test history data not available.&lt;/div&gt;'
-          }
-        &lt;/div&gt;
-        &lt;div id="ai-failure-analyzer" class="tab-content"&gt;
-            &lt;div class="tab-loading-placeholder"&gt;Loading failure analyzer...&lt;/div&gt;
-        &lt;/div&gt;
-        &lt;footer style="padding: 0.5rem; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); text-align: center; font-family: 'Segoe UI', system-ui, sans-serif;"&gt;
-            &lt;div style="display: inline-flex; align-items: center; gap: 0.5rem; color: #333; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;"&gt;
-                &lt;span&gt;Created by&lt;/span&gt;
-                &lt;a href="https://github.com/Arghajit47" target="_blank" rel="noopener noreferrer" style="color: #7737BF; font-weight: 700; font-style: italic; text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.color='#BF5C37'" onmouseout="this.style.color='#7737BF'"&gt;Arghajit Singha&lt;/a&gt;
-            &lt;/div&gt;
-            &lt;div style="margin-top: 0.5rem; font-size: 0.75rem; color: #666;"&gt;Crafted with precision&lt;/div&gt;
-        &lt;/footer&gt;
-    &lt;/div&gt;
-    &lt;script&gt;
-      // Store all data and generator functions on the window object
-      window._pulseData = ${JSON.stringify(pulseData)};
-      window._tabContents = ${JSON.stringify(tabContents)};
-      
-      function getStatusClass(status) {
-        switch (String(status).toLowerCase()) {
-          case "passed": return "status-passed";
-          case "failed": return "status-failed";
-          case "skipped": return "status-skipped";
-          default: return "status-unknown";
+            </div>
+            </div>
+            <h2 class="tab-main-title">Individual Test History</h2>
+             ${
+               trendData &&
+               trendData.testRuns &&
+               Object.keys(trendData.testRuns).length > 0
+                 ? generateTestHistoryContent(trendData)
+                 : '<div class="no-data">Individual test history data not available.</div>'
+             }
+        </div>
+        <div id="ai-failure-analyzer" class="tab-content">
+          ${generateAIFailureAnalyzerTab(results)}
+        </div>
+        <footer style="padding: 0.5rem; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); text-align: center; font-family: 'Segoe UI', system-ui, sans-serif;">
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; color: #333; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">
+                <span>Created by</span>
+                <a href="https://github.com/Arghajit47" target="_blank" rel="noopener noreferrer" style="color: #7737BF; font-weight: 700; font-style: italic; text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.color='#BF5C37'" onmouseout="this.style.color='#7737BF'">Arghajit Singha</a>
+            </div>
+            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #666;">Crafted with precision</div>
+        </footer>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.style.display = 'none');
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).style.display = 'block';
+                // Trigger lazy chart rendering if the tab contains charts
+                document.querySelectorAll(`#${tabId} .lazy-load-chart`).forEach(chartEl => {
+                    const renderFunctionName = chartEl.dataset.renderFunctionName;
+                    if (renderFunctionName && typeof window[renderFunctionName] === 'function') {
+                        window[renderFunctionName]();
+                    }
+                });
+            });
+        });
+        
+        // Default to showing the first tab
+        if(tabButtons.length > 0) {
+          tabButtons[0].click();
         }
-      }
-    
-      function sanitizeHTML(str) {
-        if (str === null || str === undefined) return "";
-        return String(str).replace(/[&<>"']/g, (match) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[match] || match));
-      }
-    
-      function getStatusIcon(status) {
-        switch (String(status).toLowerCase()) {
-          case "passed": return "✅";
-          case "failed": return "❌";
-          case "skipped": return "⏭️";
-          default: return "❓";
-        }
-      }
 
-    // Ensure formatDuration is globally available
-    if (typeof formatDuration === 'undefined') { 
-        function formatDuration(ms) { 
-            if (ms === undefined || ms === null || ms &lt; 0) return "0.0s"; 
-            return (ms / 1000).toFixed(1) + "s"; 
+        // --- Filters for Test Run Summary ---
+        const nameFilter = document.getElementById('filter-name');
+        const statusFilter = document.getElementById('filter-status');
+        const browserFilter = document.getElementById('filter-browser');
+        const clearRunSummaryFiltersBtn = document.getElementById('clear-run-summary-filters');
+        
+        function filterTestCases() {
+            const nameValue = nameFilter ? nameFilter.value.toLowerCase() : "";
+            const statusValue = statusFilter ? statusFilter.value : "";
+            const browserValue = browserFilter ? browserFilter.value : "";
+
+            document.querySelectorAll('#test-runs .test-case').forEach(testCaseElement => {
+                const titleElement = testCaseElement.querySelector('.test-case-title');
+                const fullTestName = titleElement ? titleElement.getAttribute('title').toLowerCase() : "";
+                const status = testCaseElement.getAttribute('data-status');
+                const browser = testCaseElement.getAttribute('data-browser');
+
+                const nameMatch = fullTestName.includes(nameValue);
+                const statusMatch = !statusValue || status === statusValue;
+                const browserMatch = !browserValue || browser === browserValue;
+
+                testCaseElement.style.display = (nameMatch && statusMatch && browserMatch) ? '' : 'none';
+            });
+        }
+        
+        if(nameFilter) nameFilter.addEventListener('input', filterTestCases);
+        if(statusFilter) statusFilter.addEventListener('change', filterTestCases);
+        if(browserFilter) browserFilter.addEventListener('change', filterTestCases);
+        if(clearRunSummaryFiltersBtn) clearRunSummaryFiltersBtn.addEventListener('click', () => {
+            if(nameFilter) nameFilter.value = '';
+            if(statusFilter) statusFilter.value = '';
+            if(browserFilter) browserFilter.value = '';
+            filterTestCases();
+        });
+
+
+        // --- Filters for Test History ---
+        const historyNameFilter = document.getElementById('history-filter-name');
+        const historyStatusFilter = document.getElementById('history-filter-status');
+        const clearHistoryFiltersBtn = document.getElementById('clear-history-filters');
+
+        function filterTestHistoryCards() {
+            const nameValue = historyNameFilter ? historyNameFilter.value.toLowerCase() : "";
+            const statusValue = historyStatusFilter ? historyStatusFilter.value : "";
+
+            document.querySelectorAll('.test-history-card').forEach(card => {
+                const testTitle = card.getAttribute('data-test-name').toLowerCase(); 
+                const latestStatus = card.getAttribute('data-latest-status');
+
+                const nameMatch = testTitle.includes(nameValue);
+                const statusMatch = !statusValue || latestStatus === statusValue;
+                
+                card.style.display = (nameMatch && statusMatch) ? '' : 'none';
+            });
+        }
+
+        if(historyNameFilter) historyNameFilter.addEventListener('input', filterTestHistoryCards);
+        if(historyStatusFilter) historyStatusFilter.addEventListener('change', filterTestHistoryCards);
+        if(clearHistoryFiltersBtn) clearHistoryFiltersBtn.addEventListener('click', () => {
+            if(historyNameFilter) historyNameFilter.value = '';
+            if(historyStatusFilter) historyStatusFilter.value = '';
+            filterTestHistoryCards();
+        });
+
+        // --- Expand/Collapse All ---
+        const expandAllBtn = document.getElementById('expand-all-tests');
+        const collapseAllBtn = document.getElementById('collapse-all-tests');
+
+        if(expandAllBtn) expandAllBtn.addEventListener('click', () => {
+            document.querySelectorAll('#test-runs .test-case-content').forEach(el => el.style.display = 'block');
+            document.querySelectorAll('.step-details').forEach(el => el.style.display = 'block');
+        });
+        
+        if(collapseAllBtn) collapseAllBtn.addEventListener('click', () => {
+            document.querySelectorAll('#test-runs .test-case-content').forEach(el => el.style.display = 'none');
+             document.querySelectorAll('.step-details').forEach(el => el.style.display = 'none');
+        });
+        
+        // --- Intersection Observer for Charts ---
+        const lazyCharts = document.querySelectorAll('.lazy-load-chart');
+        if ('IntersectionObserver' in window) {
+            let chartObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const chartEl = entry.target;
+                        const renderFunctionName = chartEl.dataset.renderFunctionName;
+                        if (renderFunctionName && typeof window[renderFunctionName] === 'function') {
+                            window[renderFunctionName]();
+                            // Once rendered, we don't need to observe it anymore
+                            observer.unobserve(chartEl);
+                        }
+                    }
+                });
+            }, { rootMargin: "0px 0px 200px 0px" });
+
+            lazyCharts.forEach(chart => chartObserver.observe(chart));
+        } else {
+            // Fallback for older browsers
+            lazyCharts.forEach(chartEl => {
+                const renderFunctionName = chartEl.dataset.renderFunctionName;
+                if (renderFunctionName && typeof window[renderFunctionName] === 'function') {
+                    window[renderFunctionName]();
+                }
+            });
+        }
+    });
+
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tab-button");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+    function toggleDetails(element) {
+        const content = element.nextElementSibling;
+        if(content && content.classList.contains('test-case-content')) {
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        } else if (content && content.classList.contains('step-details')) {
+             content.style.display = content.style.display === 'block' ? 'none' : 'block';
         }
     }
-    
     function copyLogContent(elementId, button) {
         const logElement = document.getElementById(elementId);
         if (!logElement) {
             console.error('Could not find log element with ID:', elementId);
             return;
         }
-        navigator.clipboard.writeText(logElement.innerText).then(() =&gt; {
+        
+        navigator.clipboard.writeText(logElement.innerText).then(() => {
             button.textContent = 'Copied!';
-            setTimeout(() =&gt; { button.textContent = 'Copy'; }, 2000);
-        }).catch(err =&gt; {
+            setTimeout(() => {
+                button.textContent = 'Copy';
+            }, 2000);
+        }).catch(err => {
             console.error('Failed to copy log content:', err);
             button.textContent = 'Failed';
-             setTimeout(() =&gt; { button.textContent = 'Copy'; }, 2000);
+             setTimeout(() => {
+                button.textContent = 'Copy';
+            }, 2000);
         });
     }
 
@@ -2236,7 +2500,7 @@ function generateHTML(reportData, trendData = null) {
         
         modal.style.display = 'flex';
         modalTitle.textContent = 'Analyzing...';
-        modalContent.innerHTML = '&lt;div class="ai-loader"&gt;&lt;/div&gt;';
+        modalContent.innerHTML = '<div class="ai-loader"></div>';
 
         try {
             const testJson = button.dataset.testJson;
@@ -2247,34 +2511,36 @@ function generateHTML(reportData, trendData = null) {
                 'Error Message:',
                 test.errorMessage || 'Not available.',
                 '\\n\\n--- stdout ---',
-                (test.stdout && test.stdout.length &gt; 0) ? test.stdout.join('\\n') : 'Not available.',
+                (test.stdout && test.stdout.length > 0) ? test.stdout.join('\\n') : 'Not available.',
                 '\\n\\n--- stderr ---',
-                (test.stderr && test.stderr.length &gt; 0) ? test.stderr.join('\\n') : 'Not available.'
+                (test.stderr && test.stderr.length > 0) ? test.stderr.join('\\n') : 'Not available.'
             ].join('\\n');
             const codeSnippet = test.snippet || '';
 
-            const shortTestName = testName.split(' &gt; ').pop();
+            const shortTestName = testName.split(' > ').pop();
             modalTitle.textContent = \`Analysis for: \${shortTestName}\`;
             
             const apiUrl = 'https://ai-test-analyser.netlify.app/api/analyze';
             fetch(apiUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
                     testName: testName,
                     failureLogsAndErrors: failureLogsAndErrors,
                     codeSnippet: codeSnippet,
                 }),
             })
-            .then(response =&gt; {
+            .then(response => {
                 if (!response.ok) {
-                    return response.text().then(text =&gt; { 
+                    return response.text().then(text => { 
                         throw new Error(\`API request failed with status \${response.status}: \${text || response.statusText}\`);
                     });
                 }
                 return response.text();
             })
-            .then(text =&gt; {
+            .then(text => {
                 if (!text) {
                     throw new Error("The AI analyzer returned an empty response. This might happen during high load or if the request was blocked. Please try again in a moment.");
                 }
@@ -2285,46 +2551,46 @@ function generateHTML(reportData, trendData = null) {
                     throw new Error(\`The AI analyzer returned an invalid response. \${e.message}\`);
                 }
             })
-            .then(data =&gt; {
-                const escapeHtml = (unsafe) =&gt; {
+            .then(data => {
+                const escapeHtml = (unsafe) => {
                     if (typeof unsafe !== 'string') return '';
                     return unsafe
                         .replace(/&/g, "&amp;")
-                        .replace(/&lt;/g, "&lt;")
-                        .replace(/&gt;/g, "&gt;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
                         .replace(/"/g, "&quot;")
                         .replace(/'/g, "&#039;");
                 };
 
-                const analysisHtml = \`&lt;h4&gt;Analysis&lt;/h4&gt;&lt;p&gt;\${escapeHtml(data.rootCause) || 'No analysis provided.'}&lt;/p&gt;\`;
+                const analysisHtml = \`<h4>Analysis</h4><p>\${escapeHtml(data.rootCause) || 'No analysis provided.'}</p>\`;
                 
-                let suggestionsHtml = '&lt;h4&gt;Suggestions&lt;/h4&gt;';
-                if (data.suggestedFixes && data.suggestedFixes.length &gt; 0) {
-                    suggestionsHtml += '&lt;div class="suggestions-list" style="margin-top: 15px;"&gt;';
-                    data.suggestedFixes.forEach(fix =&gt; {
+                let suggestionsHtml = '<h4>Suggestions</h4>';
+                if (data.suggestedFixes && data.suggestedFixes.length > 0) {
+                    suggestionsHtml += '<div class="suggestions-list" style="margin-top: 15px;">';
+                    data.suggestedFixes.forEach(fix => {
                         suggestionsHtml += \`
-                            &lt;div class="suggestion-item" style="margin-bottom: 22px; border-left: 3px solid var(--accent-color-alt); padding-left: 15px;"&gt;
-                                &lt;p style="margin: 0 0 8px 0; font-weight: 500;"&gt;\${escapeHtml(fix.description)}&lt;/p&gt;
-                                \${fix.codeSnippet ? \`&lt;div class="code-section"&gt;&lt;pre&gt;&lt;code&gt;\${escapeHtml(fix.codeSnippet)}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;\` : ''}
-                            &lt;/div&gt;
+                            <div class="suggestion-item" style="margin-bottom: 22px; border-left: 3px solid var(--accent-color-alt); padding-left: 15px;">
+                                <p style="margin: 0 0 8px 0; font-weight: 500;">\${escapeHtml(fix.description)}</p>
+                                \${fix.codeSnippet ? \`<div class="code-section"><pre><code>\${escapeHtml(fix.codeSnippet)}</code></pre></div>\` : ''}
+                            </div>
                         \`;
                     });
-                    suggestionsHtml += '&lt;/div&gt;';
+                    suggestionsHtml += '</div>';
                 } else {
-                    suggestionsHtml += \`&lt;div class="code-section"&gt;&lt;pre&gt;&lt;code&gt;No suggestion provided.&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;\`;
+                    suggestionsHtml += \`<div class="code-section"><pre><code>No suggestion provided.</code></pre></div>\`;
                 }
                 
                 modalContent.innerHTML = analysisHtml + suggestionsHtml;
             })
-            .catch(err =&gt; {
+            .catch(err => {
                 console.error('AI Fix Error:', err);
-                modalContent.innerHTML = \`&lt;div class="test-error-summary"&gt;&lt;strong&gt;Error:&lt;/strong&gt; Failed to get AI analysis. Please check the console for details. &lt;br&gt;&lt;br&gt; \${err.message}&lt;/div&gt;\`;
+                modalContent.innerHTML = \`<div class="test-error-summary"><strong>Error:</strong> Failed to get AI analysis. Please check the console for details. <br><br> \${err.message}</div>\`;
             });
 
         } catch (e) {
             console.error('Error processing test data for AI Fix:', e);
             modalTitle.textContent = 'Error';
-            modalContent.innerHTML = \`&lt;div class="test-error-summary"&gt;Could not process test data. Is it formatted correctly?&lt;/div&gt;\`;
+            modalContent.innerHTML = \`<div class="test-error-summary">Could not process test data. Is it formatted correctly?</div>\`;
         }
     }
 
@@ -2347,314 +2613,67 @@ function generateHTML(reportData, trendData = null) {
             button.classList.remove('expanded');
         }
     }
-
-    function initializeReportInteractivity() {
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const loadedTabs = { 'test-history': true }; // Test History is pre-rendered
-
-        const loadTabContent = (tabId) =&gt; {
-            if (loadedTabs[tabId]) return;
-            const contentContainer = document.getElementById(tabId);
-            if (contentContainer && window._tabContents[tabId]) {
-                contentContainer.innerHTML = window._tabContents[tabId];
-            }
-            loadedTabs[tabId] = true;
-        };
-        
-        // Initial load for the active tab
-        loadTabContent('dashboard');
-
-        tabButtons.forEach(button =&gt; {
-            button.addEventListener('click', () =&gt; {
-                const tabId = button.getAttribute('data-tab');
-                loadTabContent(tabId);
-
-                tabButtons.forEach(btn =&gt; btn.classList.remove('active'));
-                tabContents.forEach(content =&gt; content.classList.remove('active'));
-                
-                button.classList.add('active');
-                const activeContent = document.getElementById(tabId);
-                if (activeContent) {
-                    activeContent.classList.add('active');
-                }
-            });
-        });
-        
-        // --- Test Run Summary Filters ---
-        const nameFilter = document.getElementById('filter-name');
-        const statusFilter = document.getElementById('filter-status');
-        const browserFilter = document.getElementById('filter-browser');
-        const clearRunSummaryFiltersBtn = document.getElementById('clear-run-summary-filters'); 
-        function filterTestCases() { 
-            const nameValue = nameFilter ? nameFilter.value.toLowerCase() : "";
-            const statusValue = statusFilter ? statusFilter.value : "";
-            const browserValue = browserFilter ? browserFilter.value : "";
-            document.querySelectorAll('#test-runs .test-case').forEach(testCaseElement =&gt; {
-                const titleElement = testCaseElement.querySelector('.test-case-title');
-                const fullTestName = titleElement ? titleElement.getAttribute('title').toLowerCase() : "";
-                const status = testCaseElement.getAttribute('data-status');
-                const browser = testCaseElement.getAttribute('data-browser');
-                const nameMatch = fullTestName.includes(nameValue);
-                const statusMatch = !statusValue || status === statusValue;
-                const browserMatch = !browserValue || browser === browserValue;
-                testCaseElement.style.display = (nameMatch && statusMatch && browserMatch) ? '' : 'none';
-            });
-        }
-        if(nameFilter) nameFilter.addEventListener('input', filterTestCases);
-        if(statusFilter) statusFilter.addEventListener('change', filterTestCases);
-        if(browserFilter) browserFilter.addEventListener('change', filterTestCases);
-        if(clearRunSummaryFiltersBtn) clearRunSummaryFiltersBtn.addEventListener('click', () =&gt; {
-            if(nameFilter) nameFilter.value = ''; if(statusFilter) statusFilter.value = ''; if(browserFilter) browserFilter.value = '';
-            filterTestCases();
-        });
-        
-        // --- Test History Filters ---
-        const historyNameFilter = document.getElementById('history-filter-name');
-        const historyStatusFilter = document.getElementById('history-filter-status');
-        const clearHistoryFiltersBtn = document.getElementById('clear-history-filters'); 
-        function filterTestHistoryCards() { 
-            const nameValue = historyNameFilter ? historyNameFilter.value.toLowerCase() : "";
-            const statusValue = historyStatusFilter ? historyStatusFilter.value : "";
-            document.querySelectorAll('.test-history-card').forEach(card =&gt; {
-                const testTitle = card.getAttribute('data-test-name').toLowerCase(); 
-                const latestStatus = card.getAttribute('data-latest-status');
-                const nameMatch = testTitle.includes(nameValue);
-                const statusMatch = !statusValue || latestStatus === statusValue;
-                card.style.display = (nameMatch && statusMatch) ? '' : 'none';
-            });
-        }
-        if(historyNameFilter) historyNameFilter.addEventListener('input', filterTestHistoryCards);
-        if(historyStatusFilter) historyStatusFilter.addEventListener('change', filterTestHistoryCards);
-        if(clearHistoryFiltersBtn) clearHistoryFiltersBtn.addEventListener('click', () =&gt; {
-            if(historyNameFilter) historyNameFilter.value = ''; if(historyStatusFilter) historyStatusFilter.value = '';
-            filterTestHistoryCards();
-        });
-        
-        // --- Expand/Collapse and Toggle Details Logic ---
-        function toggleElementDetails(headerElement, contentSelector) { 
-            let contentElement;
-            if (headerElement.classList.contains('test-case-header')) {
-                contentElement = headerElement.parentElement.querySelector('.test-case-content');
-            } else if (headerElement.classList.contains('step-header')) {
-                contentElement = headerElement.nextElementSibling;
-                if (!contentElement || !contentElement.matches(contentSelector || '.step-details')) {
-                     contentElement = null;
-                }
-            }
-            if (contentElement) {
-                 const isExpanded = contentElement.style.display === 'block';
-                 contentElement.style.display = isExpanded ? 'none' : 'block';
-                 headerElement.setAttribute('aria-expanded', String(!isExpanded));
-            }
-        }
-        document.querySelectorAll('#test-runs .test-case-header').forEach(header =&gt; {
-            header.addEventListener('click', () =&gt; toggleElementDetails(header)); 
-        });
-        document.querySelectorAll('#test-runs .step-header').forEach(header =&gt; {
-            header.addEventListener('click', () =&gt; toggleElementDetails(header, '.step-details'));
-        });
-        const expandAllBtn = document.getElementById('expand-all-tests');
-        const collapseAllBtn = document.getElementById('collapse-all-tests');
-        function setAllTestRunDetailsVisibility(displayMode, ariaState) {
-            document.querySelectorAll('#test-runs .test-case-content').forEach(el =&gt; el.style.display = displayMode);
-            document.querySelectorAll('#test-runs .step-details').forEach(el =&gt; el.style.display = displayMode);
-            document.querySelectorAll('#test-runs .test-case-header[aria-expanded]').forEach(el =&gt; el.setAttribute('aria-expanded', ariaState));
-            document.querySelectorAll('#test-runs .step-header[aria-expanded]').forEach(el =&gt; el.setAttribute('aria-expanded', ariaState));
-        }
-        if (expandAllBtn) expandAllBtn.addEventListener('click', () =&gt; setAllTestRunDetailsVisibility('block', 'true'));
-        if (collapseAllBtn) collapseAllBtn.addEventListener('click', () =&gt; setAllTestRunDetailsVisibility('none', 'false'));
-        
-        // --- Intersection Observer for Lazy Loading ---
-        const lazyLoadElements = document.querySelectorAll('.lazy-load-chart, .lazy-load-iframe, .lazy-load-image, .lazy-load-video, .lazy-load-attachment');
-        if ('IntersectionObserver' in window) {
-            let lazyObserver = new IntersectionObserver((entries, observer) =&gt; {
-                entries.forEach(entry =&gt; {
-                    if (entry.isIntersecting) {
-                        const element = entry.target;
-                        if (element.classList.contains('lazy-load-image')) {
-                            if (element.dataset.src) {
-                                element.src = element.dataset.src;
-                                element.removeAttribute('data-src');
-                            }
-                        } else if (element.classList.contains('lazy-load-video')) {
-                            const source = element.querySelector('source');
-                            if (source && source.dataset.src) {
-                                source.src = source.dataset.src;
-                                source.removeAttribute('data-src');
-                                element.load();
-                            }
-                        } else if (element.classList.contains('lazy-load-attachment')) {
-                            if (element.dataset.href) {
-                                element.href = element.dataset.href;
-                                element.removeAttribute('data-href');
-                            }
-                        } else if (element.classList.contains('lazy-load-iframe')) {
-                            if (element.dataset.src) {
-                                element.src = element.dataset.src;
-                                element.removeAttribute('data-src');
-                            }
-                        } else if (element.classList.contains('lazy-load-chart')) {
-                            const renderFunctionName = element.dataset.renderFunctionName;
-                            if (renderFunctionName && typeof window[renderFunctionName] === 'function') {
-                                window[renderFunctionName]();
-                            }
-                        }
-                        observer.unobserve(element);
-                    }
-                });
-            }, { rootMargin: "0px 0px 200px 0px" });
-            lazyLoadElements.forEach(el =&gt; lazyObserver.observe(el));
-        } else { // Fallback for browsers without IntersectionObserver
-            lazyLoadElements.forEach(element =&gt; {
-                if (element.classList.contains('lazy-load-image') && element.dataset.src) element.src = element.dataset.src;
-                else if (element.classList.contains('lazy-load-video')) { const source = element.querySelector('source'); if (source && source.dataset.src) { source.src = source.dataset.src; element.load(); } }
-                else if (element.classList.contains('lazy-load-attachment') && element.dataset.href) element.href = element.dataset.href;
-                else if (element.classList.contains('lazy-load-iframe') && element.dataset.src) element.src = element.dataset.src;
-                else if (element.classList.contains('lazy-load-chart')) { const renderFn = element.dataset.renderFunctionName; if(renderFn && window[renderFn]) window[renderFn](); }
-            });
-        }
-    }
-    document.addEventListener('DOMContentLoaded', initializeReportInteractivity);
-
+    
     function copyErrorToClipboard(button) {
-      const errorContainer = button.closest('.test-error-summary');
-      if (!errorContainer) {
-        console.error("Could not find '.test-error-summary' container.");
-        return;
-      }
-      let errorText;
-      const stackTraceElement = errorContainer.querySelector('.stack-trace');
-      if (stackTraceElement) {
-        errorText = stackTraceElement.textContent;
-      } else {
-        const clonedContainer = errorContainer.cloneNode(true);
-        const buttonInClone = clonedContainer.querySelector('button');
-        if (buttonInClone) buttonInClone.remove();
-        errorText = clonedContainer.textContent;
-      }
+        const errorContainer = button.closest('.test-error-summary');
+        if (!errorContainer) {
+          console.error("Could not find '.test-error-summary' container.");
+          return;
+        }
 
-      if (!errorText) {
-        button.textContent = 'Nothing to copy';
-        setTimeout(() =&gt; { button.textContent = 'Copy Error'; }, 2000);
-        return;
-      }
-      navigator.clipboard.writeText(errorText.trim()).then(() =&gt; {
-        const originalText = button.textContent;
-        button.textContent = 'Copied!';
-        setTimeout(() =&gt; { button.textContent = originalText; }, 2000);
-      }).catch(err =&gt; {
-        console.error('Failed to copy: ', err);
-        button.textContent = 'Failed';
-      });
+        // To get clean text, clone the node and remove the button before getting textContent
+        let errorText;
+        const stackTraceElement = errorContainer.querySelector('.stack-trace');
+
+        if (stackTraceElement) {
+          // If a specific stack trace element exists, copy its content
+          errorText = stackTraceElement.textContent;
+        } else {
+          // Otherwise, copy the text of the whole summary, excluding the button
+          const clonedContainer = errorContainer.cloneNode(true);
+          const buttonInClone = clonedContainer.querySelector('button');
+          if (buttonInClone) buttonInClone.remove();
+          errorText = clonedContainer.textContent;
+        }
+
+        if (!errorText) {
+            button.textContent = 'Nothing to copy';
+             setTimeout(() => {
+                button.textContent = 'Copy Error';
+            }, 2000);
+            return;
+        }
+
+        navigator.clipboard.writeText(errorText.trim()).then(() => {
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            setTimeout(() => {
+                button.textContent = originalText;
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            button.textContent = 'Failed';
+        });
     }
-&lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;
+
+</script>
+</body>
+</html>
   `;
 }
-
-function generateDashboardTabHTML(data) {
-    const runSummary = data.runSummary;
-    const totalTestsOr1 = runSummary.totalTests || 1;
-    const passPercentage = Math.round((runSummary.passed / totalTestsOr1) * 100);
-    const failPercentage = Math.round((runSummary.failed / totalTestsOr1) * 100);
-    const skipPercentage = Math.round(((runSummary.skipped || 0) / totalTestsOr1) * 100);
-    const avgTestDuration = runSummary.totalTests &gt; 0 
-      ? formatDuration(runSummary.duration / runSummary.totalTests) 
-      : "0.0s";
-    
-    return `
-      &lt;div class="dashboard-grid"&gt;
-        &lt;div class="summary-card"&gt;&lt;h3&gt;Total Tests&lt;/h3&gt;&lt;div class="value"&gt;${runSummary.totalTests}&lt;/div&gt;&lt;/div&gt;
-        &lt;div class="summary-card status-passed"&gt;&lt;h3&gt;Passed&lt;/h3&gt;&lt;div class="value"&gt;${runSummary.passed}&lt;/div&gt;&lt;div class="trend-percentage"&gt;${passPercentage}%&lt;/div&gt;&lt;/div&gt;
-        &lt;div class="summary-card status-failed"&gt;&lt;h3&gt;Failed&lt;/h3&gt;&lt;div class="value"&gt;${runSummary.failed}&lt;/div&gt;&lt;div class="trend-percentage"&gt;${failPercentage}%&lt;/div&gt;&lt;/div&gt;
-        &lt;div class="summary-card status-skipped"&gt;&lt;h3&gt;Skipped&lt;/h3&gt;&lt;div class="value"&gt;${runSummary.skipped || 0}&lt;/div&gt;&lt;div class="trend-percentage"&gt;${skipPercentage}%&lt;/div&gt;&lt;/div&gt;
-        &lt;div class="summary-card"&gt;&lt;h3&gt;Avg. Test Time&lt;/h3&gt;&lt;div class="value"&gt;${avgTestDuration}&lt;/div&gt;&lt;/div&gt;
-        &lt;div class="summary-card"&gt;&lt;h3&gt;Run Duration&lt;/h3&gt;&lt;div class="value"&gt;${formatDuration(runSummary.duration)}&lt;/div&gt;&lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class="dashboard-bottom-row"&gt;
-        &lt;div style="display: grid; gap: 20px"&gt;
-          ${generatePieChart(data.pieData, 400, 390)}
-          ${runSummary.environment && Object.keys(runSummary.environment).length &gt; 0 
-            ? generateEnvironmentDashboard(runSummary.environment) 
-            : '&lt;div class="no-data"&gt;Environment data not available.&lt;/div&gt;'}
-        &lt;/div&gt;
-        ${generateSuitesWidget(data.suitesData)}
-      &lt;/div&gt;
-    `;
-  }
-  
-  function generateTestRunSummaryTabHTML(data) {
-    const results = data.results || [];
-    
-    if (results.length === 0) {
-      return '&lt;div class="no-tests"&gt;No test results found in this run.&lt;/div&gt;';
-    }
-    
-    // Generate minimal test list - just titles and status
-    const testListHTML = results.map((test, index) =&gt; {
-      const browser = test.browser || "unknown";
-      const testFileParts = test.name.split(" &gt; ");
-      const testTitle = testFileParts[testFileParts.length - 1] || "Unnamed Test";
-      
-      return `
-        &lt;div class="test-case" data-status="${test.status}" data-browser="${sanitizeHTML(browser)}" data-tags="${(test.tags || []).join(",").toLowerCase()}"&gt;
-          &lt;div class="test-case-header" role="button" aria-expanded="false" data-test-index="${index}"&gt;
-            &lt;div class="test-case-summary"&gt;
-              &lt;span class="status-badge ${getStatusClass(test.status)}"${String(test.status).toUpperCase()}&lt;/span&gt;
-              &lt;span class="test-case-title" title="${sanitizeHTML(test.name)}"${sanitizeHTML(testTitle)}&lt;/span&gt;
-              &lt;span class="test-case-browser"&gt;(${sanitizeHTML(browser)})&lt;/span&gt;
-            &lt;/div&gt;
-            &lt;div class="test-case-meta"&gt;
-              ${test.tags && test.tags.length &gt; 0 
-                ? test.tags.map(t =&gt; `&lt;span class="tag"${sanitizeHTML(t)}&lt;/span&gt;`).join(" ") 
-                : ""}
-              &lt;span class="test-duration"&gt;${formatDuration(test.duration)}&lt;/span&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
-          &lt;div class="test-case-content" id="test-details-${index}" style="display: none;"&gt;&lt;/div&gt;
-        &lt;/div&gt;
-      `;
-    }).join("");
-    
-    return `
-      &lt;div class="filters"&gt;
-          &lt;input type="text" id="filter-name" placeholder="Filter by test name/path..." style="border-color: black; border-style: outset;"&gt;
-          &lt;select id="filter-status"&gt;
-              &lt;option value=""&gt;All Statuses&lt;/option&gt;
-              &lt;option value="passed"&gt;Passed&lt;/option&gt;
-              &lt;option value="failed"&gt;Failed&lt;/option&gt;
-              &lt;option value="skipped"&gt;Skipped&lt;/option&gt;
-          &lt;/select&gt;
-          &lt;select id="filter-browser"&gt;
-              &lt;option value=""&gt;All Browsers&lt;/option&gt;
-              ${Array.from(new Set((results || []).map(test =&gt; test.browser || "unknown")))
-                .map(browser =&gt; `&lt;option value="${sanitizeHTML(browser)}"${sanitizeHTML(browser)}&lt;/option&gt;`)
-                .join("")}
-          &lt;/select&gt;
-          &lt;button id="expand-all-tests"&gt;Expand All&lt;/button&gt;
-          &lt;button id="collapse-all-tests"&gt;Collapse All&lt;/button&gt;
-          &lt;button id="clear-run-summary-filters" class="clear-filters-btn"&gt;Clear Filters&lt;/button&gt;
-      &lt;/div&gt;
-      &lt;div class="test-cases-list"&gt;
-          ${testListHTML}
-      &lt;/div&gt;
-    `;
-  }
 async function runScript(scriptPath) {
-  return new Promise((resolve, reject) =&gt; {
+  return new Promise((resolve, reject) => {
     console.log(chalk.blue(`Executing script: ${scriptPath}...`));
     const process = fork(scriptPath, [], {
       stdio: "inherit",
     });
 
-    process.on("error", (err) =&gt; {
+    process.on("error", (err) => {
       console.error(chalk.red(`Failed to start script: ${scriptPath}`), err);
       reject(err);
     });
 
-    process.on("exit", (code) =&gt; {
+    process.on("exit", (code) => {
       if (code === 0) {
         console.log(chalk.green(`Script ${scriptPath} finished successfully.`));
         resolve();
@@ -2741,9 +2760,9 @@ async function main() {
 
     const jsonHistoryFiles = allHistoryFiles
       .filter(
-        (file) =&gt; file.startsWith(HISTORY_FILE_PREFIX) && file.endsWith(".json")
+        (file) => file.startsWith(HISTORY_FILE_PREFIX) && file.endsWith(".json")
       )
-      .map((file) =&gt; {
+      .map((file) => {
         const timestampPart = file
           .replace(HISTORY_FILE_PREFIX, "")
           .replace(".json", "");
@@ -2753,8 +2772,8 @@ async function main() {
           timestamp: parseInt(timestampPart, 10),
         };
       })
-      .filter((file) =&gt; !isNaN(file.timestamp))
-      .sort((a, b) =&gt; b.timestamp - a.timestamp);
+      .filter((file) => !isNaN(file.timestamp))
+      .sort((a, b) => b.timestamp - a.timestamp);
 
     const filesToLoadForTrend = jsonHistoryFiles.slice(
       0,
@@ -2802,8 +2821,8 @@ async function main() {
     testRuns: {},
   };
 
-  if (historicalRuns.length &gt; 0) {
-    historicalRuns.forEach((histRunReport) =&gt; {
+  if (historicalRuns.length > 0) {
+    historicalRuns.forEach((histRunReport) => {
       if (histRunReport.run) {
         const runTimestamp = new Date(histRunReport.run.timestamp);
         trendData.overall.push({
@@ -2819,7 +2838,7 @@ async function main() {
         if (histRunReport.results && Array.isArray(histRunReport.results)) {
           const runKeyForTestHistory = `test run ${runTimestamp.getTime()}`;
           trendData.testRuns[runKeyForTestHistory] = histRunReport.results.map(
-            (test) =&gt; ({
+            (test) => ({
               testName: test.name,
               duration: test.duration,
               status: test.status,
@@ -2830,7 +2849,7 @@ async function main() {
       }
     });
     trendData.overall.sort(
-      (a, b) =&gt; a.timestamp.getTime() - b.timestamp.getTime()
+      (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
     );
   }
 
@@ -2850,12 +2869,10 @@ async function main() {
     process.exit(1);
   }
 }
-main().catch((err) =&gt; {
+main().catch((err) => {
   console.error(
     chalk.red.bold(`Unhandled error during script execution: ${err.message}`)
   );
   console.error(err.stack);
   process.exit(1);
 });
-
-    
