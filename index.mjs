@@ -1606,7 +1606,7 @@ function generateAIFailureAnalyzerTab(results) {
   `;
 }
 /**
- * Generates the HTML report.
+ * Generates the HTML report with lazy loading for tabs and test details.
  * @param {object} reportData - The data for the report.
  * @param {object} trendData - The data for the trend chart.
  * @returns {string} The HTML report.
@@ -1623,6 +1623,426 @@ function generateHTML(reportData, trendData = null) {
     timestamp: new Date().toISOString(),
   };
 
+  // Prepare data for client-side rendering
+  const pulseData = {
+    runSummary,
+    results: results || [],
+    suitesData,
+    trendData: trendData || { overall: [], testRuns: {} },
+    pieData: [
+      { label: "Passed", value: runSummary.passed },
+      { label: "Failed", value: runSummary.failed },
+      { label: "Skipped", value: runSummary.skipped || 0 },
+    ]
+  };
+
+  // Helper function to generate test details HTML (will be used client-side)
+  const generateTestDetailsHTMLFunction = `
+    function generateTestDetailsHTML(testIndex) {
+      const test = window._pulseData.results[testIndex];
+      if (!test) return '<div class="no-data">Test data not found.</div>';
+      
+      const browser = test.browser || "unknown";
+      
+      const generateStepsHTML = (steps, depth = 0) => {
+        if (!steps || steps.length === 0)
+          return "<div class='no-steps'>No steps recorded for this test.</div>";
+        return steps.map((step) => {
+          const hasNestedSteps = step.steps && step.steps.length > 0;
+          const isHook = step.hookType;
+          const stepClass = isHook ? \`step-hook step-hook-\${step.hookType}\` : "";
+          const hookIndicator = isHook ? \` (\${step.hookType} hook)\` : "";
+          return \`<div class="step-item" style="--depth: \${depth};">
+            <div class="step-header \${stepClass}" role="button" aria-expanded="false">
+              <span class="step-icon">\${getStatusIcon(step.status)}</span>
+              <span class="step-title">\${sanitizeHTML(step.title)}\${hookIndicator}</span>
+              <span class="step-duration">\${formatDuration(step.duration)}</span>
+            </div>
+            <div class="step-details" style="display: none;">
+              \${step.codeLocation ? \`<div class="step-info code-section"><strong>Location:</strong> \${sanitizeHTML(step.codeLocation)}</div>\` : ""}
+              \${step.errorMessage ? \`<div class="test-error-summary">
+                \${step.stackTrace ? \`<div class="stack-trace">\${formatPlaywrightError(step.stackTrace)}</div>\` : ""}
+                <button class="copy-error-btn" onclick="copyErrorToClipboard(this)">Copy Error Prompt</button>
+              </div>\` : ""}
+              \${hasNestedSteps ? \`<div class="nested-steps">\${generateStepsHTML(step.steps, depth + 1)}</div>\` : ""}
+            </div>
+          </div>\`;
+        }).join("");
+      };
+      
+      let html = \`
+        <p><strong>Full Path:</strong> \${sanitizeHTML(test.name)}</p>
+        <p><strong>Test run Worker ID:</strong> \${sanitizeHTML(test.workerId)} 
+           [<strong>Total No. of Workers:</strong> \${sanitizeHTML(test.totalWorkers)}]</p>
+        \${test.errorMessage ? \`<div class="test-error-summary">
+          \${formatPlaywrightError(test.errorMessage)}
+          <button class="copy-error-btn" onclick="copyErrorToClipboard(this)">Copy Error Prompt</button>
+        </div>\` : ""}
+        \${test.snippet ? \`<div class="code-section"><h4>Error Snippet</h4>
+          <pre><code>\${formatPlaywrightError(test.snippet)}</code></pre></div>\` : ""}
+        <h4>Steps</h4>
+        <div class="steps-list">\${generateStepsHTML(test.steps)}</div>
+      \`;
+      
+      // Add stdout if exists
+      if (test.stdout && test.stdout.length > 0) {
+        const logId = \`stdout-log-\${test.id || testIndex}\`;
+        html += \`<div class="console-output-section">
+          <h4>Console Output (stdout)
+            <button class="copy-btn" onclick="copyLogContent('\${logId}', this)">Copy Console</button>
+          </h4>
+          <div class="log-wrapper">
+            <pre id="\${logId}" class="console-log stdout-log" style="background-color: #2d2d2d; color: wheat; padding: 1.25em; border-radius: 0.85em; line-height: 1.2;">
+              \${formatPlaywrightError(test.stdout.map(line => sanitizeHTML(line)).join("\\n"))}
+            </pre>
+          </div>
+        </div>\`;
+      }
+      
+      // Add stderr if exists
+      if (test.stderr && test.stderr.length > 0) {
+        html += \`<div class="console-output-section">
+          <h4>Console Output (stderr)</h4>
+          <pre class="console-log stderr-log">\${test.stderr.map(line => sanitizeHTML(line)).join("\\n")}</pre>
+        </div>\`;
+      }
+      
+      // Add screenshots - these are already base64 encoded in the data
+      if (test.screenshots && test.screenshots.length > 0) {
+        html += \`<div class="attachments-section">
+          <h4>Screenshots</h4>
+          <div class="attachments-grid">
+            \${test.screenshots.map((screenshot, index) => \`
+              <div class="attachment-item">
+                <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" 
+                     data-src="\${screenshot}" 
+                     alt="Screenshot \${index + 1}" 
+                     class="lazy-load-image">
+                <div class="attachment-info">
+                  <div class="trace-actions">
+                    <a href="\${screenshot}" target="_blank" download="screenshot-\${index}.png">Download</a>
+                  </div>
+                </div>
+              </div>
+            \`).join("")}
+          </div>
+        </div>\`;
+      }
+      
+      // Add videos
+      if (test.videoPath && test.videoPath.length > 0) {
+        html += \`<div class="attachments-section">
+          <h4>Videos</h4>
+          <div class="attachments-grid">
+            \${test.videoPath.map((video, index) => \`
+              <div class="attachment-item video-item">
+                <video controls preload="none" class="lazy-load-video">
+                  <source data-src="\${video.dataUri}" type="\${video.mimeType}">
+                </video>
+                <div class="attachment-info">
+                  <div class="trace-actions">
+                    <a href="\${video.dataUri}" target="_blank" download="video-\${index}.\${video.extension}">Download</a>
+                  </div>
+                </div>
+              </div>
+            \`).join("")}
+          </div>
+        </div>\`;
+      }
+      
+      // Add trace file
+      if (test.tracePath) {
+        html += \`<div class="attachments-section">
+          <h4>Trace File</h4>
+          <div class="attachments-grid">
+            <div class="attachment-item generic-attachment">
+              <div class="attachment-icon">📄</div>
+              <div class="attachment-caption">
+                <span class="attachment-name">trace.zip</span>
+              </div>
+              <div class="attachment-info">
+                <div class="trace-actions">
+                  <a href="#" data-href="\${test.tracePath}" class="lazy-load-attachment" download="trace.zip">Download Trace</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>\`;
+      }
+      
+      // Add other attachments
+      if (test.attachments && test.attachments.length > 0) {
+        html += \`<div class="attachments-section">
+          <h4>Other Attachments</h4>
+          <div class="attachments-grid">
+            \${test.attachments.map(attachment => \`
+              <div class="attachment-item generic-attachment">
+                <div class="attachment-icon">\${getAttachmentIcon(attachment.contentType)}</div>
+                <div class="attachment-caption">
+                  <span class="attachment-name" title="\${sanitizeHTML(attachment.name)}">\${sanitizeHTML(attachment.name)}</span>
+                  <span class="attachment-type">\${sanitizeHTML(attachment.contentType)}</span>
+                </div>
+                <div class="attachment-info">
+                  <div class="trace-actions">
+                    <a href="\${attachment.dataUri}" target="_blank" class="view-full">View</a>
+                    <a href="\${attachment.dataUri}" download="\${sanitizeHTML(attachment.name)}">Download</a>
+                  </div>
+                </div>
+              </div>
+            \`).join("")}
+          </div>
+        </div>\`;
+      }
+      
+      // Add code snippet if exists
+      if (test.codeSnippet) {
+        html += \`<div class="code-section">
+          <h4>Code Snippet</h4>
+          <pre><code>\${sanitizeHTML(test.codeSnippet)}</code></pre>
+        </div>\`;
+      }
+      
+      return html;
+    }
+  `;
+
+  // Process attachments to base64 for embedding in JSON
+  const processedResults = (results || []).map(test => {
+    const processed = { ...test };
+    
+    // Process screenshots
+    if (test.screenshots && test.screenshots.length > 0) {
+      processed.screenshots = test.screenshots.map(screenshotPath => {
+        try {
+          const imagePath = path.resolve(DEFAULT_OUTPUT_DIR, screenshotPath);
+          if (!fsExistsSync(imagePath)) return null;
+          const base64ImageData = readFileSync(imagePath).toString("base64");
+          return `data:image/png;base64,${base64ImageData}`;
+        } catch (e) {
+          return null;
+        }
+      }).filter(Boolean);
+    }
+    
+    // Process videos
+    if (test.videoPath && test.videoPath.length > 0) {
+      processed.videoPath = test.videoPath.map(videoPath => {
+        try {
+          const videoFilePath = path.resolve(DEFAULT_OUTPUT_DIR, videoPath);
+          if (!fsExistsSync(videoFilePath)) return null;
+          const videoBase64 = readFileSync(videoFilePath).toString("base64");
+          const fileExtension = path.extname(videoPath).slice(1).toLowerCase();
+          const mimeType = {
+            mp4: "video/mp4",
+            webm: "video/webm",
+            ogg: "video/ogg",
+            mov: "video/quicktime",
+            avi: "video/x-msvideo",
+          }[fileExtension] || "video/mp4";
+          return {
+            dataUri: `data:${mimeType};base64,${videoBase64}`,
+            mimeType,
+            extension: fileExtension
+          };
+        } catch (e) {
+          return null;
+        }
+      }).filter(Boolean);
+    }
+    
+    // Process trace
+    if (test.tracePath) {
+      try {
+        const traceFilePath = path.resolve(DEFAULT_OUTPUT_DIR, test.tracePath);
+        if (fsExistsSync(traceFilePath)) {
+          const traceBase64 = readFileSync(traceFilePath).toString("base64");
+          processed.tracePath = `data:application/zip;base64,${traceBase64}`;
+        }
+      } catch (e) {
+        processed.tracePath = null;
+      }
+    }
+    
+    // Process other attachments
+    if (test.attachments && test.attachments.length > 0) {
+      processed.attachments = test.attachments.map(attachment => {
+        try {
+          const attachmentPath = path.resolve(DEFAULT_OUTPUT_DIR, attachment.path);
+          if (!fsExistsSync(attachmentPath)) return null;
+          const attachmentBase64 = readFileSync(attachmentPath).toString("base64");
+          return {
+            ...attachment,
+            dataUri: `data:${attachment.contentType};base64,${attachmentBase64}`
+          };
+        } catch (e) {
+          return null;
+        }
+      }).filter(Boolean);
+    }
+    
+    return processed;
+  });
+
+  pulseData.results = processedResults;
+
+  // Generate client-side tab generators
+  const clientSideGenerators = `
+    // Dashboard tab generator
+    function generateDashboardTabHTML() {
+      const data = window._pulseData;
+      const runSummary = data.runSummary;
+      const totalTestsOr1 = runSummary.totalTests || 1;
+      const passPercentage = Math.round((runSummary.passed / totalTestsOr1) * 100);
+      const failPercentage = Math.round((runSummary.failed / totalTestsOr1) * 100);
+      const skipPercentage = Math.round(((runSummary.skipped || 0) / totalTestsOr1) * 100);
+      const avgTestDuration = runSummary.totalTests > 0 
+        ? formatDuration(runSummary.duration / runSummary.totalTests) 
+        : "0.0s";
+      
+      return \`
+        <div class="dashboard-grid">
+          <div class="summary-card"><h3>Total Tests</h3><div class="value">\${runSummary.totalTests}</div></div>
+          <div class="summary-card status-passed"><h3>Passed</h3><div class="value">\${runSummary.passed}</div><div class="trend-percentage">\${passPercentage}%</div></div>
+          <div class="summary-card status-failed"><h3>Failed</h3><div class="value">\${runSummary.failed}</div><div class="trend-percentage">\${failPercentage}%</div></div>
+          <div class="summary-card status-skipped"><h3>Skipped</h3><div class="value">\${runSummary.skipped || 0}</div><div class="trend-percentage">\${skipPercentage}%</div></div>
+          <div class="summary-card"><h3>Avg. Test Time</h3><div class="value">\${avgTestDuration}</div></div>
+          <div class="summary-card"><h3>Run Duration</h3><div class="value">\${formatDuration(runSummary.duration)}</div></div>
+        </div>
+        <div class="dashboard-bottom-row">
+          <div style="display: grid; gap: 20px">
+            \${generatePieChartFromData(data.pieData, 400, 390)}
+            \${runSummary.environment && Object.keys(runSummary.environment).length > 0 
+              ? generateEnvironmentDashboardFromData(runSummary.environment) 
+              : '<div class="no-data">Environment data not available.</div>'}
+          </div>
+          \${generateSuitesWidgetFromData(data.suitesData)}
+        </div>
+      \`;
+    }
+    
+    // Test Run Summary tab generator
+    function generateTestRunSummaryTabHTML() {
+      const data = window._pulseData;
+      const results = data.results || [];
+      
+      if (results.length === 0) {
+        return '<div class="no-tests">No test results found in this run.</div>';
+      }
+      
+      // Generate minimal test list - just titles and status
+      const testListHTML = results.map((test, index) => {
+        const browser = test.browser || "unknown";
+        const testFileParts = test.name.split(" > ");
+        const testTitle = testFileParts[testFileParts.length - 1] || "Unnamed Test";
+        
+        return \`
+          <div class="test-case" data-status="\${test.status}" data-browser="\${sanitizeHTML(browser)}" data-tags="\${(test.tags || []).join(",").toLowerCase()}">
+            <div class="test-case-header" role="button" aria-expanded="false" data-test-index="\${index}">
+              <div class="test-case-summary">
+                <span class="status-badge \${getStatusClass(test.status)}">\${String(test.status).toUpperCase()}</span>
+                <span class="test-case-title" title="\${sanitizeHTML(test.name)}">\${sanitizeHTML(testTitle)}</span>
+                <span class="test-case-browser">(\${sanitizeHTML(browser)})</span>
+              </div>
+              <div class="test-case-meta">
+                \${test.tags && test.tags.length > 0 
+                  ? test.tags.map(t => \`<span class="tag">\${sanitizeHTML(t)}</span>\`).join(" ") 
+                  : ""}
+                <span class="test-duration">\${formatDuration(test.duration)}</span>
+              </div>
+            </div>
+            <div class="test-case-content" id="test-details-\${index}" style="display: none;"></div>
+          </div>
+        \`;
+      }).join("");
+      
+      return testListHTML;
+    }
+    
+    // AI Failure Analyzer tab generator
+    function generateAIFailureAnalyzerTabHTML() {
+      const results = window._pulseData.results || [];
+      const failedTests = results.filter(test => test.status === 'failed');
+      
+      if (failedTests.length === 0) {
+        return \`
+          <h2 class="tab-main-title">AI Failure Analysis</h2>
+          <div class="no-data">Congratulations! No failed tests in this run.</div>
+        \`;
+      }
+      
+      return \`
+        <h2 class="tab-main-title">AI Failure Analysis</h2>
+        <div class="ai-analyzer-stats">
+          <div class="stat-item">
+            <span class="stat-number">\${failedTests.length}</span>
+            <span class="stat-label">Failed Tests</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">\${new Set(failedTests.map(t => t.browser)).size}</span>
+            <span class="stat-label">Browsers</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">\${Math.round(failedTests.reduce((sum, test) => sum + (test.duration || 0), 0) / 1000)}s</span>
+            <span class="stat-label">Total Duration</span>
+          </div>
+        </div>
+        <p class="ai-analyzer-description">
+          Analyze failed tests using AI to get suggestions and potential fixes. Click the AI Fix button for specific failed test.
+        </p>
+        
+        <div class="compact-failure-list">
+          \${failedTests.map(test => {
+            const testTitle = test.name.split(" > ").pop() || "Unnamed Test";
+            const testJson = btoa(JSON.stringify(test));
+            const truncatedError = (test.errorMessage || "No error message").slice(0, 150) + 
+              (test.errorMessage && test.errorMessage.length > 150 ? "..." : "");
+            
+            return \`
+              <div class="compact-failure-item">
+                <div class="failure-header">
+                  <div class="failure-main-info">
+                    <h3 class="failure-title" title="\${sanitizeHTML(test.name)}">\${sanitizeHTML(testTitle)}</h3>
+                    <div class="failure-meta">
+                      <span class="browser-indicator">\${sanitizeHTML(test.browser || 'unknown')}</span>
+                      <span class="duration-indicator">\${formatDuration(test.duration)}</span>
+                    </div>
+                  </div>
+                  <button class="compact-ai-btn" onclick="getAIFix(this)" data-test-json="\${testJson}">
+                    <span class="ai-text">AI Fix</span>
+                  </button>
+                </div>
+                <div class="failure-error-preview">
+                  <div class="error-snippet">\${formatPlaywrightError(truncatedError)}</div>
+                  <button class="expand-error-btn" onclick="toggleErrorDetails(this)">
+                    <span class="expand-text">Show Full Error</span>
+                    <span class="expand-icon">▼</span>
+                  </button>
+                </div>
+                <div class="full-error-details" style="display: none;">
+                  <div class="full-error-content">
+                    \${formatPlaywrightError(test.errorMessage || "No detailed error message available")}
+                  </div>
+                </div>
+              </div>
+            \`;
+          }).join('')}
+        </div>
+        
+        <!-- AI Fix Modal -->
+        <div id="ai-fix-modal" class="ai-modal-overlay" onclick="closeAiModal()">
+          <div class="ai-modal-content" onclick="event.stopPropagation()">
+            <div class="ai-modal-header">
+              <h3 id="ai-fix-modal-title">AI Analysis</h3>
+              <span class="ai-modal-close" onclick="closeAiModal()">×</span>
+            </div>
+            <div class="ai-modal-body" id="ai-fix-modal-content">
+              <!-- Content will be injected by JavaScript -->
+            </div>
+          </div>
+        </div>
+      \`;
+    }
+  `;
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -1852,53 +2272,14 @@ function generateHTML(reportData, trendData = null) {
     runSummary.duration
   )}</div>
         </header>
-
         <div class="tabs">
-            <button class="tab-button active" onclick="openTab('dashboard')">Dashboard</button>
-            <button class="tab-button" onclick="openTab('test-runs')">Test Run Summary</button>
-            <button class="tab-button" onclick="openTab('test-history')">Test History</button>
-            <button class="tab-button" onclick="openTab('ai-failure-analyzer')">AI Failure Analyzer</button>
+            <button class="tab-button active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-button" data-tab="test-runs">Test Run Summary</button>
+            <button class="tab-button" data-tab="test-history">Test History</button>
+            <button class="tab-button" data-tab="ai-failure-analyzer">AI Failure Analyzer</button>
         </div>
-
         <div id="dashboard" class="tab-content active">
-            <div class="dashboard-grid">
-                <div class="summary-card">
-                    <h3>Total Tests</h3>
-                    <div class="value">${runSummary.totalTests}</div>
-                </div>
-                <div class="summary-card status-passed">
-                    <h3>Passed</h3>
-                    <div class="value">${runSummary.passed}</div>
-                    <div class="trend-percentage">${Math.round(
-                      (runSummary.passed / (runSummary.totalTests || 1)) * 100
-                    )}%</div>
-                </div>
-                <div class="summary-card status-failed">
-                    <h3>Failed</h3>
-                    <div class="value">${runSummary.failed}</div>
-                    <div class="trend-percentage">${Math.round(
-                      (runSummary.failed / (runSummary.totalTests || 1)) * 100
-                    )}%</div>
-                </div>
-                <div class="summary-card status-skipped">
-                    <h3>Skipped</h3>
-                    <div class="value">${runSummary.skipped || 0}</div>
-                    <div class="trend-percentage">${Math.round(
-                      ((runSummary.skipped || 0) / (runSummary.totalTests || 1)) * 100
-                    )}%</div>
-                </div>
-                <div class="summary-card">
-                   <h3>Avg. Test Time</h3>
-                   <div class="value">${
-                     runSummary.totalTests > 0
-                       ? formatDuration(runSummary.duration / runSummary.totalTests)
-                       : "0.0s"
-                   }</div>
-                </div>
-                <div class="summary-card">
-                    <h3>Run Duration</h3>
-                    <div class="value">${formatDuration(runSummary.duration)}</div>
-                </div>
+            <div class="tab-loading-placeholder">Loading dashboard...</div>
             </div>
             <div class="dashboard-bottom-row">
               <div style="display: grid; gap: 20px">
@@ -1921,7 +2302,6 @@ function generateHTML(reportData, trendData = null) {
                 ${generateSuitesWidget(suitesData)}
             </div>
         </div>
-
         <div id="test-runs" class="tab-content">
             <div class="filters">
                 <input type="text" id="filter-name" placeholder="Filter by test name/path..." style="border-color: black; border-style: outset;">
@@ -1933,13 +2313,8 @@ function generateHTML(reportData, trendData = null) {
                 </select>
                 <select id="filter-browser">
                     <option value="">All Browsers</option>
-                    ${Array.from(new Set(results.map((test) => test.browser)))
-                      .map(
-                        (browser) =>
-                          `<option value="${sanitizeHTML(
-                            browser
-                          )}">${sanitizeHTML(browser)}</option>`
-                      )
+                    ${Array.from(new Set((results || []).map(test => test.browser || "unknown")))
+                      .map(browser => `<option value="${sanitizeHTML(browser)}">${sanitizeHTML(browser)}</option>`)
                       .join("")}
                 </select>
                 <button id="expand-all-tests">Expand All</button>
@@ -1947,197 +2322,8 @@ function generateHTML(reportData, trendData = null) {
                 <button id="clear-run-summary-filters" class="clear-filters-btn">Clear Filters</button>
             </div>
             <div class="test-cases-list">
-                ${results
-                  .map((test, index) => {
-                    const browser = test.browser || "unknown"; // Default browser
-                    const testFileParts = test.name.split(" > ");
-                    const testTitle =
-                      testFileParts[testFileParts.length - 1] || "Unnamed Test";
-
-                    return `
-                    <div class="test-case" data-status="${
-                      test.status
-                    }" data-browser="${sanitizeHTML(
-                      browser
-                    )}" data-tags="${(test.tags || []).join(",").toLowerCase()}">
-                        <div class="test-case-header">
-                            <div class="test-case-summary">
-                               <span class="status-badge ${getStatusClass(
-                                 test.status
-                               )}">${String(test.status).toUpperCase()}</span>
-                                <span class="test-case-title" title="${sanitizeHTML(
-                                  test.name
-                                )}">${sanitizeHTML(testTitle)}</span>
-                                <span class="test-case-browser">(${sanitizeHTML(
-                                  browser
-                                )})</span>
-                            </div>
-                            <div class="test-case-meta">
-                                ${(test.tags &&
-                                  test.tags
-                                    .map((t) => `<span class="tag">${t}</span>`)
-                                    .join(" ")) ||
-                                  ""}
-                                <span class="test-duration">${formatDuration(
-                                  test.duration
-                                )}</span>
-                            </div>
-                        </div>
-                        <div class="test-case-content">
-                            <h4>Steps</h4>
-                            <div class="steps-list">
-                                ${test.steps
-                                  .map(
-                                    (step) => `
-                                <details class="step-item" style="--depth: ${
-                                  step.depth || 0
-                                };">
-                                    <summary class="step-header">
-                                        <span class="step-icon">${getStatusIcon(
-                                          step.status
-                                        )}</span>
-                                        <span class="step-title">${sanitizeHTML(
-                                          step.title
-                                        )}</span>
-                                        <span class="step-duration">${formatDuration(
-                                          step.duration
-                                        )}</span>
-                                    </summary>
-                                    <div class="step-details">
-                                        ${
-                                          step.codeLocation
-                                            ? `<div class="step-info code-section"><strong>Location:</strong> ${sanitizeHTML(
-                                                step.codeLocation
-                                              )}</div>`
-                                            : ""
-                                        }
-                                        ${
-                                          step.errorMessage
-                                            ? `<div class="test-error-summary"><h4>Error</h4><pre>${formatPlaywrightError(
-                                                step.errorMessage
-                                              )}</pre></div>`
-                                            : ""
-                                        }
-                                    </div>
-                                </details>
-                                `
-                                  )
-                                  .join("")}
-                            </div>
-                            ${
-                              test.screenshots && test.screenshots.length > 0
-                                ? `<div class="attachments-section"><h4>Screenshots</h4><div class="attachments-grid">${test.screenshots
-                                    .map(
-                                      (screenshot, index) => `
-                                <div class="attachment-item">
-                                    <a href="${screenshot}" target="_blank">
-                                        <img src="${screenshot}" alt="Screenshot ${
-                                        index + 1
-                                      }">
-                                    </a>
-                                </div>`
-                                    )
-                                    .join("")}</div></div>`
-                                : ""
-                            }
-                             ${
-                               test.videoPath && test.videoPath.length > 0
-                                 ? `<div class="attachments-section"><h4>Videos</h4><div class="attachments-grid">${test.videoPath
-                                     .map(
-                                       (video, index) => `
-                                <div class="attachment-item video-item">
-                                     <video controls>
-                                        <source src="${
-                                          video.dataUri
-                                        }" type="${video.mimeType}">
-                                    </video>
-                                    <div class="attachment-info">
-                                         <a href="${
-                                           video.dataUri
-                                         }" target="_blank" download="video-${index}.${
-                                         video.extension
-                                       }">Download Video</a>
-                                    </div>
-                                </div>`
-                                     )
-                                     .join("")}</div></div>`
-                                 : ""
-                             }
-                            ${
-                              test.tracePath
-                                ? `<div class="attachments-section">
-                                <h4>Trace File</h4>
-                                <div class="trace-item">
-                                    <a href="${test.tracePath}" download="trace.zip">Download Trace</a>
-                                </div>
-                            </div>`
-                                : ""
-                            }
-                            ${
-                              test.attachments && test.attachments.length > 0
-                                ? `<div class="attachments-section">
-                              <h4>Other Attachments</h4>
-                              <div class="attachments-grid">
-                                ${test.attachments
-                                  .map(
-                                    (attachment) => `
-                                  <div class="attachment-item generic-attachment">
-                                    <div class="attachment-icon">${getAttachmentIcon(
-                                      attachment.contentType
-                                    )}</div>
-                                    <div class="attachment-caption">
-                                      <span class="attachment-name">${sanitizeHTML(
-                                        attachment.name
-                                      )}</span>
-                                      <span class="attachment-type">${sanitizeHTML(
-                                        attachment.contentType
-                                      )}</span>
-                                    </div>
-                                    <div class="attachment-info">
-                                      <div class="trace-actions">
-                                        <a href="${
-                                          attachment.dataUri
-                                        }" target="_blank" class="view-full">View</a>
-                                        <a href="${
-                                          attachment.dataUri
-                                        }" download="${sanitizeHTML(
-                                        attachment.name
-                                      )}">Download</a>
-                                      </div>
-                                    </div>
-                                  </div>`
-                                  )
-                                  .join("")}
-                              </div>
-                            </div>`
-                                : ""
-                            }
-                            ${
-                              test.stdout && test.stdout.length > 0
-                                ? `<div class="console-output-section"><h4>Console Output (stdout)<button class="copy-btn" onclick="copyLogContent('stdout-log-${index}', this)">Copy</button></h4><div class="log-wrapper"><pre id="stdout-log-${index}" class="console-log stdout-log" style="background-color: #2d2d2d; color: wheat; padding: 1.25em; border-radius: 0.85em; line-height: 1.2;">${test.stdout
-                                    .map((line) => sanitizeHTML(line))
-                                    .join("\n")}</pre></div></div>`
-                                : ""
-                            }
-                            ${
-                              test.stderr && test.stderr.length > 0
-                                ? `<div class="console-output-section"><h4>Console Output (stderr)</h4><pre class="console-log stderr-log">${test.stderr
-                                    .map((line) => sanitizeHTML(line))
-                                    .join("\n")}</pre></div>`
-                                : ""
-                            }
-                            ${
-                              test.snippet
-                                ? `<div class="code-section"><h4>Error Snippet</h4><pre><code>${formatPlaywrightError(
-                                    test.snippet
-                                  )}</code></pre></div>`
-                                : ""
-                            }
-                        </div>
-                    </div>`;
-                  })
-                  .join("")}
-            </div>
+                <div class="tab-loading-placeholder">Loading test cases...</div>
+        </div>
         </div>
         
         <!-- Test History tab - server-rendered as before -->
@@ -2175,7 +2361,7 @@ function generateHTML(reportData, trendData = null) {
           }
         </div>
         <div id="ai-failure-analyzer" class="tab-content">
-          ${generateAIFailureAnalyzerTab(results)}
+            <div class="tab-loading-placeholder">Loading failure analyzer...</div>
         </div>
         <footer style="padding: 0.5rem; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); text-align: center; font-family: 'Segoe UI', system-ui, sans-serif;">
             <div style="display: inline-flex; align-items: center; gap: 0.5rem; color: #333; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">
@@ -2186,100 +2372,29 @@ function generateHTML(reportData, trendData = null) {
         </footer>
     </div>
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const tabs = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(item => item.classList.remove('active'));
-                tab.classList.add('active');
-
-                const target = tab.textContent.trim().toLowerCase().replace(/ /g, '-');
-                tabContents.forEach(content => {
-                    content.style.display = content.id === target ? 'block' : 'none';
-                });
-            });
-        });
-
-        const testCaseHeaders = document.querySelectorAll('.test-case-header');
-        testCaseHeaders.forEach(header => {
-            header.addEventListener('click', () => {
-                const content = header.nextElementSibling;
-                content.style.display = content.style.display === 'block' ? 'none' : 'block';
-            });
-        });
-
-        // Filters for Test Run Summary
-        const nameFilter = document.getElementById('filter-name');
-        const statusFilter = document.getElementById('filter-status');
-        const browserFilter = document.getElementById('filter-browser');
-        const clearRunSummaryFiltersBtn = document.getElementById('clear-run-summary-filters');
-
-        function filterTestCases() {
-            const nameValue = nameFilter.value.toLowerCase();
-            const statusValue = statusFilter.value;
-            const browserValue = browserFilter.value;
-
-            document.querySelectorAll('.test-case').forEach(testCase => {
-                const title = testCase.querySelector('.test-case-title').title.toLowerCase();
-                const status = testCase.dataset.status;
-                const browser = testCase.dataset.browser;
-                const nameMatch = title.includes(nameValue);
-                const statusMatch = !statusValue || status === statusValue;
-                const browserMatch = !browserValue || browser === browserValue;
-
-                testCase.style.display = nameMatch && statusMatch && browserMatch ? '' : 'none';
-            });
+    
+    // Ensure formatDuration is globally available
+    if (typeof formatDuration === 'undefined') { 
+        function formatDuration(ms) { 
+            if (ms === undefined || ms === null || ms < 0) return "0.0s"; 
+            return (ms / 1000).toFixed(1) + "s"; 
         }
-
-        nameFilter.addEventListener('input', filterTestCases);
-        statusFilter.addEventListener('change', filterTestCases);
-        browserFilter.addEventListener('change', filterTestCases);
-        
-        clearRunSummaryFiltersBtn.addEventListener('click', () => {
-          nameFilter.value = '';
-          statusFilter.value = '';
-          browserFilter.value = '';
-          filterTestCases();
-        });
-
-        // Expand/Collapse All
-        document.getElementById('expand-all-tests').addEventListener('click', () => {
-            document.querySelectorAll('.test-case-content').forEach(el => el.style.display = 'block');
-        });
-        document.getElementById('collapse-all-tests').addEventListener('click', () => {
-            document.querySelectorAll('.test-case-content').forEach(el => el.style.display = 'none');
-        });
-
-        // Filters for Test History
-        const historyNameFilter = document.getElementById('history-filter-name');
-        const historyStatusFilter = document.getElementById('history-filter-status');
-        const clearHistoryFiltersBtn = document.getElementById('clear-history-filters');
-
-        function filterTestHistoryCards() {
-          const nameValue = historyNameFilter.value.toLowerCase();
-          const statusValue = historyStatusFilter.value;
-          
-          document.querySelectorAll('.test-history-card').forEach(card => {
-            const testTitle = card.dataset.testName;
-            const latestStatus = card.dataset.latestStatus;
-
-            const nameMatch = testTitle.includes(nameValue);
-            const statusMatch = !statusValue || latestStatus === statusValue;
-            
-            card.style.display = (nameMatch && statusMatch) ? '' : 'none';
-          });
+    }
+    function copyLogContent(elementId, button) {
+        const logElement = document.getElementById(elementId);
+        if (!logElement) {
+            console.error('Could not find log element with ID:', elementId);
+            return;
         }
-
-        historyNameFilter.addEventListener('input', filterTestHistoryCards);
-        historyStatusFilter.addEventListener('change', filterTestHistoryCards);
-        clearHistoryFiltersBtn.addEventListener('click', () => {
-            historyNameFilter.value = '';
-            historyStatusFilter.value = '';
-            filterTestHistoryCards();
+        navigator.clipboard.writeText(logElement.innerText).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy log content:', err);
+            button.textContent = 'Failed';
+             setTimeout(() => { button.textContent = 'Copy'; }, 2000);
         });
-    });
+    }
 
     function getAIFix(button) {
         const modal = document.getElementById('ai-fix-modal');
@@ -2399,39 +2514,154 @@ function generateHTML(reportData, trendData = null) {
             button.classList.remove('expanded');
         }
     }
-    document.addEventListener('DOMContentLoaded', () => {
-        const lazyLoadObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const element = entry.target;
-                    const renderFunctionName = element.dataset.renderFunctionName;
-                    if (renderFunctionName && typeof window[renderFunctionName] === 'function') {
-                        window[renderFunctionName]();
-                    }
-                    observer.unobserve(element);
+     
+    function initializeReportInteractivity() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                const activeContent = document.getElementById(tabId);
+                if (activeContent) {
+                    activeContent.classList.add('active');
                 }
             });
-        }, { rootMargin: '0px 0px 200px 0px' });
-        document.querySelectorAll('.lazy-load-chart').forEach(chart => {
-            lazyLoadObserver.observe(chart);
         });
-    });
-
-    function copyLogContent(elementId, button) {
-        const logElement = document.getElementById(elementId);
-        if (!logElement) {
-            console.error('Could not find log element with ID:', elementId);
-            return;
+        // --- Test Run Summary Filters ---
+        const nameFilter = document.getElementById('filter-name');
+        const statusFilter = document.getElementById('filter-status');
+        const browserFilter = document.getElementById('filter-browser');
+        const clearRunSummaryFiltersBtn = document.getElementById('clear-run-summary-filters'); 
+        function filterTestCases() { 
+            const nameValue = nameFilter ? nameFilter.value.toLowerCase() : "";
+            const statusValue = statusFilter ? statusFilter.value : "";
+            const browserValue = browserFilter ? browserFilter.value : "";
+            document.querySelectorAll('#test-runs .test-case').forEach(testCaseElement => {
+                const titleElement = testCaseElement.querySelector('.test-case-title');
+                const fullTestName = titleElement ? titleElement.getAttribute('title').toLowerCase() : "";
+                const status = testCaseElement.getAttribute('data-status');
+                const browser = testCaseElement.getAttribute('data-browser');
+                const nameMatch = fullTestName.includes(nameValue);
+                const statusMatch = !statusValue || status === statusValue;
+                const browserMatch = !browserValue || browser === browserValue;
+                testCaseElement.style.display = (nameMatch && statusMatch && browserMatch) ? '' : 'none';
+            });
         }
-        navigator.clipboard.writeText(logElement.innerText).then(() => {
-            button.textContent = 'Copied!';
-            setTimeout(() => { button.textContent = 'Copy'; }, 2000);
-        }).catch(err => {
-            console.error('Failed to copy log content:', err);
-            button.textContent = 'Failed';
-             setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+        if(nameFilter) nameFilter.addEventListener('input', filterTestCases);
+        if(statusFilter) statusFilter.addEventListener('change', filterTestCases);
+        if(browserFilter) browserFilter.addEventListener('change', filterTestCases);
+        if(clearRunSummaryFiltersBtn) clearRunSummaryFiltersBtn.addEventListener('click', () => {
+            if(nameFilter) nameFilter.value = ''; if(statusFilter) statusFilter.value = ''; if(browserFilter) browserFilter.value = '';
+            filterTestCases();
         });
+        // --- Test History Filters ---
+        const historyNameFilter = document.getElementById('history-filter-name');
+        const historyStatusFilter = document.getElementById('history-filter-status');
+        const clearHistoryFiltersBtn = document.getElementById('clear-history-filters'); 
+        function filterTestHistoryCards() { 
+            const nameValue = historyNameFilter ? historyNameFilter.value.toLowerCase() : "";
+            const statusValue = historyStatusFilter ? historyStatusFilter.value : "";
+            document.querySelectorAll('.test-history-card').forEach(card => {
+                const testTitle = card.getAttribute('data-test-name').toLowerCase(); 
+                const latestStatus = card.getAttribute('data-latest-status');
+                const nameMatch = testTitle.includes(nameValue);
+                const statusMatch = !statusValue || latestStatus === statusValue;
+                card.style.display = (nameMatch && statusMatch) ? '' : 'none';
+            });
+        }
+        if(historyNameFilter) historyNameFilter.addEventListener('input', filterTestHistoryCards);
+        if(historyStatusFilter) historyStatusFilter.addEventListener('change', filterTestHistoryCards);
+        if(clearHistoryFiltersBtn) clearHistoryFiltersBtn.addEventListener('click', () => {
+            if(historyNameFilter) historyNameFilter.value = ''; if(historyStatusFilter) historyStatusFilter.value = '';
+            filterTestHistoryCards();
+        });
+        // --- Expand/Collapse and Toggle Details Logic ---
+        function toggleElementDetails(headerElement, contentSelector) { 
+            let contentElement;
+            if (headerElement.classList.contains('test-case-header')) {
+                contentElement = headerElement.parentElement.querySelector('.test-case-content');
+            } else if (headerElement.classList.contains('step-header')) {
+                contentElement = headerElement.nextElementSibling;
+                if (!contentElement || !contentElement.matches(contentSelector || '.step-details')) {
+                     contentElement = null;
+                }
+            }
+            if (contentElement) {
+                 const isExpanded = contentElement.style.display === 'block';
+                 contentElement.style.display = isExpanded ? 'none' : 'block';
+                 headerElement.setAttribute('aria-expanded', String(!isExpanded));
+            }
+        }
+        document.querySelectorAll('#test-runs .test-case-header').forEach(header => {
+            header.addEventListener('click', () => toggleElementDetails(header)); 
+        });
+        document.querySelectorAll('#test-runs .step-header').forEach(header => {
+            header.addEventListener('click', () => toggleElementDetails(header, '.step-details'));
+        });
+        const expandAllBtn = document.getElementById('expand-all-tests');
+        const collapseAllBtn = document.getElementById('collapse-all-tests');
+        function setAllTestRunDetailsVisibility(displayMode, ariaState) {
+            document.querySelectorAll('#test-runs .test-case-content').forEach(el => el.style.display = displayMode);
+            document.querySelectorAll('#test-runs .step-details').forEach(el => el.style.display = displayMode);
+            document.querySelectorAll('#test-runs .test-case-header[aria-expanded]').forEach(el => el.setAttribute('aria-expanded', ariaState));
+            document.querySelectorAll('#test-runs .step-header[aria-expanded]').forEach(el => el.setAttribute('aria-expanded', ariaState));
+        }
+        if (expandAllBtn) expandAllBtn.addEventListener('click', () => setAllTestRunDetailsVisibility('block', 'true'));
+        if (collapseAllBtn) collapseAllBtn.addEventListener('click', () => setAllTestRunDetailsVisibility('none', 'false'));
+        // --- Intersection Observer for Lazy Loading ---
+        const lazyLoadElements = document.querySelectorAll('.lazy-load-chart, .lazy-load-iframe, .lazy-load-image, .lazy-load-video, .lazy-load-attachment');
+        if ('IntersectionObserver' in window) {
+            let lazyObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const element = entry.target;
+                        if (element.classList.contains('lazy-load-image')) {
+                            if (element.dataset.src) {
+                                element.src = element.dataset.src;
+                                element.removeAttribute('data-src');
+                            }
+                        } else if (element.classList.contains('lazy-load-video')) {
+                            const source = element.querySelector('source');
+                            if (source && source.dataset.src) {
+                                source.src = source.dataset.src;
+                                source.removeAttribute('data-src');
+                                element.load();
+                            }
+                        } else if (element.classList.contains('lazy-load-attachment')) {
+                            if (element.dataset.href) {
+                                element.href = element.dataset.href;
+                                element.removeAttribute('data-href');
+                            }
+                        } else if (element.classList.contains('lazy-load-iframe')) {
+                            if (element.dataset.src) {
+                                element.src = element.dataset.src;
+                                element.removeAttribute('data-src');
+                            }
+                        } else if (element.classList.contains('lazy-load-chart')) {
+                            const renderFunctionName = element.dataset.renderFunctionName;
+                            if (renderFunctionName && typeof window[renderFunctionName] === 'function') {
+                                window[renderFunctionName]();
+                            }
+                        }
+                        observer.unobserve(element);
+                    }
+                });
+            }, { rootMargin: "0px 0px 200px 0px" });
+            lazyLoadElements.forEach(el => lazyObserver.observe(el));
+        } else { // Fallback for browsers without IntersectionObserver
+            lazyLoadElements.forEach(element => {
+                if (element.classList.contains('lazy-load-image') && element.dataset.src) element.src = element.dataset.src;
+                else if (element.classList.contains('lazy-load-video')) { const source = element.querySelector('source'); if (source && source.dataset.src) { source.src = source.dataset.src; element.load(); } }
+                else if (element.classList.contains('lazy-load-attachment') && element.dataset.href) element.href = element.dataset.href;
+                else if (element.classList.contains('lazy-load-iframe') && element.dataset.src) element.src = element.dataset.src;
+                else if (element.classList.contains('lazy-load-chart')) { const renderFn = element.dataset.renderFunctionName; if(renderFn && window[renderFn]) window[renderFn](); }
+            });
+        }
     }
+    document.addEventListener('DOMContentLoaded', initializeReportInteractivity);
 
     function copyErrorToClipboard(button) {
       const errorContainer = button.closest('.test-error-summary');
@@ -2464,7 +2694,6 @@ function generateHTML(reportData, trendData = null) {
         button.textContent = 'Failed';
       });
     }
-    
 </script>
 </body>
 </html>
