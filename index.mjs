@@ -1,4 +1,3 @@
-
 #!/usr/bin/env node
 
 import * as fs from "fs/promises";
@@ -28,6 +27,1666 @@ const DEFAULT_OUTPUT_DIR = "pulse-report";
 const DEFAULT_JSON_FILE = "playwright-pulse-report.json";
 const DEFAULT_HTML_FILE = "playwright-pulse-static-report.html";
 
+// Helper functions
+export function ansiToHtml(text) {
+  if (!text) {
+    return "";
+  }
+  const codes = {
+    0: "color:inherit;font-weight:normal;font-style:normal;text-decoration:none;opacity:1;background-color:inherit;",
+    1: "font-weight:bold",
+    2: "opacity:0.6",
+    3: "font-style:italic",
+    4: "text-decoration:underline",
+    30: "color:#000", // black
+    31: "color:#d00", // red
+    32: "color:#0a0", // green
+    33: "color:#aa0", // yellow
+    34: "color:#00d", // blue
+    35: "color:#a0a", // magenta
+    36: "color:#0aa", // cyan
+    37: "color:#aaa", // light grey
+    39: "color:inherit", // default foreground color
+    40: "background-color:#000", // black background
+    41: "background-color:#d00", // red background
+    42: "background-color:#0a0", // green background
+    43: "background-color:#aa0", // yellow background
+    44: "background-color:#00d", // blue background
+    45: "background-color:#a0a", // magenta background
+    46: "background-color:#0aa", // cyan background
+    47: "background-color:#aaa", // light grey background
+    49: "background-color:inherit", // default background color
+    90: "color:#555", // dark grey
+    91: "color:#f55", // light red
+    92: "color:#5f5", // light green
+    93: "color:#ff5", // light yellow
+    94: "color:#55f", // light blue
+    95: "color:#f5f", // light magenta
+    96: "color:#5ff", // light cyan
+    97: "color:#fff", // white
+  };
+
+  let currentStylesArray = [];
+  let html = "";
+  let openSpan = false;
+
+  const applyStyles = () => {
+    if (openSpan) {
+      html += "</span>";
+      openSpan = false;
+    }
+    if (currentStylesArray.length > 0) {
+      const styleString = currentStylesArray.filter((s) => s).join(";");
+      if (styleString) {
+        html += `<span style="${styleString}">`;
+        openSpan = true;
+      }
+    }
+  };
+  const resetAndApplyNewCodes = (newCodesStr) => {
+    const newCodes = newCodesStr.split(";");
+    if (newCodes.includes("0")) {
+      currentStylesArray = [];
+      if (codes["0"]) currentStylesArray.push(codes["0"]);
+    }
+    for (const code of newCodes) {
+      if (code === "0") continue;
+      if (codes[code]) {
+        if (code === "39") {
+          currentStylesArray = currentStylesArray.filter(
+            (s) => !s.startsWith("color:")
+          );
+          currentStylesArray.push("color:inherit");
+        } else if (code === "49") {
+          currentStylesArray = currentStylesArray.filter(
+            (s) => !s.startsWith("background-color:")
+          );
+          currentStylesArray.push("background-color:inherit");
+        } else {
+          currentStylesArray.push(codes[code]);
+        }
+      } else if (code.startsWith("38;2;") || code.startsWith("48;2;")) {
+        const parts = code.split(";");
+        const type = parts[0] === "38" ? "color" : "background-color";
+        if (parts.length === 5) {
+          currentStylesArray = currentStylesArray.filter(
+            (s) => !s.startsWith(type + ":")
+          );
+          currentStylesArray.push(
+            `${type}:rgb(${parts[2]},${parts[3]},${parts[4]})`
+          );
+        }
+      }
+    }
+    applyStyles();
+  };
+  const segments = text.split(/(\x1b\[[0-9;]*m)/g);
+  for (const segment of segments) {
+    if (!segment) continue;
+    if (segment.startsWith("\x1b[") && segment.endsWith("m")) {
+      const command = segment.slice(2, -1);
+      resetAndApplyNewCodes(command);
+    } else {
+      const escapedContent = segment
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+      html += escapedContent;
+    }
+  }
+  if (openSpan) {
+    html += "</span>";
+  }
+  return html;
+}
+function sanitizeHTML(str) {
+  if (str === null || str === undefined) return "";
+  return String(str).replace(
+    /[&<>"']/g,
+    (match) =>
+      ({ "&": "&", "<": "<", ">": ">", '"': '"', "'": "'" }[match] || match)
+  );
+}
+function capitalize(str) {
+  if (!str) return "";
+  return str[0].toUpperCase() + str.slice(1).toLowerCase();
+}
+function formatPlaywrightError(error) {
+  const commandOutput = ansiToHtml(error || error.message);
+  return convertPlaywrightErrorToHTML(commandOutput);
+}
+function convertPlaywrightErrorToHTML(str) {
+    if (!str) return "";
+    return str
+      .replace(/^(\s+)/gm, (match) =>
+        match.replace(/ /g, " ").replace(/\t/g, "  ")
+      )
+      .replace(/<red>/g, '<span style="color: red;">')
+      .replace(/<green>/g, '<span style="color: green;">')
+      .replace(/<dim>/g, '<span style="opacity: 0.6;">')
+      .replace(/<intensity>/g, '<span style="font-weight: bold;">')
+      .replace(/<\/color>/g, "</span>")
+      .replace(/<\/intensity>/g, "</span>")
+      .replace(/\n/g, "<br>");
+}
+function formatDuration(ms, options = {}) {
+  const {
+    precision = 1,
+    invalidInputReturn = "N/A",
+    defaultForNullUndefinedNegative = null,
+  } = options;
+
+  const validPrecision = Math.max(0, Math.floor(precision));
+  const zeroWithPrecision = (0).toFixed(validPrecision) + "s";
+  const resolvedNullUndefNegReturn =
+    defaultForNullUndefinedNegative === null
+      ? zeroWithPrecision
+      : defaultForNullUndefinedNegative;
+
+  if (ms === undefined || ms === null) {
+    return resolvedNullUndefNegReturn;
+  }
+
+  const numMs = Number(ms);
+
+  if (Number.isNaN(numMs) || !Number.isFinite(numMs)) {
+    return invalidInputReturn;
+  }
+
+  if (numMs < 0) {
+    return resolvedNullUndefNegReturn;
+  }
+
+  if (numMs === 0) {
+    return zeroWithPrecision;
+  }
+
+  const MS_PER_SECOND = 1000;
+  const SECONDS_PER_MINUTE = 60;
+  const MINUTES_PER_HOUR = 60;
+  const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
+
+  const totalRawSeconds = numMs / MS_PER_SECOND;
+
+  if (
+    totalRawSeconds < SECONDS_PER_MINUTE &&
+    Math.ceil(totalRawSeconds) < SECONDS_PER_MINUTE
+  ) {
+    return `${totalRawSeconds.toFixed(validPrecision)}s`;
+  } else {
+    const totalMsRoundedUpToSecond =
+      Math.ceil(numMs / MS_PER_SECOND) * MS_PER_SECOND;
+
+    let remainingMs = totalMsRoundedUpToSecond;
+
+    const h = Math.floor(remainingMs / (MS_PER_SECOND * SECONDS_PER_HOUR));
+    remainingMs %= MS_PER_SECOND * SECONDS_PER_HOUR;
+
+    const m = Math.floor(remainingMs / (MS_PER_SECOND * SECONDS_PER_MINUTE));
+    remainingMs %= MS_PER_SECOND * SECONDS_PER_MINUTE;
+
+    const s = Math.floor(remainingMs / MS_PER_SECOND);
+
+    const parts = [];
+    if (h > 0) {
+      parts.push(`${h}h`);
+    }
+    if (h > 0 || m > 0 || numMs >= MS_PER_SECOND * SECONDS_PER_MINUTE) {
+      parts.push(`${m}m`);
+    }
+    parts.push(`${s}s`);
+
+    return parts.join(" ");
+  }
+}
+function generateTestTrendsChart(trendData) {
+  if (!trendData || !trendData.overall || trendData.overall.length === 0) {
+    return '<div class="no-data">No overall trend data available for test counts.</div>';
+  }
+
+  const chartId = `testTrendsChart-${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2, 7)}`;
+  const renderFunctionName = `renderTestTrendsChart_${chartId.replace(
+    /-/g,
+    "_"
+  )}`;
+  const runs = trendData.overall;
+
+  const series = [
+    {
+      name: "Total",
+      data: runs.map((r) => r.totalTests),
+      color: "var(--primary-color)",
+      marker: { symbol: "circle" },
+    },
+    {
+      name: "Passed",
+      data: runs.map((r) => r.passed),
+      color: "var(--success-color)",
+      marker: { symbol: "circle" },
+    },
+    {
+      name: "Failed",
+      data: runs.map((r) => r.failed),
+      color: "var(--danger-color)",
+      marker: { symbol: "circle" },
+    },
+    {
+      name: "Skipped",
+      data: runs.map((r) => r.skipped || 0),
+      color: "var(--warning-color)",
+      marker: { symbol: "circle" },
+    },
+  ];
+  const runsForTooltip = runs.map((r) => ({
+    runId: r.runId,
+    timestamp: r.timestamp,
+    duration: r.duration,
+  }));
+
+  const categoriesString = JSON.stringify(runs.map((run, i) => `Run ${i + 1}`));
+  const seriesString = JSON.stringify(series);
+  const runsForTooltipString = JSON.stringify(runsForTooltip);
+
+  return `
+      <div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}">
+          <div class="no-data">Loading Test Volume Trends...</div>
+      </div>
+      <script>
+          window.${renderFunctionName} = function() {
+              const chartContainer = document.getElementById('${chartId}');
+              if (!chartContainer) { console.error("Chart container ${chartId} not found for lazy loading."); return; }
+              if (typeof Highcharts !== 'undefined' && typeof formatDuration !== 'undefined') {
+                  try {
+                      chartContainer.innerHTML = ''; // Clear placeholder
+                      const chartOptions = {
+                          chart: { type: "line", height: 350, backgroundColor: "transparent" },
+                          title: { text: null },
+                          xAxis: { categories: ${categoriesString}, crosshair: true, labels: { style: { color: 'var(--text-color-secondary)', fontSize: '12px' }}},
+                          yAxis: { title: { text: "Test Count", style: { color: 'var(--text-color)'} }, min: 0, labels: { style: { color: 'var(--text-color-secondary)', fontSize: '12px' }}},
+                          legend: { layout: "horizontal", align: "center", verticalAlign: "bottom", itemStyle: { fontSize: "12px", color: 'var(--text-color)' }},
+                          plotOptions: { series: { marker: { radius: 4, states: { hover: { radius: 6 }}}, states: { hover: { halo: { size: 5, opacity: 0.1 }}}}, line: { lineWidth: 2.5 }},
+                          tooltip: {
+                              shared: true, useHTML: true, backgroundColor: 'rgba(10,10,10,0.92)', borderColor: 'rgba(10,10,10,0.92)', style: { color: '#f5f5f5' },
+                              formatter: function () {
+                                  const runsData = ${runsForTooltipString};
+                                  const pointIndex = this.points[0].point.x;
+                                  const run = runsData[pointIndex];
+                                  let tooltip = '<strong>Run ' + (run.runId || pointIndex + 1) + '</strong><br>' + 'Date: ' + new Date(run.timestamp).toLocaleString() + '<br><br>';
+                                  this.points.forEach(point => { tooltip += '<span style="color:' + point.color + '">●</span> ' + point.series.name + ': <b>' + point.y + '</b><br>'; });
+                                  tooltip += '<br>Duration: ' + formatDuration(run.duration);
+                                  return tooltip;
+                              }
+                          },
+                          series: ${seriesString},
+                          credits: { enabled: false }
+                      };
+                      Highcharts.chart('${chartId}', chartOptions);
+                  } catch (e) {
+                      console.error("Error rendering chart ${chartId} (lazy):", e);
+                      chartContainer.innerHTML = '<div class="no-data">Error rendering test trends chart.</div>';
+                  }
+              } else {
+                  chartContainer.innerHTML = '<div class="no-data">Charting library not available for test trends.</div>';
+              }
+          };
+      </script>
+  `;
+}
+function generateDurationTrendChart(trendData) {
+  if (!trendData || !trendData.overall || trendData.overall.length === 0) {
+    return '<div class="no-data">No overall trend data available for durations.</div>';
+  }
+  const chartId = `durationTrendChart-${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2, 7)}`;
+  const renderFunctionName = `renderDurationTrendChart_${chartId.replace(
+    /-/g,
+    "_"
+  )}`;
+  const runs = trendData.overall;
+
+  const accentColorAltRGB = "255, 152, 0"; // Assuming var(--accent-color-alt) is Orange #FF9800
+
+  const chartDataString = JSON.stringify(runs.map((run) => run.duration));
+  const categoriesString = JSON.stringify(runs.map((run, i) => `Run ${i + 1}`));
+  const runsForTooltip = runs.map((r) => ({
+    runId: r.runId,
+    timestamp: r.timestamp,
+    duration: r.duration,
+    totalTests: r.totalTests,
+  }));
+  const runsForTooltipString = JSON.stringify(runsForTooltip);
+
+  const seriesStringForRender = `[{
+      name: 'Duration',
+      data: ${chartDataString},
+      color: 'var(--accent-color-alt)',
+      type: 'area',
+      marker: { symbol: 'circle', enabled: true, radius: 4, states: { hover: { radius: 6, lineWidthPlus: 0 } } },
+      fillColor: { linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 }, stops: [[0, 'rgba(${accentColorAltRGB}, 0.4)'], [1, 'rgba(${accentColorAltRGB}, 0.05)']] },
+      lineWidth: 2.5
+  }]`;
+
+  return `
+      <div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}">
+          <div class="no-data">Loading Duration Trends...</div>
+      </div>
+      <script>
+          window.${renderFunctionName} = function() {
+              const chartContainer = document.getElementById('${chartId}');
+              if (!chartContainer) { console.error("Chart container ${chartId} not found for lazy loading."); return; }
+              if (typeof Highcharts !== 'undefined' && typeof formatDuration !== 'undefined') {
+                  try {
+                      chartContainer.innerHTML = ''; // Clear placeholder
+                      const chartOptions = {
+                          chart: { type: 'area', height: 350, backgroundColor: 'transparent' },
+                          title: { text: null },
+                          xAxis: { categories: ${categoriesString}, crosshair: true, labels: { style: { color: 'var(--text-color-secondary)', fontSize: '12px' }}},
+                          yAxis: {
+                              title: { text: 'Duration', style: { color: 'var(--text-color)' } },
+                              labels: { formatter: function() { return formatDuration(this.value); }, style: { color: 'var(--text-color-secondary)', fontSize: '12px' }},
+                              min: 0
+                          },
+                          legend: { layout: 'horizontal', align: 'center', verticalAlign: 'bottom', itemStyle: { fontSize: '12px', color: 'var(--text-color)' }},
+                          plotOptions: { area: { lineWidth: 2.5, states: { hover: { lineWidthPlus: 0 } }, threshold: null }},
+                          tooltip: {
+                              shared: true, useHTML: true, backgroundColor: 'rgba(10,10,10,0.92)', borderColor: 'rgba(10,10,10,0.92)', style: { color: '#f5f5f5' },
+                              formatter: function () {
+                                  const runsData = ${runsForTooltipString};
+                                  const pointIndex = this.points[0].point.x;
+                                  const run = runsData[pointIndex];
+                                  let tooltip = '<strong>Run ' + (run.runId || pointIndex + 1) + '</strong><br>' + 'Date: ' + new Date(run.timestamp).toLocaleString() + '<br>';
+                                  this.points.forEach(point => { tooltip += '<span style="color:' + point.series.color + '">●</span> ' + point.series.name + ': <b>' + formatDuration(point.y) + '</b><br>'; });
+                                  tooltip += '<br>Tests: ' + run.totalTests;
+                                  return tooltip;
+                              }
+                          },
+                          series: ${seriesStringForRender}, // This is already a string representation of an array
+                          credits: { enabled: false }
+                      };
+                      Highcharts.chart('${chartId}', chartOptions);
+                  } catch (e) {
+                      console.error("Error rendering chart ${chartId} (lazy):", e);
+                      chartContainer.innerHTML = '<div class="no-data">Error rendering duration trend chart.</div>';
+                  }
+              } else {
+                  chartContainer.innerHTML = '<div class="no-data">Charting library not available for duration trends.</div>';
+              }
+          };
+      </script>
+  `;
+}
+function formatDate(dateStrOrDate) {
+  if (!dateStrOrDate) return "N/A";
+  try {
+    const date = new Date(dateStrOrDate);
+    if (isNaN(date.getTime())) return "Invalid Date";
+    return (
+      date.toLocaleDateString(undefined, {
+        year: "2-digit",
+        month: "2-digit",
+        day: "2-digit",
+      }) +
+      " " +
+      date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+    );
+  } catch (e) {
+    return "Invalid Date Format";
+  }
+}
+function generateTestHistoryChart(history) {
+  if (!history || history.length === 0)
+    return '<div class="no-data-chart">No data for chart</div>';
+  const validHistory = history.filter(
+    (h) => h && typeof h.duration === "number" && h.duration >= 0
+  );
+  if (validHistory.length === 0)
+    return '<div class="no-data-chart">No valid data for chart</div>';
+
+  const chartId = `testHistoryChart-${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2, 7)}`;
+  const renderFunctionName = `renderTestHistoryChart_${chartId.replace(
+    /-/g,
+    "_"
+  )}`;
+
+  const seriesDataPoints = validHistory.map((run) => {
+    let color;
+    switch (String(run.status).toLowerCase()) {
+      case "passed":
+        color = "var(--success-color)";
+        break;
+      case "failed":
+        color = "var(--danger-color)";
+        break;
+      case "skipped":
+        color = "var(--warning-color)";
+        break;
+      default:
+        color = "var(--dark-gray-color)";
+    }
+    return {
+      y: run.duration,
+      marker: {
+        fillColor: color,
+        symbol: "circle",
+        radius: 3.5,
+        states: { hover: { radius: 5 } },
+      },
+      status: run.status,
+      runId: run.runId,
+    };
+  });
+
+  const accentColorRGB = "103, 58, 183"; // Assuming var(--accent-color) is Deep Purple #673ab7
+
+  const categoriesString = JSON.stringify(
+    validHistory.map((_, i) => `R${i + 1}`)
+  );
+  const seriesDataPointsString = JSON.stringify(seriesDataPoints);
+
+  return `
+      <div id="${chartId}" style="width: 320px; height: 100px;" class="lazy-load-chart" data-render-function-name="${renderFunctionName}">
+          <div class="no-data-chart">Loading History...</div>
+      </div>
+      <script>
+          window.${renderFunctionName} = function() {
+              const chartContainer = document.getElementById('${chartId}');
+              if (!chartContainer) { console.error("Chart container ${chartId} not found for lazy loading."); return; }
+              if (typeof Highcharts !== 'undefined' && typeof formatDuration !== 'undefined') {
+                  try {
+                      chartContainer.innerHTML = ''; // Clear placeholder
+                      const chartOptions = {
+                          chart: { type: 'area', height: 100, width: 320, backgroundColor: 'transparent', spacing: [10,10,15,35] },
+                          title: { text: null },
+                          xAxis: { categories: ${categoriesString}, labels: { style: { fontSize: '10px', color: 'var(--text-color-secondary)' }}},
+                          yAxis: {
+                              title: { text: null },
+                              labels: { formatter: function() { return formatDuration(this.value); }, style: { fontSize: '10px', color: 'var(--text-color-secondary)' }, align: 'left', x: -35, y: 3 },
+                              min: 0, gridLineWidth: 0, tickAmount: 4
+                          },
+                          legend: { enabled: false },
+                          plotOptions: {
+                              area: {
+                                  lineWidth: 2, lineColor: 'var(--accent-color)',
+                                  fillColor: { linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 }, stops: [[0, 'rgba(${accentColorRGB}, 0.4)'],[1, 'rgba(${accentColorRGB}, 0)']]},
+                                  marker: { enabled: true }, threshold: null
+                              }
+                          },
+                          tooltip: {
+                              useHTML: true, backgroundColor: 'rgba(10,10,10,0.92)', borderColor: 'rgba(10,10,10,0.92)', style: { color: '#f5f5f5', padding: '8px' },
+                              formatter: function() {
+                                  const pointData = this.point;
+                                  let statusBadgeHtml = '<span style="padding: 2px 5px; border-radius: 3px; font-size: 0.9em; font-weight: 600; color: white; text-transform: uppercase; background-color: ';
+                                  switch(String(pointData.status).toLowerCase()) {
+                                      case 'passed': statusBadgeHtml += 'var(--success-color)'; break;
+                                      case 'failed': statusBadgeHtml += 'var(--danger-color)'; break;
+                                      case 'skipped': statusBadgeHtml += 'var(--warning-color)'; break;
+                                      default: statusBadgeHtml += 'var(--dark-gray-color)';
+                                  }
+                                  statusBadgeHtml += ';">' + String(pointData.status).toUpperCase() + '</span>';
+                                  return '<strong>Run ' + (pointData.runId || (this.point.index + 1)) + '</strong><br>' + 'Status: ' + statusBadgeHtml + '<br>' + 'Duration: ' + formatDuration(pointData.y);
+                              }
+                          },
+                          series: [{ data: ${seriesDataPointsString}, showInLegend: false }],
+                          credits: { enabled: false }
+                      };
+                      Highcharts.chart('${chartId}', chartOptions);
+                  } catch (e) {
+                      console.error("Error rendering chart ${chartId} (lazy):", e);
+                      chartContainer.innerHTML = '<div class="no-data-chart">Error rendering history chart.</div>';
+                  }
+              } else {
+                  chartContainer.innerHTML = '<div class="no-data-chart">Charting library not available for history.</div>';
+              }
+          };
+      </script>
+  `;
+}
+function generatePieChart(data, chartWidth = 300, chartHeight = 300) {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  if (total === 0) {
+    return '<div class="pie-chart-wrapper"><h3>Test Distribution</h3><div class="no-data">No data for Test Distribution chart.</div></div>';
+  }
+  const passedEntry = data.find((d) => d.label === "Passed");
+  const passedPercentage = Math.round(
+    ((passedEntry ? passedEntry.value : 0) / total) * 100
+  );
+
+  const chartId = `pieChart-${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2, 7)}`;
+
+  const seriesData = [
+    {
+      name: "Tests", // Changed from 'Test Distribution' for tooltip clarity
+      data: data
+        .filter((d) => d.value > 0)
+        .map((d) => {
+          let color;
+          switch (d.label) {
+            case "Passed":
+              color = "var(--success-color)";
+              break;
+            case "Failed":
+              color = "var(--danger-color)";
+              break;
+            case "Skipped":
+              color = "var(--warning-color)";
+              break;
+            default:
+              color = "#CCCCCC"; // A neutral default color
+          }
+          return { name: d.label, y: d.value, color: color };
+        }),
+      size: "100%",
+      innerSize: "55%",
+      dataLabels: { enabled: false },
+      showInLegend: true,
+    },
+  ];
+
+  // Approximate font size for center text, can be adjusted or made dynamic with more client-side JS
+  const centerTitleFontSize =
+    Math.max(12, Math.min(chartWidth, chartHeight) / 12) + "px";
+  const centerSubtitleFontSize =
+    Math.max(10, Math.min(chartWidth, chartHeight) / 18) + "px";
+
+  const optionsObjectString = `
+  {
+      chart: {
+          type: 'pie',
+          width: ${chartWidth},
+          height: ${
+            chartHeight - 40
+          }, // Adjusted height to make space for legend if chartHeight is for the whole wrapper
+          backgroundColor: 'transparent',
+          plotShadow: false,
+          spacingBottom: 40 // Ensure space for legend
+      },
+      title: {
+          text: '${passedPercentage}%',
+          align: 'center',
+          verticalAlign: 'middle',
+          y: 5, 
+          style: { fontSize: '${centerTitleFontSize}', fontWeight: 'bold', color: 'var(--primary-color)' }
+      },
+      subtitle: {
+          text: 'Passed',
+          align: 'center',
+          verticalAlign: 'middle',
+          y: 25, 
+          style: { fontSize: '${centerSubtitleFontSize}', color: 'var(--text-color-secondary)' }
+      },
+      tooltip: {
+          pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b> ({point.y})',
+          backgroundColor: 'rgba(10,10,10,0.92)',
+          borderColor: 'rgba(10,10,10,0.92)',
+          style: { color: '#f5f5f5' }
+      },
+      legend: {
+          layout: 'horizontal',
+          align: 'center',
+          verticalAlign: 'bottom',
+          itemStyle: { color: 'var(--text-color)', fontWeight: 'normal', fontSize: '12px' }
+      },
+      plotOptions: {
+          pie: {
+              allowPointSelect: true,
+              cursor: 'pointer',
+              borderWidth: 3,
+              borderColor: 'var(--card-background-color)', // Match D3 style
+              states: {
+                  hover: {
+                      // Using default Highcharts halo which is generally good
+                  }
+              }
+          }
+      },
+      series: ${JSON.stringify(seriesData)},
+      credits: { enabled: false }
+  }
+  `;
+
+  return `
+      <div class="pie-chart-wrapper" style="align-items: center; max-height: 450px">
+          <div style="display: flex; align-items: start; width: 100%;"><h3>Test Distribution</h3></div>
+          <div id="${chartId}" style="width: ${chartWidth}px; height: ${
+    chartHeight - 40
+  }px;"></div>
+          <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                  if (typeof Highcharts !== 'undefined') {
+                      try {
+                          const chartOptions = ${optionsObjectString};
+                          Highcharts.chart('${chartId}', chartOptions);
+                      } catch (e) {
+                          console.error("Error rendering chart ${chartId}:", e);
+                          document.getElementById('${chartId}').innerHTML = '<div class="no-data">Error rendering pie chart.</div>';
+                      }
+                  } else {
+                      document.getElementById('${chartId}').innerHTML = '<div class="no-data">Charting library not available.</div>';
+                  }
+              });
+          </script>
+      </div>
+  `;
+}
+function generateEnvironmentDashboard(environment, dashboardHeight = 600) {
+  // Format memory for display
+  const formattedMemory = environment.memory.replace(/(\d+\.\d{2})GB/, "$1 GB");
+
+  // Generate a unique ID for the dashboard
+  const dashboardId = `envDashboard-${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2, 7)}`;
+
+  const cardHeight = Math.floor(dashboardHeight * 0.44);
+  const cardContentPadding = 16; // px
+
+  return `
+    <div class="environment-dashboard-wrapper" id="${dashboardId}">
+      <style>
+        .environment-dashboard-wrapper *,
+        .environment-dashboard-wrapper *::before,
+        .environment-dashboard-wrapper *::after {
+          box-sizing: border-box;
+        }
+
+        .environment-dashboard-wrapper {
+          --primary-color: #007bff;
+          --primary-light-color: #e6f2ff;
+          --secondary-color: #6c757d;
+          --success-color: #28a745;
+          --success-light-color: #eaf6ec;
+          --warning-color: #ffc107;
+          --warning-light-color: #fff9e6;
+          --danger-color: #dc3545;
+          
+          --background-color: #ffffff; 
+          --card-background-color: #ffffff; 
+          --text-color: #212529; 
+          --text-color-secondary: #6c757d; 
+          --border-color: #dee2e6; 
+          --border-light-color: #f1f3f5;
+          --icon-color: #495057;
+          --chip-background: #e9ecef;
+          --chip-text: #495057;
+          --shadow-color: rgba(0, 0, 0, 0.075);
+
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+          background-color: var(--background-color);
+          border-radius: 12px; 
+          box-shadow: 0 6px 12px var(--shadow-color);
+          padding: 24px; 
+          color: var(--text-color);
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          grid-template-rows: auto 1fr; 
+          gap: 20px; 
+          font-size: 14px; 
+        }
+        
+        .env-dashboard-header {
+          grid-column: 1 / -1;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid var(--border-color);
+          padding-bottom: 16px; 
+          margin-bottom: 8px; 
+        }
+        
+        .env-dashboard-title {
+          font-size: 1.5rem; 
+          font-weight: 600;
+          color: var(--text-color); 
+          margin: 0;
+        }
+        
+        .env-dashboard-subtitle {
+          font-size: 0.875rem; 
+          color: var(--text-color-secondary);
+          margin-top: 4px;
+        }
+        
+        .env-card {
+          background-color: var(--card-background-color);
+          border-radius: 8px;
+          padding: ${cardContentPadding}px;
+          box-shadow: 0 3px 6px var(--shadow-color);
+          height: ${cardHeight}px;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden; 
+        }
+        
+        .env-card-header {
+          font-weight: 600;
+          font-size: 1rem; 
+          margin-bottom: 12px;
+          color: var(--text-color);
+          display: flex;
+          align-items: center;
+          padding-bottom: 8px;
+          border-bottom: 1px solid var(--border-light-color);
+        }
+        
+        .env-card-header svg {
+          margin-right: 10px; 
+          width: 18px; 
+          height: 18px;
+          fill: var(--icon-color);
+        }
+
+        .env-card-content {
+          flex-grow: 1; 
+          overflow-y: auto; 
+          padding-right: 5px; 
+        }
+        
+        .env-detail-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center; 
+          padding: 10px 0; 
+          border-bottom: 1px solid var(--border-light-color);
+          font-size: 0.875rem;
+        }
+        
+        .env-detail-row:last-child {
+          border-bottom: none;
+        }
+        
+        .env-detail-label {
+          color: var(--text-color-secondary);
+          font-weight: 500;
+          margin-right: 10px; 
+        }
+        
+        .env-detail-value {
+          color: var(--text-color);
+          font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+          text-align: right;
+          word-break: break-all; 
+        }
+        
+        .env-chip {
+          display: inline-block;
+          padding: 4px 10px; 
+          border-radius: 16px; 
+          font-size: 0.75rem; 
+          font-weight: 500;
+          line-height: 1.2;
+          background-color: var(--chip-background);
+          color: var(--chip-text);
+        }
+        
+        .env-chip-primary {
+          background-color: var(--primary-light-color);
+          color: var(--primary-color);
+        }
+        
+        .env-chip-success {
+          background-color: var(--success-light-color);
+          color: var(--success-color);
+        }
+        
+        .env-chip-warning {
+          background-color: var(--warning-light-color);
+          color: var(--warning-color);
+        }
+        
+        .env-cpu-cores {
+          display: flex;
+          align-items: center;
+          gap: 6px; 
+        }
+        
+        .env-core-indicator {
+          width: 12px; 
+          height: 12px;
+          border-radius: 50%;
+          background-color: var(--success-color);
+          border: 1px solid rgba(0,0,0,0.1); 
+        }
+        
+        .env-core-indicator.inactive {
+          background-color: var(--border-light-color);
+          opacity: 0.7; 
+          border-color: var(--border-color);
+        }
+      </style>
+      
+      <div class="env-dashboard-header">
+        <div>
+          <h3 class="env-dashboard-title">System Environment</h3>
+          <p class="env-dashboard-subtitle">Snapshot of the execution environment</p>
+        </div>
+        <span class="env-chip env-chip-primary">${environment.host}</span>
+      </div>
+      
+      <div class="env-card">
+        <div class="env-card-header">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16V4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8h-2v10H4V6zm18-2h-4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2H6a2 2 0 0 0-2 2v2h20V6a2 2 0 0 0-2-2zM8 12h8v2H8v-2zm0 4h8v2H8v-2z"/></svg>
+          Hardware
+        </div>
+        <div class="env-card-content">
+          <div class="env-detail-row">
+            <span class="env-detail-label">CPU Model</span>
+            <span class="env-detail-value">${environment.cpu.model}</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">CPU Cores</span>
+            <span class="env-detail-value">
+              <div class="env-cpu-cores">
+                ${Array.from(
+                  { length: Math.max(0, environment.cpu.cores || 0) },
+                  (_, i) =>
+                    `<div class="env-core-indicator ${
+                      i >=
+                      (environment.cpu.cores >= 8 ? 8 : environment.cpu.cores)
+                        ? "inactive"
+                        : ""
+                    }" title="Core ${i + 1}"></div>`
+                ).join("")}
+                <span>${environment.cpu.cores || "N/A"} cores</span>
+              </div>
+            </span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">Memory</span>
+            <span class="env-detail-value">${formattedMemory}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="env-card">
+        <div class="env-card-header">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-0.01 18c-2.76 0-5.26-1.12-7.07-2.93A7.973 7.973 0 0 1 4 12c0-2.21.9-4.21 2.36-5.64A7.994 7.994 0 0 1 11.99 4c4.41 0 8 3.59 8 8 0 2.76-1.12 5.26-2.93 7.07A7.973 7.973 0 0 1 11.99 20zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
+          Operating System
+        </div>
+        <div class="env-card-content">
+          <div class="env-detail-row">
+            <span class="env-detail-label">OS Type</span>
+            <span class="env-detail-value">${
+              environment.os.split(" ")[0] === "darwin"
+                ? "darwin (macOS)"
+                : environment.os.split(" ")[0] || "Unknown"
+            }</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">OS Version</span>
+            <span class="env-detail-value">${
+              environment.os.split(" ")[1] || "N/A"
+            }</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">Hostname</span>
+            <span class="env-detail-value" title="${environment.host}">${
+    environment.host
+  }</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="env-card">
+        <div class="env-card-header">
+          <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+          Node.js Runtime
+        </div>
+        <div class="env-card-content">
+          <div class="env-detail-row">
+            <span class="env-detail-label">Node Version</span>
+            <span class="env-detail-value">${environment.node}</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">V8 Engine</span>
+            <span class="env-detail-value">${environment.v8}</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">Working Dir</span>
+            <span class="env-detail-value" title="${environment.cwd}">${
+    environment.cwd.length > 25
+      ? "..." + environment.cwd.slice(-22)
+      : environment.cwd
+  }</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="env-card">
+        <div class="env-card-header">
+          <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h.71C7.37 8.69 9.48 7 12 7c2.76 0 5 2.24 5 5v1h2c1.66 0 3 1.34 3 3s-1.34 3-3 3z"/></svg>
+          System Summary
+        </div>
+        <div class="env-card-content">
+          <div class="env-detail-row">
+            <span class="env-detail-label">Platform Arch</span>
+            <span class="env-detail-value">
+              <span class="env-chip ${
+                environment.os.includes("darwin") &&
+                environment.cpu.model.toLowerCase().includes("apple")
+                  ? "env-chip-success"
+                  : "env-chip-warning"
+              }">
+                ${
+                  environment.os.includes("darwin") &&
+                  environment.cpu.model.toLowerCase().includes("apple")
+                    ? "Apple Silicon"
+                    : environment.cpu.model.toLowerCase().includes("arm") ||
+                      environment.cpu.model.toLowerCase().includes("aarch64")
+                    ? "ARM-based"
+                    : "x86/Other"
+                }
+              </span>
+            </span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">Memory per Core</span>
+            <span class="env-detail-value">${
+              environment.cpu.cores > 0
+                ? (
+                    parseFloat(environment.memory) / environment.cpu.cores
+                  ).toFixed(2) + " GB"
+                : "N/A"
+            }</span>
+          </div>
+          <div class="env-detail-row">
+            <span class="env-detail-label">Run Context</span>
+            <span class="env-detail-value">CI/Local Test</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function generateWorkerDistributionChart(results) {
+  if (!results || results.length === 0) {
+    return '<div class="no-data">No test results data available to display worker distribution.</div>';
+  }
+
+  // 1. Sort results by startTime to ensure chronological order
+  const sortedResults = [...results].sort((a, b) => {
+    const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
+    const timeB = b.startTime ? new Date(b.startTime).getTime() : 0;
+    return timeA - timeB;
+  });
+
+  const workerData = sortedResults.reduce((acc, test) => {
+    const workerId =
+      typeof test.workerId !== "undefined" ? test.workerId : "N/A";
+    if (!acc[workerId]) {
+      acc[workerId] = { passed: 0, failed: 0, skipped: 0, tests: [] };
+    }
+
+    const status = String(test.status).toLowerCase();
+    if (status === "passed" || status === "failed" || status === "skipped") {
+      acc[workerId][status]++;
+    }
+
+    const testTitleParts = test.name.split(" > ");
+    const testTitle =
+      testTitleParts[testTitleParts.length - 1] || "Unnamed Test";
+    // Store both name and status for each test
+    acc[workerId].tests.push({ name: testTitle, status: status });
+
+    return acc;
+  }, {});
+
+  const workerIds = Object.keys(workerData).sort((a, b) => {
+    if (a === "N/A") return 1;
+    if (b === "N/A") return -1;
+    return parseInt(a, 10) - parseInt(b, 10);
+  });
+
+  if (workerIds.length === 0) {
+    return '<div class="no-data">Could not determine worker distribution from test data.</div>';
+  }
+
+  const chartId = `workerDistChart-${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2, 7)}`;
+  const renderFunctionName = `renderWorkerDistChart_${chartId.replace(
+    /-/g,
+    "_"
+  )}`;
+  const modalJsNamespace = `modal_funcs_${chartId.replace(/-/g, "_")}`;
+
+  // The categories now just need the name for the axis labels
+  const categories = workerIds.map((id) => `Worker ${id}`);
+
+  // We pass the full data separately to the script
+  const fullWorkerData = workerIds.map((id) => ({
+    id: id,
+    name: `Worker ${id}`,
+    tests: workerData[id].tests,
+  }));
+
+  const passedData = workerIds.map((id) => workerData[id].passed);
+  const failedData = workerIds.map((id) => workerData[id].failed);
+  const skippedData = workerIds.map((id) => workerData[id].skipped);
+
+  const categoriesString = JSON.stringify(categories);
+  const fullDataString = JSON.stringify(fullWorkerData);
+  const seriesString = JSON.stringify([
+    { name: "Passed", data: passedData, color: "var(--success-color)" },
+    { name: "Failed", data: failedData, color: "var(--danger-color)" },
+    { name: "Skipped", data: skippedData, color: "var(--warning-color)" },
+  ]);
+
+  // The HTML now includes the chart container, the modal, and styles for the modal
+  return `
+    <style>
+      .worker-modal-overlay {
+        position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%;
+        overflow: auto; background-color: rgba(0,0,0,0.6);
+        display: none; align-items: center; justify-content: center;
+      }
+      .worker-modal-content {
+        background-color: #3d4043;
+        color: var(--card-background-color);
+        margin: auto; padding: 20px; border: 1px solid var(--border-color, #888);
+        width: 80%; max-width: 700px; border-radius: 8px;
+        position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      }
+      .worker-modal-close {
+        position: absolute; top: 10px; right: 20px;
+        font-size: 28px; font-weight: bold; cursor: pointer;
+        line-height: 1;
+      }
+      .worker-modal-close:hover, .worker-modal-close:focus {
+        color: var(--text-color, #000);
+      }
+      #worker-modal-body-${chartId} ul {
+        list-style-type: none; padding-left: 0; margin-top: 15px; max-height: 45vh; overflow-y: auto;
+      }
+       #worker-modal-body-${chartId} li {
+         padding: 8px 5px; border-bottom: 1px solid var(--border-color, #eee);
+         font-size: 0.9em;
+      }
+       #worker-modal-body-${chartId} li:last-child {
+         border-bottom: none;
+      }
+       #worker-modal-body-${chartId} li > span {
+         display: inline-block;
+         width: 70px;
+         font-weight: bold;
+         text-align: right;
+         margin-right: 10px;
+      }
+    </style>
+
+    <div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}" style="min-height: 350px;">
+      <div class="no-data">Loading Worker Distribution Chart...</div>
+    </div>
+
+    <div id="worker-modal-${chartId}" class="worker-modal-overlay">
+      <div class="worker-modal-content">
+        <span class="worker-modal-close">×</span>
+        <h3 id="worker-modal-title-${chartId}" style="text-align: center; margin-top: 0; margin-bottom: 25px; font-size: 1.25em; font-weight: 600; color: #fff"></h3>
+        <div id="worker-modal-body-${chartId}"></div>
+      </div>
+    </div>
+
+    <script>
+      // Namespace for modal functions to avoid global scope pollution
+      window.${modalJsNamespace} = {};
+
+      window.${renderFunctionName} = function() {
+        const chartContainer = document.getElementById('${chartId}');
+        if (!chartContainer) { console.error("Chart container ${chartId} not found."); return; }
+
+        // --- Modal Setup ---
+        const modal = document.getElementById('worker-modal-${chartId}');
+        const modalTitle = document.getElementById('worker-modal-title-${chartId}');
+        const modalBody = document.getElementById('worker-modal-body-${chartId}');
+        const closeModalBtn = modal.querySelector('.worker-modal-close');
+
+        window.${modalJsNamespace}.open = function(worker) {
+          if (!worker) return;
+          modalTitle.textContent = 'Test Details for ' + worker.name;
+
+          let testListHtml = '<ul>';
+          if (worker.tests && worker.tests.length > 0) {
+            worker.tests.forEach(test => {
+                let color = 'inherit';
+                if (test.status === 'passed') color = 'var(--success-color)';
+                else if (test.status === 'failed') color = 'var(--danger-color)';
+                else if (test.status === 'skipped') color = 'var(--warning-color)';
+
+                const escapedName = test.name.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+                testListHtml += \`<li style="color: \${color};"><span style="color: \${color}">[\${test.status.toUpperCase()}]</span> \${escapedName}</li>\`;
+            });
+          } else {
+            testListHtml += '<li>No detailed test data available for this worker.</li>';
+          }
+          testListHtml += '</ul>';
+
+          modalBody.innerHTML = testListHtml;
+          modal.style.display = 'flex';
+        };
+
+        const closeModal = function() {
+          modal.style.display = 'none';
+        };
+
+        closeModalBtn.onclick = closeModal;
+        modal.onclick = function(event) {
+          // Close if clicked on the dark overlay background
+          if (event.target == modal) {
+            closeModal();
+          }
+        };
+
+
+        // --- Highcharts Setup ---
+        if (typeof Highcharts !== 'undefined') {
+          try {
+            chartContainer.innerHTML = '';
+            const fullData = ${fullDataString};
+
+            const chartOptions = {
+              chart: { type: 'bar', height: 350, backgroundColor: 'transparent' },
+              title: { text: null },
+              xAxis: {
+                categories: ${categoriesString},
+                title: { text: 'Worker ID' },
+                labels: { style: { color: 'var(--text-color-secondary)' }}
+              },
+              yAxis: {
+                min: 0,
+                title: { text: 'Number of Tests' },
+                labels: { style: { color: 'var(--text-color-secondary)' }},
+                stackLabels: { enabled: true, style: { fontWeight: 'bold', color: 'var(--text-color)' } }
+              },
+              legend: { reversed: true, itemStyle: { fontSize: "12px", color: 'var(--text-color)' } },
+              plotOptions: {
+                series: {
+                  stacking: 'normal',
+                  cursor: 'pointer',
+                  point: {
+                    events: {
+                      click: function () {
+                        // 'this.x' is the index of the category
+                        const workerData = fullData[this.x];
+                        window.${modalJsNamespace}.open(workerData);
+                      }
+                    }
+                  }
+                }
+              },
+              tooltip: {
+                shared: true,
+                headerFormat: '<b>{point.key}</b> (Click for details)<br/>',
+                pointFormat: '<span style="color:{series.color}">●</span> {series.name}: <b>{point.y}</b><br/>',
+                footerFormat: 'Total: <b>{point.total}</b>'
+              },
+              series: ${seriesString},
+              credits: { enabled: false }
+            };
+            Highcharts.chart('${chartId}', chartOptions);
+          } catch (e) {
+            console.error("Error rendering chart ${chartId}:", e);
+            chartContainer.innerHTML = '<div class="no-data">Error rendering worker distribution chart.</div>';
+          }
+        } else {
+          chartContainer.innerHTML = '<div class="no-data">Charting library not available for worker distribution.</div>';
+        }
+      };
+    </script>
+  `;
+}
+const infoTooltip = `
+  <span class="info-tooltip" style="display: inline-block; margin-left: 8px;">
+    <span class="info-icon" 
+          style="cursor: pointer; font-size: 1.25rem;"
+          onclick="window.workerInfoPrompt()">ℹ️</span>
+  </span>
+  <script>
+    window.workerInfoPrompt = function() {
+      const message = 'Why is worker -1 special?\\n\\n' +
+                     'Playwright assigns skipped tests to worker -1 because:\\n' +
+                     '1. They don\\'t require browser execution\\n' +
+                     '2. This keeps real workers focused on actual tests\\n' +
+                     '3. Maintains clean reporting\\n\\n' +
+                     'This is an intentional optimization by Playwright.';
+      alert(message);
+    }
+  </script>
+`;
+function generateTestHistoryContent(trendData) {
+  if (
+    !trendData ||
+    !trendData.testRuns ||
+    Object.keys(trendData.testRuns).length === 0
+  ) {
+    return '<div class="no-data">No historical test data available.</div>';
+  }
+
+  const allTestNamesAndPaths = new Map();
+  Object.values(trendData.testRuns).forEach((run) => {
+    if (Array.isArray(run)) {
+      run.forEach((test) => {
+        if (test && test.testName && !allTestNamesAndPaths.has(test.testName)) {
+          const parts = test.testName.split(" > ");
+          const title = parts[parts.length - 1];
+          allTestNamesAndPaths.set(test.testName, title);
+        }
+      });
+    }
+  });
+
+  if (allTestNamesAndPaths.size === 0) {
+    return '<div class="no-data">No historical test data found after processing.</div>';
+  }
+
+  const testHistory = Array.from(allTestNamesAndPaths.entries())
+    .map(([fullTestName, testTitle]) => {
+      const history = [];
+      (trendData.overall || []).forEach((overallRun, index) => {
+        const runKey = overallRun.runId
+          ? `test run ${overallRun.runId}`
+          : `test run ${index + 1}`;
+        const testRunForThisOverallRun = trendData.testRuns[runKey]?.find(
+          (t) => t && t.testName === fullTestName
+        );
+        if (testRunForThisOverallRun) {
+          history.push({
+            runId: overallRun.runId || index + 1,
+            status: testRunForThisOverallRun.status || "unknown",
+            duration: testRunForThisOverallRun.duration || 0,
+            timestamp:
+              testRunForThisOverallRun.timestamp ||
+              overallRun.timestamp ||
+              new Date(),
+          });
+        }
+      });
+      return { fullTestName, testTitle, history };
+    })
+    .filter((item) => item.history.length > 0);
+
+  return `
+    <div class="test-history-container">
+      <div class="filters" style="border-color: black; border-style: groove;">
+    <input type="text" id="history-filter-name" placeholder="Search by test title..." style="border-color: black; border-style: outset;">
+    <select id="history-filter-status">
+        <option value="">All Statuses</option>
+        <option value="passed">Passed</option>
+        <option value="failed">Failed</option>
+        <option value="skipped">Skipped</option>
+    </select>
+    <button id="clear-history-filters" class="clear-filters-btn">Clear Filters</button>
+</div>
+      
+      <div class="test-history-grid">
+        ${testHistory
+          .map((test) => {
+            const latestRun =
+              test.history.length > 0
+                ? test.history[test.history.length - 1]
+                : { status: "unknown" };
+            return `
+            <div class="test-history-card" data-test-name="${sanitizeHTML(
+              test.testTitle.toLowerCase()
+            )}" data-latest-status="${latestRun.status}">
+              <div class="test-history-header">
+                <p title="${sanitizeHTML(test.testTitle)}">${capitalize(
+              sanitizeHTML(test.testTitle)
+            )}</p>
+                <span class="status-badge ${getStatusClass(latestRun.status)}">
+                  ${String(latestRun.status).toUpperCase()}
+                </span>
+              </div>
+              <div class="test-history-trend">
+                ${generateTestHistoryChart(test.history)} 
+              </div>
+              <details class="test-history-details-collapsible">
+                <summary>Show Run Details (${test.history.length})</summary>
+                <div class="test-history-details">
+                  <table>
+                    <thead><tr><th>Run</th><th>Status</th><th>Duration</th><th>Date</th></tr></thead>
+                    <tbody>
+                      ${test.history
+                        .slice()
+                        .reverse()
+                        .map(
+                          (run) => `
+                        <tr>
+                          <td>${run.runId}</td>
+                          <td><span class="status-badge-small ${getStatusClass(
+                            run.status
+                          )}">${String(run.status).toUpperCase()}</span></td>
+                          <td>${formatDuration(run.duration)}</td>
+                          <td>${formatDate(run.timestamp)}</td>
+                        </tr>`
+                        )
+                        .join("")}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            </div>`;
+          })
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+function getStatusClass(status) {
+  switch (String(status).toLowerCase()) {
+    case "passed":
+      return "status-passed";
+    case "failed":
+      return "status-failed";
+    case "skipped":
+      return "status-skipped";
+    default:
+      return "status-unknown";
+  }
+}
+function getStatusIcon(status) {
+  switch (String(status).toLowerCase()) {
+    case "passed":
+      return "✅";
+    case "failed":
+      return "❌";
+    case "skipped":
+      return "⏭️";
+    default:
+      return "❓";
+  }
+}
+function getSuitesData(results) {
+  const suitesMap = new Map();
+  if (!results || results.length === 0) return [];
+
+  results.forEach((test) => {
+    const browser = test.browser || "unknown";
+    const suiteParts = test.name.split(" > ");
+    let suiteNameCandidate = "Default Suite";
+    if (suiteParts.length > 2) {
+      suiteNameCandidate = suiteParts[1];
+    } else if (suiteParts.length > 1) {
+      suiteNameCandidate = suiteParts[0]
+        .split(path.sep)
+        .pop()
+        .replace(/\.(spec|test)\.(ts|js|mjs|cjs)$/, "");
+    } else {
+      suiteNameCandidate = test.name
+        .split(path.sep)
+        .pop()
+        .replace(/\.(spec|test)\.(ts|js|mjs|cjs)$/, "");
+    }
+    const suiteName = suiteNameCandidate;
+    const key = `${suiteName}|${browser}`;
+
+    if (!suitesMap.has(key)) {
+      suitesMap.set(key, {
+        id: test.id || key,
+        name: suiteName,
+        browser: browser,
+        passed: 0,
+        failed: 0,
+        skipped: 0,
+        count: 0,
+        statusOverall: "passed",
+      });
+    }
+    const suite = suitesMap.get(key);
+    suite.count++;
+    const currentStatus = String(test.status).toLowerCase();
+    if (currentStatus && suite[currentStatus] !== undefined) {
+      suite[currentStatus]++;
+    }
+    if (currentStatus === "failed") suite.statusOverall = "failed";
+    else if (currentStatus === "skipped" && suite.statusOverall !== "failed")
+      suite.statusOverall = "skipped";
+  });
+  return Array.from(suitesMap.values());
+}
+function getAttachmentIcon(contentType) {
+  if (!contentType) return "📎"; // Handle undefined/null
+
+  const normalizedType = contentType.toLowerCase();
+
+  if (normalizedType.includes("pdf")) return "📄";
+  if (normalizedType.includes("json")) return "{ }";
+  if (/html/.test(normalizedType)) return "🌐"; // Fixed: regex for any HTML type
+  if (normalizedType.includes("xml")) return "<>";
+  if (normalizedType.includes("csv")) return "📊";
+  if (normalizedType.startsWith("text/")) return "📝";
+  return "📎";
+}
+function generateSuitesWidget(suitesData) {
+  if (!suitesData || suitesData.length === 0) {
+    return `<div class="suites-widget"><div class="suites-header"><h2>Test Suites</h2></div><div class="no-data">No suite data available.</div></div>`;
+  }
+  return `
+<div class="suites-widget">
+  <div class="suites-header">
+    <h2>Test Suites</h2>
+    <span class="summary-badge">${
+      suitesData.length
+    } suites • ${suitesData.reduce(
+    (sum, suite) => sum + suite.count,
+    0
+  )} tests</span>
+  </div>
+  <div class="suites-grid">
+    ${suitesData
+      .map(
+        (suite) => `
+    <div class="suite-card status-${suite.statusOverall}">
+      <div class="suite-card-header">
+        <h3 class="suite-name" title="${sanitizeHTML(
+          suite.name
+        )} (${sanitizeHTML(suite.browser)})">${sanitizeHTML(suite.name)}</h3>
+      </div>
+      <div>🖥️ <span class="browser-tag">${sanitizeHTML(
+        suite.browser
+      )}</span></div>
+      <div class="suite-card-body">
+        <span class="test-count">${suite.count} test${
+          suite.count !== 1 ? "s" : ""
+        }</span>
+        <div class="suite-stats">
+            ${
+              suite.passed > 0
+                ? `<span class="stat-passed" title="Passed"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg> ${suite.passed}</span>`
+                : ""
+            }
+            ${
+              suite.failed > 0
+                ? `<span class="stat-failed" title="Failed"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg> ${suite.failed}</span>`
+                : ""
+            }
+            ${
+              suite.skipped > 0
+                ? `<span class="stat-skipped" title="Skipped"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg> ${suite.skipped}</span>`
+                : ""
+            }
+        </div>
+      </div>
+    </div>`
+      )
+      .join("")}
+  </div>
+</div>`;
+}
+function generateAIFailureAnalyzerTab(results) {
+  const failedTests = (results || []).filter(test => test.status === 'failed');
+
+  if (failedTests.length === 0) {
+    return `
+      <h2 class="tab-main-title">AI Failure Analysis</h2>
+      <div class="no-data">Congratulations! No failed tests in this run.</div>
+    `;
+  }
+
+  // btoa is not available in Node.js environment, so we define a simple polyfill for it.
+  const btoa = (str) => Buffer.from(str).toString('base64');
+
+  return `
+    <h2 class="tab-main-title">AI Failure Analysis</h2>
+    <div class="ai-analyzer-stats">
+        <div class="stat-item">
+            <span class="stat-number">${failedTests.length}</span>
+            <span class="stat-label">Failed Tests</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">${new Set(failedTests.map(t => t.browser)).size}</span>
+            <span class="stat-label">Browsers</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">${(Math.round(failedTests.reduce((sum, test) => sum + (test.duration || 0), 0) / 1000))}s</span>
+            <span class="stat-label">Total Duration</span>
+        </div>
+    </div>
+    <p class="ai-analyzer-description">
+        Analyze failed tests using AI to get suggestions and potential fixes. Click the AI Fix button for specific failed test.
+    </p>
+    
+    <div class="compact-failure-list">
+      ${failedTests.map(test => {
+    const testTitle = test.name.split(" > ").pop() || "Unnamed Test";
+    const testJson = btoa(JSON.stringify(test)); // Base64 encode the test object
+    const truncatedError = (test.errorMessage || "No error message").slice(0, 150) +
+      (test.errorMessage && test.errorMessage.length > 150 ? "..." : "");
+
+    return `
+        <div class="compact-failure-item">
+            <div class="failure-header">
+                <div class="failure-main-info">
+                    <h3 class="failure-title" title="${sanitizeHTML(test.name)}">${sanitizeHTML(testTitle)}</h3>
+                    <div class="failure-meta">
+                        <span class="browser-indicator">${sanitizeHTML(test.browser || 'unknown')}</span>
+                        <span class="duration-indicator">${formatDuration(test.duration)}</span>
+                    </div>
+                </div>
+                <button class="compact-ai-btn" onclick="getAIFix(this)" data-test-json="${testJson}">
+                    <span class="ai-text">AI Fix</span>
+                </button>
+            </div>
+            <div class="failure-error-preview">
+                <div class="error-snippet">${formatPlaywrightError(truncatedError)}</div>
+                <button class="expand-error-btn" onclick="toggleErrorDetails(this)">
+                    <span class="expand-text">Show Full Error</span>
+                    <span class="expand-icon">▼</span>
+                </button>
+            </div>
+            <div class="full-error-details" style="display: none;">
+                <div class="full-error-content">
+                    ${formatPlaywrightError(test.errorMessage || "No detailed error message available")}
+                </div>
+            </div>
+        </div>
+        `
+  }).join('')}
+    </div>
+
+    <!-- AI Fix Modal -->
+    <div id="ai-fix-modal" class="ai-modal-overlay" onclick="closeAiModal()">
+      <div class="ai-modal-content" onclick="event.stopPropagation()">
+        <div class="ai-modal-header">
+            <h3 id="ai-fix-modal-title">AI Analysis</h3>
+            <span class="ai-modal-close" onclick="closeAiModal()">×</span>
+        </div>
+        <div class="ai-modal-body" id="ai-fix-modal-content">
+            <!-- Content will be injected by JavaScript -->
+        </div>
+      </div>
+    </div>
+  `;
+}
+function generateDashboardTabHTML(runSummary, suitesData, pieData, environment) {
+  const totalTestsOr1 = runSummary.totalTests || 1;
+  const passPercentage = Math.round((runSummary.passed / totalTestsOr1) * 100);
+  const failPercentage = Math.round((runSummary.failed / totalTestsOr1) * 100);
+  const skipPercentage = Math.round(((runSummary.skipped || 0) / totalTestsOr1) * 100);
+  const avgTestDuration = runSummary.totalTests > 0 
+    ? formatDuration(runSummary.duration / runSummary.totalTests) 
+    : "0.0s";
+
+  return `
+    <div class="dashboard-grid">
+      <div class="summary-card"><h3>Total Tests</h3><div class="value">${runSummary.totalTests}</div></div>
+      <div class="summary-card status-passed"><h3>Passed</h3><div class="value">${runSummary.passed}</div><div class="trend-percentage">${passPercentage}%</div></div>
+      <div class="summary-card status-failed"><h3>Failed</h3><div class="value">${runSummary.failed}</div><div class="trend-percentage">${failPercentage}%</div></div>
+      <div class="summary-card status-skipped"><h3>Skipped</h3><div class="value">${runSummary.skipped || 0}</div><div class="trend-percentage">${skipPercentage}%</div></div>
+      <div class="summary-card"><h3>Avg. Test Time</h3><div class="value">${avgTestDuration}</div></div>
+      <div class="summary-card"><h3>Run Duration</h3><div class="value">${formatDuration(runSummary.duration)}</div></div>
+    </div>
+    <div class="dashboard-bottom-row">
+      <div style="display: grid; gap: 20px">
+        ${generatePieChart(pieData, 400, 390)}
+        ${environment && Object.keys(environment).length > 0 
+          ? generateEnvironmentDashboard(environment) 
+          : '<div class="no-data">Environment data not available.</div>'}
+      </div>
+      ${generateSuitesWidget(suitesData)}
+    </div>
+  `;
+}
+
+function generateTestRunSummaryTabHTML(results) {
+  if (!results || results.length === 0) {
+    return '<div class="no-tests">No test results found in this run.</div>';
+  }
+  
+  const testListHTML = results.map((test, index) => {
+    const browser = test.browser || "unknown";
+    const testFileParts = test.name.split(" > ");
+    const testTitle = testFileParts[testFileParts.length - 1] || "Unnamed Test";
+    
+    return `
+      <div class="test-case" data-status="${test.status}" data-browser="${sanitizeHTML(browser)}" data-tags="${(test.tags || []).join(",").toLowerCase()}">
+        <div class="test-case-header" role="button" aria-expanded="false" data-test-index="${index}">
+          <div class="test-case-summary">
+            <span class="status-badge ${getStatusClass(test.status)}">${String(test.status).toUpperCase()}</span>
+            <span class="test-case-title" title="${sanitizeHTML(test.name)}">${sanitizeHTML(testTitle)}</span>
+            <span class="test-case-browser">(${sanitizeHTML(browser)})</span>
+          </div>
+          <div class="test-case-meta">
+            ${test.tags && test.tags.length > 0 
+              ? test.tags.map(t => `<span class="tag">${sanitizeHTML(t)}</span>`).join(" ") 
+              : ""}
+            <span class="test-duration">${formatDuration(test.duration)}</span>
+          </div>
+        </div>
+        <div class="test-case-content" id="test-details-${index}" style="display: none;"></div>
+      </div>
+    `;
+  }).join("");
+  
+  return `
+    <div class="filters">
+      <input type="text" id="filter-name" placeholder="Filter by test name/path..." style="border-color: black; border-style: outset;">
+      <select id="filter-status">
+          <option value="">All Statuses</option>
+          <option value="passed">Passed</option>
+          <option value="failed">Failed</option>
+          <option value="skipped">Skipped</option>
+      </select>
+      <select id="filter-browser">
+          <option value="">All Browsers</option>
+          ${Array.from(new Set(results.map(test => test.browser || "unknown")))
+            .map(browser => `<option value="${sanitizeHTML(browser)}">${sanitizeHTML(browser)}</option>`)
+            .join("")}
+      </select>
+      <button id="expand-all-tests">Expand All</button>
+      <button id="collapse-all-tests">Collapse All</button>
+      <button id="clear-run-summary-filters" class="clear-filters-btn">Clear Filters</button>
+    </div>
+    <div class="test-cases-list">${testListHTML}</div>
+  `;
+}
 /**
  * Generates the HTML report with lazy loading for tabs and test details.
  * @param {object} reportData - The data for the report.
@@ -134,6 +1793,12 @@ function generateHTML(reportData, trendData = null) {
       { label: "Failed", value: runSummary.failed },
       { label: "Skipped", value: runSummary.skipped || 0 },
     ]
+  };
+
+  const tabContents = {
+      dashboard: generateDashboardTabHTML(pulseData.runSummary, pulseData.suitesData, pulseData.pieData, runSummary.environment),
+      'test-runs': generateTestRunSummaryTabHTML(pulseData.results),
+      'ai-failure-analyzer': generateAIFailureAnalyzerTab(pulseData.results)
   };
 
   return `
@@ -282,7 +1947,7 @@ function generateHTML(reportData, trendData = null) {
         .status-badge-small.status-failed { background-color: var(--danger-color); }
         .status-badge-small.status-skipped { background-color: var(--warning-color); }
         .status-badge-small.status-unknown { background-color: var(--dark-gray-color); }
-        .no-data, .no-tests, .no-steps, .no-data-chart, .tab-loading-placeholder { padding: 28px; text-align: center; color: var(--dark-gray-color); font-style: italic; font-size:1.1em; background-color: var(--light-gray-color); border-radius: var(--border-radius); margin: 18px 0; border: 1px dashed var(--medium-gray-color); }
+        .no-data, .no-tests, .no-steps, .no-data-chart { padding: 28px; text-align: center; color: var(--dark-gray-color); font-style: italic; font-size:1.1em; background-color: var(--light-gray-color); border-radius: var(--border-radius); margin: 18px 0; border: 1px dashed var(--medium-gray-color); }
         .no-data-chart {font-size: 0.95em; padding: 18px;}
         .ai-failure-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 22px; }
         .ai-failure-card { background: var(--card-background-color); border: 1px solid var(--border-color); border-left: 5px solid var(--danger-color); border-radius: var(--border-radius); box-shadow: var(--box-shadow-light); display: flex; flex-direction: column; }
@@ -350,6 +2015,7 @@ function generateHTML(reportData, trendData = null) {
         .attachment-caption { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; }
         .attachment-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
         .attachment-type { font-size: 0.8rem; color: var(--text-color-secondary); }
+        .tab-loading-placeholder { text-align: center; padding: 40px; color: var(--dark-gray-color); font-style: italic; }
     </style>
 </head>
 <body>
@@ -372,13 +2038,11 @@ function generateHTML(reportData, trendData = null) {
             <button class="tab-button" data-tab="ai-failure-analyzer">AI Failure Analyzer</button>
         </div>
         <div id="dashboard" class="tab-content active">
-          <div class="tab-loading-placeholder">Loading dashboard...</div>
+            <div class="tab-loading-placeholder">Loading...</div>
         </div>
         <div id="test-runs" class="tab-content">
-          <div class="tab-loading-placeholder">Loading test run summary...</div>
+            <div class="tab-loading-placeholder">Loading...</div>
         </div>
-        
-        <!-- Test History tab - server-rendered -->
         <div id="test-history" class="tab-content">
           <h2 class="tab-main-title">Execution Trends</h2>
           <div class="trend-charts-row">
@@ -413,7 +2077,7 @@ function generateHTML(reportData, trendData = null) {
           }
         </div>
         <div id="ai-failure-analyzer" class="tab-content">
-          <div class="tab-loading-placeholder">Loading failure analyzer...</div>
+            <div class="tab-loading-placeholder">Loading...</div>
         </div>
         <footer style="padding: 0.5rem; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); text-align: center; font-family: 'Segoe UI', system-ui, sans-serif;">
             <div style="display: inline-flex; align-items: center; gap: 0.5rem; color: #333; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px;">
@@ -424,371 +2088,357 @@ function generateHTML(reportData, trendData = null) {
         </footer>
     </div>
     <script>
-    // --- Start of Client-Side Script Block ---
-
-    // Embed all data needed for client-side rendering
+    // --- Start of Client-Side Script ---
     window._pulseData = ${JSON.stringify(pulseData)};
-
-    // --- All Helper Functions Moved to Client-Side Scope ---
+    window._tabContents = ${JSON.stringify(tabContents)};
     
-    function ansiToHtml(text) {
-      if (!text) {
-        return "";
-      }
-      const codes = {
-        0: "color:inherit;font-weight:normal;font-style:normal;text-decoration:none;opacity:1;background-color:inherit;",
-        1: "font-weight:bold",
-        2: "opacity:0.6",
-        3: "font-style:italic",
-        4: "text-decoration:underline",
-        30: "color:#000", 31: "color:#d00", 32: "color:#0a0", 33: "color:#aa0", 34: "color:#00d", 35: "color:#a0a", 36: "color:#0aa", 37: "color:#aaa",
-        39: "color:inherit", 40: "background-color:#000", 41: "background-color:#d00", 42: "background-color:#0a0", 43: "background-color:#aa0", 44: "background-color:#00d", 45: "background-color:#a0a", 46: "background-color:#0aa", 47: "background-color:#aaa",
-        49: "background-color:inherit", 90: "color:#555", 91: "color:#f55", 92: "color:#5f5", 93: "color:#ff5", 94: "color:#55f", 95: "color:#f5f", 96: "color:#5ff", 97: "color:#fff",
-      };
-      let currentStylesArray = []; let html = ""; let openSpan = false;
-      const applyStyles = () => {
-        if (openSpan) { html += "</span>"; openSpan = false; }
-        if (currentStylesArray.length > 0) { const styleString = currentStylesArray.filter((s) => s).join(";"); if (styleString) { html += \`<span style="\${styleString}">\`; openSpan = true; } }
-      };
-      const resetAndApplyNewCodes = (newCodesStr) => {
-        const newCodes = newCodesStr.split(";");
-        if (newCodes.includes("0")) { currentStylesArray = []; if (codes["0"]) currentStylesArray.push(codes["0"]); }
-        for (const code of newCodes) {
-          if (code === "0") continue;
-          if (codes[code]) {
-            if (code === "39") { currentStylesArray = currentStylesArray.filter((s) => !s.startsWith("color:")); currentStylesArray.push("color:inherit"); } 
-            else if (code === "49") { currentStylesArray = currentStylesArray.filter((s) => !s.startsWith("background-color:")); currentStylesArray.push("background-color:inherit"); } 
-            else { currentStylesArray.push(codes[code]); }
-          } else if (code.startsWith("38;2;") || code.startsWith("48;2;")) {
-            const parts = code.split(";"); const type = parts[0] === "38" ? "color" : "background-color";
-            if (parts.length === 5) { currentStylesArray = currentStylesArray.filter((s) => !s.startsWith(type + ":")); currentStylesArray.push(\`\${type}:rgb(\${parts[2]},\${parts[3]},\${parts[4]})\`); }
-          }
-        }
-        applyStyles();
-      };
-      const segments = text.split(/(\\x1b\\[[0-9;]*m)/g);
-      for (const segment of segments) {
-        if (!segment) continue;
-        if (segment.startsWith("\\x1b[") && segment.endsWith("m")) { const command = segment.slice(2, -1); resetAndApplyNewCodes(command); } 
-        else { const escapedContent = segment.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); html += escapedContent; }
-      }
-      if (openSpan) { html += "</span>"; }
-      return html;
-    }
+    // --- Start of Helper functions moved to client-side ---
+    // Note: These functions are now part of the client-side script block.
+    // They are defined here so they can be called by the tab loading logic.
+
     function sanitizeHTML(str) {
-      if (str === null || str === undefined) return "";
-      return String(str).replace(/[&<>"']/g, (match) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[match] || match));
+        if (str === null || str === undefined) return "";
+        return String(str).replace(/[&<>"']/g, (match) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[match] || match));
     }
-    function capitalize(str) { if (!str) return ""; return str[0].toUpperCase() + str.slice(1).toLowerCase(); }
-    function formatPlaywrightError(error) { const commandOutput = ansiToHtml(error || error.message); return convertPlaywrightErrorToHTML(commandOutput); }
-    function convertPlaywrightErrorToHTML(str) {
-        if (!str) return "";
-        return str.replace(/^(\\s+)/gm, (match) => match.replace(/ /g, " ").replace(/\\t/g, "  ")).replace(/<red>/g, '<span style="color: red;">').replace(/<green>/g, '<span style="color: green;">').replace(/<dim>/g, '<span style="opacity: 0.6;">').replace(/<intensity>/g, '<span style="font-weight: bold;">').replace(/<\\/color>/g, "</span>").replace(/<\\/intensity>/g, "</span>").replace(/\\n/g, "<br>");
-    }
-    function formatDuration(ms, options = {}) {
-      const { precision = 1, invalidInputReturn = "N/A", defaultForNullUndefinedNegative = null } = options;
-      const validPrecision = Math.max(0, Math.floor(precision));
-      const zeroWithPrecision = (0).toFixed(validPrecision) + "s";
-      const resolvedNullUndefNegReturn = defaultForNullUndefinedNegative === null ? zeroWithPrecision : defaultForNullUndefinedNegative;
-      if (ms === undefined || ms === null) { return resolvedNullUndefNegReturn; }
-      const numMs = Number(ms);
-      if (Number.isNaN(numMs) || !Number.isFinite(numMs)) { return invalidInputReturn; }
-      if (numMs < 0) { return resolvedNullUndefNegReturn; }
-      if (numMs === 0) { return zeroWithPrecision; }
-      const MS_PER_SECOND = 1000, SECONDS_PER_MINUTE = 60, MINUTES_PER_HOUR = 60, SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
-      const totalRawSeconds = numMs / MS_PER_SECOND;
-      if (totalRawSeconds < SECONDS_PER_MINUTE && Math.ceil(totalRawSeconds) < SECONDS_PER_MINUTE) { return \`\${totalRawSeconds.toFixed(validPrecision)}s\`; } 
-      else {
-        let remainingMs = Math.ceil(numMs / MS_PER_SECOND) * MS_PER_SECOND;
-        const h = Math.floor(remainingMs / (MS_PER_SECOND * SECONDS_PER_HOUR));
-        remainingMs %= MS_PER_SECOND * SECONDS_PER_HOUR;
-        const m = Math.floor(remainingMs / (MS_PER_SECOND * SECONDS_PER_MINUTE));
-        remainingMs %= MS_PER_SECOND * SECONDS_PER_MINUTE;
-        const s = Math.floor(remainingMs / MS_PER_SECOND);
-        const parts = [];
-        if (h > 0) parts.push(\`\${h}h\`);
-        if (h > 0 || m > 0 || numMs >= MS_PER_SECOND * SECONDS_PER_MINUTE) parts.push(\`\${m}m\`);
-        parts.push(\`\${s}s\`);
-        return parts.join(" ");
-      }
-    }
-    function formatDate(dateStrOrDate) {
-      if (!dateStrOrDate) return "N/A";
-      try {
-        const date = new Date(dateStrOrDate);
-        if (isNaN(date.getTime())) return "Invalid Date";
-        return date.toLocaleDateString(undefined, { year: "2-digit", month: "2-digit", day: "2-digit" }) + " " + date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-      } catch (e) { return "Invalid Date Format"; }
-    }
+
     function getStatusClass(status) {
-      switch (String(status).toLowerCase()) {
-        case "passed": return "status-passed"; case "failed": return "status-failed"; case "skipped": return "status-skipped"; default: return "status-unknown";
-      }
+        switch (String(status).toLowerCase()) {
+            case "passed": return "status-passed";
+            case "failed": return "status-failed";
+            case "skipped": return "status-skipped";
+            default: return "status-unknown";
+        }
     }
+    
     function getStatusIcon(status) {
-      switch (String(status).toLowerCase()) {
-        case "passed": return "✅"; case "failed": return "❌"; case "skipped": return "⏭️"; default: return "❓";
-      }
+        switch (String(status).toLowerCase()) {
+            case "passed": return "✅";
+            case "failed": return "❌";
+            case "skipped": return "⏭️";
+            default: return "❓";
+        }
     }
+
     function getAttachmentIcon(contentType) {
-      if (!contentType) return "📎";
-      const normalizedType = contentType.toLowerCase();
-      if (normalizedType.includes("pdf")) return "📄";
-      if (normalizedType.includes("json")) return "{ }";
-      if (/html/.test(normalizedType)) return "🌐";
-      if (normalizedType.includes("xml")) return "<>";
-      if (normalizedType.includes("csv")) return "📊";
-      if (normalizedType.startsWith("text/")) return "📝";
-      return "📎";
+        if (!contentType) return "📎";
+        const normalizedType = contentType.toLowerCase();
+        if (normalizedType.includes("pdf")) return "📄";
+        if (normalizedType.includes("json")) return "{ }";
+        if (/html/.test(normalizedType)) return "🌐";
+        if (normalizedType.includes("xml")) return "<>";
+        if (normalizedType.includes("csv")) return "📊";
+        if (normalizedType.startsWith("text/")) return "📝";
+        return "📎";
     }
 
-    // --- HTML Generators (Client-side) ---
-
-    function generatePieChartFromData(data, chartWidth = 300, chartHeight = 300) {
-        const total = data.reduce((sum, d) => sum + d.value, 0);
-        if (total === 0) { return '<div class="pie-chart-wrapper"><h3>Test Distribution</h3><div class="no-data">No data for Test Distribution chart.</div></div>'; }
-        const passedEntry = data.find((d) => d.label === "Passed");
-        const passedPercentage = Math.round(((passedEntry ? passedEntry.value : 0) / total) * 100);
-        const chartId = \`pieChart-\${Date.now()}-\${Math.random().toString(36).substring(2, 7)}\`;
-        const seriesData = [{ name: "Tests", data: data.filter((d) => d.value > 0).map((d) => { let color; switch (d.label) { case "Passed": color = "var(--success-color)"; break; case "Failed": color = "var(--danger-color)"; break; case "Skipped": color = "var(--warning-color)"; break; default: color = "#CCCCCC"; } return { name: d.label, y: d.value, color: color }; }), size: "100%", innerSize: "55%", dataLabels: { enabled: false }, showInLegend: true, }];
-        const centerTitleFontSize = Math.max(12, Math.min(chartWidth, chartHeight) / 12) + "px";
-        const centerSubtitleFontSize = Math.max(10, Math.min(chartWidth, chartHeight) / 18) + "px";
-        const optionsObjectString = \` { chart: { type: 'pie', width: \${chartWidth}, height: \${chartHeight - 40}, backgroundColor: 'transparent', plotShadow: false, spacingBottom: 40 }, title: { text: '\${passedPercentage}%', align: 'center', verticalAlign: 'middle', y: 5, style: { fontSize: '\${centerTitleFontSize}', fontWeight: 'bold', color: 'var(--primary-color)' } }, subtitle: { text: 'Passed', align: 'center', verticalAlign: 'middle', y: 25, style: { fontSize: '\${centerSubtitleFontSize}', color: 'var(--text-color-secondary)' } }, tooltip: { pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b> ({point.y})', backgroundColor: 'rgba(10,10,10,0.92)', borderColor: 'rgba(10,10,10,0.92)', style: { color: '#f5f5f5' } }, legend: { layout: 'horizontal', align: 'center', verticalAlign: 'bottom', itemStyle: { color: 'var(--text-color)', fontWeight: 'normal', fontSize: '12px' } }, plotOptions: { pie: { allowPointSelect: true, cursor: 'pointer', borderWidth: 3, borderColor: 'var(--card-background-color)', states: { hover: {} } } }, series: \${JSON.stringify(seriesData)}, credits: { enabled: false } } \`;
-        return \` <div class="pie-chart-wrapper" style="align-items: center; max-height: 450px"> <div style="display: flex; align-items: start; width: 100%;"><h3>Test Distribution</h3></div> <div id="\${chartId}" style="width: \${chartWidth}px; height: \${chartHeight - 40}px;"></div> <script> document.addEventListener('DOMContentLoaded', function() { if (typeof Highcharts !== 'undefined') { try { const chartOptions = \${optionsObjectString}; Highcharts.chart('\${chartId}', chartOptions); } catch (e) { console.error("Error rendering chart \${chartId}:", e); document.getElementById('\${chartId}').innerHTML = '<div class="no-data">Error rendering pie chart.</div>'; } } else { document.getElementById('\${chartId}').innerHTML = '<div class="no-data">Charting library not available.</div>'; } }); <\\/script> </div> \`;
-    }
-    function generateEnvironmentDashboardFromData(environment, dashboardHeight = 600) {
-        const formattedMemory = environment.memory.replace(/(\\d+\\.\\d{2})GB/, "$1 GB");
-        const dashboardId = \`envDashboard-\${Date.now()}-\${Math.random().toString(36).substring(2, 7)}\`;
-        const cardHeight = Math.floor(dashboardHeight * 0.44);
-        return \` <div class="environment-dashboard-wrapper" id="\${dashboardId}"> <style> /* ... CSS from original file ... */ </style> <div class="env-dashboard-header"> <div> <h3 class="env-dashboard-title">System Environment</h3> <p class="env-dashboard-subtitle">Snapshot of the execution environment</p> </div> <span class="env-chip env-chip-primary">\${environment.host}</span> </div> <div class="env-card"> <div class="env-card-header"> <svg viewBox="0 0 24 24"><path d="M4 6h16V4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8h-2v10H4V6zm18-2h-4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2H6a2 2 0 0 0-2 2v2h20V6a2 2 0 0 0-2-2zM8 12h8v2H8v-2zm0 4h8v2H8v-2z"/></svg> Hardware </div> <div class="env-card-content"> <div class="env-detail-row"> <span class="env-detail-label">CPU Model</span> <span class="env-detail-value">\${environment.cpu.model}</span> </div> <div class="env-detail-row"> <span class="env-detail-label">CPU Cores</span> <span class="env-detail-value"> <div class="env-cpu-cores"> \${Array.from({ length: Math.max(0, environment.cpu.cores || 0) }, (_, i) => \`<div class="env-core-indicator \${i >= (environment.cpu.cores >= 8 ? 8 : environment.cpu.cores) ? "inactive" : ""}" title="Core \${i + 1}"></div>\`).join("")} <span>\${environment.cpu.cores || "N/A"} cores</span> </div> </span> </div> <div class="env-detail-row"> <span class="env-detail-label">Memory</span> <span class="env-detail-value">\${formattedMemory}</span> </div> </div> </div> <div class="env-card"> <div class="env-card-header"> <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-0.01 18c-2.76 0-5.26-1.12-7.07-2.93A7.973 7.973 0 0 1 4 12c0-2.21.9-4.21 2.36-5.64A7.994 7.994 0 0 1 11.99 4c4.41 0 8 3.59 8 8 0 2.76-1.12 5.26-2.93 7.07A7.973 7.973 0 0 1 11.99 20zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg> Operating System </div> <div class="env-card-content"> <div class="env-detail-row"> <span class="env-detail-label">OS Type</span> <span class="env-detail-value">\${environment.os.split(" ")[0] === "darwin" ? "darwin (macOS)" : environment.os.split(" ")[0] || "Unknown"}</span> </div> <div class="env-detail-row"> <span class="env-detail-label">OS Version</span> <span class="env-detail-value">\${environment.os.split(" ")[1] || "N/A"}</span> </div> <div class="env-detail-row"> <span class="env-detail-label">Hostname</span> <span class="env-detail-value" title="\${environment.host}">\${environment.host}</span> </div> </div> </div> <div class="env-card"> <div class="env-card-header"> <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg> Node.js Runtime </div> <div class="env-card-content"> <div class="env-detail-row"> <span class="env-detail-label">Node Version</span> <span class="env-detail-value">\${environment.node}</span> </div> <div class="env-detail-row"> <span class="env-detail-label">V8 Engine</span> <span class="env-detail-value">\${environment.v8}</span> </div> <div class="env-detail-row"> <span class="env-detail-label">Working Dir</span> <span class="env-detail-value" title="\${environment.cwd}">\${environment.cwd.length > 25 ? "..." + environment.cwd.slice(-22) : environment.cwd}</span> </div> </div> </div> <div class="env-card"> <div class="env-card-header"> <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h.71C7.37 8.69 9.48 7 12 7c2.76 0 5 2.24 5 5v1h2c1.66 0 3 1.34 3 3s-1.34 3-3 3z"/></svg> System Summary </div> <div class="env-card-content"> <div class="env-detail-row"> <span class="env-detail-label">Platform Arch</span> <span class="env-detail-value"> <span class="env-chip \${environment.os.includes("darwin") && environment.cpu.model.toLowerCase().includes("apple") ? "env-chip-success" : "env-chip-warning"}"> \${environment.os.includes("darwin") && environment.cpu.model.toLowerCase().includes("apple") ? "Apple Silicon" : environment.cpu.model.toLowerCase().includes("arm") || environment.cpu.model.toLowerCase().includes("aarch64") ? "ARM-based" : "x86/Other"} </span> </span> </div> <div class="env-detail-row"> <span class="env-detail-label">Memory per Core</span> <span class="env-detail-value">\${environment.cpu.cores > 0 ? (parseFloat(environment.memory) / environment.cpu.cores).toFixed(2) + " GB" : "N/A"}</span> </div> <div class="env-detail-row"> <span class="env-detail-label">Run Context</span> <span class="env-detail-value">CI/Local Test</span> </div> </div> </div> </div> \`;
-    }
-    function generateSuitesWidgetFromData(suitesData) {
-        if (!suitesData || suitesData.length === 0) { return \`<div class="suites-widget"><div class="suites-header"><h2>Test Suites</h2></div><div class="no-data">No suite data available.</div></div>\`; }
-        return \` <div class="suites-widget"> <div class="suites-header"> <h2>Test Suites</h2> <span class="summary-badge">\${suitesData.length} suites • \${suitesData.reduce((sum, suite) => sum + suite.count,0)} tests</span> </div> <div class="suites-grid"> \${suitesData.map((suite) => \` <div class="suite-card status-\${suite.statusOverall}"> <div class="suite-card-header"> <h3 class="suite-name" title="\${sanitizeHTML(suite.name)} (\${sanitizeHTML(suite.browser)})">\${sanitizeHTML(suite.name)}</h3> </div> <div>🖥️ <span class="browser-tag">\${sanitizeHTML(suite.browser)}</span></div> <div class="suite-card-body"> <span class="test-count">\${suite.count} test\${suite.count !== 1 ? "s" : ""}</span> <div class="suite-stats"> \${suite.passed > 0 ? \`<span class="stat-passed" title="Passed"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg> \${suite.passed}</span>\` : ""} \${suite.failed > 0 ? \`<span class="stat-failed" title="Failed"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg> \${suite.failed}</span>\` : ""} \${suite.skipped > 0 ? \`<span class="stat-skipped" title="Skipped"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg> \${suite.skipped}</span>\` : ""} </div> </div> </div>\`).join("")} </div> </div>\`;
-    }
-
-    // --- Tab Content Generators (called on-demand) ---
-
-    function generateDashboardTabHTML() {
-      const data = window._pulseData;
-      const runSummary = data.runSummary;
-      const totalTestsOr1 = runSummary.totalTests || 1;
-      const passPercentage = Math.round((runSummary.passed / totalTestsOr1) * 100);
-      const failPercentage = Math.round((runSummary.failed / totalTestsOr1) * 100);
-      const skipPercentage = Math.round(((runSummary.skipped || 0) / totalTestsOr1) * 100);
-      const avgTestDuration = runSummary.totalTests > 0 ? formatDuration(runSummary.duration / runSummary.totalTests) : "0.0s";
-      return \`
-        <div class="dashboard-grid">
-          <div class="summary-card"><h3>Total Tests</h3><div class="value">\${runSummary.totalTests}</div></div>
-          <div class="summary-card status-passed"><h3>Passed</h3><div class="value">\${runSummary.passed}</div><div class="trend-percentage">\${passPercentage}%</div></div>
-          <div class="summary-card status-failed"><h3>Failed</h3><div class="value">\${runSummary.failed}</div><div class="trend-percentage">\${failPercentage}%</div></div>
-          <div class="summary-card status-skipped"><h3>Skipped</h3><div class="value">\${runSummary.skipped || 0}</div><div class="trend-percentage">\${skipPercentage}%</div></div>
-          <div class="summary-card"><h3>Avg. Test Time</h3><div class="value">\${avgTestDuration}</div></div>
-          <div class="summary-card"><h3>Run Duration</h3><div class="value">\${formatDuration(runSummary.duration)}</div></div>
-        </div>
-        <div class="dashboard-bottom-row">
-          <div style="display: grid; gap: 20px">
-            \${generatePieChartFromData(data.pieData, 400, 390)}
-            \${runSummary.environment && Object.keys(runSummary.environment).length > 0 
-              ? generateEnvironmentDashboardFromData(runSummary.environment) 
-              : '<div class="no-data">Environment data not available.</div>'}
-          </div>
-          \${generateSuitesWidgetFromData(data.suitesData)}
-        </div>
-      \`;
+    function formatDuration(ms, options = {}) {
+        const { precision = 1, invalidInputReturn = "N/A", defaultForNullUndefinedNegative = null } = options;
+        const validPrecision = Math.max(0, Math.floor(precision));
+        const zeroWithPrecision = (0).toFixed(validPrecision) + "s";
+        const resolvedNullUndefNegReturn = defaultForNullUndefinedNegative === null ? zeroWithPrecision : defaultForNullUndefinedNegative;
+        if (ms === undefined || ms === null) return resolvedNullUndefNegReturn;
+        const numMs = Number(ms);
+        if (Number.isNaN(numMs) || !Number.isFinite(numMs)) return invalidInputReturn;
+        if (numMs < 0) return resolvedNullUndefNegReturn;
+        if (numMs === 0) return zeroWithPrecision;
+        const MS_PER_SECOND = 1000, SECONDS_PER_MINUTE = 60, MINUTES_PER_HOUR = 60, SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
+        const totalRawSeconds = numMs / MS_PER_SECOND;
+        if (totalRawSeconds < SECONDS_PER_MINUTE && Math.ceil(totalRawSeconds) < SECONDS_PER_MINUTE) {
+            return \`\${totalRawSeconds.toFixed(validPrecision)}s\`;
+        } else {
+            const totalMsRoundedUpToSecond = Math.ceil(numMs / MS_PER_SECOND) * MS_PER_SECOND;
+            let remainingMs = totalMsRoundedUpToSecond;
+            const h = Math.floor(remainingMs / (MS_PER_SECOND * SECONDS_PER_HOUR));
+            remainingMs %= MS_PER_SECOND * SECONDS_PER_HOUR;
+            const m = Math.floor(remainingMs / (MS_PER_SECOND * SECONDS_PER_MINUTE));
+            remainingMs %= MS_PER_SECOND * SECONDS_PER_MINUTE;
+            const s = Math.floor(remainingMs / MS_PER_SECOND);
+            const parts = [];
+            if (h > 0) parts.push(\`\${h}h\`);
+            if (h > 0 || m > 0 || numMs >= MS_PER_SECOND * SECONDS_PER_MINUTE) parts.push(\`\${m}m\`);
+            parts.push(\`\${s}s\`);
+            return parts.join(" ");
+        }
     }
     
-    function generateTestRunSummaryTabHTML() {
-      const data = window._pulseData;
-      const results = data.results || [];
-      if (results.length === 0) { return '<div class="no-tests">No test results found in this run.</div>'; }
-      const testListHTML = results.map((test, index) => {
-        const browser = test.browser || "unknown";
-        const testFileParts = test.name.split(" > ");
-        const testTitle = testFileParts[testFileParts.length - 1] || "Unnamed Test";
-        return \`
-          <div class="test-case" data-status="\${test.status}" data-browser="\${sanitizeHTML(browser)}" data-tags="\${(test.tags || []).join(",").toLowerCase()}">
-            <div class="test-case-header" role="button" aria-expanded="false" data-test-index="\${index}">
-              <div class="test-case-summary">
-                <span class="status-badge \${getStatusClass(test.status)}">\${String(test.status).toUpperCase()}</span>
-                <span class="test-case-title" title="\${sanitizeHTML(test.name)}">\${sanitizeHTML(testTitle)}</span>
-                <span class="test-case-browser">(\${sanitizeHTML(browser)})</span>
-              </div>
-              <div class="test-case-meta">
-                \${test.tags && test.tags.length > 0 ? test.tags.map(t => \`<span class="tag">\${sanitizeHTML(t)}</span>\`).join(" ") : ""}
-                <span class="test-duration">\${formatDuration(test.duration)}</span>
-              </div>
-            </div>
-            <div class="test-case-content" id="test-details-\${index}" style="display: none;"></div>
-          </div>
-        \`;
-      }).join("");
-      return \`
-        <div class="filters">
-            <input type="text" id="filter-name" placeholder="Filter by test name/path..." style="border-color: black; border-style: outset;">
-            <select id="filter-status">
-                <option value="">All Statuses</option>
-                <option value="passed">Passed</option>
-                <option value="failed">Failed</option>
-                <option value="skipped">Skipped</option>
-            </select>
-            <select id="filter-browser">
-                <option value="">All Browsers</option>
-                \${Array.from(new Set((results || []).map(test => test.browser || "unknown"))).map(browser => \`<option value="\${sanitizeHTML(browser)}">\${sanitizeHTML(browser)}</option>\`).join("")}
-            </select>
-            <button id="expand-all-tests">Expand All</button>
-            <button id="collapse-all-tests">Collapse All</button>
-            <button id="clear-run-summary-filters" class="clear-filters-btn">Clear Filters</button>
-        </div>
-        <div class="test-cases-list">\${testListHTML}</div>
-      \`;
-    }
-    
-    function generateAIFailureAnalyzerTabHTML() {
-      const results = window._pulseData.results || [];
-      const failedTests = results.filter(test => test.status === 'failed');
-      if (failedTests.length === 0) { return \`<h2 class="tab-main-title">AI Failure Analysis</h2><div class="no-data">Congratulations! No failed tests in this run.</div>\`; }
-      return \`
-        <h2 class="tab-main-title">AI Failure Analysis</h2>
-        <div class="ai-analyzer-stats">
-          <div class="stat-item"><span class="stat-number">\${failedTests.length}</span><span class="stat-label">Failed Tests</span></div>
-          <div class="stat-item"><span class="stat-number">\${new Set(failedTests.map(t => t.browser)).size}</span><span class="stat-label">Browsers</span></div>
-          <div class="stat-item"><span class="stat-number">\${Math.round(failedTests.reduce((sum, test) => sum + (test.duration || 0), 0) / 1000)}s</span><span class="stat-label">Total Duration</span></div>
-        </div>
-        <p class="ai-analyzer-description">Analyze failed tests using AI to get suggestions and potential fixes. Click the AI Fix button for specific failed test.</p>
-        <div class="compact-failure-list">
-          \${failedTests.map(test => {
-            const testTitle = test.name.split(" > ").pop() || "Unnamed Test";
-            const testJson = btoa(JSON.stringify(test));
-            const truncatedError = (test.errorMessage || "No error message").slice(0, 150) + (test.errorMessage && test.errorMessage.length > 150 ? "..." : "");
-            return \`
-              <div class="compact-failure-item">
-                <div class="failure-header">
-                  <div class="failure-main-info">
-                    <h3 class="failure-title" title="\${sanitizeHTML(test.name)}">\${sanitizeHTML(testTitle)}</h3>
-                    <div class="failure-meta"><span class="browser-indicator">\${sanitizeHTML(test.browser || 'unknown')}</span><span class="duration-indicator">\${formatDuration(test.duration)}</span></div>
-                  </div>
-                  <button class="compact-ai-btn" onclick="getAIFix(this)" data-test-json="\${testJson}"><span class="ai-text">AI Fix</span></button>
-                </div>
-                <div class="failure-error-preview">
-                  <div class="error-snippet">\${formatPlaywrightError(truncatedError)}</div>
-                  <button class="expand-error-btn" onclick="toggleErrorDetails(this)"><span class="expand-text">Show Full Error</span><span class="expand-icon">▼</span></button>
-                </div>
-                <div class="full-error-details" style="display: none;"><div class="full-error-content">\${formatPlaywrightError(test.errorMessage || "No detailed error message available")}</div></div>
-              </div> \`;
-          }).join('')}
-        </div>
-        <div id="ai-fix-modal" class="ai-modal-overlay" onclick="closeAiModal()"><div class="ai-modal-content" onclick="event.stopPropagation()"><div class="ai-modal-header"><h3 id="ai-fix-modal-title">AI Analysis</h3><span class="ai-modal-close" onclick="closeAiModal()">×</span></div><div class="ai-modal-body" id="ai-fix-modal-content"></div></div></div>
-      \`;
+    function formatPlaywrightError(error) {
+        const ansiToHtml = (text) => {
+            if (!text) return "";
+            const codes = {
+              '1': 'font-weight:bold', '31': 'color:#d00', '32': 'color:#0a0', '39': 'color:inherit'
+              // Simplified for brevity, can be expanded
+            };
+            return text.replace(/\\u001b\\[(\\d+)m/g, (match, code) => {
+              return codes[code] ? \`<span style="\${codes[code]}">\` : '</span>';
+            }).replace(/\\n/g, '<br>');
+        };
+        const commandOutput = ansiToHtml(error || error.message);
+        return commandOutput;
     }
 
+    // --- End of Helper functions moved to client-side ---
+
+    const loadedTabs = new Set(['test-history']); // Test History is server-rendered
+
+    function initializeLazyLoading() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                loadTabContent(tabId);
+            });
+        });
+        // Load the initially active tab
+        const activeTab = document.querySelector('.tab-button.active');
+        if (activeTab) {
+            loadTabContent(activeTab.getAttribute('data-tab'));
+        }
+    }
+
+    function loadTabContent(tabId) {
+        if (loadedTabs.has(tabId)) {
+            return; // Already loaded
+        }
+        
+        const contentArea = document.getElementById(tabId);
+        if (!contentArea) return;
+
+        const htmlContent = window._tabContents[tabId];
+        
+        if (htmlContent) {
+            contentArea.innerHTML = htmlContent;
+            loadedTabs.add(tabId);
+            // Re-initialize event listeners for the new content
+            initializeReportInteractivity(); 
+             // Trigger lazy loading for any charts/images in the new content
+            observeLazyElementsIn(contentArea);
+        } else {
+            contentArea.innerHTML = '<div class="no-data">Could not load tab content.</div>';
+        }
+    }
+
+    function observeLazyElementsIn(container) {
+        const lazyLoadElements = container.querySelectorAll('.lazy-load-chart, .lazy-load-image, .lazy-load-video, .lazy-load-attachment');
+        if ('IntersectionObserver' in window) {
+            let lazyObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const element = entry.target;
+                        // Existing lazy loading logic for charts, images, etc.
+                        if (element.classList.contains('lazy-load-chart')) {
+                            const renderFunctionName = element.dataset.renderFunctionName;
+                            if (renderFunctionName && typeof window[renderFunctionName] === 'function') {
+                                window[renderFunctionName]();
+                            }
+                        }
+                        observer.unobserve(element);
+                    }
+                });
+            }, { rootMargin: "0px 0px 200px 0px" });
+            lazyLoadElements.forEach(el => lazyObserver.observe(el));
+        } else {
+            // Fallback for older browsers
+             lazyLoadElements.forEach(element => {
+                if (element.classList.contains('lazy-load-chart')) {
+                    const renderFn = element.dataset.renderFunctionName;
+                    if(renderFn && window[renderFn]) window[renderFn]();
+                }
+             });
+        }
+    }
+    
     function generateTestDetailsHTML(testIndex) {
       const test = window._pulseData.results[testIndex];
       if (!test) return '<div class="no-data">Test data not found.</div>';
+      
+      const browser = test.browser || "unknown";
+      
       const generateStepsHTML = (steps, depth = 0) => {
-        if (!steps || steps.length === 0) return "<div class='no-steps'>No steps recorded for this test.</div>";
+        if (!steps || steps.length === 0)
+          return "<div class='no-steps'>No steps recorded for this test.</div>";
         return steps.map((step) => {
           const hasNestedSteps = step.steps && step.steps.length > 0;
           const isHook = step.hookType;
           const stepClass = isHook ? \`step-hook step-hook-\${step.hookType}\` : "";
           const hookIndicator = isHook ? \` (\${step.hookType} hook)\` : "";
           return \`<div class="step-item" style="--depth: \${depth};">
-            <div class="step-header \${stepClass}" role="button" aria-expanded="false" onclick="toggleElementDetails(this, '.step-details')">
+            <div class="step-header \${stepClass}" role="button" aria-expanded="false">
               <span class="step-icon">\${getStatusIcon(step.status)}</span>
               <span class="step-title">\${sanitizeHTML(step.title)}\${hookIndicator}</span>
               <span class="step-duration">\${formatDuration(step.duration)}</span>
             </div>
             <div class="step-details" style="display: none;">
               \${step.codeLocation ? \`<div class="step-info code-section"><strong>Location:</strong> \${sanitizeHTML(step.codeLocation)}</div>\` : ""}
-              \${step.errorMessage ? \`<div class="test-error-summary">\${formatPlaywrightError(step.errorMessage)}</div>\` : ""}
+              \${step.errorMessage ? \`<div class="test-error-summary">
+                \${step.stackTrace ? \`<div class="stack-trace">\${formatPlaywrightError(step.stackTrace)}</div>\` : ""}
+                <button class="copy-error-btn" onclick="copyErrorToClipboard(this)">Copy Error Prompt</button>
+              </div>\` : ""}
               \${hasNestedSteps ? \`<div class="nested-steps">\${generateStepsHTML(step.steps, depth + 1)}</div>\` : ""}
             </div>
           </div>\`;
         }).join("");
       };
+      
       let html = \`
         <p><strong>Full Path:</strong> \${sanitizeHTML(test.name)}</p>
-        <p><strong>Test run Worker ID:</strong> \${sanitizeHTML(test.workerId)} [<strong>Total No. of Workers:</strong> \${sanitizeHTML(test.totalWorkers)}]</p>
-        \${test.errorMessage ? \`<div class="test-error-summary">\${formatPlaywrightError(test.errorMessage)}<button class="copy-error-btn" onclick="copyErrorToClipboard(this)">Copy Error Prompt</button></div>\` : ""}
-        \${test.snippet ? \`<div class="code-section"><h4>Error Snippet</h4><pre><code>\${formatPlaywrightError(test.snippet)}</code></pre></div>\` : ""}
+        <p><strong>Test run Worker ID:</strong> \${sanitizeHTML(test.workerId)} 
+           [<strong>Total No. of Workers:</strong> \${sanitizeHTML(test.totalWorkers)}]</p>
+        \${test.errorMessage ? \`<div class="test-error-summary">
+          \${formatPlaywrightError(test.errorMessage)}
+          <button class="copy-error-btn" onclick="copyErrorToClipboard(this)">Copy Error Prompt</button>
+        </div>\` : ""}
+        \${test.snippet ? \`<div class="code-section"><h4>Error Snippet</h4>
+          <pre><code>\${formatPlaywrightError(test.snippet)}</code></pre></div>\` : ""}
         <h4>Steps</h4>
         <div class="steps-list">\${generateStepsHTML(test.steps)}</div>
       \`;
-      if (test.stdout && test.stdout.length > 0) { const logId = \`stdout-log-\${test.id || testIndex}\`; html += \`<div class="console-output-section"><h4>Console Output (stdout)<button class="copy-btn" onclick="copyLogContent('\${logId}', this)">Copy Console</button></h4><div class="log-wrapper"><pre id="\${logId}" class="console-log stdout-log" style="background-color: #2d2d2d; color: wheat; padding: 1.25em; border-radius: 0.85em; line-height: 1.2;">\${formatPlaywrightError(test.stdout.map(line => sanitizeHTML(line)).join("\\n"))}</pre></div></div>\`; }
-      if (test.screenshots && test.screenshots.length > 0) { html += \`<div class="attachments-section"><h4>Screenshots</h4><div class="attachments-grid">\${test.screenshots.map((screenshot, index) => \` <div class="attachment-item"><img src="\${screenshot}" alt="Screenshot \${index + 1}"><div class="attachment-info"><div class="trace-actions"><a href="\${screenshot}" target="_blank" download="screenshot-\${index}.png">Download</a></div></div></div> \`).join("")}</div></div>\`; }
-      if (test.videoPath && test.videoPath.length > 0) { html += \`<div class="attachments-section"><h4>Videos</h4><div class="attachments-grid">\${test.videoPath.map((video, index) => \` <div class="attachment-item video-item"><video controls preload="metadata"><source src="\${video.dataUri}" type="\${video.mimeType}"></video><div class="attachment-info"><div class="trace-actions"><a href="\${video.dataUri}" target="_blank" download="video-\${index}.\${video.extension}">Download</a></div></div></div> \`).join("")}</div></div>\`; }
-      if (test.tracePath) { html += \`<div class="attachments-section"><h4>Trace File</h4><div class="attachments-grid"><div class="attachment-item generic-attachment"><div class="attachment-icon">📄</div><div class="attachment-caption"><span class="attachment-name">trace.zip</span></div><div class="attachment-info"><div class="trace-actions"><a href="\${test.tracePath}" download="trace.zip">Download Trace</a></div></div></div></div></div>\`; }
-      if (test.attachments && test.attachments.length > 0) { html += \`<div class="attachments-section"><h4>Other Attachments</h4><div class="attachments-grid">\${test.attachments.map(attachment => \` <div class="attachment-item generic-attachment"><div class="attachment-icon">\${getAttachmentIcon(attachment.contentType)}</div><div class="attachment-caption"><span class="attachment-name" title="\${sanitizeHTML(attachment.name)}">\${sanitizeHTML(attachment.name)}</span><span class="attachment-type">\${sanitizeHTML(attachment.contentType)}</span></div><div class="attachment-info"><div class="trace-actions"><a href="\${attachment.dataUri}" target="_blank" class="view-full">View</a><a href="\${attachment.dataUri}" download="\${sanitizeHTML(attachment.name)}">Download</a></div></div></div> \`).join("")}</div></div>\`; }
+      
+      // Add stdout if exists
+      if (test.stdout && test.stdout.length > 0) {
+        const logId = \`stdout-log-\${test.id || testIndex}\`;
+        html += \`<div class="console-output-section">
+          <h4>Console Output (stdout)
+            <button class="copy-btn" onclick="copyLogContent('\${logId}', this)">Copy Console</button>
+          </h4>
+          <div class="log-wrapper">
+            <pre id="\${logId}" class="console-log stdout-log" style="background-color: #2d2d2d; color: wheat; padding: 1.25em; border-radius: 0.85em; line-height: 1.2;">
+              \${formatPlaywrightError(test.stdout.map(line => sanitizeHTML(line)).join("\\n"))}
+            </pre>
+          </div>
+        </div>\`;
+      }
+      
+      // Add stderr if exists
+      if (test.stderr && test.stderr.length > 0) {
+        html += \`<div class="console-output-section">
+          <h4>Console Output (stderr)</h4>
+          <pre class="console-log stderr-log">\${test.stderr.map(line => sanitizeHTML(line)).join("\\n")}</pre>
+        </div>\`;
+      }
+      
+      // Add screenshots - these are already base64 encoded in the data
+      if (test.screenshots && test.screenshots.length > 0) {
+        html += \`<div class="attachments-section">
+          <h4>Screenshots</h4>
+          <div class="attachments-grid">
+            \${test.screenshots.map((screenshot, index) => \`
+              <div class="attachment-item">
+                <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" 
+                     data-src="\${screenshot}" 
+                     alt="Screenshot \${index + 1}" 
+                     class="lazy-load-image">
+                <div class="attachment-info">
+                  <div class="trace-actions">
+                    <a href="\${screenshot}" target="_blank" download="screenshot-\${index}.png">Download</a>
+                  </div>
+                </div>
+              </div>
+            \`).join("")}
+          </div>
+        </div>\`;
+      }
+      
+      // Add videos
+      if (test.videoPath && test.videoPath.length > 0) {
+        html += \`<div class="attachments-section">
+          <h4>Videos</h4>
+          <div class="attachments-grid">
+            \${test.videoPath.map((video, index) => \`
+              <div class="attachment-item video-item">
+                <video controls preload="none" class="lazy-load-video">
+                  <source data-src="\${video.dataUri}" type="\${video.mimeType}">
+                </video>
+                <div class="attachment-info">
+                  <div class="trace-actions">
+                    <a href="\${video.dataUri}" target="_blank" download="video-\${index}.\${video.extension}">Download</a>
+                  </div>
+                </div>
+              </div>
+            \`).join("")}
+          </div>
+        </div>\`;
+      }
+      
+      // Add trace file
+      if (test.tracePath) {
+        html += \`<div class="attachments-section">
+          <h4>Trace File</h4>
+          <div class="attachments-grid">
+            <div class="attachment-item generic-attachment">
+              <div class="attachment-icon">📄</div>
+              <div class="attachment-caption">
+                <span class="attachment-name">trace.zip</span>
+              </div>
+              <div class="attachment-info">
+                <div class="trace-actions">
+                  <a href="#" data-href="\${test.tracePath}" class="lazy-load-attachment" download="trace.zip">Download Trace</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>\`;
+      }
+      
+      // Add other attachments
+      if (test.attachments && test.attachments.length > 0) {
+        html += \`<div class="attachments-section">
+          <h4>Other Attachments</h4>
+          <div class="attachments-grid">
+            \${test.attachments.map(attachment => \`
+              <div class="attachment-item generic-attachment">
+                <div class="attachment-icon">\${getAttachmentIcon(attachment.contentType)}</div>
+                <div class="attachment-caption">
+                  <span class="attachment-name" title="\${sanitizeHTML(attachment.name)}">\${sanitizeHTML(attachment.name)}</span>
+                  <span class="attachment-type">\${sanitizeHTML(attachment.contentType)}</span>
+                </div>
+                <div class="attachment-info">
+                  <div class="trace-actions">
+                    <a href="\${attachment.dataUri}" target="_blank" class="view-full">View</a>
+                    <a href="\${attachment.dataUri}" download="\${sanitizeHTML(attachment.name)}">Download</a>
+                  </div>
+                </div>
+              </div>
+            \`).join("")}
+          </div>
+        </div>\`;
+      }
+      
+      // Add code snippet if exists
+      if (test.codeSnippet) {
+        html += \`<div class="code-section">
+          <h4>Code Snippet</h4>
+          <pre><code>\${sanitizeHTML(test.codeSnippet)}</code></pre>
+        </div>\`;
+      }
+      
       return html;
     }
 
-    // --- Main Initializer and Event Listeners ---
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const tabButtons = document.querySelectorAll('.tab-button');
-      const tabContents = document.querySelectorAll('.tab-content');
-      const loadedTabs = new Set(['test-history']); // Test History is server-rendered
-
-      const loadTabContent = (tabId) => {
-          if (loadedTabs.has(tabId)) return;
-          
-          const contentEl = document.getElementById(tabId);
-          if (!contentEl) return;
-
-          let html = '';
-          if (tabId === 'dashboard') {
-              html = generateDashboardTabHTML();
-          } else if (tabId === 'test-runs') {
-              html = generateTestRunSummaryTabHTML();
-          } else if (tabId === 'ai-failure-analyzer') {
-              html = generateAIFailureAnalyzerTabHTML();
-          }
-
-          contentEl.innerHTML = html;
-          loadedTabs.add(tabId);
-          
-          // Re-initialize any dynamic behaviors for the new content
-          initializeReportInteractivity(contentEl); 
-      };
-
-      tabButtons.forEach(button => {
-          button.addEventListener('click', () => {
-              const tabId = button.getAttribute('data-tab');
-              
-              tabButtons.forEach(btn => btn.classList.remove('active'));
-              tabContents.forEach(content => content.classList.remove('active'));
-              
-              button.classList.add('active');
-              const activeContent = document.getElementById(tabId);
-              if (activeContent) {
-                  activeContent.classList.add('active');
-                  loadTabContent(tabId);
-              }
-          });
-      });
-      
-      // Initial load for the default active tab
-      const initialActiveTab = document.querySelector('.tab-button.active');
-      if (initialActiveTab) {
-          loadTabContent(initialActiveTab.getAttribute('data-tab'));
-      }
-      
-      // Initialize interactivity for server-rendered content
-      initializeReportInteractivity(document.getElementById('test-history'));
-    });
-
-    function initializeReportInteractivity(container) {
-        // --- Test Run Summary Filters (if container is test-runs) ---
-        const nameFilter = container.querySelector('#filter-name');
-        const statusFilter = container.querySelector('#filter-status');
-        const browserFilter = container.querySelector('#filter-browser');
-        const clearRunSummaryFiltersBtn = container.querySelector('#clear-run-summary-filters');
+    function initializeReportInteractivity() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                // Deactivate all
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                // Activate current
+                button.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
         
+        // --- Test Run Summary Filters ---
+        const nameFilter = document.getElementById('filter-name');
+        const statusFilter = document.getElementById('filter-status');
+        const browserFilter = document.getElementById('filter-browser');
+        const clearRunSummaryFiltersBtn = document.getElementById('clear-run-summary-filters'); 
         function filterTestCases() { 
             const nameValue = nameFilter ? nameFilter.value.toLowerCase() : "";
             const statusValue = statusFilter ? statusFilter.value : "";
             const browserValue = browserFilter ? browserFilter.value : "";
-            container.querySelectorAll('.test-case').forEach(testCaseElement => {
+            document.querySelectorAll('#test-runs .test-case').forEach(testCaseElement => {
                 const titleElement = testCaseElement.querySelector('.test-case-title');
                 const fullTestName = titleElement ? titleElement.getAttribute('title').toLowerCase() : "";
                 const status = testCaseElement.getAttribute('data-status');
@@ -806,15 +2456,15 @@ function generateHTML(reportData, trendData = null) {
             if(nameFilter) nameFilter.value = ''; if(statusFilter) statusFilter.value = ''; if(browserFilter) browserFilter.value = '';
             filterTestCases();
         });
-
-        // --- Test History Filters (if container is test-history) ---
-        const historyNameFilter = container.querySelector('#history-filter-name');
-        const historyStatusFilter = container.querySelector('#history-filter-status');
-        const clearHistoryFiltersBtn = container.querySelector('#clear-history-filters'); 
+        
+        // --- Test History Filters ---
+        const historyNameFilter = document.getElementById('history-filter-name');
+        const historyStatusFilter = document.getElementById('history-filter-status');
+        const clearHistoryFiltersBtn = document.getElementById('clear-history-filters'); 
         function filterTestHistoryCards() { 
             const nameValue = historyNameFilter ? historyNameFilter.value.toLowerCase() : "";
             const statusValue = historyStatusFilter ? historyStatusFilter.value : "";
-            container.querySelectorAll('.test-history-card').forEach(card => {
+            document.querySelectorAll('.test-history-card').forEach(card => {
                 const testTitle = card.getAttribute('data-test-name').toLowerCase(); 
                 const latestStatus = card.getAttribute('data-latest-status');
                 const nameMatch = testTitle.includes(nameValue);
@@ -828,561 +2478,409 @@ function generateHTML(reportData, trendData = null) {
             if(historyNameFilter) historyNameFilter.value = ''; if(historyStatusFilter) historyStatusFilter.value = '';
             filterTestHistoryCards();
         });
-
-        // --- Event Delegation for Expand/Collapse ---
-        container.addEventListener('click', function(event) {
-          const header = event.target.closest('.test-case-header');
-          if (header) {
-            const contentElement = header.nextElementSibling;
-            const isExpanded = contentElement.style.display === 'block';
-            contentElement.style.display = isExpanded ? 'none' : 'block';
-            header.setAttribute('aria-expanded', String(!isExpanded));
-            
-            // Lazy load test details on first expansion
-            if (!isExpanded && contentElement.innerHTML.trim() === '') {
-              const testIndex = header.getAttribute('data-test-index');
-              contentElement.innerHTML = generateTestDetailsHTML(testIndex);
-              // Re-run observer for any new lazy content inside details
-              initializeLazyLoading(contentElement);
-            }
-          }
-        });
-
-        const expandAllBtn = container.querySelector('#expand-all-tests');
-        const collapseAllBtn = container.querySelector('#collapse-all-tests');
-        function setAllTestRunDetailsVisibility(displayMode, ariaState) {
-            container.querySelectorAll('.test-case-header').forEach(header => {
-              const contentElement = header.nextElementSibling;
-              if (displayMode === 'block' && contentElement.innerHTML.trim() === '') {
-                  const testIndex = header.getAttribute('data-test-index');
-                  contentElement.innerHTML = generateTestDetailsHTML(testIndex);
-                  initializeLazyLoading(contentElement);
-              }
-              contentElement.style.display = displayMode;
-              header.setAttribute('aria-expanded', ariaState);
-            });
-        }
-        if (expandAllBtn) expandAllBtn.addEventListener('click', () => setAllTestRunDetailsVisibility('block', 'true'));
-        if (collapseAllBtn) collapseAllBtn.addEventListener('click', () => setAllTestRunDetailsVisibility('none', 'false'));
         
-        initializeLazyLoading(container);
-    }
-    
-    function initializeLazyLoading(container) {
-        const lazyLoadElements = container.querySelectorAll('.lazy-load-chart, .lazy-load-image, .lazy-load-video, .lazy-load-attachment');
-        if ('IntersectionObserver' in window) {
-            let lazyObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const element = entry.target;
-                        if (element.classList.contains('lazy-load-image')) { if (element.dataset.src) { element.src = element.dataset.src; element.removeAttribute('data-src'); } } 
-                        else if (element.classList.contains('lazy-load-video')) { const source = element.querySelector('source'); if (source && source.dataset.src) { source.src = source.dataset.src; source.removeAttribute('data-src'); element.load(); } } 
-                        else if (element.classList.contains('lazy-load-attachment')) { if (element.dataset.href) { element.href = element.dataset.href; element.removeAttribute('data-href'); } } 
-                        else if (element.classList.contains('lazy-load-chart')) { const renderFunctionName = element.dataset.renderFunctionName; if (renderFunctionName && typeof window[renderFunctionName] === 'function') { window[renderFunctionName](); } }
-                        observer.unobserve(element);
+        // --- Expand/Collapse Logic for Test Run Summary ---
+        document.getElementById('test-runs')?.addEventListener('click', function(event) {
+            const header = event.target.closest('.test-case-header');
+            if (header) {
+                const content = header.nextElementSibling;
+                const isExpanded = header.getAttribute('aria-expanded') === 'true';
+
+                if (!isExpanded && content.innerHTML.trim() === '') {
+                    // First time opening: generate and inject HTML
+                    const testIndex = header.dataset.testIndex;
+                    content.innerHTML = generateTestDetailsHTML(testIndex);
+                    observeLazyElementsIn(content); // Scan for new lazy elements
+                }
+
+                content.style.display = isExpanded ? 'none' : 'block';
+                header.setAttribute('aria-expanded', String(!isExpanded));
+            }
+        });
+        
+        const expandAllBtn = document.getElementById('expand-all-tests');
+        const collapseAllBtn = document.getElementById('collapse-all-tests');
+
+        function setAllTestRunDetailsVisibility(shouldExpand) {
+            document.querySelectorAll('#test-runs .test-case-header').forEach(header => {
+                const content = header.nextElementSibling;
+                if (shouldExpand) {
+                    if (content.innerHTML.trim() === '') {
+                        const testIndex = header.dataset.testIndex;
+                        content.innerHTML = generateTestDetailsHTML(testIndex);
+                        observeLazyElementsIn(content);
                     }
-                });
-            }, { rootMargin: "0px 0px 200px 0px" });
-            lazyLoadElements.forEach(el => lazyObserver.observe(el));
-        } else {
-            lazyLoadElements.forEach(element => {
-                if (element.classList.contains('lazy-load-image') && element.dataset.src) element.src = element.dataset.src;
-                else if (element.classList.contains('lazy-load-video')) { const source = element.querySelector('source'); if (source && source.dataset.src) { source.src = source.dataset.src; element.load(); } } 
-                else if (element.classList.contains('lazy-load-attachment') && element.dataset.href) element.href = element.dataset.href;
-                else if (element.classList.contains('lazy-load-chart')) { const renderFn = element.dataset.renderFunctionName; if(renderFn && window[renderFn]) window[renderFn](); }
+                }
+                content.style.display = shouldExpand ? 'block' : 'none';
+                header.setAttribute('aria-expanded', String(shouldExpand));
             });
         }
+        if (expandAllBtn) expandAllBtn.addEventListener('click', () => setAllTestRunDetailsVisibility(true));
+        if (collapseAllBtn) collapseAllBtn.addEventListener('click', () => setAllTestRunDetailsVisibility(false));
     }
-    
-    // --- Global functions that don't need re-initialization ---
-    function copyLogContent(elementId, button) { /* ... implementation ... */ }
-    function getAIFix(button) { /* ... implementation ... */ }
-    function closeAiModal() { /* ... implementation ... */ }
-    function toggleErrorDetails(button) { /* ... implementation ... */ }
-    function copyErrorToClipboard(button) { /* ... implementation ... */ }
-    
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeLazyLoading();
+        initializeReportInteractivity();
+        observeLazyElementsIn(document.body);
+    });
+
+    function copyErrorToClipboard(button) {
+      const errorContainer = button.closest('.test-error-summary');
+      if (!errorContainer) {
+        console.error("Could not find '.test-error-summary' container.");
+        return;
+      }
+      let errorText;
+      const stackTraceElement = errorContainer.querySelector('.stack-trace');
+      if (stackTraceElement) {
+        errorText = stackTraceElement.textContent;
+      } else {
+        const clonedContainer = errorContainer.cloneNode(true);
+        const buttonInClone = clonedContainer.querySelector('button');
+        if (buttonInClone) buttonInClone.remove();
+        errorText = clonedContainer.textContent;
+      }
+
+      if (!errorText) {
+        button.textContent = 'Nothing to copy';
+        setTimeout(() => { button.textContent = 'Copy Error'; }, 2000);
+        return;
+      }
+      navigator.clipboard.writeText(errorText.trim()).then(() => {
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        setTimeout(() => { button.textContent = originalText; }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+        button.textContent = 'Failed';
+      });
+    }
+
+    function getAIFix(button) {
+        const modal = document.getElementById('ai-fix-modal');
+        const modalContent = document.getElementById('ai-fix-modal-content');
+        const modalTitle = document.getElementById('ai-fix-modal-title');
+        
+        modal.style.display = 'flex';
+        modalTitle.textContent = 'Analyzing...';
+        modalContent.innerHTML = '<div class="ai-loader"></div>';
+
+        try {
+            const testJson = button.dataset.testJson;
+            const test = JSON.parse(atob(testJson));
+
+            const testName = test.name || 'Unknown Test';
+            const failureLogsAndErrors = [
+                'Error Message:',
+                test.errorMessage || 'Not available.',
+                '\\n\\n--- stdout ---',
+                (test.stdout && test.stdout.length > 0) ? test.stdout.join('\\n') : 'Not available.',
+                '\\n\\n--- stderr ---',
+                (test.stderr && test.stderr.length > 0) ? test.stderr.join('\\n') : 'Not available.'
+            ].join('\\n');
+            const codeSnippet = test.snippet || '';
+
+            const shortTestName = testName.split(' > ').pop();
+            modalTitle.textContent = \`Analysis for: \${shortTestName}\`;
+            
+            const apiUrl = 'https://ai-test-analyser.netlify.app/api/analyze';
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    testName: testName,
+                    failureLogsAndErrors: failureLogsAndErrors,
+                    codeSnippet: codeSnippet,
+                }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { 
+                        throw new Error(\`API request failed with status \${response.status}: \${text || response.statusText}\`);
+                    });
+                }
+                return response.text();
+            })
+            .then(text => {
+                if (!text) {
+                    throw new Error("The AI analyzer returned an empty response. This might happen during high load or if the request was blocked. Please try again in a moment.");
+                }
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error("Failed to parse JSON:", text);
+                    throw new Error(\`The AI analyzer returned an invalid response. \${e.message}\`);
+                }
+            })
+            .then(data => {
+                const escapeHtml = (unsafe) => {
+                    if (typeof unsafe !== 'string') return '';
+                    return unsafe
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;");
+                };
+
+                const analysisHtml = \`<h4>Analysis</h4><p>\${escapeHtml(data.rootCause) || 'No analysis provided.'}</p>\`;
+                
+                let suggestionsHtml = '<h4>Suggestions</h4>';
+                if (data.suggestedFixes && data.suggestedFixes.length > 0) {
+                    suggestionsHtml += '<div class="suggestions-list" style="margin-top: 15px;">';
+                    data.suggestedFixes.forEach(fix => {
+                        suggestionsHtml += \`
+                            <div class="suggestion-item" style="margin-bottom: 22px; border-left: 3px solid var(--accent-color-alt); padding-left: 15px;">
+                                <p style="margin: 0 0 8px 0; font-weight: 500;">\${escapeHtml(fix.description)}</p>
+                                \${fix.codeSnippet ? \`<div class="code-section"><pre><code>\${escapeHtml(fix.codeSnippet)}</code></pre></div>\` : ''}
+                            </div>
+                        \`;
+                    });
+                    suggestionsHtml += '</div>';
+                } else {
+                    suggestionsHtml += \`<div class="code-section"><pre><code>No suggestion provided.</code></pre></div>\`;
+                }
+                
+                modalContent.innerHTML = analysisHtml + suggestionsHtml;
+            })
+            .catch(err => {
+                console.error('AI Fix Error:', err);
+                modalContent.innerHTML = \`<div class="test-error-summary"><strong>Error:</strong> Failed to get AI analysis. Please check the console for details. <br><br> \${err.message}</div>\`;
+            });
+
+        } catch (e) {
+            console.error('Error processing test data for AI Fix:', e);
+            modalTitle.textContent = 'Error';
+            modalContent.innerHTML = \`<div class="test-error-summary">Could not process test data. Is it formatted correctly?</div>\`;
+        }
+    }
+
+    function closeAiModal() {
+        const modal = document.getElementById('ai-fix-modal');
+        if(modal) modal.style.display = 'none';
+    }
+
+    function toggleErrorDetails(button) {
+        const errorDetails = button.closest('.compact-failure-item').querySelector('.full-error-details');
+        const expandText = button.querySelector('.expand-text');
+        
+        if (errorDetails.style.display === 'none' || !errorDetails.style.display) {
+            errorDetails.style.display = 'block';
+            expandText.textContent = 'Hide Full Error';
+            button.classList.add('expanded');
+        } else {
+            errorDetails.style.display = 'none';
+            expandText.textContent = 'Show Full Error';
+            button.classList.remove('expanded');
+        }
+    }
+    // --- End of Client-Side Script ---
 </script>
 </body>
 </html>
   `;
 }
-
-// These functions remain in the Node.js scope as they are only used during server-side generation
-function getSuitesData(results) {
-  const suitesMap = new Map();
-  if (!results || results.length === 0) return [];
-
-  results.forEach((test) => {
-    const browser = test.browser || "unknown";
-    const suiteParts = test.name.split(" > ");
-    let suiteNameCandidate = "Default Suite";
-    if (suiteParts.length > 2) {
-      suiteNameCandidate = suiteParts[1];
-    } else if (suiteParts.length > 1) {
-      suiteNameCandidate = suiteParts[0]
-        .split(path.sep)
-        .pop()
-        .replace(/\.(spec|test)\.(ts|js|mjs|cjs)$/, "");
-    } else {
-      suiteNameCandidate = test.name
-        .split(path.sep)
-        .pop()
-        .replace(/\.(spec|test)\.(ts|js|mjs|cjs)$/, "");
-    }
-    const suiteName = suiteNameCandidate;
-    const key = `${suiteName}|${browser}`;
-
-    if (!suitesMap.has(key)) {
-      suitesMap.set(key, {
-        id: test.id || key,
-        name: suiteName,
-        browser: browser,
-        passed: 0,
-        failed: 0,
-        skipped: 0,
-        count: 0,
-        statusOverall: "passed",
-      });
-    }
-    const suite = suitesMap.get(key);
-    suite.count++;
-    const currentStatus = String(test.status).toLowerCase();
-    if (currentStatus && suite[currentStatus] !== undefined) {
-      suite[currentStatus]++;
-    }
-    if (currentStatus === "failed") suite.statusOverall = "failed";
-    else if (currentStatus === "skipped" && suite.statusOverall !== "failed")
-      suite.statusOverall = "skipped";
-  });
-  return Array.from(suitesMap.values());
-}
-function generateTestTrendsChart(trendData) {
-  if (!trendData || !trendData.overall || trendData.overall.length === 0) {
-    return '<div class="no-data">No overall trend data available for test counts.</div>';
-  }
-
-  const chartId = `testTrendsChart-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-  const renderFunctionName = `renderTestTrendsChart_${chartId.replace(/-/g,"_")}`;
-  const runs = trendData.overall;
-
-  const series = [
-    { name: "Total", data: runs.map((r) => r.totalTests), color: "var(--primary-color)", marker: { symbol: "circle" }, },
-    { name: "Passed", data: runs.map((r) => r.passed), color: "var(--success-color)", marker: { symbol: "circle" }, },
-    { name: "Failed", data: runs.map((r) => r.failed), color: "var(--danger-color)", marker: { symbol: "circle" }, },
-    { name: "Skipped", data: runs.map((r) => r.skipped || 0), color: "var(--warning-color)", marker: { symbol: "circle" }, },
-  ];
-  const runsForTooltip = runs.map((r) => ({ runId: r.runId, timestamp: r.timestamp, duration: r.duration, }));
-  const categoriesString = JSON.stringify(runs.map((run, i) => `Run ${i + 1}`));
-  const seriesString = JSON.stringify(series);
-  const runsForTooltipString = JSON.stringify(runsForTooltip);
-
-  return `
-      <div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}">
-          <div class="no-data">Loading Test Volume Trends...</div>
-      </div>
-      <script>
-          window.${renderFunctionName} = function() {
-              const chartContainer = document.getElementById('${chartId}');
-              if (!chartContainer) { console.error("Chart container ${chartId} not found for lazy loading."); return; }
-              if (typeof Highcharts !== 'undefined' && typeof formatDuration !== 'undefined') {
-                  try {
-                      chartContainer.innerHTML = '';
-                      const chartOptions = {
-                          chart: { type: "line", height: 350, backgroundColor: "transparent" },
-                          title: { text: null },
-                          xAxis: { categories: ${categoriesString}, crosshair: true, labels: { style: { color: 'var(--text-color-secondary)', fontSize: '12px' }}},
-                          yAxis: { title: { text: "Test Count", style: { color: 'var(--text-color)'} }, min: 0, labels: { style: { color: 'var(--text-color-secondary)', fontSize: '12px' }}},
-                          legend: { layout: "horizontal", align: "center", verticalAlign: "bottom", itemStyle: { fontSize: "12px", color: 'var(--text-color)' }},
-                          plotOptions: { series: { marker: { radius: 4, states: { hover: { radius: 6 }}}, states: { hover: { halo: { size: 5, opacity: 0.1 }}}}, line: { lineWidth: 2.5 }},
-                          tooltip: {
-                              shared: true, useHTML: true, backgroundColor: 'rgba(10,10,10,0.92)', borderColor: 'rgba(10,10,10,0.92)', style: { color: '#f5f5f5' },
-                              formatter: function () {
-                                  const runsData = ${runsForTooltipString};
-                                  const pointIndex = this.points[0].point.x;
-                                  const run = runsData[pointIndex];
-                                  let tooltip = '<strong>Run ' + (run.runId || pointIndex + 1) + '</strong><br>' + 'Date: ' + new Date(run.timestamp).toLocaleString() + '<br><br>';
-                                  this.points.forEach(point => { tooltip += '<span style="color:' + point.color + '">●</span> ' + point.series.name + ': <b>' + point.y + '</b><br>'; });
-                                  tooltip += '<br>Duration: ' + formatDuration(run.duration);
-                                  return tooltip;
-                              }
-                          },
-                          series: ${seriesString},
-                          credits: { enabled: false }
-                      };
-                      Highcharts.chart('${chartId}', chartOptions);
-                  } catch (e) {
-                      console.error("Error rendering chart ${chartId} (lazy):", e);
-                      chartContainer.innerHTML = '<div class="no-data">Error rendering test trends chart.</div>';
-                  }
-              } else {
-                  chartContainer.innerHTML = '<div class="no-data">Charting library not available for test trends.</div>';
-              }
-          };
-      </script>
-  `;
-}
-function generateDurationTrendChart(trendData) {
-  if (!trendData || !trendData.overall || trendData.overall.length === 0) {
-    return '<div class="no-data">No overall trend data available for durations.</div>';
-  }
-  const chartId = `durationTrendChart-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-  const renderFunctionName = `renderDurationTrendChart_${chartId.replace(/-/g, "_")}`;
-  const runs = trendData.overall;
-
-  const accentColorAltRGB = "255, 152, 0"; 
-
-  const chartDataString = JSON.stringify(runs.map((run) => run.duration));
-  const categoriesString = JSON.stringify(runs.map((run, i) => `Run ${i + 1}`));
-  const runsForTooltip = runs.map((r) => ({ runId: r.runId, timestamp: r.timestamp, duration: r.duration, totalTests: r.totalTests, }));
-  const runsForTooltipString = JSON.stringify(runsForTooltip);
-
-  const seriesStringForRender = `[{
-      name: 'Duration',
-      data: ${chartDataString},
-      color: 'var(--accent-color-alt)',
-      type: 'area',
-      marker: { symbol: 'circle', enabled: true, radius: 4, states: { hover: { radius: 6, lineWidthPlus: 0 } } },
-      fillColor: { linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 }, stops: [[0, 'rgba(${accentColorAltRGB}, 0.4)'], [1, 'rgba(${accentColorAltRGB}, 0.05)']] },
-      lineWidth: 2.5
-  }]`;
-
-  return `
-      <div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}">
-          <div class="no-data">Loading Duration Trends...</div>
-      </div>
-      <script>
-          window.${renderFunctionName} = function() {
-              const chartContainer = document.getElementById('${chartId}');
-              if (!chartContainer) { console.error("Chart container ${chartId} not found for lazy loading."); return; }
-              if (typeof Highcharts !== 'undefined' && typeof formatDuration !== 'undefined') {
-                  try {
-                      chartContainer.innerHTML = '';
-                      const chartOptions = {
-                          chart: { type: 'area', height: 350, backgroundColor: 'transparent' },
-                          title: { text: null },
-                          xAxis: { categories: ${categoriesString}, crosshair: true, labels: { style: { color: 'var(--text-color-secondary)', fontSize: '12px' }}},
-                          yAxis: {
-                              title: { text: 'Duration', style: { color: 'var(--text-color)' } },
-                              labels: { formatter: function() { return formatDuration(this.value); }, style: { color: 'var(--text-color-secondary)', fontSize: '12px' }},
-                              min: 0
-                          },
-                          legend: { layout: 'horizontal', align: 'center', verticalAlign: 'bottom', itemStyle: { fontSize: '12px', color: 'var(--text-color)' }},
-                          plotOptions: { area: { lineWidth: 2.5, states: { hover: { lineWidthPlus: 0 } }, threshold: null }},
-                          tooltip: {
-                              shared: true, useHTML: true, backgroundColor: 'rgba(10,10,10,0.92)', borderColor: 'rgba(10,10,10,0.92)', style: { color: '#f5f5f5' },
-                              formatter: function () {
-                                  const runsData = ${runsForTooltipString};
-                                  const pointIndex = this.points[0].point.x;
-                                  const run = runsData[pointIndex];
-                                  let tooltip = '<strong>Run ' + (run.runId || pointIndex + 1) + '</strong><br>' + 'Date: ' + new Date(run.timestamp).toLocaleString() + '<br>';
-                                  this.points.forEach(point => { tooltip += '<span style="color:' + point.series.color + '">●</span> ' + point.series.name + ': <b>' + formatDuration(point.y) + '</b><br>'; });
-                                  tooltip += '<br>Tests: ' + run.totalTests;
-                                  return tooltip;
-                              }
-                          },
-                          series: ${seriesStringForRender},
-                          credits: { enabled: false }
-                      };
-                      Highcharts.chart('${chartId}', chartOptions);
-                  } catch (e) {
-                      console.error("Error rendering chart ${chartId} (lazy):", e);
-                      chartContainer.innerHTML = '<div class="no-data">Error rendering duration trend chart.</div>';
-                  }
-              } else {
-                  chartContainer.innerHTML = '<div class="no-data">Charting library not available for duration trends.</div>';
-              }
-          };
-      </script>
-  `;
-}
-function generateTestHistoryChart(history) {
-  if (!history || history.length === 0) return '<div class="no-data-chart">No data for chart</div>';
-  const validHistory = history.filter((h) => h && typeof h.duration === "number" && h.duration >= 0);
-  if (validHistory.length === 0) return '<div class="no-data-chart">No valid data for chart</div>';
-  const chartId = `testHistoryChart-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-  const renderFunctionName = `renderTestHistoryChart_${chartId.replace(/-/g, "_")}`;
-  const seriesDataPoints = validHistory.map((run) => {
-    let color;
-    switch (String(run.status).toLowerCase()) {
-      case "passed": color = "var(--success-color)"; break;
-      case "failed": color = "var(--danger-color)"; break;
-      case "skipped": color = "var(--warning-color)"; break;
-      default: color = "var(--dark-gray-color)";
-    }
-    return { y: run.duration, marker: { fillColor: color, symbol: "circle", radius: 3.5, states: { hover: { radius: 5 } }, }, status: run.status, runId: run.runId, };
-  });
-  const accentColorRGB = "103, 58, 183";
-  const categoriesString = JSON.stringify(validHistory.map((_, i) => `R${i + 1}`));
-  const seriesDataPointsString = JSON.stringify(seriesDataPoints);
-  return `
-      <div id="${chartId}" style="width: 320px; height: 100px;" class="lazy-load-chart" data-render-function-name="${renderFunctionName}">
-          <div class="no-data-chart">Loading History...</div>
-      </div>
-      <script>
-          window.${renderFunctionName} = function() {
-              const chartContainer = document.getElementById('${chartId}');
-              if (!chartContainer) { console.error("Chart container ${chartId} not found for lazy loading."); return; }
-              if (typeof Highcharts !== 'undefined' && typeof formatDuration !== 'undefined') {
-                  try {
-                      chartContainer.innerHTML = '';
-                      const chartOptions = {
-                          chart: { type: 'area', height: 100, width: 320, backgroundColor: 'transparent', spacing: [10,10,15,35] },
-                          title: { text: null },
-                          xAxis: { categories: ${categoriesString}, labels: { style: { fontSize: '10px', color: 'var(--text-color-secondary)' }}},
-                          yAxis: { title: { text: null }, labels: { formatter: function() { return formatDuration(this.value); }, style: { fontSize: '10px', color: 'var(--text-color-secondary)' }, align: 'left', x: -35, y: 3 }, min: 0, gridLineWidth: 0, tickAmount: 4 },
-                          legend: { enabled: false },
-                          plotOptions: { area: { lineWidth: 2, lineColor: 'var(--accent-color)', fillColor: { linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 }, stops: [[0, 'rgba(${accentColorRGB}, 0.4)'],[1, 'rgba(${accentColorRGB}, 0)']]}, marker: { enabled: true }, threshold: null } },
-                          tooltip: {
-                              useHTML: true, backgroundColor: 'rgba(10,10,10,0.92)', borderColor: 'rgba(10,10,10,0.92)', style: { color: '#f5f5f5', padding: '8px' },
-                              formatter: function() {
-                                  const pointData = this.point;
-                                  let statusBadgeHtml = '<span style="padding: 2px 5px; border-radius: 3px; font-size: 0.9em; font-weight: 600; color: white; text-transform: uppercase; background-color: ';
-                                  switch(String(pointData.status).toLowerCase()) {
-                                      case 'passed': statusBadgeHtml += 'var(--success-color)'; break; case 'failed': statusBadgeHtml += 'var(--danger-color)'; break; case 'skipped': statusBadgeHtml += 'var(--warning-color)'; break; default: statusBadgeHtml += 'var(--dark-gray-color)';
-                                  }
-                                  statusBadgeHtml += ';">' + String(pointData.status).toUpperCase() + '</span>';
-                                  return '<strong>Run ' + (pointData.runId || (this.point.index + 1)) + '</strong><br>' + 'Status: ' + statusBadgeHtml + '<br>' + 'Duration: ' + formatDuration(pointData.y);
-                              }
-                          },
-                          series: [{ data: ${seriesDataPointsString}, showInLegend: false }],
-                          credits: { enabled: false }
-                      };
-                      Highcharts.chart('${chartId}', chartOptions);
-                  } catch (e) {
-                      console.error("Error rendering chart ${chartId} (lazy):", e);
-                      chartContainer.innerHTML = '<div class="no-data-chart">Error rendering history chart.</div>';
-                  }
-              } else {
-                  chartContainer.innerHTML = '<div class="no-data-chart">Charting library not available for history.</div>';
-              }
-          };
-      </script>
-  `;
-}
-const infoTooltip = `
-  <span class="info-tooltip" style="display: inline-block; margin-left: 8px;">
-    <span class="info-icon" style="cursor: pointer; font-size: 1.25rem;" onclick="window.workerInfoPrompt()">ℹ️</span>
-  </span>
-  <script>
-    window.workerInfoPrompt = function() {
-      const message = 'Why is worker -1 special?\\n\\n' +
-                     'Playwright assigns skipped tests to worker -1 because:\\n' +
-                     '1. They don\\'t require browser execution\\n' +
-                     '2. This keeps real workers focused on actual tests\\n' +
-                     '3. Maintains clean reporting\\n\\n' +
-                     'This is an intentional optimization by Playwright.';
-      alert(message);
-    }
-  </script>
-`;
-function generateTestHistoryContent(trendData) {
-  if (!trendData || !trendData.testRuns || Object.keys(trendData.testRuns).length === 0) {
-    return '<div class="no-data">No historical test data available.</div>';
-  }
-  const allTestNamesAndPaths = new Map();
-  Object.values(trendData.testRuns).forEach((run) => {
-    if (Array.isArray(run)) {
-      run.forEach((test) => {
-        if (test && test.testName && !allTestNamesAndPaths.has(test.testName)) {
-          const parts = test.testName.split(" > ");
-          const title = parts[parts.length - 1];
-          allTestNamesAndPaths.set(test.testName, title);
-        }
-      });
-    }
-  });
-  if (allTestNamesAndPaths.size === 0) { return '<div class="no-data">No historical test data found after processing.</div>'; }
-  const testHistory = Array.from(allTestNamesAndPaths.entries())
-    .map(([fullTestName, testTitle]) => {
-      const history = [];
-      (trendData.overall || []).forEach((overallRun, index) => {
-        const runKey = overallRun.runId ? `test run ${overallRun.runId}` : `test run ${index + 1}`;
-        const testRunForThisOverallRun = trendData.testRuns[runKey]?.find((t) => t && t.testName === fullTestName);
-        if (testRunForThisOverallRun) { history.push({ runId: overallRun.runId || index + 1, status: testRunForThisOverallRun.status || "unknown", duration: testRunForThisOverallRun.duration || 0, timestamp: testRunForThisOverallRun.timestamp || overallRun.timestamp || new Date(), }); }
-      });
-      return { fullTestName, testTitle, history };
-    })
-    .filter((item) => item.history.length > 0);
-
-  return `
-    <div class="test-history-container">
-      <div class="filters" style="border-color: black; border-style: groove;">
-        <input type="text" id="history-filter-name" placeholder="Search by test title..." style="border-color: black; border-style: outset;">
-        <select id="history-filter-status"> <option value="">All Statuses</option> <option value="passed">Passed</option> <option value="failed">Failed</option> <option value="skipped">Skipped</option> </select>
-        <button id="clear-history-filters" class="clear-filters-btn">Clear Filters</button>
-      </div>
-      <div class="test-history-grid">
-        ${testHistory.map((test) => {
-            const latestRun = test.history.length > 0 ? test.history[test.history.length - 1] : { status: "unknown" };
-            return `
-            <div class="test-history-card" data-test-name="${sanitizeHTML(test.testTitle.toLowerCase())}" data-latest-status="${latestRun.status}">
-              <div class="test-history-header"> <p title="${sanitizeHTML(test.testTitle)}">${capitalize(sanitizeHTML(test.testTitle))}</p> <span class="status-badge ${getStatusClass(latestRun.status)}">${String(latestRun.status).toUpperCase()}</span> </div>
-              <div class="test-history-trend"> ${generateTestHistoryChart(test.history)} </div>
-              <details class="test-history-details-collapsible"> <summary>Show Run Details (${test.history.length})</summary> <div class="test-history-details"> <table> <thead><tr><th>Run</th><th>Status</th><th>Duration</th><th>Date</th></tr></thead> <tbody> \${test.history.slice().reverse().map((run) => \` <tr> <td>\${run.runId}</td> <td><span class="status-badge-small \${getStatusClass(run.status)}">\${String(run.status).toUpperCase()}</span></td> <td>\${formatDuration(run.duration)}</td> <td>\${formatDate(run.timestamp)}</td> </tr>\`).join("")} </tbody> </table> </div> </details>
-            </div>`;
-          }).join("")}
-      </div>
-    </div>
-  `;
-}
-function generateWorkerDistributionChart(results) {
-  if (!results || results.length === 0) { return '<div class="no-data">No test results data available to display worker distribution.</div>'; }
-  const sortedResults = [...results].sort((a, b) => { const timeA = a.startTime ? new Date(a.startTime).getTime() : 0; const timeB = b.startTime ? new Date(b.startTime).getTime() : 0; return timeA - timeB; });
-  const workerData = sortedResults.reduce((acc, test) => {
-    const workerId = typeof test.workerId !== "undefined" ? test.workerId : "N/A";
-    if (!acc[workerId]) { acc[workerId] = { passed: 0, failed: 0, skipped: 0, tests: [] }; }
-    const status = String(test.status).toLowerCase();
-    if (status === "passed" || status === "failed" || status === "skipped") { acc[workerId][status]++; }
-    const testTitleParts = test.name.split(" > ");
-    const testTitle = testTitleParts[testTitleParts.length - 1] || "Unnamed Test";
-    acc[workerId].tests.push({ name: testTitle, status: status });
-    return acc;
-  }, {});
-  const workerIds = Object.keys(workerData).sort((a, b) => { if (a === "N/A") return 1; if (b === "N/A") return -1; return parseInt(a, 10) - parseInt(b, 10); });
-  if (workerIds.length === 0) { return '<div class="no-data">Could not determine worker distribution from test data.</div>'; }
-  const chartId = `workerDistChart-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-  const renderFunctionName = `renderWorkerDistChart_${chartId.replace(/-/g, "_")}`;
-  const modalJsNamespace = `modal_funcs_${chartId.replace(/-/g, "_")}`;
-  const categories = workerIds.map((id) => `Worker ${id}`);
-  const fullWorkerData = workerIds.map((id) => ({ id: id, name: `Worker ${id}`, tests: workerData[id].tests, }));
-  const passedData = workerIds.map((id) => workerData[id].passed);
-  const failedData = workerIds.map((id) => workerData[id].failed);
-  const skippedData = workerIds.map((id) => workerData[id].skipped);
-  const categoriesString = JSON.stringify(categories);
-  const fullDataString = JSON.stringify(fullWorkerData);
-  const seriesString = JSON.stringify([ { name: "Passed", data: passedData, color: "var(--success-color)" }, { name: "Failed", data: failedData, color: "var(--danger-color)" }, { name: "Skipped", data: skippedData, color: "var(--warning-color)" }, ]);
-  return `
-    <style> /* ... Modal CSS from original file ... */ </style>
-    <div id="${chartId}" class="trend-chart-container lazy-load-chart" data-render-function-name="${renderFunctionName}" style="min-height: 350px;"> <div class="no-data">Loading Worker Distribution Chart...</div> </div>
-    <div id="worker-modal-${chartId}" class="worker-modal-overlay"> <div class="worker-modal-content"> <span class="worker-modal-close">×</span> <h3 id="worker-modal-title-${chartId}" style="text-align: center; margin-top: 0; margin-bottom: 25px; font-size: 1.25em; font-weight: 600; color: #fff"></h3> <div id="worker-modal-body-${chartId}"></div> </div> </div>
-    <script>
-      window.${modalJsNamespace} = {};
-      window.${renderFunctionName} = function() {
-        const chartContainer = document.getElementById('${chartId}');
-        if (!chartContainer) { console.error("Chart container ${chartId} not found."); return; }
-        const modal = document.getElementById('worker-modal-${chartId}');
-        const modalTitle = document.getElementById('worker-modal-title-${chartId}');
-        const modalBody = document.getElementById('worker-modal-body-${chartId}');
-        const closeModalBtn = modal.querySelector('.worker-modal-close');
-        window.${modalJsNamespace}.open = function(worker) {
-          if (!worker) return;
-          modalTitle.textContent = 'Test Details for ' + worker.name;
-          let testListHtml = '<ul>';
-          if (worker.tests && worker.tests.length > 0) { worker.tests.forEach(test => { let color = 'inherit'; if (test.status === 'passed') color = 'var(--success-color)'; else if (test.status === 'failed') color = 'var(--danger-color)'; else if (test.status === 'skipped') color = 'var(--warning-color)'; const escapedName = test.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); testListHtml += \`<li style="color: \${color};"><span style="color: \${color}">[\${test.status.toUpperCase()}]</span> \${escapedName}</li>\`; }); } 
-          else { testListHtml += '<li>No detailed test data available for this worker.</li>'; }
-          testListHtml += '</ul>';
-          modalBody.innerHTML = testListHtml;
-          modal.style.display = 'flex';
-        };
-        const closeModal = function() { modal.style.display = 'none'; };
-        closeModalBtn.onclick = closeModal;
-        modal.onclick = function(event) { if (event.target == modal) { closeModal(); } };
-        if (typeof Highcharts !== 'undefined') {
-          try {
-            chartContainer.innerHTML = '';
-            const fullData = ${fullDataString};
-            const chartOptions = {
-              chart: { type: 'bar', height: 350, backgroundColor: 'transparent' },
-              title: { text: null },
-              xAxis: { categories: ${categoriesString}, title: { text: 'Worker ID' }, labels: { style: { color: 'var(--text-color-secondary)' }} },
-              yAxis: { min: 0, title: { text: 'Number of Tests' }, labels: { style: { color: 'var(--text-color-secondary)' }}, stackLabels: { enabled: true, style: { fontWeight: 'bold', color: 'var(--text-color)' } } },
-              legend: { reversed: true, itemStyle: { fontSize: "12px", color: 'var(--text-color)' } },
-              plotOptions: { series: { stacking: 'normal', cursor: 'pointer', point: { events: { click: function () { const workerData = fullData[this.x]; window.${modalJsNamespace}.open(workerData); } } } } },
-              tooltip: { shared: true, headerFormat: '<b>{point.key}</b> (Click for details)<br/>', pointFormat: '<span style="color:{series.color}">●</span> {series.name}: <b>{point.y}</b><br/>', footerFormat: 'Total: <b>{point.total}</b>' },
-              series: ${seriesString},
-              credits: { enabled: false }
-            };
-            Highcharts.chart('${chartId}', chartOptions);
-          } catch (e) { console.error("Error rendering chart ${chartId}:", e); chartContainer.innerHTML = '<div class="no-data">Error rendering worker distribution chart.</div>'; }
-        } else { chartContainer.innerHTML = '<div class="no-data">Charting library not available for worker distribution.</div>'; }
-      };
-    </script>
-  `;
-}
-
 async function runScript(scriptPath) {
   return new Promise((resolve, reject) => {
     console.log(chalk.blue(`Executing script: ${scriptPath}...`));
-    const process = fork(scriptPath, [], { stdio: "inherit", });
-    process.on("error", (err) => { console.error(chalk.red(`Failed to start script: ${scriptPath}`), err); reject(err); });
+    const process = fork(scriptPath, [], {
+      stdio: "inherit",
+    });
+
+    process.on("error", (err) => {
+      console.error(chalk.red(`Failed to start script: ${scriptPath}`), err);
+      reject(err);
+    });
+
     process.on("exit", (code) => {
-      if (code === 0) { console.log(chalk.green(`Script ${scriptPath} finished successfully.`)); resolve(); } 
-      else { const errorMessage = `Script ${scriptPath} exited with code ${code}.`; console.error(chalk.red(errorMessage)); reject(new Error(errorMessage)); }
+      if (code === 0) {
+        console.log(chalk.green(`Script ${scriptPath} finished successfully.`));
+        resolve();
+      } else {
+        const errorMessage = `Script ${scriptPath} exited with code ${code}.`;
+        console.error(chalk.red(errorMessage));
+        reject(new Error(errorMessage));
+      }
     });
   });
 }
 async function main() {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  const archiveRunScriptPath = path.resolve(__dirname, "generate-trend.mjs");
+
+  // Script to archive current run to JSON history (this is your modified "generate-trend.mjs")
+  const archiveRunScriptPath = path.resolve(
+    __dirname,
+    "generate-trend.mjs" // Keeping the filename as per your request
+  );
+
   const outputDir = path.resolve(process.cwd(), DEFAULT_OUTPUT_DIR);
-  const reportJsonPath = path.resolve(outputDir, DEFAULT_JSON_FILE);
+  const reportJsonPath = path.resolve(outputDir, DEFAULT_JSON_FILE); // Current run's main JSON
   const reportHtmlPath = path.resolve(outputDir, DEFAULT_HTML_FILE);
-  const historyDir = path.join(outputDir, "history");
-  const HISTORY_FILE_PREFIX = "trend-";
-  const MAX_HISTORY_FILES_TO_LOAD_FOR_REPORT = 15;
+
+  const historyDir = path.join(outputDir, "history"); // Directory for historical JSON files
+  const HISTORY_FILE_PREFIX = "trend-"; // Match prefix used in archiving script
+  const MAX_HISTORY_FILES_TO_LOAD_FOR_REPORT = 15; // How many historical runs to show in the report
 
   console.log(chalk.blue(`Starting static HTML report generation...`));
   console.log(chalk.blue(`Output directory set to: ${outputDir}`));
 
+  // Step 1: Ensure current run data is archived to the history folder
   try {
-    await runScript(archiveRunScriptPath);
-    console.log(chalk.green("Current run data archiving to history completed."));
+    await runScript(archiveRunScriptPath); // This script now handles JSON history
+    console.log(
+      chalk.green("Current run data archiving to history completed.")
+    );
   } catch (error) {
-    console.error(chalk.red("Failed to archive current run data. Report might use stale or incomplete historical trends."), error);
+    console.error(
+      chalk.red(
+        "Failed to archive current run data. Report might use stale or incomplete historical trends."
+      ),
+      error
+    );
   }
 
+  // Step 2: Load current run's data (for non-trend sections of the report)
   let currentRunReportData;
   try {
     const jsonData = await fs.readFile(reportJsonPath, "utf-8");
     currentRunReportData = JSON.parse(jsonData);
-    if (!currentRunReportData || typeof currentRunReportData !== "object" || !currentRunReportData.results) { throw new Error("Invalid report JSON structure. 'results' field is missing or invalid."); }
-    if (!Array.isArray(currentRunReportData.results)) { currentRunReportData.results = []; console.warn(chalk.yellow("Warning: 'results' field in current run JSON was not an array. Treated as empty.")); }
+    if (
+      !currentRunReportData ||
+      typeof currentRunReportData !== "object" ||
+      !currentRunReportData.results
+    ) {
+      throw new Error(
+        "Invalid report JSON structure. 'results' field is missing or invalid."
+      );
+    }
+    if (!Array.isArray(currentRunReportData.results)) {
+      currentRunReportData.results = [];
+      console.warn(
+        chalk.yellow(
+          "Warning: 'results' field in current run JSON was not an array. Treated as empty."
+        )
+      );
+    }
   } catch (error) {
-    console.error(chalk.red(`Critical Error: Could not read or parse main report JSON at ${reportJsonPath}: ${error.message}`));
+    console.error(
+      chalk.red(
+        `Critical Error: Could not read or parse main report JSON at ${reportJsonPath}: ${error.message}`
+      )
+    );
     process.exit(1);
   }
 
+  // Step 3: Load historical data for trends
   let historicalRuns = [];
   try {
     await fs.access(historyDir);
     const allHistoryFiles = await fs.readdir(historyDir);
-    const jsonHistoryFiles = allHistoryFiles.filter((file) => file.startsWith(HISTORY_FILE_PREFIX) && file.endsWith(".json"))
-      .map((file) => ({ name: file, path: path.join(historyDir, file), timestamp: parseInt(file.replace(HISTORY_FILE_PREFIX, "").replace(".json", ""), 10), }))
-      .filter((file) => !isNaN(file.timestamp)).sort((a, b) => b.timestamp - a.timestamp);
-    const filesToLoadForTrend = jsonHistoryFiles.slice(0, MAX_HISTORY_FILES_TO_LOAD_FOR_REPORT);
+
+    const jsonHistoryFiles = allHistoryFiles
+      .filter(
+        (file) => file.startsWith(HISTORY_FILE_PREFIX) && file.endsWith(".json")
+      )
+      .map((file) => {
+        const timestampPart = file
+          .replace(HISTORY_FILE_PREFIX, "")
+          .replace(".json", "");
+        return {
+          name: file,
+          path: path.join(historyDir, file),
+          timestamp: parseInt(timestampPart, 10),
+        };
+      })
+      .filter((file) => !isNaN(file.timestamp))
+      .sort((a, b) => b.timestamp - a.timestamp);
+
+    const filesToLoadForTrend = jsonHistoryFiles.slice(
+      0,
+      MAX_HISTORY_FILES_TO_LOAD_FOR_REPORT
+    );
+
     for (const fileMeta of filesToLoadForTrend) {
       try {
         const fileContent = await fs.readFile(fileMeta.path, "utf-8");
-        historicalRuns.push(JSON.parse(fileContent));
-      } catch (fileReadError) { console.warn(chalk.yellow(`Could not read/parse history file ${fileMeta.name}: ${fileReadError.message}`)); }
+        const runJsonData = JSON.parse(fileContent);
+        historicalRuns.push(runJsonData);
+      } catch (fileReadError) {
+        console.warn(
+          chalk.yellow(
+            `Could not read/parse history file ${fileMeta.name}: ${fileReadError.message}`
+          )
+        );
+      }
     }
-    historicalRuns.reverse();
-    console.log(chalk.green(`Loaded ${historicalRuns.length} historical run(s) for trend analysis.`));
+    historicalRuns.reverse(); // Oldest first for charts
+    console.log(
+      chalk.green(
+        `Loaded ${historicalRuns.length} historical run(s) for trend analysis.`
+      )
+    );
   } catch (error) {
-    if (error.code === "ENOENT") { console.warn(chalk.yellow(`History directory '${historyDir}' not found. No historical trends will be displayed.`)); } 
-    else { console.warn(chalk.yellow(`Error loading historical data from '${historyDir}': ${error.message}`)); }
+    if (error.code === "ENOENT") {
+      console.warn(
+        chalk.yellow(
+          `History directory '${historyDir}' not found. No historical trends will be displayed.`
+        )
+      );
+    } else {
+      console.warn(
+        chalk.yellow(
+          `Error loading historical data from '${historyDir}': ${error.message}`
+        )
+      );
+    }
   }
 
-  const trendData = { overall: [], testRuns: {}, };
+  // Step 4: Prepare trendData object
+  const trendData = {
+    overall: [],
+    testRuns: {},
+  };
+
   if (historicalRuns.length > 0) {
     historicalRuns.forEach((histRunReport) => {
       if (histRunReport.run) {
         const runTimestamp = new Date(histRunReport.run.timestamp);
-        trendData.overall.push({ runId: runTimestamp.getTime(), timestamp: runTimestamp, duration: histRunReport.run.duration, totalTests: histRunReport.run.totalTests, passed: histRunReport.run.passed, failed: histRunReport.run.failed, skipped: histRunReport.run.skipped || 0, });
+        trendData.overall.push({
+          runId: runTimestamp.getTime(),
+          timestamp: runTimestamp,
+          duration: histRunReport.run.duration,
+          totalTests: histRunReport.run.totalTests,
+          passed: histRunReport.run.passed,
+          failed: histRunReport.run.failed,
+          skipped: histRunReport.run.skipped || 0,
+        });
+
         if (histRunReport.results && Array.isArray(histRunReport.results)) {
           const runKeyForTestHistory = `test run ${runTimestamp.getTime()}`;
-          trendData.testRuns[runKeyForTestHistory] = histRunReport.results.map((test) => ({ testName: test.name, duration: test.duration, status: test.status, timestamp: new Date(test.startTime), }));
+          trendData.testRuns[runKeyForTestHistory] = histRunReport.results.map(
+            (test) => ({
+              testName: test.name,
+              duration: test.duration,
+              status: test.status,
+              timestamp: new Date(test.startTime),
+            })
+          );
         }
       }
     });
-    trendData.overall.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    trendData.overall.sort(
+      (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+    );
   }
 
+  // Step 5: Generate and write HTML
   try {
     const htmlContent = generateHTML(currentRunReportData, trendData);
     await fs.writeFile(reportHtmlPath, htmlContent, "utf-8");
-    console.log(chalk.green.bold(`🎉 Pulse report generated successfully at: ${reportHtmlPath}`));
+    console.log(
+      chalk.green.bold(
+        `🎉 Pulse report generated successfully at: ${reportHtmlPath}`
+      )
+    );
     console.log(chalk.gray(`(You can open this file in your browser)`));
   } catch (error) {
     console.error(chalk.red(`Error generating HTML report: ${error.message}`));
@@ -1391,7 +2889,9 @@ async function main() {
   }
 }
 main().catch((err) => {
-  console.error(chalk.red.bold(`Unhandled error during script execution: ${err.message}`));
+  console.error(
+    chalk.red.bold(`Unhandled error during script execution: ${err.message}`)
+  );
   console.error(err.stack);
   process.exit(1);
 });
