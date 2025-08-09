@@ -1520,91 +1520,7 @@ function generateSuitesWidget(suitesData) {
   </div>
 </div>`;
 }
-function generateAIFailureAnalyzerTab(results) {
-  const failedTests = (results || []).filter(test => test.status === 'failed');
 
-  if (failedTests.length === 0) {
-    return `
-      <h2 class="tab-main-title">AI Failure Analysis</h2>
-      <div class="no-data">Congratulations! No failed tests in this run.</div>
-    `;
-  }
-
-  // btoa is not available in Node.js environment, so we define a simple polyfill for it.
-  const btoa = (str) => Buffer.from(str).toString('base64');
-
-  return `
-    <h2 class="tab-main-title">AI Failure Analysis</h2>
-    <div class="ai-analyzer-stats">
-        <div class="stat-item">
-            <span class="stat-number">${failedTests.length}</span>
-            <span class="stat-label">Failed Tests</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-number">${new Set(failedTests.map(t => t.browser)).size}</span>
-            <span class="stat-label">Browsers</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-number">${(Math.round(failedTests.reduce((sum, test) => sum + (test.duration || 0), 0) / 1000))}s</span>
-            <span class="stat-label">Total Duration</span>
-        </div>
-    </div>
-    <p class="ai-analyzer-description">
-        Analyze failed tests using AI to get suggestions and potential fixes. Click the AI Fix button for specific failed test.
-    </p>
-    
-    <div class="compact-failure-list">
-      ${failedTests.map(test => {
-    const testTitle = test.name.split(" > ").pop() || "Unnamed Test";
-    const testJson = btoa(JSON.stringify(test)); // Base64 encode the test object
-    const truncatedError = (test.errorMessage || "No error message").slice(0, 150) +
-      (test.errorMessage && test.errorMessage.length > 150 ? "..." : "");
-
-    return `
-        <div class="compact-failure-item">
-            <div class="failure-header">
-                <div class="failure-main-info">
-                    <h3 class="failure-title" title="${sanitizeHTML(test.name)}">${sanitizeHTML(testTitle)}</h3>
-                    <div class="failure-meta">
-                        <span class="browser-indicator">${sanitizeHTML(test.browser || 'unknown')}</span>
-                        <span class="duration-indicator">${formatDuration(test.duration)}</span>
-                    </div>
-                </div>
-                <button class="compact-ai-btn" onclick="getAIFix(this)" data-test-json="${testJson}">
-                    <span class="ai-text">AI Fix</span>
-                </button>
-            </div>
-            <div class="failure-error-preview">
-                <div class="error-snippet">${formatPlaywrightError(truncatedError)}</div>
-                <button class="expand-error-btn" onclick="toggleErrorDetails(this)">
-                    <span class="expand-text">Show Full Error</span>
-                    <span class="expand-icon">▼</span>
-                </button>
-            </div>
-            <div class="full-error-details" style="display: none;">
-                <div class="full-error-content">
-                    ${formatPlaywrightError(test.errorMessage || "No detailed error message available")}
-                </div>
-            </div>
-        </div>
-        `
-  }).join('')}
-    </div>
-
-    <!-- AI Fix Modal -->
-    <div id="ai-fix-modal" class="ai-modal-overlay" onclick="closeAiModal()">
-      <div class="ai-modal-content" onclick="event.stopPropagation()">
-        <div class="ai-modal-header">
-            <h3 id="ai-fix-modal-title">AI Analysis</h3>
-            <span class="ai-modal-close" onclick="closeAiModal()">×</span>
-        </div>
-        <div class="ai-modal-body" id="ai-fix-modal-content">
-            <!-- Content will be injected by JavaScript -->
-        </div>
-      </div>
-    </div>
-  `;
-}
 /**
  * Generates the HTML report with lazy loading for tabs and test details.
  * @param {object} reportData - The data for the report.
@@ -1623,10 +1539,60 @@ function generateHTML(reportData, trendData = null) {
     timestamp: new Date().toISOString(),
   };
 
+    // Process attachments to base64 for embedding in JSON
+    const processedResults = (results || []).map(test => {
+        const processed = { ...test };
+        if (test.screenshots && test.screenshots.length > 0) {
+            processed.screenshots = test.screenshots.map(screenshotPath => {
+                try {
+                    const imagePath = path.resolve(DEFAULT_OUTPUT_DIR, screenshotPath);
+                    if (!fsExistsSync(imagePath)) return null;
+                    const base64ImageData = readFileSync(imagePath).toString("base64");
+                    return `data:image/png;base64,${base64ImageData}`;
+                } catch (e) { return null; }
+            }).filter(Boolean);
+        }
+        if (test.videoPath && test.videoPath.length > 0) {
+            processed.videoPath = test.videoPath.map(videoPath => {
+                try {
+                    const videoFilePath = path.resolve(DEFAULT_OUTPUT_DIR, videoPath);
+                    if (!fsExistsSync(videoFilePath)) return null;
+                    const videoBase64 = readFileSync(videoFilePath).toString("base64");
+                    const fileExtension = path.extname(videoPath).slice(1).toLowerCase();
+                    const mimeType = {
+                        mp4: "video/mp4", webm: "video/webm", ogg: "video/ogg",
+                        mov: "video/quicktime", avi: "video/x-msvideo",
+                    }[fileExtension] || "video/mp4";
+                    return { dataUri: `data:${mimeType};base64,${videoBase64}`, mimeType, extension: fileExtension };
+                } catch (e) { return null; }
+            }).filter(Boolean);
+        }
+        if (test.tracePath) {
+            try {
+                const traceFilePath = path.resolve(DEFAULT_OUTPUT_DIR, test.tracePath);
+                if (fsExistsSync(traceFilePath)) {
+                    const traceBase64 = readFileSync(traceFilePath).toString("base64");
+                    processed.tracePath = `data:application/zip;base64,${traceBase64}`;
+                }
+            } catch (e) { processed.tracePath = null; }
+        }
+        if (test.attachments && test.attachments.length > 0) {
+            processed.attachments = test.attachments.map(attachment => {
+                try {
+                    const attachmentPath = path.resolve(DEFAULT_OUTPUT_DIR, attachment.path);
+                    if (!fsExistsSync(attachmentPath)) return null;
+                    const attachmentBase64 = readFileSync(attachmentPath).toString("base64");
+                    return { ...attachment, dataUri: `data:${attachment.contentType};base64,${attachmentBase64}` };
+                } catch (e) { return null; }
+            }).filter(Boolean);
+        }
+        return processed;
+    });
+
   // Prepare data for client-side rendering
   const pulseData = {
     runSummary,
-    results: results || [],
+    results: processedResults,
     suitesData,
     trendData: trendData || { overall: [], testRuns: {} },
     pieData: [
@@ -1636,413 +1602,6 @@ function generateHTML(reportData, trendData = null) {
     ]
   };
 
-  // Helper function to generate test details HTML (will be used client-side)
-  const generateTestDetailsHTMLFunction = `
-    function generateTestDetailsHTML(testIndex) {
-      const test = window._pulseData.results[testIndex];
-      if (!test) return '<div class="no-data">Test data not found.</div>';
-      
-      const browser = test.browser || "unknown";
-      
-      const generateStepsHTML = (steps, depth = 0) => {
-        if (!steps || steps.length === 0)
-          return "<div class='no-steps'>No steps recorded for this test.</div>";
-        return steps.map((step) => {
-          const hasNestedSteps = step.steps && step.steps.length > 0;
-          const isHook = step.hookType;
-          const stepClass = isHook ? \`step-hook step-hook-\${step.hookType}\` : "";
-          const hookIndicator = isHook ? \` (\${step.hookType} hook)\` : "";
-          return \`<div class="step-item" style="--depth: \${depth};">
-            <div class="step-header \${stepClass}" role="button" aria-expanded="false">
-              <span class="step-icon">\${getStatusIcon(step.status)}</span>
-              <span class="step-title">\${sanitizeHTML(step.title)}\${hookIndicator}</span>
-              <span class="step-duration">\${formatDuration(step.duration)}</span>
-            </div>
-            <div class="step-details" style="display: none;">
-              \${step.codeLocation ? \`<div class="step-info code-section"><strong>Location:</strong> \${sanitizeHTML(step.codeLocation)}</div>\` : ""}
-              \${step.errorMessage ? \`<div class="test-error-summary">
-                \${step.stackTrace ? \`<div class="stack-trace">\${formatPlaywrightError(step.stackTrace)}</div>\` : ""}
-                <button class="copy-error-btn" onclick="copyErrorToClipboard(this)">Copy Error Prompt</button>
-              </div>\` : ""}
-              \${hasNestedSteps ? \`<div class="nested-steps">\${generateStepsHTML(step.steps, depth + 1)}</div>\` : ""}
-            </div>
-          </div>\`;
-        }).join("");
-      };
-      
-      let html = \`
-        <p><strong>Full Path:</strong> \${sanitizeHTML(test.name)}</p>
-        <p><strong>Test run Worker ID:</strong> \${sanitizeHTML(test.workerId)} 
-           [<strong>Total No. of Workers:</strong> \${sanitizeHTML(test.totalWorkers)}]</p>
-        \${test.errorMessage ? \`<div class="test-error-summary">
-          \${formatPlaywrightError(test.errorMessage)}
-          <button class="copy-error-btn" onclick="copyErrorToClipboard(this)">Copy Error Prompt</button>
-        </div>\` : ""}
-        \${test.snippet ? \`<div class="code-section"><h4>Error Snippet</h4>
-          <pre><code>\${formatPlaywrightError(test.snippet)}</code></pre></div>\` : ""}
-        <h4>Steps</h4>
-        <div class="steps-list">\${generateStepsHTML(test.steps)}</div>
-      \`;
-      
-      // Add stdout if exists
-      if (test.stdout && test.stdout.length > 0) {
-        const logId = \`stdout-log-\${test.id || testIndex}\`;
-        html += \`<div class="console-output-section">
-          <h4>Console Output (stdout)
-            <button class="copy-btn" onclick="copyLogContent('\${logId}', this)">Copy Console</button>
-          </h4>
-          <div class="log-wrapper">
-            <pre id="\${logId}" class="console-log stdout-log" style="background-color: #2d2d2d; color: wheat; padding: 1.25em; border-radius: 0.85em; line-height: 1.2;">
-              \${formatPlaywrightError(test.stdout.map(line => sanitizeHTML(line)).join("\\n"))}
-            </pre>
-          </div>
-        </div>\`;
-      }
-      
-      // Add stderr if exists
-      if (test.stderr && test.stderr.length > 0) {
-        html += \`<div class="console-output-section">
-          <h4>Console Output (stderr)</h4>
-          <pre class="console-log stderr-log">\${test.stderr.map(line => sanitizeHTML(line)).join("\\n")}</pre>
-        </div>\`;
-      }
-      
-      // Add screenshots - these are already base64 encoded in the data
-      if (test.screenshots && test.screenshots.length > 0) {
-        html += \`<div class="attachments-section">
-          <h4>Screenshots</h4>
-          <div class="attachments-grid">
-            \${test.screenshots.map((screenshot, index) => \`
-              <div class="attachment-item">
-                <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" 
-                     data-src="\${screenshot}" 
-                     alt="Screenshot \${index + 1}" 
-                     class="lazy-load-image">
-                <div class="attachment-info">
-                  <div class="trace-actions">
-                    <a href="\${screenshot}" target="_blank" download="screenshot-\${index}.png">Download</a>
-                  </div>
-                </div>
-              </div>
-            \`).join("")}
-          </div>
-        </div>\`;
-      }
-      
-      // Add videos
-      if (test.videoPath && test.videoPath.length > 0) {
-        html += \`<div class="attachments-section">
-          <h4>Videos</h4>
-          <div class="attachments-grid">
-            \${test.videoPath.map((video, index) => \`
-              <div class="attachment-item video-item">
-                <video controls preload="none" class="lazy-load-video">
-                  <source data-src="\${video.dataUri}" type="\${video.mimeType}">
-                </video>
-                <div class="attachment-info">
-                  <div class="trace-actions">
-                    <a href="\${video.dataUri}" target="_blank" download="video-\${index}.\${video.extension}">Download</a>
-                  </div>
-                </div>
-              </div>
-            \`).join("")}
-          </div>
-        </div>\`;
-      }
-      
-      // Add trace file
-      if (test.tracePath) {
-        html += \`<div class="attachments-section">
-          <h4>Trace File</h4>
-          <div class="attachments-grid">
-            <div class="attachment-item generic-attachment">
-              <div class="attachment-icon">📄</div>
-              <div class="attachment-caption">
-                <span class="attachment-name">trace.zip</span>
-              </div>
-              <div class="attachment-info">
-                <div class="trace-actions">
-                  <a href="#" data-href="\${test.tracePath}" class="lazy-load-attachment" download="trace.zip">Download Trace</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>\`;
-      }
-      
-      // Add other attachments
-      if (test.attachments && test.attachments.length > 0) {
-        html += \`<div class="attachments-section">
-          <h4>Other Attachments</h4>
-          <div class="attachments-grid">
-            \${test.attachments.map(attachment => \`
-              <div class="attachment-item generic-attachment">
-                <div class="attachment-icon">\${getAttachmentIcon(attachment.contentType)}</div>
-                <div class="attachment-caption">
-                  <span class="attachment-name" title="\${sanitizeHTML(attachment.name)}">\${sanitizeHTML(attachment.name)}</span>
-                  <span class="attachment-type">\${sanitizeHTML(attachment.contentType)}</span>
-                </div>
-                <div class="attachment-info">
-                  <div class="trace-actions">
-                    <a href="\${attachment.dataUri}" target="_blank" class="view-full">View</a>
-                    <a href="\${attachment.dataUri}" download="\${sanitizeHTML(attachment.name)}">Download</a>
-                  </div>
-                </div>
-              </div>
-            \`).join("")}
-          </div>
-        </div>\`;
-      }
-      
-      // Add code snippet if exists
-      if (test.codeSnippet) {
-        html += \`<div class="code-section">
-          <h4>Code Snippet</h4>
-          <pre><code>\${sanitizeHTML(test.codeSnippet)}</code></pre>
-        </div>\`;
-      }
-      
-      return html;
-    }
-  `;
-
-  // Process attachments to base64 for embedding in JSON
-  const processedResults = (results || []).map(test => {
-    const processed = { ...test };
-    
-    // Process screenshots
-    if (test.screenshots && test.screenshots.length > 0) {
-      processed.screenshots = test.screenshots.map(screenshotPath => {
-        try {
-          const imagePath = path.resolve(DEFAULT_OUTPUT_DIR, screenshotPath);
-          if (!fsExistsSync(imagePath)) return null;
-          const base64ImageData = readFileSync(imagePath).toString("base64");
-          return `data:image/png;base64,${base64ImageData}`;
-        } catch (e) {
-          return null;
-        }
-      }).filter(Boolean);
-    }
-    
-    // Process videos
-    if (test.videoPath && test.videoPath.length > 0) {
-      processed.videoPath = test.videoPath.map(videoPath => {
-        try {
-          const videoFilePath = path.resolve(DEFAULT_OUTPUT_DIR, videoPath);
-          if (!fsExistsSync(videoFilePath)) return null;
-          const videoBase64 = readFileSync(videoFilePath).toString("base64");
-          const fileExtension = path.extname(videoPath).slice(1).toLowerCase();
-          const mimeType = {
-            mp4: "video/mp4",
-            webm: "video/webm",
-            ogg: "video/ogg",
-            mov: "video/quicktime",
-            avi: "video/x-msvideo",
-          }[fileExtension] || "video/mp4";
-          return {
-            dataUri: `data:${mimeType};base64,${videoBase64}`,
-            mimeType,
-            extension: fileExtension
-          };
-        } catch (e) {
-          return null;
-        }
-      }).filter(Boolean);
-    }
-    
-    // Process trace
-    if (test.tracePath) {
-      try {
-        const traceFilePath = path.resolve(DEFAULT_OUTPUT_DIR, test.tracePath);
-        if (fsExistsSync(traceFilePath)) {
-          const traceBase64 = readFileSync(traceFilePath).toString("base64");
-          processed.tracePath = `data:application/zip;base64,${traceBase64}`;
-        }
-      } catch (e) {
-        processed.tracePath = null;
-      }
-    }
-    
-    // Process other attachments
-    if (test.attachments && test.attachments.length > 0) {
-      processed.attachments = test.attachments.map(attachment => {
-        try {
-          const attachmentPath = path.resolve(DEFAULT_OUTPUT_DIR, attachment.path);
-          if (!fsExistsSync(attachmentPath)) return null;
-          const attachmentBase64 = readFileSync(attachmentPath).toString("base64");
-          return {
-            ...attachment,
-            dataUri: `data:${attachment.contentType};base64,${attachmentBase64}`
-          };
-        } catch (e) {
-          return null;
-        }
-      }).filter(Boolean);
-    }
-    
-    return processed;
-  });
-
-  pulseData.results = processedResults;
-
-  // Generate client-side tab generators
-  const clientSideGenerators = `
-    // Dashboard tab generator
-    function generateDashboardTabHTML() {
-      const data = window._pulseData;
-      const runSummary = data.runSummary;
-      const totalTestsOr1 = runSummary.totalTests || 1;
-      const passPercentage = Math.round((runSummary.passed / totalTestsOr1) * 100);
-      const failPercentage = Math.round((runSummary.failed / totalTestsOr1) * 100);
-      const skipPercentage = Math.round(((runSummary.skipped || 0) / totalTestsOr1) * 100);
-      const avgTestDuration = runSummary.totalTests > 0 
-        ? formatDuration(runSummary.duration / runSummary.totalTests) 
-        : "0.0s";
-      
-      return \`
-        <div class="dashboard-grid">
-          <div class="summary-card"><h3>Total Tests</h3><div class="value">\${runSummary.totalTests}</div></div>
-          <div class="summary-card status-passed"><h3>Passed</h3><div class="value">\${runSummary.passed}</div><div class="trend-percentage">\${passPercentage}%</div></div>
-          <div class="summary-card status-failed"><h3>Failed</h3><div class="value">\${runSummary.failed}</div><div class="trend-percentage">\${failPercentage}%</div></div>
-          <div class="summary-card status-skipped"><h3>Skipped</h3><div class="value">\${runSummary.skipped || 0}</div><div class="trend-percentage">\${skipPercentage}%</div></div>
-          <div class="summary-card"><h3>Avg. Test Time</h3><div class="value">\${avgTestDuration}</div></div>
-          <div class="summary-card"><h3>Run Duration</h3><div class="value">\${formatDuration(runSummary.duration)}</div></div>
-        </div>
-        <div class="dashboard-bottom-row">
-          <div style="display: grid; gap: 20px">
-            \${generatePieChartFromData(data.pieData, 400, 390)}
-            \${runSummary.environment && Object.keys(runSummary.environment).length > 0 
-              ? generateEnvironmentDashboardFromData(runSummary.environment) 
-              : '<div class="no-data">Environment data not available.</div>'}
-          </div>
-          \${generateSuitesWidgetFromData(data.suitesData)}
-        </div>
-      \`;
-    }
-    
-    // Test Run Summary tab generator
-    function generateTestRunSummaryTabHTML() {
-      const data = window._pulseData;
-      const results = data.results || [];
-      
-      if (results.length === 0) {
-        return '<div class="no-tests">No test results found in this run.</div>';
-      }
-      
-      // Generate minimal test list - just titles and status
-      const testListHTML = results.map((test, index) => {
-        const browser = test.browser || "unknown";
-        const testFileParts = test.name.split(" > ");
-        const testTitle = testFileParts[testFileParts.length - 1] || "Unnamed Test";
-        
-        return \`
-          <div class="test-case" data-status="\${test.status}" data-browser="\${sanitizeHTML(browser)}" data-tags="\${(test.tags || []).join(",").toLowerCase()}">
-            <div class="test-case-header" role="button" aria-expanded="false" data-test-index="\${index}">
-              <div class="test-case-summary">
-                <span class="status-badge \${getStatusClass(test.status)}">\${String(test.status).toUpperCase()}</span>
-                <span class="test-case-title" title="\${sanitizeHTML(test.name)}">\${sanitizeHTML(testTitle)}</span>
-                <span class="test-case-browser">(\${sanitizeHTML(browser)})</span>
-              </div>
-              <div class="test-case-meta">
-                \${test.tags && test.tags.length > 0 
-                  ? test.tags.map(t => \`<span class="tag">\${sanitizeHTML(t)}</span>\`).join(" ") 
-                  : ""}
-                <span class="test-duration">\${formatDuration(test.duration)}</span>
-              </div>
-            </div>
-            <div class="test-case-content" id="test-details-\${index}" style="display: none;"></div>
-          </div>
-        \`;
-      }).join("");
-      
-      return testListHTML;
-    }
-    
-    // AI Failure Analyzer tab generator
-    function generateAIFailureAnalyzerTabHTML() {
-      const results = window._pulseData.results || [];
-      const failedTests = results.filter(test => test.status === 'failed');
-      
-      if (failedTests.length === 0) {
-        return \`
-          <h2 class="tab-main-title">AI Failure Analysis</h2>
-          <div class="no-data">Congratulations! No failed tests in this run.</div>
-        \`;
-      }
-      
-      return \`
-        <h2 class="tab-main-title">AI Failure Analysis</h2>
-        <div class="ai-analyzer-stats">
-          <div class="stat-item">
-            <span class="stat-number">\${failedTests.length}</span>
-            <span class="stat-label">Failed Tests</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">\${new Set(failedTests.map(t => t.browser)).size}</span>
-            <span class="stat-label">Browsers</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">\${Math.round(failedTests.reduce((sum, test) => sum + (test.duration || 0), 0) / 1000)}s</span>
-            <span class="stat-label">Total Duration</span>
-          </div>
-        </div>
-        <p class="ai-analyzer-description">
-          Analyze failed tests using AI to get suggestions and potential fixes. Click the AI Fix button for specific failed test.
-        </p>
-        
-        <div class="compact-failure-list">
-          \${failedTests.map(test => {
-            const testTitle = test.name.split(" > ").pop() || "Unnamed Test";
-            const testJson = btoa(JSON.stringify(test));
-            const truncatedError = (test.errorMessage || "No error message").slice(0, 150) + 
-              (test.errorMessage && test.errorMessage.length > 150 ? "..." : "");
-            
-            return \`
-              <div class="compact-failure-item">
-                <div class="failure-header">
-                  <div class="failure-main-info">
-                    <h3 class="failure-title" title="\${sanitizeHTML(test.name)}">\${sanitizeHTML(testTitle)}</h3>
-                    <div class="failure-meta">
-                      <span class="browser-indicator">\${sanitizeHTML(test.browser || 'unknown')}</span>
-                      <span class="duration-indicator">\${formatDuration(test.duration)}</span>
-                    </div>
-                  </div>
-                  <button class="compact-ai-btn" onclick="getAIFix(this)" data-test-json="\${testJson}">
-                    <span class="ai-text">AI Fix</span>
-                  </button>
-                </div>
-                <div class="failure-error-preview">
-                  <div class="error-snippet">\${formatPlaywrightError(truncatedError)}</div>
-                  <button class="expand-error-btn" onclick="toggleErrorDetails(this)">
-                    <span class="expand-text">Show Full Error</span>
-                    <span class="expand-icon">▼</span>
-                  </button>
-                </div>
-                <div class="full-error-details" style="display: none;">
-                  <div class="full-error-content">
-                    \${formatPlaywrightError(test.errorMessage || "No detailed error message available")}
-                  </div>
-                </div>
-              </div>
-            \`;
-          }).join('')}
-        </div>
-        
-        <!-- AI Fix Modal -->
-        <div id="ai-fix-modal" class="ai-modal-overlay" onclick="closeAiModal()">
-          <div class="ai-modal-content" onclick="event.stopPropagation()">
-            <div class="ai-modal-header">
-              <h3 id="ai-fix-modal-title">AI Analysis</h3>
-              <span class="ai-modal-close" onclick="closeAiModal()">×</span>
-            </div>
-            <div class="ai-modal-body" id="ai-fix-modal-content">
-              <!-- Content will be injected by JavaScript -->
-            </div>
-          </div>
-        </div>
-      \`;
-    }
-  `;
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -2189,7 +1748,7 @@ function generateHTML(reportData, trendData = null) {
         .status-badge-small.status-failed { background-color: var(--danger-color); }
         .status-badge-small.status-skipped { background-color: var(--warning-color); }
         .status-badge-small.status-unknown { background-color: var(--dark-gray-color); }
-        .no-data, .no-tests, .no-steps, .no-data-chart { padding: 28px; text-align: center; color: var(--dark-gray-color); font-style: italic; font-size:1.1em; background-color: var(--light-gray-color); border-radius: var(--border-radius); margin: 18px 0; border: 1px dashed var(--medium-gray-color); }
+        .no-data, .no-tests, .no-steps, .no-data-chart, .tab-loading-placeholder { padding: 28px; text-align: center; color: var(--dark-gray-color); font-style: italic; font-size:1.1em; background-color: var(--light-gray-color); border-radius: var(--border-radius); margin: 18px 0; border: 1px dashed var(--medium-gray-color); }
         .no-data-chart {font-size: 0.95em; padding: 18px;}
         .ai-failure-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 22px; }
         .ai-failure-card { background: var(--card-background-color); border: 1px solid var(--border-color); border-left: 5px solid var(--danger-color); border-radius: var(--border-radius); box-shadow: var(--box-shadow-light); display: flex; flex-direction: column; }
@@ -2278,55 +1837,14 @@ function generateHTML(reportData, trendData = null) {
             <button class="tab-button" data-tab="test-history">Test History</button>
             <button class="tab-button" data-tab="ai-failure-analyzer">AI Failure Analyzer</button>
         </div>
+
         <div id="dashboard" class="tab-content active">
             <div class="tab-loading-placeholder">Loading dashboard...</div>
-            </div>
-            <div class="dashboard-bottom-row">
-              <div style="display: grid; gap: 20px">
-                ${generatePieChart(
-                  [
-                    { label: "Passed", value: runSummary.passed },
-                    { label: "Failed", value: runSummary.failed },
-                    { label: "Skipped", value: runSummary.skipped || 0 },
-                  ],
-                  400,
-                  390
-                )} 
-                ${
-                  runSummary.environment &&
-                  Object.keys(runSummary.environment).length > 0
-                    ? generateEnvironmentDashboard(runSummary.environment)
-                    : '<div class="no-data">Environment data not available.</div>'
-                }
-              </div> 
-                ${generateSuitesWidget(suitesData)}
-            </div>
         </div>
         <div id="test-runs" class="tab-content">
-            <div class="filters">
-                <input type="text" id="filter-name" placeholder="Filter by test name/path..." style="border-color: black; border-style: outset;">
-                <select id="filter-status">
-                    <option value="">All Statuses</option>
-                    <option value="passed">Passed</option>
-                    <option value="failed">Failed</option>
-                    <option value="skipped">Skipped</option>
-                </select>
-                <select id="filter-browser">
-                    <option value="">All Browsers</option>
-                    ${Array.from(new Set((results || []).map(test => test.browser || "unknown")))
-                      .map(browser => `<option value="${sanitizeHTML(browser)}">${sanitizeHTML(browser)}</option>`)
-                      .join("")}
-                </select>
-                <button id="expand-all-tests">Expand All</button>
-                <button id="collapse-all-tests">Collapse All</button>
-                <button id="clear-run-summary-filters" class="clear-filters-btn">Clear Filters</button>
-            </div>
-            <div class="test-cases-list">
-                <div class="tab-loading-placeholder">Loading test cases...</div>
-        </div>
+            <div class="tab-loading-placeholder">Loading test cases...</div>
         </div>
         
-        <!-- Test History tab - server-rendered as before -->
         <div id="test-history" class="tab-content">
           <h2 class="tab-main-title">Execution Trends</h2>
           <div class="trend-charts-row">
@@ -2372,329 +1890,449 @@ function generateHTML(reportData, trendData = null) {
         </footer>
     </div>
     <script>
-    
-    // Ensure formatDuration is globally available
+    // --- START: Client-side Data and Generators ---
+    window._pulseData = ${JSON.stringify(pulseData)};
+    const loadedTabs = new Set(['test-history']); // Test History is server-rendered
+
+    // --- Helper Functions (globally available in this script) ---
     if (typeof formatDuration === 'undefined') { 
         function formatDuration(ms) { 
             if (ms === undefined || ms === null || ms < 0) return "0.0s"; 
             return (ms / 1000).toFixed(1) + "s"; 
         }
     }
-    function copyLogContent(elementId, button) {
-        const logElement = document.getElementById(elementId);
-        if (!logElement) {
-            console.error('Could not find log element with ID:', elementId);
-            return;
+    const sanitizeHTML = (str) => {
+        if (str === null || str === undefined) return "";
+        return String(str).replace(/[&<>"']/g, match => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[match] || match));
+    };
+    const getStatusClass = (status) => {
+      switch (String(status).toLowerCase()) {
+        case "passed": return "status-passed";
+        case "failed": return "status-failed";
+        case "skipped": return "status-skipped";
+        default: return "status-unknown";
+      }
+    };
+    const getStatusIcon = (status) => {
+        switch (String(status).toLowerCase()) {
+            case 'passed': return '✅'; case 'failed': return '❌';
+            case 'skipped': return '⏭️'; default: return '❓';
         }
-        navigator.clipboard.writeText(logElement.innerText).then(() => {
-            button.textContent = 'Copied!';
-            setTimeout(() => { button.textContent = 'Copy'; }, 2000);
-        }).catch(err => {
-            console.error('Failed to copy log content:', err);
-            button.textContent = 'Failed';
-             setTimeout(() => { button.textContent = 'Copy'; }, 2000);
-        });
+    };
+    const formatPlaywrightError = (str) => {
+        if (!str) return "";
+        return str
+            .replace(/^(\\s+)/gm, match => match.replace(/ /g, " ").replace(/\\t/g, "  "))
+            .replace(/<red>/g, '<span style="color: red;">').replace(/<green>/g, '<span style="color: green;">')
+            .replace(/<dim>/g, '<span style="opacity: 0.6;">').replace(/<intensity>/g, '<span style="font-weight: bold;">')
+            .replace(/<\\/color>/g, "</span>").replace(/<\\/intensity>/g, "</span>")
+            .replace(/\\n/g, "<br>");
+    };
+    const getAttachmentIcon = (contentType) => {
+        if (!contentType) return "📎";
+        const normalizedType = contentType.toLowerCase();
+        if (normalizedType.includes("pdf")) return "📄";
+        if (normalizedType.includes("json")) return "{ }";
+        if (/html/.test(normalizedType)) return "🌐";
+        if (normalizedType.includes("xml")) return "<>";
+        if (normalizedType.includes("csv")) return "📊";
+        if (normalizedType.startsWith("text/")) return "📝";
+        return "📎";
+    };
+
+    // --- Tab Content Generators ---
+    function generateDashboardTabHTML() {
+        const data = window._pulseData;
+        const runSummary = data.runSummary;
+        const totalTestsOr1 = runSummary.totalTests || 1;
+        const passPercentage = Math.round((runSummary.passed / totalTestsOr1) * 100);
+        const failPercentage = Math.round((runSummary.failed / totalTestsOr1) * 100);
+        const skipPercentage = Math.round(((runSummary.skipped || 0) / totalTestsOr1) * 100);
+        const avgTestDuration = runSummary.totalTests > 0 ? formatDuration(runSummary.duration / runSummary.totalTests) : "0.0s";
+        return \`
+            <div class="dashboard-grid">
+                <div class="summary-card"><h3>Total Tests</h3><div class="value">\${runSummary.totalTests}</div></div>
+                <div class="summary-card status-passed"><h3>Passed</h3><div class="value">\${runSummary.passed}</div><div class="trend-percentage">\${passPercentage}%</div></div>
+                <div class="summary-card status-failed"><h3>Failed</h3><div class="value">\${runSummary.failed}</div><div class="trend-percentage">\${failPercentage}%</div></div>
+                <div class="summary-card status-skipped"><h3>Skipped</h3><div class="value">\${runSummary.skipped || 0}</div><div class="trend-percentage">\${skipPercentage}%</div></div>
+                <div class="summary-card"><h3>Avg. Test Time</h3><div class="value">\${avgTestDuration}</div></div>
+                <div class="summary-card"><h3>Run Duration</h3><div class="value">\${formatDuration(runSummary.duration)}</div></div>
+            </div>
+            <div class="dashboard-bottom-row">
+                <div style="display: grid; gap: 20px">
+                    \${generatePieChart(data.pieData, 400, 390)}
+                    \${runSummary.environment && Object.keys(runSummary.environment).length > 0 ? generateEnvironmentDashboard(runSummary.environment) : '<div class="no-data">Environment data not available.</div>'}
+                </div>
+                \${generateSuitesWidget(data.suitesData)}
+            </div>
+        \`;
     }
 
-    function getAIFix(button) {
-        const modal = document.getElementById('ai-fix-modal');
-        const modalContent = document.getElementById('ai-fix-modal-content');
-        const modalTitle = document.getElementById('ai-fix-modal-title');
-        
-        modal.style.display = 'flex';
-        modalTitle.textContent = 'Analyzing...';
-        modalContent.innerHTML = '<div class="ai-loader"></div>';
+    function generateTestRunSummaryTabHTML() {
+        const data = window._pulseData;
+        const results = data.results || [];
+        if (results.length === 0) return '<div class="no-tests">No test results found in this run.</div>';
 
-        try {
-            const testJson = button.dataset.testJson;
-            const test = JSON.parse(atob(testJson));
+        const filtersHTML = \`
+            <div class="filters">
+                <input type="text" id="filter-name" placeholder="Filter by test name/path..." style="border-color: black; border-style: outset;">
+                <select id="filter-status">
+                    <option value="">All Statuses</option>
+                    <option value="passed">Passed</option>
+                    <option value="failed">Failed</option>
+                    <option value="skipped">Skipped</option>
+                </select>
+                <select id="filter-browser">
+                    <option value="">All Browsers</option>
+                    \${Array.from(new Set((results || []).map(test => test.browser || "unknown"))).map(browser => \`<option value="\${sanitizeHTML(browser)}">\${sanitizeHTML(browser)}</option>\`).join("")}
+                </select>
+                <button id="expand-all-tests">Expand All</button>
+                <button id="collapse-all-tests">Collapse All</button>
+                <button id="clear-run-summary-filters" class="clear-filters-btn">Clear Filters</button>
+            </div>
+        \`;
 
-            const testName = test.name || 'Unknown Test';
-            const failureLogsAndErrors = [
-                'Error Message:',
-                test.errorMessage || 'Not available.',
-                '\\n\\n--- stdout ---',
-                (test.stdout && test.stdout.length > 0) ? test.stdout.join('\\n') : 'Not available.',
-                '\\n\\n--- stderr ---',
-                (test.stderr && test.stderr.length > 0) ? test.stderr.join('\\n') : 'Not available.'
-            ].join('\\n');
-            const codeSnippet = test.snippet || '';
+        const testListHTML = results.map((test, index) => {
+            const browser = test.browser || "unknown";
+            const testFileParts = test.name.split(" > ");
+            const testTitle = testFileParts[testFileParts.length - 1] || "Unnamed Test";
+            return \`
+                <div class="test-case" data-status="\${test.status}" data-browser="\${sanitizeHTML(browser)}" data-tags="\${(test.tags || []).join(",").toLowerCase()}">
+                    <div class="test-case-header" role="button" aria-expanded="false" data-test-index="\${index}">
+                        <div class="test-case-summary">
+                            <span class="status-badge \${getStatusClass(test.status)}">\${String(test.status).toUpperCase()}</span>
+                            <span class="test-case-title" title="\${sanitizeHTML(test.name)}">\${sanitizeHTML(testTitle)}</span>
+                            <span class="test-case-browser">(\${sanitizeHTML(browser)})</span>
+                        </div>
+                        <div class="test-case-meta">
+                            \${test.tags && test.tags.length > 0 ? test.tags.map(t => \`<span class="tag">\${sanitizeHTML(t)}</span>\`).join(" ") : ""}
+                            <span class="test-duration">\${formatDuration(test.duration)}</span>
+                        </div>
+                    </div>
+                    <div class="test-case-content" id="test-details-\${index}" style="display: none;"></div>
+                </div>
+            \`;
+        }).join("");
 
-            const shortTestName = testName.split(' > ').pop();
-            modalTitle.textContent = \`Analysis for: \${shortTestName}\`;
-            
-            const apiUrl = 'https://ai-test-analyser.netlify.app/api/analyze';
-            fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    testName: testName,
-                    failureLogsAndErrors: failureLogsAndErrors,
-                    codeSnippet: codeSnippet,
-                }),
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => { 
-                        throw new Error(\`API request failed with status \${response.status}: \${text || response.statusText}\`);
-                    });
-                }
-                return response.text();
-            })
-            .then(text => {
-                if (!text) {
-                    throw new Error("The AI analyzer returned an empty response. This might happen during high load or if the request was blocked. Please try again in a moment.");
-                }
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.error("Failed to parse JSON:", text);
-                    throw new Error(\`The AI analyzer returned an invalid response. \${e.message}\`);
-                }
-            })
-            .then(data => {
-                const escapeHtml = (unsafe) => {
-                    if (typeof unsafe !== 'string') return '';
-                    return unsafe
-                        .replace(/&/g, "&amp;")
-                        .replace(/</g, "&lt;")
-                        .replace(/>/g, "&gt;")
-                        .replace(/"/g, "&quot;")
-                        .replace(/'/g, "&#039;");
-                };
+        return filtersHTML + '<div class="test-cases-list">' + testListHTML + '</div>';
+    }
 
-                const analysisHtml = \`<h4>Analysis</h4><p>\${escapeHtml(data.rootCause) || 'No analysis provided.'}</p>\`;
-                
-                let suggestionsHtml = '<h4>Suggestions</h4>';
-                if (data.suggestedFixes && data.suggestedFixes.length > 0) {
-                    suggestionsHtml += '<div class="suggestions-list" style="margin-top: 15px;">';
-                    data.suggestedFixes.forEach(fix => {
-                        suggestionsHtml += \`
-                            <div class="suggestion-item" style="margin-bottom: 22px; border-left: 3px solid var(--accent-color-alt); padding-left: 15px;">
-                                <p style="margin: 0 0 8px 0; font-weight: 500;">\${escapeHtml(fix.description)}</p>
-                                \${fix.codeSnippet ? \`<div class="code-section"><pre><code>\${escapeHtml(fix.codeSnippet)}</code></pre></div>\` : ''}
+    function generateAIFailureAnalyzerTabHTML() {
+        const results = window._pulseData.results || [];
+        const failedTests = results.filter(test => test.status === 'failed');
+        if (failedTests.length === 0) {
+            return '<h2 class="tab-main-title">AI Failure Analysis</h2><div class="no-data">Congratulations! No failed tests in this run.</div>';
+        }
+        return \`
+            <h2 class="tab-main-title">AI Failure Analysis</h2>
+            <div class="ai-analyzer-stats">
+                <div class="stat-item"><span class="stat-number">\${failedTests.length}</span><span class="stat-label">Failed Tests</span></div>
+                <div class="stat-item"><span class="stat-number">\${new Set(failedTests.map(t => t.browser)).size}</span><span class="stat-label">Browsers</span></div>
+                <div class="stat-item"><span class="stat-number">\${Math.round(failedTests.reduce((sum, test) => sum + (test.duration || 0), 0) / 1000)}s</span><span class="stat-label">Total Duration</span></div>
+            </div>
+            <p class="ai-analyzer-description">Analyze failed tests using AI to get suggestions and potential fixes. Click the AI Fix button for specific failed test.</p>
+            <div class="compact-failure-list">
+                \${failedTests.map(test => {
+                    const testTitle = test.name.split(" > ").pop() || "Unnamed Test";
+                    const testJson = btoa(JSON.stringify(test));
+                    const truncatedError = (test.errorMessage || "No error message").slice(0, 150) + (test.errorMessage && test.errorMessage.length > 150 ? "..." : "");
+                    return \`
+                        <div class="compact-failure-item">
+                            <div class="failure-header">
+                                <div class="failure-main-info">
+                                    <h3 class="failure-title" title="\${sanitizeHTML(test.name)}">\${sanitizeHTML(testTitle)}</h3>
+                                    <div class="failure-meta">
+                                        <span class="browser-indicator">\${sanitizeHTML(test.browser || 'unknown')}</span>
+                                        <span class="duration-indicator">\${formatDuration(test.duration)}</span>
+                                    </div>
+                                </div>
+                                <button class="compact-ai-btn" onclick="getAIFix(this)" data-test-json="\${testJson}"><span class="ai-text">AI Fix</span></button>
                             </div>
-                        \`;
-                    });
-                    suggestionsHtml += '</div>';
-                } else {
-                    suggestionsHtml += \`<div class="code-section"><pre><code>No suggestion provided.</code></pre></div>\`;
-                }
-                
-                modalContent.innerHTML = analysisHtml + suggestionsHtml;
-            })
-            .catch(err => {
-                console.error('AI Fix Error:', err);
-                modalContent.innerHTML = \`<div class="test-error-summary"><strong>Error:</strong> Failed to get AI analysis. Please check the console for details. <br><br> \${err.message}</div>\`;
-            });
-
-        } catch (e) {
-            console.error('Error processing test data for AI Fix:', e);
-            modalTitle.textContent = 'Error';
-            modalContent.innerHTML = \`<div class="test-error-summary">Could not process test data. Is it formatted correctly?</div>\`;
-        }
+                            <div class="failure-error-preview">
+                                <div class="error-snippet">\${formatPlaywrightError(truncatedError)}</div>
+                                <button class="expand-error-btn" onclick="toggleErrorDetails(this)"><span class="expand-text">Show Full Error</span><span class="expand-icon">▼</span></button>
+                            </div>
+                            <div class="full-error-details" style="display: none;"><div class="full-error-content">\${formatPlaywrightError(test.errorMessage || "No detailed error message available")}</div></div>
+                        </div>
+                    \`;
+                }).join('')}
+            </div>
+            <div id="ai-fix-modal" class="ai-modal-overlay" onclick="closeAiModal()">
+                <div class="ai-modal-content" onclick="event.stopPropagation()">
+                    <div class="ai-modal-header"><h3 id="ai-fix-modal-title">AI Analysis</h3><span class="ai-modal-close" onclick="closeAiModal()">×</span></div>
+                    <div class="ai-modal-body" id="ai-fix-modal-content"></div>
+                </div>
+            </div>
+        \`;
     }
 
-    function closeAiModal() {
-        const modal = document.getElementById('ai-fix-modal');
-        if(modal) modal.style.display = 'none';
-    }
-
-    function toggleErrorDetails(button) {
-        const errorDetails = button.closest('.compact-failure-item').querySelector('.full-error-details');
-        const expandText = button.querySelector('.expand-text');
+    function generateTestDetailsHTML(testIndex) {
+        const test = window._pulseData.results[testIndex];
+        if (!test) return '<div class="no-data">Test data not found.</div>';
+        const browser = test.browser || "unknown";
+        const generateStepsHTML = (steps, depth = 0) => {
+            if (!steps || steps.length === 0) return "<div class='no-steps'>No steps recorded.</div>";
+            return steps.map((step) => {
+                const hasNestedSteps = step.steps && step.steps.length > 0;
+                const isHook = step.hookType;
+                const stepClass = isHook ? \`step-hook step-hook-\${step.hookType}\` : "";
+                const hookIndicator = isHook ? \` (\${step.hookType} hook)\` : "";
+                return \`<div class="step-item" style="--depth: \${depth};">
+                    <div class="step-header \${stepClass}" role="button" aria-expanded="false">
+                        <span class="step-icon">\${getStatusIcon(step.status)}</span>
+                        <span class="step-title">\${sanitizeHTML(step.title)}\${hookIndicator}</span>
+                        <span class="step-duration">\${formatDuration(step.duration)}</span>
+                    </div>
+                    <div class="step-details" style="display: none;">
+                        \${step.codeLocation ? \`<div class="step-info code-section"><strong>Location:</strong> \${sanitizeHTML(step.codeLocation)}</div>\` : ""}
+                        \${step.errorMessage ? \`<div class="test-error-summary"><pre class="stack-trace">\${formatPlaywrightError(step.errorMessage)}</pre></div>\` : ""}
+                        \${hasNestedSteps ? \`<div class="nested-steps">\${generateStepsHTML(step.steps, depth + 1)}</div>\` : ""}
+                    </div>
+                </div>\`;
+            }).join("");
+        };
         
-        if (errorDetails.style.display === 'none' || !errorDetails.style.display) {
-            errorDetails.style.display = 'block';
-            expandText.textContent = 'Hide Full Error';
-            button.classList.add('expanded');
-        } else {
-            errorDetails.style.display = 'none';
-            expandText.textContent = 'Show Full Error';
-            button.classList.remove('expanded');
+        let html = \`
+            <p><strong>Full Path:</strong> \${sanitizeHTML(test.name)}</p>
+            <p><strong>Worker:</strong> \${sanitizeHTML(test.workerId)} / \${sanitizeHTML(test.totalWorkers)}</p>
+            \${test.errorMessage ? \`<div class="test-error-summary"><pre>\${formatPlaywrightError(test.errorMessage)}</pre><button class="copy-btn" onclick="copyErrorToClipboard(this)">Copy</button></div>\` : ""}
+            \${test.snippet ? \`<div class="code-section"><h4>Error Snippet</h4><pre><code>\${formatPlaywrightError(test.snippet)}</code></pre></div>\` : ""}
+            <h4>Steps</h4>
+            <div class="steps-list">\${generateStepsHTML(test.steps)}</div>
+        \`;
+
+        if (test.stdout && test.stdout.length > 0) {
+            const logId = \`stdout-log-\${test.id || testIndex}\`;
+            html += \`<div class="console-output-section"><h4>Console Output (stdout)<button class="copy-btn" onclick="copyLogContent('\${logId}', this)">Copy</button></h4><div class="log-wrapper"><pre id="\${logId}" class="console-log stdout-log">\${formatPlaywrightError(test.stdout.map(line => sanitizeHTML(line)).join("\\n"))}</pre></div></div>\`;
         }
+        if (test.stderr && test.stderr.length > 0) {
+            html += \`<div class="console-output-section"><h4>Console Output (stderr)</h4><pre class="console-log stderr-log">\${test.stderr.map(line => sanitizeHTML(line)).join("\\n")}</pre></div>\`;
+        }
+        if (test.screenshots && test.screenshots.length > 0) {
+            html += \`<div class="attachments-section"><h4>Screenshots</h4><div class="attachments-grid">\${test.screenshots.map((screenshot, index) => \`
+                <div class="attachment-item"><img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" data-src="\${screenshot}" alt="Screenshot \${index + 1}" class="lazy-load-image"><div class="attachment-info"><div class="trace-actions"><a href="\${screenshot}" target="_blank" download="screenshot-\${index}.png">Download</a></div></div></div>
+            \`).join("")}</div></div>\`;
+        }
+        if (test.videoPath && test.videoPath.length > 0) {
+            html += \`<div class="attachments-section"><h4>Videos</h4><div class="attachments-grid">\${test.videoPath.map((video, index) => \`
+                <div class="attachment-item video-item"><video controls preload="none" class="lazy-load-video"><source data-src="\${video.dataUri}" type="\${video.mimeType}"></video><div class="attachment-info"><div class="trace-actions"><a href="\${video.dataUri}" target="_blank" download="video-\${index}.\${video.extension}">Download</a></div></div></div>
+            \`).join("")}</div></div>\`;
+        }
+        if (test.tracePath) {
+            html += \`<div class="attachments-section"><h4>Trace File</h4><div class="attachments-grid"><div class="attachment-item generic-attachment"><div class="attachment-icon">📄</div><div class="attachment-caption"><span class="attachment-name">trace.zip</span></div><div class="attachment-info"><div class="trace-actions"><a href="#" data-href="\${test.tracePath}" class="lazy-load-attachment" download="trace.zip">Download</a></div></div></div></div></div>\`;
+        }
+        if (test.attachments && test.attachments.length > 0) {
+            html += \`<div class="attachments-section"><h4>Other Attachments</h4><div class="attachments-grid">\${test.attachments.map(attachment => \`<div class="attachment-item generic-attachment"><div class="attachment-icon">\${getAttachmentIcon(attachment.contentType)}</div><div class="attachment-caption"><span class="attachment-name" title="\${sanitizeHTML(attachment.name)}">\${sanitizeHTML(attachment.name)}</span><span class="attachment-type">\${sanitizeHTML(attachment.contentType)}</span></div><div class="attachment-info"><div class="trace-actions"><a href="\${attachment.dataUri}" target="_blank" class="view-full">View</a><a href="\${attachment.dataUri}" download="\${sanitizeHTML(attachment.name)}">Download</a></div></div></div>\`).join("")}</div></div>\`;
+        }
+        return html;
     }
-     
-    function initializeReportInteractivity() {
+    
+    // --- START: Main Execution ---
+    document.addEventListener('DOMContentLoaded', () => {
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
+        const contentGenerators = {
+            'dashboard': generateDashboardTabHTML,
+            'test-runs': generateTestRunSummaryTabHTML,
+            'ai-failure-analyzer': generateAIFailureAnalyzerTabHTML,
+        };
+
+        const initLazyObserver = () => {
+            const lazyLoadElements = document.querySelectorAll('.lazy-load-chart, .lazy-load-image, .lazy-load-video, .lazy-load-attachment');
+            if ('IntersectionObserver' in window) {
+                let lazyObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const element = entry.target;
+                            if (element.classList.contains('lazy-load-image')) { if (element.dataset.src) element.src = element.dataset.src; }
+                            else if (element.classList.contains('lazy-load-video')) { const source = element.querySelector('source'); if (source && source.dataset.src) { source.src = source.dataset.src; element.load(); } }
+                            else if (element.classList.contains('lazy-load-attachment')) { if (element.dataset.href) element.href = element.dataset.href; }
+                            else if (element.classList.contains('lazy-load-chart')) { const renderFn = element.dataset.renderFunctionName; if(renderFn && window[renderFn]) window[renderFn](); }
+                            observer.unobserve(element);
+                        }
+                    });
+                }, { rootMargin: "0px 0px 200px 0px" });
+                lazyLoadElements.forEach(el => lazyObserver.observe(el));
+            } else { // Fallback
+                lazyLoadElements.forEach(el => {
+                    if (el.classList.contains('lazy-load-image') && el.dataset.src) el.src = el.dataset.src;
+                    else if (el.classList.contains('lazy-load-video')) { const s = el.querySelector('source'); if (s && s.dataset.src) { s.src = s.dataset.src; el.load(); } }
+                    else if (el.classList.contains('lazy-load-attachment') && el.dataset.href) el.href = el.dataset.href;
+                    else if (el.classList.contains('lazy-load-chart')) { const r = el.dataset.renderFunctionName; if(r && window[r]) window[r](); }
+                });
+            }
+        };
+
+        const loadTabContent = (tabId) => {
+            const activeContent = document.getElementById(tabId);
+            if (!activeContent || loadedTabs.has(tabId)) return;
+
+            if (contentGenerators[tabId]) {
+                activeContent.innerHTML = contentGenerators[tabId]();
+                loadedTabs.add(tabId);
+                // Re-initialize event listeners and observers for new content
+                if (tabId === 'test-runs') setupTestRunSummaryInteractivity();
+            }
+            initLazyObserver(); // Always re-run observer for new charts/media
+        };
+
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 tabContents.forEach(content => content.classList.remove('active'));
                 button.classList.add('active');
                 const tabId = button.getAttribute('data-tab');
-                const activeContent = document.getElementById(tabId);
-                if (activeContent) {
-                    activeContent.classList.add('active');
-                }
+                loadTabContent(tabId);
+                document.getElementById(tabId)?.classList.add('active');
             });
         });
+        
+        loadTabContent('dashboard'); // Initial load for the default active tab
+        initLazyObserver(); // Initial observer for Test History tab
+    });
+    
+    function setupTestRunSummaryInteractivity() {
         // --- Test Run Summary Filters ---
         const nameFilter = document.getElementById('filter-name');
         const statusFilter = document.getElementById('filter-status');
         const browserFilter = document.getElementById('filter-browser');
-        const clearRunSummaryFiltersBtn = document.getElementById('clear-run-summary-filters'); 
-        function filterTestCases() { 
-            const nameValue = nameFilter ? nameFilter.value.toLowerCase() : "";
-            const statusValue = statusFilter ? statusFilter.value : "";
-            const browserValue = browserFilter ? browserFilter.value : "";
-            document.querySelectorAll('#test-runs .test-case').forEach(testCaseElement => {
-                const titleElement = testCaseElement.querySelector('.test-case-title');
-                const fullTestName = titleElement ? titleElement.getAttribute('title').toLowerCase() : "";
-                const status = testCaseElement.getAttribute('data-status');
-                const browser = testCaseElement.getAttribute('data-browser');
-                const nameMatch = fullTestName.includes(nameValue);
-                const statusMatch = !statusValue || status === statusValue;
-                const browserMatch = !browserValue || browser === browserValue;
-                testCaseElement.style.display = (nameMatch && statusMatch && browserMatch) ? '' : 'none';
+        const clearBtn = document.getElementById('clear-run-summary-filters');
+        
+        const filterTestCases = () => {
+            const nameVal = nameFilter.value.toLowerCase();
+            const statusVal = statusFilter.value;
+            const browserVal = browserFilter.value;
+            document.querySelectorAll('#test-runs .test-case').forEach(el => {
+                const titleEl = el.querySelector('.test-case-title');
+                const fullName = titleEl ? titleEl.getAttribute('title').toLowerCase() : "";
+                const nameMatch = fullName.includes(nameVal);
+                const statusMatch = !statusVal || el.getAttribute('data-status') === statusVal;
+                const browserMatch = !browserVal || el.getAttribute('data-browser') === browserVal;
+                el.style.display = (nameMatch && statusMatch && browserMatch) ? '' : 'none';
             });
-        }
-        if(nameFilter) nameFilter.addEventListener('input', filterTestCases);
-        if(statusFilter) statusFilter.addEventListener('change', filterTestCases);
-        if(browserFilter) browserFilter.addEventListener('change', filterTestCases);
-        if(clearRunSummaryFiltersBtn) clearRunSummaryFiltersBtn.addEventListener('click', () => {
-            if(nameFilter) nameFilter.value = ''; if(statusFilter) statusFilter.value = ''; if(browserFilter) browserFilter.value = '';
-            filterTestCases();
-        });
-        // --- Test History Filters ---
-        const historyNameFilter = document.getElementById('history-filter-name');
-        const historyStatusFilter = document.getElementById('history-filter-status');
-        const clearHistoryFiltersBtn = document.getElementById('clear-history-filters'); 
-        function filterTestHistoryCards() { 
-            const nameValue = historyNameFilter ? historyNameFilter.value.toLowerCase() : "";
-            const statusValue = historyStatusFilter ? historyStatusFilter.value : "";
-            document.querySelectorAll('.test-history-card').forEach(card => {
-                const testTitle = card.getAttribute('data-test-name').toLowerCase(); 
-                const latestStatus = card.getAttribute('data-latest-status');
-                const nameMatch = testTitle.includes(nameValue);
-                const statusMatch = !statusValue || latestStatus === statusValue;
-                card.style.display = (nameMatch && statusMatch) ? '' : 'none';
-            });
-        }
-        if(historyNameFilter) historyNameFilter.addEventListener('input', filterTestHistoryCards);
-        if(historyStatusFilter) historyStatusFilter.addEventListener('change', filterTestHistoryCards);
-        if(clearHistoryFiltersBtn) clearHistoryFiltersBtn.addEventListener('click', () => {
-            if(historyNameFilter) historyNameFilter.value = ''; if(historyStatusFilter) historyStatusFilter.value = '';
-            filterTestHistoryCards();
-        });
-        // --- Expand/Collapse and Toggle Details Logic ---
-        function toggleElementDetails(headerElement, contentSelector) { 
-            let contentElement;
-            if (headerElement.classList.contains('test-case-header')) {
-                contentElement = headerElement.parentElement.querySelector('.test-case-content');
-            } else if (headerElement.classList.contains('step-header')) {
-                contentElement = headerElement.nextElementSibling;
-                if (!contentElement || !contentElement.matches(contentSelector || '.step-details')) {
-                     contentElement = null;
-                }
-            }
-            if (contentElement) {
-                 const isExpanded = contentElement.style.display === 'block';
-                 contentElement.style.display = isExpanded ? 'none' : 'block';
-                 headerElement.setAttribute('aria-expanded', String(!isExpanded));
-            }
-        }
-        document.querySelectorAll('#test-runs .test-case-header').forEach(header => {
-            header.addEventListener('click', () => toggleElementDetails(header)); 
-        });
-        document.querySelectorAll('#test-runs .step-header').forEach(header => {
-            header.addEventListener('click', () => toggleElementDetails(header, '.step-details'));
-        });
-        const expandAllBtn = document.getElementById('expand-all-tests');
-        const collapseAllBtn = document.getElementById('collapse-all-tests');
-        function setAllTestRunDetailsVisibility(displayMode, ariaState) {
-            document.querySelectorAll('#test-runs .test-case-content').forEach(el => el.style.display = displayMode);
-            document.querySelectorAll('#test-runs .step-details').forEach(el => el.style.display = displayMode);
-            document.querySelectorAll('#test-runs .test-case-header[aria-expanded]').forEach(el => el.setAttribute('aria-expanded', ariaState));
-            document.querySelectorAll('#test-runs .step-header[aria-expanded]').forEach(el => el.setAttribute('aria-expanded', ariaState));
-        }
-        if (expandAllBtn) expandAllBtn.addEventListener('click', () => setAllTestRunDetailsVisibility('block', 'true'));
-        if (collapseAllBtn) collapseAllBtn.addEventListener('click', () => setAllTestRunDetailsVisibility('none', 'false'));
-        // --- Intersection Observer for Lazy Loading ---
-        const lazyLoadElements = document.querySelectorAll('.lazy-load-chart, .lazy-load-iframe, .lazy-load-image, .lazy-load-video, .lazy-load-attachment');
-        if ('IntersectionObserver' in window) {
-            let lazyObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const element = entry.target;
-                        if (element.classList.contains('lazy-load-image')) {
-                            if (element.dataset.src) {
-                                element.src = element.dataset.src;
-                                element.removeAttribute('data-src');
-                            }
-                        } else if (element.classList.contains('lazy-load-video')) {
-                            const source = element.querySelector('source');
-                            if (source && source.dataset.src) {
-                                source.src = source.dataset.src;
-                                source.removeAttribute('data-src');
-                                element.load();
-                            }
-                        } else if (element.classList.contains('lazy-load-attachment')) {
-                            if (element.dataset.href) {
-                                element.href = element.dataset.href;
-                                element.removeAttribute('data-href');
-                            }
-                        } else if (element.classList.contains('lazy-load-iframe')) {
-                            if (element.dataset.src) {
-                                element.src = element.dataset.src;
-                                element.removeAttribute('data-src');
-                            }
-                        } else if (element.classList.contains('lazy-load-chart')) {
-                            const renderFunctionName = element.dataset.renderFunctionName;
-                            if (renderFunctionName && typeof window[renderFunctionName] === 'function') {
-                                window[renderFunctionName]();
-                            }
-                        }
-                        observer.unobserve(element);
-                    }
-                });
-            }, { rootMargin: "0px 0px 200px 0px" });
-            lazyLoadElements.forEach(el => lazyObserver.observe(el));
-        } else { // Fallback for browsers without IntersectionObserver
-            lazyLoadElements.forEach(element => {
-                if (element.classList.contains('lazy-load-image') && element.dataset.src) element.src = element.dataset.src;
-                else if (element.classList.contains('lazy-load-video')) { const source = element.querySelector('source'); if (source && source.dataset.src) { source.src = source.dataset.src; element.load(); } }
-                else if (element.classList.contains('lazy-load-attachment') && element.dataset.href) element.href = element.dataset.href;
-                else if (element.classList.contains('lazy-load-iframe') && element.dataset.src) element.src = element.dataset.src;
-                else if (element.classList.contains('lazy-load-chart')) { const renderFn = element.dataset.renderFunctionName; if(renderFn && window[renderFn]) window[renderFn](); }
-            });
-        }
-    }
-    document.addEventListener('DOMContentLoaded', initializeReportInteractivity);
+        };
+        nameFilter.addEventListener('input', filterTestCases);
+        statusFilter.addEventListener('change', filterTestCases);
+        browserFilter.addEventListener('change', filterTestCases);
+        clearBtn.addEventListener('click', () => { nameFilter.value = ''; statusFilter.value = ''; browserFilter.value = ''; filterTestCases(); });
 
+        // --- Test Detail Expansion ---
+        document.querySelectorAll('#test-runs .test-case-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const testIndex = header.dataset.testIndex;
+                const contentDiv = document.getElementById(\`test-details-\${testIndex}\`);
+                const isExpanded = header.getAttribute('aria-expanded') === 'true';
+
+                if (contentDiv) {
+                    if (!isExpanded && contentDiv.innerHTML.trim() === '') {
+                        // First time opening: generate and inject content
+                        contentDiv.innerHTML = generateTestDetailsHTML(testIndex);
+                        // Setup step toggles within this new content
+                        contentDiv.querySelectorAll('.step-header').forEach(stepHeader => {
+                            stepHeader.addEventListener('click', () => {
+                                const details = stepHeader.nextElementSibling;
+                                if (details) {
+                                    const isStepExpanded = details.style.display === 'block';
+                                    details.style.display = isStepExpanded ? 'none' : 'block';
+                                    stepHeader.setAttribute('aria-expanded', String(!isStepExpanded));
+                                }
+                            });
+                        });
+                    }
+                    contentDiv.style.display = isExpanded ? 'none' : 'block';
+                }
+                header.setAttribute('aria-expanded', String(!isExpanded));
+            });
+        });
+        
+        document.getElementById('expand-all-tests')?.addEventListener('click', () => {
+            document.querySelectorAll('#test-runs .test-case-header').forEach(header => {
+                if(header.getAttribute('aria-expanded') !== 'true') header.click();
+            });
+        });
+        document.getElementById('collapse-all-tests')?.addEventListener('click', () => {
+            document.querySelectorAll('#test-runs .test-case-header').forEach(header => {
+                if(header.getAttribute('aria-expanded') === 'true') header.click();
+            });
+        });
+    }
+
+    // --- Global Utility Functions needed by generated HTML ---
+    function copyLogContent(elementId, button) {
+        const logEl = document.getElementById(elementId);
+        if (!logEl) return;
+        navigator.clipboard.writeText(logEl.innerText).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+        }).catch(() => { button.textContent = 'Failed'; });
+    }
     function copyErrorToClipboard(button) {
       const errorContainer = button.closest('.test-error-summary');
-      if (!errorContainer) {
-        console.error("Could not find '.test-error-summary' container.");
-        return;
-      }
+      if (!errorContainer) return;
       let errorText;
-      const stackTraceElement = errorContainer.querySelector('.stack-trace');
-      if (stackTraceElement) {
-        errorText = stackTraceElement.textContent;
-      } else {
-        const clonedContainer = errorContainer.cloneNode(true);
-        const buttonInClone = clonedContainer.querySelector('button');
-        if (buttonInClone) buttonInClone.remove();
-        errorText = clonedContainer.textContent;
+      const preEl = errorContainer.querySelector('pre');
+      if (preEl) { errorText = preEl.textContent; } else {
+        const cloned = errorContainer.cloneNode(true);
+        cloned.querySelector('button')?.remove();
+        errorText = cloned.textContent;
       }
-
-      if (!errorText) {
-        button.textContent = 'Nothing to copy';
-        setTimeout(() => { button.textContent = 'Copy Error'; }, 2000);
-        return;
-      }
-      navigator.clipboard.writeText(errorText.trim()).then(() => {
-        const originalText = button.textContent;
-        button.textContent = 'Copied!';
-        setTimeout(() => { button.textContent = originalText; }, 2000);
-      }).catch(err => {
-        console.error('Failed to copy: ', err);
-        button.textContent = 'Failed';
-      });
+      if (!errorText) return;
+      navigator.clipboard.writeText(errorText.trim()).then(() => { button.textContent = 'Copied!'; setTimeout(() => { button.textContent = 'Copy'; }, 2000); });
     }
-</script>
+    function getAIFix(button) {
+        const modal = document.getElementById('ai-fix-modal');
+        const modalContent = document.getElementById('ai-fix-modal-content');
+        const modalTitle = document.getElementById('ai-fix-modal-title');
+        modal.style.display = 'flex';
+        modalTitle.textContent = 'Analyzing...';
+        modalContent.innerHTML = '<div class="ai-loader"></div>';
+
+        try {
+            const test = JSON.parse(atob(button.dataset.testJson));
+            const shortTestName = test.name.split(' > ').pop();
+            modalTitle.textContent = \`Analysis for: \${shortTestName}\`;
+            
+            fetch('https://ai-test-analyser.netlify.app/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    testName: test.name,
+                    failureLogsAndErrors: test.errorMessage || '',
+                    codeSnippet: test.snippet || '',
+                }),
+            })
+            .then(res => res.ok ? res.json() : res.text().then(text => Promise.reject(new Error(text || 'API Error'))))
+            .then(data => {
+                const escapeHtml = (unsafe) => unsafe.replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]));
+                let html = \`<h4>Analysis</h4><p>\${escapeHtml(data.rootCause || 'N/A')}</p><h4>Suggestions</h4><div class="suggestions-list">\`;
+                if (data.suggestedFixes && data.suggestedFixes.length > 0) {
+                    html += data.suggestedFixes.map(fix => \`
+                        <div class="suggestion-item"><p><b>\${escapeHtml(fix.description)}</b></p>
+                        \${fix.codeSnippet ? \`<div class="code-section"><pre><code>\${escapeHtml(fix.codeSnippet)}</code></pre></div>\` : ''}
+                        </div>
+                    \`).join('');
+                } else { html += '<p>No suggestions provided.</p>'; }
+                html += '</div>';
+                modalContent.innerHTML = html;
+            })
+            .catch(err => {
+                modalContent.innerHTML = \`<div class="test-error-summary"><strong>Error:</strong> \${err.message}</div>\`;
+            });
+        } catch (e) {
+            modalTitle.textContent = 'Error';
+            modalContent.innerHTML = \`<div class="test-error-summary">Could not process test data.</div>\`;
+        }
+    }
+    function closeAiModal() { document.getElementById('ai-fix-modal').style.display = 'none'; }
+    function toggleErrorDetails(button) {
+        const errorDetails = button.closest('.compact-failure-item').querySelector('.full-error-details');
+        const expandText = button.querySelector('.expand-text');
+        const isExpanded = errorDetails.style.display === 'block';
+        errorDetails.style.display = isExpanded ? 'none' : 'block';
+        expandText.textContent = isExpanded ? 'Show Full Error' : 'Hide Full Error';
+        button.classList.toggle('expanded', !isExpanded);
+    }
+    </script>
 </body>
 </html>
   `;
