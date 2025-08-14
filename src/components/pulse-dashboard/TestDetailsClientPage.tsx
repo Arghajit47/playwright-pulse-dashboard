@@ -18,46 +18,15 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Clock,
-  ImageIcon,
-  FileText,
-  LineChart,
-  Info,
-  Download,
-  Film,
-  Archive,
-  Terminal,
-  FileJson,
-  FileSpreadsheet,
-  FileCode,
-  File as FileIcon,
-  Sparkles,
-  Lightbulb,
-  Wrench,
-} from "lucide-react";
-import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { useState, useEffect, useRef, useMemo } from "react";
-import { TestStepItemRecursive } from "./TestStepItemRecursive";
-import { getRawHistoricalReports } from "@/app/actions";
-import {
-  ResponsiveContainer,
-  LineChart as RechartsLineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  DotProps,
-} from "recharts";
-import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from "@/lib/utils";
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, ImageIcon, FileText, LineChart, Info, Download, Film, Archive, Terminal, FileJson, FileSpreadsheet, FileCode, File as FileIcon, Sparkles, Lightbulb, Wrench } from 'lucide-react';
+import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { TestStepItemRecursive } from './TestStepItemRecursive';
+import { getRawHistoricalReports } from '@/app/actions';
+import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, DotProps } from 'recharts';
+import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
 
 interface TestRunHistoryData {
   date: string;
@@ -231,9 +200,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   const historyChartRef = useRef<HTMLDivElement>(null);
   const [aiSuggestion, setAiSuggestion] = useState<any>(null);
   const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
-  const [aiSuggestionError, setAiSuggestionError] = useState<string | null>(
-    null
-  );
+  const [aiSuggestionError, setAiSuggestionError] = useState<string | null>(null);
 
   const handleGenerateSuggestion = async () => {
     if (!test) return;
@@ -241,6 +208,35 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     setIsGeneratingSuggestion(true);
     setAiSuggestion(null);
     setAiSuggestionError(null);
+
+    try {
+      const response = await fetch("/api/analyze-test", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          testName: test.name,
+          failureLogsAndErrors: test.errorMessage || '',
+          codeSnippet: test.snippet || '',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
+        throw new Error(errorData.message || `API request failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+      setAiSuggestion(result);
+
+    } catch (error) {
+      console.error('Error generating AI suggestion:', error);
+      setAiSuggestionError(error instanceof Error ? error.message : 'An unknown error occurred.');
+    } finally {
+      setIsGeneratingSuggestion(false);
+    }
+  };
 
     try {
       const response = await fetch("/api/analyze-test", {
@@ -330,8 +326,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     return test.screenshots.map((path, index) => ({
       name: getAttachmentNameFromPath(path, `Screenshot ${index + 1}`),
       path: path,
-      contentType: "image/png",
-      "data-ai-hint": `screenshot ${index + 1}`,
+      contentType: 'image/png',
+      'data-ai-hint': `screenshot ${index + 1}`
     }));
   }, [test]);
 
@@ -340,30 +336,27 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     return test.videoPath.map((path, index) => ({
       name: getAttachmentNameFromPath(path, `Video ${index + 1}`),
       path: path,
-      contentType: "video/mp4",
-      "data-ai-hint": `video ${index + 1}`,
+      contentType: 'video/mp4',
+      'data-ai-hint': `video ${index + 1}`
     }));
   }, [test]);
 
   const traceAttachment: DisplayAttachment | null = useMemo(() => {
-    if (!test || typeof test.tracePath !== "string" || !test.tracePath)
-      return null;
+    if (!test || typeof test.tracePath !== 'string' || !test.tracePath) return null;
     return {
       name: getAttachmentNameFromPath(test.tracePath, "trace.zip"),
       path: test.tracePath,
       contentType: "application/zip",
     };
   }, [test]);
-
+  
   const allOtherAttachments: DisplayAttachment[] = useMemo(() => {
     if (!test || !Array.isArray(test.attachments)) return [];
     return test.attachments.map((att: any, index: number) => ({
-      name:
-        att.name ||
-        getAttachmentNameFromPath(att.path, `Attachment ${index + 1}`),
-      path: att.path,
-      contentType: att.contentType || "application/octet-stream",
-      "data-ai-hint": att["data-ai-hint"],
+        name: att.name || getAttachmentNameFromPath(att.path, `Attachment ${index + 1}`),
+        path: att.path,
+        contentType: att.contentType || 'application/octet-stream',
+        'data-ai-hint': att['data-ai-hint']
     }));
   }, [test]);
 
@@ -420,14 +413,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
       (traceAttachment ? 1 : 0) +
       allOtherAttachments.length
     );
-  }, [
-    screenshotAttachments,
-    videoAttachments,
-    traceAttachment,
-    allOtherAttachments,
-  ]);
+  }, [screenshotAttachments, videoAttachments, traceAttachment, allOtherAttachments]);
 
-  const isFailedTest = test?.status === "failed" || test?.status === "timedOut";
+  const isFailedTest = test?.status === 'failed' || test?.status === 'timedOut';
 
   if (loadingCurrent && !test) {
     return (
@@ -509,32 +497,10 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               >
                 <StatusIcon status={test.status} />
                 <span className="ml-3">{displayName}</span>
-              </CardTitle>
-              {test.suiteName && (
-                <CardDescription className="mt-1 text-md">
-                  From suite: {test.suiteName}
-                </CardDescription>
-              )}
-              <p className="text-sm text-muted-foreground mt-2">
-                Latest Run Date:{" "}
-                {loadingCurrent ? (
-                  <span className="text-muted-foreground">Loading...</span>
-                ) : currentRun?.run?.timestamp ? (
-                  <span className="font-medium">
-                    {new Date(currentRun.run.timestamp).toLocaleString()}
-                  </span>
-                ) : errorCurrent && !currentRun?.run?.timestamp ? (
-                  <span className="text-destructive font-medium">
-                    Error loading date
-                  </span>
-                ) : (
-                  <span className="font-medium">Not available</span>
-                )}
-              </p>
-              <div className="mt-1 text-xs text-muted-foreground">
-                <p>ID: {test.id}</p>
-                {test.browser && <p>Browser: {test.browser}</p>}
-              </div>
+                </CardTitle>
+                {test.suiteName && <CardDescription className="mt-1 text-md">From suite: {test.suiteName}</CardDescription>}
+                 <p className="text-sm text-muted-foreground mt-2">Latest Run Date: {loadingCurrent ? <span className="text-muted-foreground">Loading...</span> : currentRun?.run?.timestamp ? <span className="font-medium">{new Date(currentRun.run.timestamp).toLocaleString()}</span> : errorCurrent && !currentRun?.run?.timestamp ? <span className="text-destructive font-medium">Error loading date</span> : <span className="font-medium">Not available</span>}</p>
+                 <div className="mt-1 text-xs text-muted-foreground"><p>ID: {test.id}</p>{test.browser && <p>Browser: {test.browser}</p>}</div>
             </div>
             <div className="text-right flex-shrink-0">
               <Badge
@@ -568,30 +534,13 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="steps" className="w-full">
-            <TabsList
-              className={cn(
-                "grid w-full mb-4 rounded-lg",
-                isFailedTest
-                  ? "grid-cols-2 md:grid-cols-5"
-                  : "grid-cols-2 md:grid-cols-4"
-              )}
-            >
-              <TabsTrigger value="steps">
-                Execution Steps ({test.steps?.length || 0})
-              </TabsTrigger>
-              <TabsTrigger value="attachments">
-                Attachments ({totalAttachmentsCount})
-              </TabsTrigger>
-              <TabsTrigger value="logs">
-                <FileText className="h-4 w-4 mr-2" />
-                Logs
-              </TabsTrigger>
+            <TabsList className={cn("grid w-full mb-4 rounded-lg", isFailedTest ? "grid-cols-2 md:grid-cols-5" : "grid-cols-2 md:grid-cols-4")}>
+              <TabsTrigger value="steps">Execution Steps ({test.steps?.length || 0})</TabsTrigger>
+              <TabsTrigger value="attachments">Attachments ({totalAttachmentsCount})</TabsTrigger>
+              <TabsTrigger value="logs"><FileText className="h-4 w-4 mr-2"/>Logs</TabsTrigger>
               <TabsTrigger value="history">Test Run History</TabsTrigger>
               {isFailedTest && (
-                <TabsTrigger value="ai-suggestions">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  AI Suggestions
-                </TabsTrigger>
+                <TabsTrigger value="ai-suggestions"><Sparkles className="h-4 w-4 mr-2" />AI Suggestions</TabsTrigger>
               )}
             </TabsList>
 
@@ -641,176 +590,47 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               <Tabs defaultValue="sub-screenshots" className="w-full">
                 <ScrollArea className="w-full whitespace-nowrap rounded-lg">
                   <TabsList className="inline-grid w-max grid-flow-col mb-4 rounded-lg">
-                    <TabsTrigger
-                      value="sub-screenshots"
-                      disabled={screenshotAttachments.length === 0}
-                    >
-                      <ImageIcon className="h-4 w-4 mr-2" />
-                      Screenshots ({screenshotAttachments.length})
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="sub-video"
-                      disabled={videoAttachments.length === 0}
-                    >
-                      <Film className="h-4 w-4 mr-2" />
-                      Videos ({videoAttachments.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="sub-trace" disabled={!traceAttachment}>
-                      <Archive className="h-4 w-4 mr-2" />
-                      Trace {traceAttachment ? "(1)" : "(0)"}
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="sub-html"
-                      disabled={htmlAttachments.length === 0}
-                    >
-                      <FileCode className="h-4 w-4 mr-2" />
-                      HTML ({htmlAttachments.length})
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="sub-pdf"
-                      disabled={pdfAttachments.length === 0}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      PDF ({pdfAttachments.length})
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="sub-json"
-                      disabled={jsonAttachments.length === 0}
-                    >
-                      <FileJson className="h-4 w-4 mr-2" />
-                      JSON ({jsonAttachments.length})
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="sub-text"
-                      disabled={textCsvAttachments.length === 0}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Text/CSV ({textCsvAttachments.length})
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="sub-other"
-                      disabled={otherGenericAttachments.length === 0}
-                    >
-                      <FileIcon className="h-4 w-4 mr-2" />
-                      Others ({otherGenericAttachments.length})
-                    </TabsTrigger>
+                    <TabsTrigger value="sub-screenshots" disabled={screenshotAttachments.length === 0}><ImageIcon className="h-4 w-4 mr-2" />Screenshots ({screenshotAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="sub-video" disabled={videoAttachments.length === 0}><Film className="h-4 w-4 mr-2" />Videos ({videoAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="sub-trace" disabled={!traceAttachment}><Archive className="h-4 w-4 mr-2" />Trace {traceAttachment ? '(1)' : '(0)'}</TabsTrigger>
+                    <TabsTrigger value="sub-html" disabled={htmlAttachments.length === 0}><FileCode className="h-4 w-4 mr-2" />HTML ({htmlAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="sub-pdf" disabled={pdfAttachments.length === 0}><FileText className="h-4 w-4 mr-2" />PDF ({pdfAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="sub-json" disabled={jsonAttachments.length === 0}><FileJson className="h-4 w-4 mr-2" />JSON ({jsonAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="sub-text" disabled={textCsvAttachments.length === 0}><FileText className="h-4 w-4 mr-2" />Text/CSV ({textCsvAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="sub-other" disabled={otherGenericAttachments.length === 0}><FileIcon className="h-4 w-4 mr-2" />Others ({otherGenericAttachments.length})</TabsTrigger>
                   </TabsList>
                 </ScrollArea>
 
                 <TabsContent value="sub-screenshots" className="mt-4">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Screenshots
-                  </h3>
-                  {screenshotAttachments.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {screenshotAttachments.map((attachment, index) => {
-                        const imageSrc = getUtilAssetPath(attachment.path);
-                        if (imageSrc === "#") return null;
-                        return (
-                          <a
-                            key={`img-preview-${index}`}
-                            href={imageSrc}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg"
-                          >
-                            <Image
-                              src={imageSrc}
-                              alt={attachment.name || `Screenshot ${index + 1}`}
-                              fill={true}
-                              style={{ objectFit: "cover" }}
-                              className="group-hover:scale-105 transition-transform duration-300"
-                              data-ai-hint={
-                                attachment["data-ai-hint"] || "test screenshot"
-                              }
-                            />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2">
-                              <p className="text-white text-xs text-center break-all">
-                                {attachment.name || `Screenshot ${index + 1}`}
-                              </p>
-                            </div>
-                          </a>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">
-                      No screenshots available for this test.
-                    </p>
-                  )}
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Screenshots</h3>
+                  {screenshotAttachments.length > 0 ? (<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">{screenshotAttachments.map((attachment, index) => {const imageSrc = getUtilAssetPath(attachment.path); if (imageSrc === '#') return null; return (<a key={`img-preview-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg"><Image src={imageSrc} alt={attachment.name || `Screenshot ${index + 1}`} fill={true} style={{objectFit: "cover"}} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={attachment['data-ai-hint'] || "test screenshot"}/><div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2"><p className="text-white text-xs text-center break-all">{attachment.name || `Screenshot ${index + 1}`}</p></div></a>);})}</div>) : (<p className="text-muted-foreground">No screenshots available for this test.</p>)}
                 </TabsContent>
 
                 <TabsContent value="sub-video" className="mt-4">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Video Recording(s)
-                  </h3>
-                  <div className="space-y-4">
-                    {videoAttachments.length > 0 ? (
-                      videoAttachments.map((attachment, index) => (
-                        <div
-                          key={`video-${index}`}
-                          className="p-4 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between"
-                        >
-                          <p
-                            className="text-sm font-medium text-foreground truncate"
-                            title={attachment.name}
-                          >
-                            {attachment.name}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <Button asChild variant="ghost" size="sm">
-                              <a
-                                href={getUtilAssetPath(attachment.path)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                View
-                              </a>
-                            </Button>
-                            <Button asChild variant="outline" size="sm">
-                              <a
-                                href={getUtilAssetPath(attachment.path)}
-                                download={attachment.name}
-                              >
-                                <Download className="h-4 w-4 mr-2" />
-                                Download
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <Alert className="rounded-lg">
-                        <Info className="h-4 w-4" />
-                        <AlertTitle>No Videos Available</AlertTitle>
-                        <AlertDescription>
-                          There is no video recording associated with this test
-                          run.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </div>
+                   <h3 className="text-lg font-semibold text-foreground mb-4">Video Recording(s)</h3>
+                    <div className="space-y-4">
+                        {videoAttachments.length > 0 ? videoAttachments.map((attachment, index) => (
+                            <div key={`video-${index}`} className="p-4 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between">
+                                <p className="text-sm font-medium text-foreground truncate" title={attachment.name}>{attachment.name}</p>
+                                <div className="flex items-center gap-2">
+                                    <Button asChild variant="ghost" size="sm"><a href={getUtilAssetPath(attachment.path)} target="_blank" rel="noopener noreferrer">View</a></Button>
+                                    <Button asChild variant="outline" size="sm"><a href={getUtilAssetPath(attachment.path)} download={attachment.name}><Download className="h-4 w-4 mr-2"/>Download</a></Button>
+                                </div>
+                            </div>
+                        )) : (
+                            <Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Videos Available</AlertTitle><AlertDescription>There is no video recording associated with this test run.</AlertDescription></Alert>
+                        )}
+                    </div>
                 </TabsContent>
 
                 <TabsContent value="sub-trace" className="mt-4">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Trace File
-                  </h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Trace File</h3>
                   {traceAttachment ? (
                     <div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
-                      <a
-                        href={getUtilAssetPath(traceAttachment.path)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-primary hover:underline text-base"
-                        download={traceAttachment.name}
-                      >
-                        <Download className="h-5 w-5 mr-2" /> Download Trace
-                        File ({traceAttachment.name})
+                      <a href={getUtilAssetPath(traceAttachment.path)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline text-base" download={traceAttachment.name}>
+                        <Download className="h-5 w-5 mr-2" /> Download Trace File ({traceAttachment.name})
                       </a>
-                      <p className="text-xs text-muted-foreground">
-                        Path: {traceAttachment.path}
-                      </p>
+                      <p className="text-xs text-muted-foreground">Path: {traceAttachment.path}</p>
                       <Alert className="rounded-lg">
                         <Info className="h-4 w-4" />
                         <AlertTitle>Using Trace Files</AlertTitle>
@@ -941,49 +761,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               </Tabs>
             </TabsContent>
 
-            <TabsContent
-              value="logs"
-              className="mt-4 p-4 border rounded-lg bg-card space-y-6 shadow-inner"
-            >
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
-                  <Terminal className="h-5 w-5 mr-2 text-primary" />
-                  Console Logs / Standard Output
-                </h3>
-                <ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm">
-                  <pre className="text-sm whitespace-pre-wrap break-words font-code">
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: ansiToHtml(
-                          test.stdout &&
-                            Array.isArray(test.stdout) &&
-                            test.stdout.length > 0
-                            ? test.stdout.join("\n")
-                            : "No standard output logs captured for this test."
-                        ),
-                      }}
-                    />
-                  </pre>
-                </ScrollArea>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
-                  <AlertCircle className="h-5 w-5 mr-2 text-destructive" />
-                  Error Messages / Standard Error
-                </h3>
-                <ScrollArea className="h-48 w-full rounded-lg border bg-destructive/5 shadow-sm">
-                  <pre className="text-sm p-3 whitespace-pre-wrap break-all font-code">
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: ansiToHtml(
-                          test.errorMessage ||
-                            "No errors captured for this test."
-                        ),
-                      }}
-                    />
-                  </pre>
-                </ScrollArea>
-              </div>
+            <TabsContent value="logs" className="mt-4 p-4 border rounded-lg bg-card space-y-6 shadow-inner">
+              <div><h3 className="text-lg font-semibold text-foreground mb-3 flex items-center"><Terminal className="h-5 w-5 mr-2 text-primary"/>Console Logs / Standard Output</h3><ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm"><pre className="text-sm whitespace-pre-wrap break-words font-code"><span dangerouslySetInnerHTML={{ __html: ansiToHtml((test.stdout && Array.isArray(test.stdout) && test.stdout.length > 0) ? test.stdout.join('\n') : "No standard output logs captured for this test.")}} /></pre></ScrollArea></div>
+              <div><h3 className="text-lg font-semibold text-foreground mb-3 flex items-center"><AlertCircle className="h-5 w-5 mr-2 text-destructive"/>Error Messages / Standard Error</h3><ScrollArea className="h-48 w-full rounded-lg border bg-destructive/5 shadow-sm"><pre className="text-sm p-3 whitespace-pre-wrap break-all font-code"><span dangerouslySetInnerHTML={{ __html: ansiToHtml(test.errorMessage || "No errors captured for this test.")}} /></pre></ScrollArea></div>
               {test.snippet && (
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
@@ -992,11 +772,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   </h3>
                   <ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm">
                     <pre className="text-sm whitespace-pre-wrap break-words font-code">
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: ansiToHtml(test.snippet),
-                        }}
-                      />
+                      <span dangerouslySetInnerHTML={{ __html: ansiToHtml(test.snippet) }} />
                     </pre>
                   </ScrollArea>
                 </div>
@@ -1088,30 +864,14 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             </TabsContent>
 
             {isFailedTest && (
-              <TabsContent
-                value="ai-suggestions"
-                className="mt-4 p-4 border rounded-lg bg-card shadow-inner"
-              >
+              <TabsContent value="ai-suggestions" className="mt-4 p-4 border rounded-lg bg-card shadow-inner">
                 <div className="flex flex-col items-center justify-center text-center p-2 md:p-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
-                    <Sparkles className="h-5 w-5 mr-2 text-primary" />
-                    AI-Powered Failure Analysis
-                  </h3>
-
-                  {!(
-                    isGeneratingSuggestion ||
-                    aiSuggestion ||
-                    aiSuggestionError
-                  ) && (
+                  <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center"><Sparkles className="h-5 w-5 mr-2 text-primary"/>AI-Powered Failure Analysis</h3>
+                  
+                  {!(isGeneratingSuggestion || aiSuggestion || aiSuggestionError) && (
                     <>
-                      <p className="text-muted-foreground text-sm mb-6 max-w-md">
-                        Get suggestions from AI to help diagnose the root cause
-                        of this test failure and find potential solutions.
-                      </p>
-                      <Button
-                        onClick={handleGenerateSuggestion}
-                        disabled={isGeneratingSuggestion}
-                      >
+                      <p className="text-muted-foreground text-sm mb-6 max-w-md">Get suggestions from AI to help diagnose the root cause of this test failure and find potential solutions.</p>
+                      <Button onClick={handleGenerateSuggestion} disabled={isGeneratingSuggestion}>
                         <Sparkles className="h-4 w-4 mr-2" />
                         Generate Suggestion
                       </Button>
@@ -1121,9 +881,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   {isGeneratingSuggestion && (
                     <div className="flex flex-col items-center justify-center py-10">
                       <Sparkles className="h-8 w-8 text-primary animate-pulse mb-4" />
-                      <p className="text-muted-foreground">
-                        Generating suggestion... Please wait.
-                      </p>
+                      <p className="text-muted-foreground">Generating suggestion... Please wait.</p>
                     </div>
                   )}
 
@@ -1133,12 +891,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                         <AlertTitle>Error Generating Suggestion</AlertTitle>
                         <AlertDescription>{aiSuggestionError}</AlertDescription>
                       </Alert>
-                      <Button
-                        onClick={handleGenerateSuggestion}
-                        variant="outline"
-                        size="sm"
-                        className="mt-4"
-                      >
+                       <Button onClick={handleGenerateSuggestion} variant="outline" size="sm" className="mt-4">
                         <Sparkles className="h-4 w-4 mr-2" />
                         Try Again
                       </Button>
@@ -1147,34 +900,20 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
                   {aiSuggestion && (
                     <div className="text-left w-full mt-6 space-y-6">
-                      <Alert
-                        variant="default"
-                        className="border-primary/30 bg-primary/5"
-                      >
+                      <Alert variant="default" className="border-primary/30 bg-primary/5">
                         <Lightbulb className="h-5 w-5 text-primary" />
-                        <AlertTitle className="text-primary font-semibold">
-                          Root Cause Analysis
-                        </AlertTitle>
+                        <AlertTitle className="text-primary font-semibold">Root Cause Analysis</AlertTitle>
                         <AlertDescription className="text-primary/90">
-                          {aiSuggestion.rootCause ||
-                            "No root cause analysis provided."}
+                          {aiSuggestion.rootCause || "No root cause analysis provided."}
                         </AlertDescription>
                       </Alert>
 
                       <div>
-                        <h4 className="font-semibold text-foreground mb-2">
-                          Affected Tests:
-                        </h4>
+                        <h4 className="font-semibold text-foreground mb-2">Affected Tests:</h4>
                         <div className="flex flex-wrap gap-2">
-                          {aiSuggestion.affectedTests?.map(
-                            (testName: string) => (
-                              <Badge key={testName} variant="secondary">
-                                {testName}
-                              </Badge>
-                            )
-                          ) || (
-                            <p className="text-sm text-muted-foreground">N/A</p>
-                          )}
+                          {aiSuggestion.affectedTests?.map((testName: string) => (
+                            <Badge key={testName} variant="secondary">{testName}</Badge>
+                          )) || <p className="text-sm text-muted-foreground">N/A</p>}
                         </div>
                       </div>
 
@@ -1184,54 +923,31 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                           Suggested Fixes
                         </h4>
                         <div className="space-y-4">
-                          {aiSuggestion.suggestedFixes?.map(
-                            (
-                              fix: { description: string; codeSnippet: string },
-                              index: number
-                            ) => (
-                              <Card
-                                key={index}
-                                className="bg-card/50 shadow-md"
-                              >
-                                <CardHeader>
-                                  <CardTitle className="text-base">
-                                    Suggestion #{index + 1}
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                  <p className="text-sm text-muted-foreground mb-3">
-                                    {fix.description}
-                                  </p>
-                                  {fix.codeSnippet && (
-                                    <div>
-                                      <h5 className="text-xs font-semibold text-foreground mb-1 flex items-center">
-                                        <FileCode className="h-3 w-3 mr-1.5" />
-                                        Code Snippet:
-                                      </h5>
-                                      <pre className="bg-muted text-sm p-3 rounded-md whitespace-pre-wrap font-code overflow-x-auto">
-                                        <code>{fix.codeSnippet}</code>
-                                      </pre>
-                                    </div>
-                                  )}
-                                </CardContent>
-                              </Card>
-                            )
-                          )}
-                          {(!aiSuggestion.suggestedFixes ||
-                            aiSuggestion.suggestedFixes.length === 0) && (
-                            <p className="text-sm text-muted-foreground">
-                              No specific fixes were suggested.
-                            </p>
-                          )}
+                          {aiSuggestion.suggestedFixes?.map((fix: { description: string, codeSnippet: string }, index: number) => (
+                            <Card key={index} className="bg-card/50 shadow-md">
+                              <CardHeader>
+                                <CardTitle className="text-base">Suggestion #{index + 1}</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="text-sm text-muted-foreground mb-3">{fix.description}</p>
+                                {fix.codeSnippet && (
+                                  <div>
+                                    <h5 className="text-xs font-semibold text-foreground mb-1 flex items-center"><FileCode className="h-3 w-3 mr-1.5" />Code Snippet:</h5>
+                                    <pre className="bg-muted text-sm p-3 rounded-md whitespace-pre-wrap font-code overflow-x-auto">
+                                      <code>{fix.codeSnippet}</code>
+                                    </pre>
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                           {(!aiSuggestion.suggestedFixes || aiSuggestion.suggestedFixes.length === 0) && (
+                               <p className="text-sm text-muted-foreground">No specific fixes were suggested.</p>
+                           )}
                         </div>
                       </div>
 
-                      <Button
-                        onClick={handleGenerateSuggestion}
-                        variant="outline"
-                        size="sm"
-                        className="mt-4"
-                      >
+                       <Button onClick={handleGenerateSuggestion} variant="outline" size="sm" className="mt-4">
                         <Sparkles className="h-4 w-4 mr-2" />
                         Regenerate Suggestion
                       </Button>
