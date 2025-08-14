@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2025-08-15
+
+### Added
+- **AI Suggestions**: Implemented AI Suggestions sub-tab inside failed test case details page.
+- **Test Case Snippet**: Added _Test Case Snippet_ section containing the failed test cases' entire test snippet, `Test Details` > `Logs` .
+
+---
+
 ## [1.1.2] - 2025-07-07
 
 ### Added

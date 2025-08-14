@@ -1,6 +1,6 @@
 
 // Main component export
-export { PulseDashboard } from './components/pulse-dashboard/PulseDashboard.js';
+export { PulseDashboard } from './components/pulse-dashboard/PulseDashboard';
 
 // Type exports for consumers
 export type {
@@ -11,9 +11,9 @@ export type {
   TestStep,
   FlakyTestDetail,
   FlakyTestOccurrence,
-} from './types/playwright.js';
+} from './types/playwright';
 
-export type { TestStatusFilter } from './components/pulse-dashboard/LiveTestResults.js';
+export type { TestStatusFilter } from './components/pulse-dashboard/LiveTestResults';
 
 // It's crucial to instruct users of this package to import the CSS.
 // For example, in their main application file (like _app.tsx or layout.tsx):

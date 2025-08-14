@@ -32,10 +32,10 @@ export async function GET() {
 
       let workerCount: number | undefined = undefined;
       if (report.results && report.results.length > 0) {
-        const workerIds = new Set<string>();
+        const workerIds = new Set<string | number>();
         report.results.forEach((result: DetailedTestResult) => {
-          if (result.workerID) {
-            workerIds.add(result.workerID);
+          if (result.workerId !== undefined && result.workerId !== null) {
+            workerIds.add(result.workerId);
           }
         });
         if (workerIds.size > 0) {

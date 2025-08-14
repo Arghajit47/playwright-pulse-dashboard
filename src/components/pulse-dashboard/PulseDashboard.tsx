@@ -199,10 +199,8 @@ export function PulseDashboard() {
             <SidebarSeparator className="my-1 group-data-[collapsible=icon]:hidden" />
             <div className="flex items-center justify-center gap-1.5 text-xs p-2">
               <ShieldCheck className="h-3.5 w-3.5 text-sidebar-foreground/70" />
-              <span className="font-medium text-sidebar-foreground">
-                Version
-              </span>
-              <span className="text-muted-foreground/80">1.1.2</span>
+              <span className="font-medium text-sidebar-foreground">Pulse</span>
+              <span className="text-muted-foreground/80">v1.1.0</span>
             </div>
           </div>
         </SidebarFooter>
@@ -292,4 +290,3 @@ export function PulseDashboard() {
     </SidebarProvider>
   );
 }
-

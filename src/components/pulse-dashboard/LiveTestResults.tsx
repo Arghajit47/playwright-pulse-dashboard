@@ -7,7 +7,7 @@ import { TestItem } from './TestItem';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Accordion } from '@/components/ui/accordion';
 import { Terminal, Info, ChevronDown, XCircle, FilterX, Repeat1, ListChecks, CheckCircle2, SkipForward, Clock, FileSpreadsheet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -469,8 +469,8 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         {groupedAndFilteredSuites.length > 0 ? (
           <Accordion type="multiple" className="w-full space-y-3">
             {groupedAndFilteredSuites.map((suite: GroupedSuite, index: number) => (
-              <AccordionItem value={`suite-${suite.title.replace(/\s+/g, '-')}-${index}`} key={`${suite.title}-${index}`} className="border rounded-xl shadow-lg bg-card hover:shadow-xl transition-shadow duration-300">
-                <AccordionTrigger className="p-4 hover:no-underline text-left w-full group">
+              <Accordion.Item value={`suite-${suite.title.replace(/\s+/g, '-')}-${index}`} key={`suite-${suite.title.replace(/\s+/g, '-')}-${index}`} className="border rounded-xl shadow-lg bg-card hover:shadow-xl transition-shadow duration-300">
+                <Accordion.Trigger className="p-4 hover:no-underline text-left w-full group">
                   <div className="flex justify-between items-center w-full">
                     <div className="flex-grow min-w-0">
                       <h3 
@@ -501,8 +501,8 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                       </div>
                     </div>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-4 pt-0">
+                </Accordion.Trigger>
+                <Accordion.Content className="p-4 pt-0">
                   {suite.tests.length > 0 ? (
                     <div className="space-y-1 mt-2">
                       {suite.tests.map(test => (
@@ -512,8 +512,8 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                   ) : (
                     <p className="text-sm text-muted-foreground mt-2">No tests in this suite match the current filters.</p>
                   )}
-                </AccordionContent>
-              </AccordionItem>
+                </Accordion.Content>
+              </Accordion.Item>
             ))}
           </Accordion>
         ) : (
