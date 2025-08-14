@@ -1,30 +1,44 @@
+"use client";
 
-'use client';
-
-import type { TestStep } from '@/types/playwright.js';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, AlertCircle, Clock, ChevronsRightLeft, Info, Code2 } from 'lucide-react';
-import { ansiToHtml } from '@/lib/utils';
+import type { TestStep } from "@/types/playwright.js";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import {
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Clock,
+  ChevronsRightLeft,
+  Info,
+  Code2,
+} from "lucide-react";
+import { ansiToHtml } from "@/lib/utils";
 
 interface TestStepItemRecursiveProps {
   step: TestStep;
   level?: number;
 }
 
-function StepStatusIcon({ status }: { status: TestStep['status'] }) {
-  const lowerStatus = typeof status === 'string' ? status.toLowerCase() : '';
+function StepStatusIcon({ status }: { status: TestStep["status"] }) {
+  const lowerStatus = typeof status === "string" ? status.toLowerCase() : "";
   switch (lowerStatus) {
-    case 'passed':
+    case "passed":
       return <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />;
-    case 'failed':
+    case "failed":
       return <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />;
-    case 'skipped':
+    case "skipped":
       return <AlertCircle className="h-4 w-4 text-accent flex-shrink-0" />;
-    case 'timedout': // Playwright often uses 'timedOut'
+    case "timedout": // Playwright often uses 'timedOut'
       return <Clock className="h-4 w-4 text-destructive flex-shrink-0" />;
-    case 'pending':
-      return <Clock className="h-4 w-4 text-primary animate-pulse flex-shrink-0" />;
+    case "pending":
+      return (
+        <Clock className="h-4 w-4 text-primary animate-pulse flex-shrink-0" />
+      );
     default:
       return <Info className="h-4 w-4 text-muted-foreground flex-shrink-0" />;
   }
@@ -35,23 +49,41 @@ function formatStepDuration(ms: number): string {
   return `${(ms / 1000).toFixed(2)}s`;
 }
 
-export function TestStepItemRecursive({ step, level = 0 }: TestStepItemRecursiveProps) {
+export function TestStepItemRecursive({
+  step,
+  level = 0,
+}: TestStepItemRecursiveProps) {
   const hasSubSteps = step.steps && step.steps.length > 0;
 
   const stepContent = (
-    <div className={`flex flex-col space-y-2 ${level > 0 ? 'pl-4 border-l border-muted ml-2' : ''}`}>
+    <div
+      className={`flex flex-col space-y-2 ${
+        level > 0 ? "pl-4 border-l border-muted ml-2" : ""
+      }`}
+    >
       <div className="flex items-center justify-between space-x-2">
         <div className="flex items-center space-x-2 min-w-0">
           <StepStatusIcon status={step.status} />
-          <span className="text-sm font-medium text-foreground truncate" title={step.title}>{step.title}</span>
-          {step.isHook && <Badge variant="outline" className="text-xs px-1.5 py-0.5">{step.hookType || 'hook'}</Badge>}
+          <span
+            className="text-sm font-medium text-foreground truncate"
+            title={step.title}
+          >
+            {step.title}
+          </span>
+          {step.isHook && (
+            <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+              {step.hookType || "hook"}
+            </Badge>
+          )}
         </div>
-        <span className="text-xs text-muted-foreground flex-shrink-0">{formatStepDuration(step.duration)}</span>
+        <span className="text-xs text-muted-foreground flex-shrink-0">
+          {formatStepDuration(step.duration)}
+        </span>
       </div>
       {step.codeLocation && (
-         <div className="flex items-center text-xs text-muted-foreground space-x-1 pl-6">
-            <Code2 className="h-3 w-3" />
-            <span>{step.codeLocation}</span>
+        <div className="flex items-center text-xs text-muted-foreground space-x-1 pl-6">
+          <Code2 className="h-3 w-3" />
+          <span>{step.codeLocation}</span>
         </div>
       )}
       {step.errorMessage && (
@@ -75,7 +107,11 @@ export function TestStepItemRecursive({ step, level = 0 }: TestStepItemRecursive
           <AccordionContent className="pt-0 pb-0">
             <div className="mt-1">
               {step.steps.map((subStep: TestStep) => (
-                <TestStepItemRecursive key={subStep.id} step={subStep} level={level + 1} />
+                <TestStepItemRecursive
+                  key={subStep.id}
+                  step={subStep}
+                  level={level + 1}
+                />
               ))}
             </div>
           </AccordionContent>
@@ -85,8 +121,6 @@ export function TestStepItemRecursive({ step, level = 0 }: TestStepItemRecursive
   }
 
   return (
-    <div className="py-2 px-1 hover:bg-muted/50 rounded-md">
-      {stepContent}
-    </div>
+    <div className="py-2 px-1 hover:bg-muted/50 rounded-md">{stepContent}</div>
   );
 }

@@ -132,6 +132,39 @@ export function ansiToHtml(text: string | null | undefined): string {
   return html;
 }
 
+/**
+ * Converts a string containing ANSI escape codes into a plain text string.
+ * It does this by splitting the string by the escape codes and only keeping
+ * the segments that are not escape codes.
+ *
+ * @param text The input string, possibly containing ANSI codes.
+ * @returns A plain text string with all ANSI codes removed.
+ */
+export function ansiToText(text: string | null | undefined): string {
+  // Return an empty string if the input is null, undefined, or empty.
+  if (!text) {
+    return '';
+  }
+
+  // This regex is the same as in your ansiToHtml function.
+  // It splits the string by ANSI escape codes, keeping the codes in the resulting array.
+  // e.g., "\x1b[31mHello\x1b[0m" -> ["", "\x1b[31m", "Hello", "\x1b[0m", ""]
+  const segments = text.split(/(\x1b\[[0-9;]*m)/g);
+
+  let plainText = '';
+
+  for (const segment of segments) {
+    // If the segment is an ANSI escape code, we simply ignore it.
+    if (segment.startsWith('\x1b[') && segment.endsWith('m')) {
+      continue;
+    }
+
+    // Otherwise, it's a plain text segment that we want to keep.
+    plainText += segment;
+  }
+
+  return plainText;
+}
 
 /**
  * Generates the correct public URL for an asset.

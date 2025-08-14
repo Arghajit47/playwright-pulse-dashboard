@@ -28,6 +28,7 @@ export interface DetailedTestResult {
   steps: TestStep[];
   errorMessage?: string | null;
   stdout?: string[] | null;
+  codeSnippet: string;
   snippet?: string;
   tags: string[];
   screenshots?: string[]; // Array of paths
