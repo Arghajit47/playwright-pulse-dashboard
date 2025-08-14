@@ -469,7 +469,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         {groupedAndFilteredSuites.length > 0 ? (
           <Accordion type="multiple" className="w-full space-y-3">
             {groupedAndFilteredSuites.map((suite: GroupedSuite, index: number) => (
-              <Accordion.Item value={`suite-${suite.title.replace(/\s+/g, '-')}-${index}`} key={`${suite.title}-${index}`} className="border rounded-xl shadow-lg bg-card hover:shadow-xl transition-shadow duration-300">
+              <Accordion.Item value={`suite-${suite.title.replace(/\s+/g, '-')}-${index}`} key={`suite-${suite.title.replace(/\s+/g, '-')}-${index}`} className="border rounded-xl shadow-lg bg-card hover:shadow-xl transition-shadow duration-300">
                 <Accordion.Trigger className="p-4 hover:no-underline text-left w-full group">
                   <div className="flex justify-between items-center w-full">
                     <div className="flex-grow min-w-0">
