@@ -1,13 +1,22 @@
+"use client";
 
-'use client';
-
-import { useRouter } from 'next/navigation';
-import { useTestData } from '@/hooks/useTestData';
-import type { DetailedTestResult, PlaywrightPulseReport, TestStep } from '@/types/playwright';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from "next/navigation";
+import { useTestData } from "@/hooks/useTestData";
+import type {
+  DetailedTestResult,
+  PlaywrightPulseReport,
+  TestStep,
+} from "@/types/playwright";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, ImageIcon, FileText, LineChart, Info, Download, Film, Archive, Terminal, FileJson, FileSpreadsheet, FileCode, File as FileIcon, Sparkles, Lightbulb, Wrench } from 'lucide-react';
@@ -19,11 +28,10 @@ import { getRawHistoricalReports } from '@/app/actions';
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, DotProps } from 'recharts';
 import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
 
-
 interface TestRunHistoryData {
   date: string;
   duration: number; // in ms
-  status: DetailedTestResult['status'];
+  status: DetailedTestResult["status"];
 }
 
 interface CustomDotProps extends DotProps {
@@ -35,19 +43,29 @@ interface DisplayAttachment {
   name: string;
   path: string;
   contentType: string;
-  'data-ai-hint'?: string;
+  "data-ai-hint"?: string;
 }
 
 const StatusDot = (props: CustomDotProps) => {
   const { cx, cy, payload } = props;
   if (!cx || !cy || !payload) return null;
 
-  let color = 'hsl(var(--muted-foreground))'; // Default color
-  if (payload.status === 'passed') color = 'hsl(var(--chart-3))';
-  else if (payload.status === 'failed' || payload.status === 'timedOut') color = 'hsl(var(--destructive))';
-  else if (payload.status === 'skipped') color = 'hsl(var(--accent))';
+  let color = "hsl(var(--muted-foreground))"; // Default color
+  if (payload.status === "passed") color = "hsl(var(--chart-3))";
+  else if (payload.status === "failed" || payload.status === "timedOut")
+    color = "hsl(var(--destructive))";
+  else if (payload.status === "skipped") color = "hsl(var(--accent))";
 
-  return <circle cx={cx} cy={cy} r={5} fill={color} stroke="hsl(var(--card))" strokeWidth={1}/>;
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={5}
+      fill={color}
+      stroke="hsl(var(--card))"
+      strokeWidth={1}
+    />
+  );
 };
 
 const HistoryTooltip = ({ active, payload, label }: any) => {
@@ -55,9 +73,23 @@ const HistoryTooltip = ({ active, payload, label }: any) => {
     const data = payload[0].payload as TestRunHistoryData;
     return (
       <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-        <p className="label text-sm font-semibold text-foreground">{`Date: ${new Date(data.date).toLocaleDateString()}`}</p>
-        <p className="text-xs text-foreground">{`Duration: ${formatDuration(data.duration)}`}</p>
-        <p className="text-xs" style={{ color: data.status === 'passed' ? 'hsl(var(--chart-3))' : data.status === 'failed' || data.status === 'timedOut' ? 'hsl(var(--destructive))' : 'hsl(var(--accent))' }}>
+        <p className="label text-sm font-semibold text-foreground">{`Date: ${new Date(
+          data.date
+        ).toLocaleDateString()}`}</p>
+        <p className="text-xs text-foreground">{`Duration: ${formatDuration(
+          data.duration
+        )}`}</p>
+        <p
+          className="text-xs"
+          style={{
+            color:
+              data.status === "passed"
+                ? "hsl(var(--chart-3))"
+                : data.status === "failed" || data.status === "timedOut"
+                ? "hsl(var(--destructive))"
+                : "hsl(var(--accent))",
+          }}
+        >
           {`Status: ${data.status}`}
         </p>
       </div>
@@ -66,21 +98,20 @@ const HistoryTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-
-function StatusIcon({ status }: { status: DetailedTestResult['status'] }) {
+function StatusIcon({ status }: { status: DetailedTestResult["status"] }) {
   switch (status) {
-    case 'passed':
+    case "passed":
       return <CheckCircle2 className="h-6 w-6 text-[hsl(var(--chart-3))]" />;
-    case 'failed':
+    case "failed":
       return <XCircle className="h-6 w-6 text-destructive" />;
-    case 'skipped':
+    case "skipped":
       return <AlertCircle className="h-6 w-6 text-[hsl(var(--accent))]" />;
-    case 'timedOut':
+    case "timedOut":
       return <Clock className="h-6 w-6 text-destructive" />;
-    case 'pending':
+    case "pending":
       return <Clock className="h-6 w-6 text-primary animate-pulse" />;
     default:
-      return <Info className="h-6 w-6 text-muted-foreground"/>;
+      return <Info className="h-6 w-6 text-muted-foreground" />;
   }
 }
 
@@ -94,39 +125,67 @@ function formatDuration(ms: number): string {
 }
 
 function formatTestName(fullName: string): string {
-  if (!fullName) return '';
+  if (!fullName) return "";
   const parts = fullName.split(" > ");
   return parts[parts.length - 1] || fullName;
 }
 
-function getStatusBadgeStyle(status: DetailedTestResult['status']): React.CSSProperties {
+function getStatusBadgeStyle(
+  status: DetailedTestResult["status"]
+): React.CSSProperties {
   switch (status) {
-    case 'passed':
-      return { backgroundColor: 'hsl(var(--chart-3))', color: 'hsl(var(--primary-foreground))' };
-    case 'failed':
-    case 'timedOut':
-      return { backgroundColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))' };
-    case 'skipped':
-      return { backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' };
-    case 'pending':
-      return { backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' };
+    case "passed":
+      return {
+        backgroundColor: "hsl(var(--chart-3))",
+        color: "hsl(var(--primary-foreground))",
+      };
+    case "failed":
+    case "timedOut":
+      return {
+        backgroundColor: "hsl(var(--destructive))",
+        color: "hsl(var(--destructive-foreground))",
+      };
+    case "skipped":
+      return {
+        backgroundColor: "hsl(var(--accent))",
+        color: "hsl(var(--accent-foreground))",
+      };
+    case "pending":
+      return {
+        backgroundColor: "hsl(var(--primary))",
+        color: "hsl(var(--primary-foreground))",
+      };
     default:
-      return { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' };
+      return {
+        backgroundColor: "hsl(var(--muted))",
+        color: "hsl(var(--muted-foreground))",
+      };
   }
 }
 
 function AttachmentIcon({ contentType }: { contentType: string }) {
-    const lowerContentType = contentType.toLowerCase();
-    if (lowerContentType.includes('html')) return <FileCode className="h-6 w-6 text-blue-500" />;
-    if (lowerContentType.includes('pdf')) return <FileText className="h-6 w-6 text-red-500" />;
-    if (lowerContentType.includes('json')) return <FileJson className="h-6 w-6 text-yellow-500" />;
-    if (lowerContentType.includes('csv') || lowerContentType.startsWith('text/plain')) return <FileSpreadsheet className="h-6 w-6 text-green-500" />;
-    if (lowerContentType.startsWith('text/')) return <FileText className="h-6 w-6 text-gray-500" />;
-    return <FileIcon className="h-6 w-6 text-gray-400" />;
+  const lowerContentType = contentType.toLowerCase();
+  if (lowerContentType.includes("html"))
+    return <FileCode className="h-6 w-6 text-blue-500" />;
+  if (lowerContentType.includes("pdf"))
+    return <FileText className="h-6 w-6 text-red-500" />;
+  if (lowerContentType.includes("json"))
+    return <FileJson className="h-6 w-6 text-yellow-500" />;
+  if (
+    lowerContentType.includes("csv") ||
+    lowerContentType.startsWith("text/plain")
+  )
+    return <FileSpreadsheet className="h-6 w-6 text-green-500" />;
+  if (lowerContentType.startsWith("text/"))
+    return <FileText className="h-6 w-6 text-gray-500" />;
+  return <FileIcon className="h-6 w-6 text-gray-400" />;
 }
 
-function getAttachmentNameFromPath(path: string, defaultName: string = 'Attachment'): string {
-  if (!path || typeof path !== 'string') return defaultName;
+function getAttachmentNameFromPath(
+  path: string,
+  defaultName: string = "Attachment"
+): string {
+  if (!path || typeof path !== "string") return defaultName;
   const parts = path.split(/[/\\]/);
   return parts.pop() || defaultName;
 }
@@ -179,10 +238,46 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     }
   };
 
+    try {
+      const response = await fetch("/api/analyze-test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          testName: test.name,
+          failureLogsAndErrors: test.errorMessage || "",
+          codeSnippet: test.snippet || "",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to parse error response" }));
+        throw new Error(
+          errorData.message ||
+            `API request failed with status ${response.status}`
+        );
+      }
+
+      const result = await response.json();
+      setAiSuggestion(result);
+    } catch (error) {
+      console.error("Error generating AI suggestion:", error);
+      setAiSuggestionError(
+        error instanceof Error ? error.message : "An unknown error occurred."
+      );
+    } finally {
+      setIsGeneratingSuggestion(false);
+    }
+  };
 
   useEffect(() => {
     if (currentRun?.results) {
-      const foundTest = currentRun.results.find((t: DetailedTestResult) => t.id === testId);
+      const foundTest = currentRun.results.find(
+        (t: DetailedTestResult) => t.id === testId
+      );
       setTest(foundTest || null);
     }
   }, [currentRun, testId]);
@@ -194,10 +289,13 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
       setLoadingHistory(true);
       setErrorHistory(null);
       try {
-        const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports();
+        const rawReports: PlaywrightPulseReport[] =
+          await getRawHistoricalReports();
         const historyData: TestRunHistoryData[] = [];
-        rawReports.forEach(report => {
-          const historicalTest = report.results.find((r: DetailedTestResult) => r.id === testId);
+        rawReports.forEach((report) => {
+          const historicalTest = report.results.find(
+            (r: DetailedTestResult) => r.id === testId
+          );
           if (historicalTest) {
             historyData.push({
               date: report.run.timestamp,
@@ -206,11 +304,15 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             });
           }
         });
-        historyData.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        historyData.sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
         setTestHistory(historyData);
       } catch (error) {
         console.error("Error fetching test history:", error);
-        setErrorHistory(error instanceof Error ? error.message : "Failed to load test history");
+        setErrorHistory(
+          error instanceof Error ? error.message : "Failed to load test history"
+        );
       } finally {
         setLoadingHistory(false);
       }
@@ -242,9 +344,9 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   const traceAttachment: DisplayAttachment | null = useMemo(() => {
     if (!test || typeof test.tracePath !== 'string' || !test.tracePath) return null;
     return {
-      name: getAttachmentNameFromPath(test.tracePath, 'trace.zip'),
+      name: getAttachmentNameFromPath(test.tracePath, "trace.zip"),
       path: test.tracePath,
-      contentType: 'application/zip'
+      contentType: "application/zip",
     };
   }, [test]);
   
@@ -258,13 +360,51 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     }));
   }, [test]);
 
-
-  const htmlAttachments: DisplayAttachment[] = useMemo(() => allOtherAttachments.filter(a => a.contentType.toLowerCase().includes('html')), [allOtherAttachments]);
-  const pdfAttachments: DisplayAttachment[] = useMemo(() => allOtherAttachments.filter(a => a.contentType.toLowerCase().includes('pdf')), [allOtherAttachments]);
-  const jsonAttachments: DisplayAttachment[] = useMemo(() => allOtherAttachments.filter(a => a.contentType.toLowerCase().includes('json')), [allOtherAttachments]);
-  const textCsvAttachments: DisplayAttachment[] = useMemo(() => allOtherAttachments.filter(a => a.contentType.toLowerCase().startsWith('text/')), [allOtherAttachments]);
-  const otherGenericAttachments: DisplayAttachment[] = useMemo(() => allOtherAttachments.filter(a => !htmlAttachments.includes(a) && !pdfAttachments.includes(a) && !jsonAttachments.includes(a) && !textCsvAttachments.includes(a)), [allOtherAttachments, htmlAttachments, pdfAttachments, jsonAttachments, textCsvAttachments]);
-
+  const htmlAttachments: DisplayAttachment[] = useMemo(
+    () =>
+      allOtherAttachments.filter((a) =>
+        a.contentType.toLowerCase().includes("html")
+      ),
+    [allOtherAttachments]
+  );
+  const pdfAttachments: DisplayAttachment[] = useMemo(
+    () =>
+      allOtherAttachments.filter((a) =>
+        a.contentType.toLowerCase().includes("pdf")
+      ),
+    [allOtherAttachments]
+  );
+  const jsonAttachments: DisplayAttachment[] = useMemo(
+    () =>
+      allOtherAttachments.filter((a) =>
+        a.contentType.toLowerCase().includes("json")
+      ),
+    [allOtherAttachments]
+  );
+  const textCsvAttachments: DisplayAttachment[] = useMemo(
+    () =>
+      allOtherAttachments.filter((a) =>
+        a.contentType.toLowerCase().startsWith("text/")
+      ),
+    [allOtherAttachments]
+  );
+  const otherGenericAttachments: DisplayAttachment[] = useMemo(
+    () =>
+      allOtherAttachments.filter(
+        (a) =>
+          !htmlAttachments.includes(a) &&
+          !pdfAttachments.includes(a) &&
+          !jsonAttachments.includes(a) &&
+          !textCsvAttachments.includes(a)
+      ),
+    [
+      allOtherAttachments,
+      htmlAttachments,
+      pdfAttachments,
+      jsonAttachments,
+      textCsvAttachments,
+    ]
+  );
 
   const totalAttachmentsCount = useMemo(() => {
     return (
@@ -281,7 +421,16 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     return (
       <div className="container mx-auto py-8 space-y-6">
         <Skeleton className="h-10 w-48 mb-4 rounded-md" />
-        <Card className="shadow-xl rounded-lg"><CardHeader><Skeleton className="h-8 w-3/4 mb-2 rounded-md" /><Skeleton className="h-4 w-1/2 rounded-md" /></CardHeader><CardContent className="space-y-4"><Skeleton className="h-10 w-1/3 mb-4 rounded-md" /><Skeleton className="h-40 w-full rounded-md" /></CardContent></Card>
+        <Card className="shadow-xl rounded-lg">
+          <CardHeader>
+            <Skeleton className="h-8 w-3/4 mb-2 rounded-md" />
+            <Skeleton className="h-4 w-1/2 rounded-md" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-10 w-1/3 mb-4 rounded-md" />
+            <Skeleton className="h-40 w-full rounded-md" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -289,8 +438,17 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   if (errorCurrent && !test) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Alert variant="destructive" className="rounded-lg"><AlertTitle>Error loading test data</AlertTitle><AlertDescription>{errorCurrent}</AlertDescription></Alert>
-        <Button onClick={() => router.push('/')} variant="outline" className="mt-4 rounded-lg"><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
+        <Alert variant="destructive" className="rounded-lg">
+          <AlertTitle>Error loading test data</AlertTitle>
+          <AlertDescription>{errorCurrent}</AlertDescription>
+        </Alert>
+        <Button
+          onClick={() => router.push("/")}
+          variant="outline"
+          className="mt-4 rounded-lg"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
       </div>
     );
   }
@@ -298,8 +456,20 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   if (!test) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-        <Alert className="rounded-lg"><AlertTitle>Test Not Found</AlertTitle><AlertDescription>The test with ID '{testId}' could not be found in the current report.</AlertDescription></Alert>
-        <Button onClick={() => router.push('/')} variant="outline" className="mt-6 rounded-lg"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard</Button>
+        <Alert className="rounded-lg">
+          <AlertTitle>Test Not Found</AlertTitle>
+          <AlertDescription>
+            The test with ID '{testId}' could not be found in the current
+            report.
+          </AlertDescription>
+        </Alert>
+        <Button
+          onClick={() => router.push("/")}
+          variant="outline"
+          className="mt-6 rounded-lg"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+        </Button>
       </div>
     );
   }
@@ -308,7 +478,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
-      <Button onClick={() => router.push('/')} variant="outline" size="sm" className="mb-6 rounded-lg">
+      <Button
+        onClick={() => router.push("/")}
+        variant="outline"
+        size="sm"
+        className="mb-6 rounded-lg"
+      >
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
       </Button>
 
@@ -316,7 +491,10 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-                <CardTitle className="text-2xl font-headline text-primary flex items-center" title={test.name}>
+              <CardTitle
+                className="text-2xl font-headline text-primary flex items-center"
+                title={test.name}
+              >
                 <StatusIcon status={test.status} />
                 <span className="ml-3">{displayName}</span>
                 </CardTitle>
@@ -325,10 +503,32 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                  <div className="mt-1 text-xs text-muted-foreground"><p>ID: {test.id}</p>{test.browser && <p>Browser: {test.browser}</p>}</div>
             </div>
             <div className="text-right flex-shrink-0">
-                 <Badge variant="outline" className="capitalize text-sm px-3 py-1 rounded-full border" style={getStatusBadgeStyle(test.status)}>{test.status}</Badge>
-                <p className="text-sm text-muted-foreground mt-1">Duration: {formatDuration(test.duration)}</p>
-                <p className="text-xs text-muted-foreground">Retries: {test.retries}</p>
-                {test.tags && test.tags.length > 0 && (<div className="mt-1 space-x-1">{test.tags.map((tag: string) => <Badge key={tag} variant="secondary" className="text-xs rounded-full">{tag}</Badge>)}</div>)}
+              <Badge
+                variant="outline"
+                className="capitalize text-sm px-3 py-1 rounded-full border"
+                style={getStatusBadgeStyle(test.status)}
+              >
+                {test.status}
+              </Badge>
+              <p className="text-sm text-muted-foreground mt-1">
+                Duration: {formatDuration(test.duration)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Retries: {test.retries}
+              </p>
+              {test.tags && test.tags.length > 0 && (
+                <div className="mt-1 space-x-1">
+                  {test.tags.map((tag: string) => (
+                    <Badge
+                      key={tag}
+                      variant="secondary"
+                      className="text-xs rounded-full"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -344,13 +544,49 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               )}
             </TabsList>
 
-            <TabsContent value="steps" className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner">
-              <h3 className="text-lg font-semibold text-foreground mb-3 px-3 md:px-0">Test Execution Steps</h3>
-              {test.errorMessage && (<div className="mb-4 p-3 md:p-0"><h4 className="font-semibold text-md text-destructive mb-1">Overall Test Error:</h4><pre className="bg-destructive/10 text-sm p-4 rounded-lg whitespace-pre-wrap break-all font-code overflow-x-auto"><span dangerouslySetInnerHTML={{ __html: ansiToHtml(test.errorMessage) }} /></pre></div>)}
-              {test.steps && test.steps.length > 0 ? (<ScrollArea className="h-[600px] w-full"><div className="pr-4">{test.steps.map((step: TestStep, index: number) => (<TestStepItemRecursive key={step.id || index} step={step} />))}</div></ScrollArea>) : (<p className="text-muted-foreground p-3 md:p-0">No detailed execution steps available for this test.</p>)}
+            <TabsContent
+              value="steps"
+              className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner"
+            >
+              <h3 className="text-lg font-semibold text-foreground mb-3 px-3 md:px-0">
+                Test Execution Steps
+              </h3>
+              {test.errorMessage && (
+                <div className="mb-4 p-3 md:p-0">
+                  <h4 className="font-semibold text-md text-destructive mb-1">
+                    Overall Test Error:
+                  </h4>
+                  <pre className="bg-destructive/10 text-sm p-4 rounded-lg whitespace-pre-wrap break-all font-code overflow-x-auto">
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: ansiToHtml(test.errorMessage),
+                      }}
+                    />
+                  </pre>
+                </div>
+              )}
+              {test.steps && test.steps.length > 0 ? (
+                <ScrollArea className="h-[600px] w-full">
+                  <div className="pr-4">
+                    {test.steps.map((step: TestStep, index: number) => (
+                      <TestStepItemRecursive
+                        key={step.id || index}
+                        step={step}
+                      />
+                    ))}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <p className="text-muted-foreground p-3 md:p-0">
+                  No detailed execution steps available for this test.
+                </p>
+              )}
             </TabsContent>
 
-            <TabsContent value="attachments" className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner">
+            <TabsContent
+              value="attachments"
+              className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner"
+            >
               <Tabs defaultValue="sub-screenshots" className="w-full">
                 <ScrollArea className="w-full whitespace-nowrap rounded-lg">
                   <TabsList className="inline-grid w-max grid-flow-col mb-4 rounded-lg">
@@ -399,7 +635,21 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                         <Info className="h-4 w-4" />
                         <AlertTitle>Using Trace Files</AlertTitle>
                         <AlertDescription>
-                          Trace files (.zip) can be viewed using the Playwright CLI: <code className="bg-muted px-1 py-0.5 rounded-sm">npx playwright show-trace /path/to/your/trace.zip</code>. Or by uploading them to <a href="https://trace.playwright.dev/" target="_blank" rel="noopener noreferrer" className="underline">trace.playwright.dev</a>.
+                          Trace files (.zip) can be viewed using the Playwright
+                          CLI:{" "}
+                          <code className="bg-muted px-1 py-0.5 rounded-sm">
+                            npx playwright show-trace /path/to/your/trace.zip
+                          </code>
+                          . Or by uploading them to{" "}
+                          <a
+                            href="https://trace.playwright.dev/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline"
+                          >
+                            trace.playwright.dev
+                          </a>
+                          .
                         </AlertDescription>
                       </Alert>
                     </div>
@@ -407,44 +657,107 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     <Alert className="rounded-lg">
                       <Info className="h-4 w-4" />
                       <AlertTitle>No Trace File Available</AlertTitle>
-                      <AlertDescription>There is no Playwright trace file associated with this test run.</AlertDescription>
+                      <AlertDescription>
+                        There is no Playwright trace file associated with this
+                        test run.
+                      </AlertDescription>
                     </Alert>
                   )}
                 </TabsContent>
-                
+
                 {[
-                  { value: 'sub-html', title: 'HTML Files', attachments: htmlAttachments },
-                  { value: 'sub-pdf', title: 'PDF Documents', attachments: pdfAttachments },
-                  { value: 'sub-json', title: 'JSON Files', attachments: jsonAttachments },
-                  { value: 'sub-text', title: 'Text & CSV Files', attachments: textCsvAttachments },
-                  { value: 'sub-other', title: 'Other Files', attachments: otherGenericAttachments },
-                ].map(tab => (
-                  <TabsContent key={tab.value} value={tab.value} className="mt-4">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">{tab.title}</h3>
+                  {
+                    value: "sub-html",
+                    title: "HTML Files",
+                    attachments: htmlAttachments,
+                  },
+                  {
+                    value: "sub-pdf",
+                    title: "PDF Documents",
+                    attachments: pdfAttachments,
+                  },
+                  {
+                    value: "sub-json",
+                    title: "JSON Files",
+                    attachments: jsonAttachments,
+                  },
+                  {
+                    value: "sub-text",
+                    title: "Text & CSV Files",
+                    attachments: textCsvAttachments,
+                  },
+                  {
+                    value: "sub-other",
+                    title: "Other Files",
+                    attachments: otherGenericAttachments,
+                  },
+                ].map((tab) => (
+                  <TabsContent
+                    key={tab.value}
+                    value={tab.value}
+                    className="mt-4"
+                  >
+                    <h3 className="text-lg font-semibold text-foreground mb-4">
+                      {tab.title}
+                    </h3>
                     <div className="space-y-3">
                       {tab.attachments.length > 0 ? (
                         tab.attachments.map((attachment, index) => (
-                          <div key={index} className="p-3 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between gap-4">
+                          <div
+                            key={index}
+                            className="p-3 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between gap-4"
+                          >
                             <div className="flex items-center gap-3 truncate">
-                              <AttachmentIcon contentType={attachment.contentType} />
+                              <AttachmentIcon
+                                contentType={attachment.contentType}
+                              />
                               <div className="truncate">
-                                <p className="text-sm font-medium text-foreground truncate" title={attachment.name}>{attachment.name}</p>
-                                <p className="text-xs text-muted-foreground">{attachment.contentType}</p>
+                                <p
+                                  className="text-sm font-medium text-foreground truncate"
+                                  title={attachment.name}
+                                >
+                                  {attachment.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {attachment.contentType}
+                                </p>
                               </div>
                             </div>
                             <div className="flex items-center flex-shrink-0 gap-2">
-                              <Button asChild variant="ghost" size="sm"><a href={getUtilAssetPath(attachment.path)} target="_blank" rel="noopener noreferrer">View</a></Button>
-                              <Button asChild variant="outline" size="sm"><a href={getUtilAssetPath(attachment.path)} download={attachment.name}><Download className="h-4 w-4 mr-2"/>Download</a></Button>
+                              <Button asChild variant="ghost" size="sm">
+                                <a
+                                  href={getUtilAssetPath(attachment.path)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  View
+                                </a>
+                              </Button>
+                              <Button asChild variant="outline" size="sm">
+                                <a
+                                  href={getUtilAssetPath(attachment.path)}
+                                  download={attachment.name}
+                                >
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Download
+                                </a>
+                              </Button>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Files Available</AlertTitle><AlertDescription>No attachments of this type were found for this test.</AlertDescription></Alert>
+                        <Alert className="rounded-lg">
+                          <Info className="h-4 w-4" />
+                          <AlertTitle>No Files Available</AlertTitle>
+                          <AlertDescription>
+                            No attachments of this type were found for this
+                            test.
+                          </AlertDescription>
+                        </Alert>
                       )}
                     </div>
                   </TabsContent>
                 ))}
-
               </Tabs>
             </TabsContent>
 
@@ -466,12 +779,88 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               )}
             </TabsContent>
 
-            <TabsContent value="history" className="mt-4 p-4 border rounded-lg bg-card shadow-inner">
-              <div className="flex justify-between items-center mb-3"><h3 className="text-lg font-semibold text-foreground flex items-center"><LineChart className="h-5 w-5 mr-2 text-primary"/>Individual Test Run History</h3></div>
-              {loadingHistory && (<div className="space-y-3"><Skeleton className="h-6 w-3/4 rounded-md" /><Skeleton className="h-64 w-full rounded-lg" /></div>)}
-              {errorHistory && !loadingHistory && (<Alert variant="destructive" className="rounded-lg"><AlertCircle className="h-4 w-4" /><AlertTitle>Error Loading Test History</AlertTitle><AlertDescription>{errorHistory}</AlertDescription></Alert>)}
-              {!loadingHistory && !errorHistory && testHistory.length === 0 && (<Alert className="rounded-lg"><Info className="h-4 w-4" /><AlertTitle>No Historical Data</AlertTitle><AlertDescription>No historical run data found for this specific test (ID: {testId}).</AlertDescription></Alert>)}
-              {!loadingHistory && !errorHistory && testHistory.length > 0 && (<div ref={historyChartRef} className="w-full h-[300px] bg-card p-4 rounded-lg shadow-inner"><ResponsiveContainer width="100%" height="100%"><RechartsLineChart data={testHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="date" tickFormatter={(tick) => new Date(tick).toLocaleDateString('en-CA', {month: 'short', day: 'numeric'})} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" height={40}/><YAxis tickFormatter={(tick) => formatDuration(tick)} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} width={80}/><RechartsTooltip content={<HistoryTooltip />}/><Legend wrapperStyle={{fontSize: "12px"}}/><Line type="monotone" dataKey="duration" name="Duration" stroke="hsl(var(--primary))" strokeWidth={2} dot={<StatusDot />} activeDot={{ r: 7 }}/></RechartsLineChart></ResponsiveContainer></div>)}
+            <TabsContent
+              value="history"
+              className="mt-4 p-4 border rounded-lg bg-card shadow-inner"
+            >
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-semibold text-foreground flex items-center">
+                  <LineChart className="h-5 w-5 mr-2 text-primary" />
+                  Individual Test Run History
+                </h3>
+              </div>
+              {loadingHistory && (
+                <div className="space-y-3">
+                  <Skeleton className="h-6 w-3/4 rounded-md" />
+                  <Skeleton className="h-64 w-full rounded-lg" />
+                </div>
+              )}
+              {errorHistory && !loadingHistory && (
+                <Alert variant="destructive" className="rounded-lg">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error Loading Test History</AlertTitle>
+                  <AlertDescription>{errorHistory}</AlertDescription>
+                </Alert>
+              )}
+              {!loadingHistory && !errorHistory && testHistory.length === 0 && (
+                <Alert className="rounded-lg">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>No Historical Data</AlertTitle>
+                  <AlertDescription>
+                    No historical run data found for this specific test (ID:{" "}
+                    {testId}).
+                  </AlertDescription>
+                </Alert>
+              )}
+              {!loadingHistory && !errorHistory && testHistory.length > 0 && (
+                <div
+                  ref={historyChartRef}
+                  className="w-full h-[300px] bg-card p-4 rounded-lg shadow-inner"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsLineChart
+                      data={testHistory}
+                      margin={{ top: 5, right: 20, left: -20, bottom: 5 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="hsl(var(--border))"
+                      />
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(tick) =>
+                          new Date(tick).toLocaleDateString("en-CA", {
+                            month: "short",
+                            day: "numeric",
+                          })
+                        }
+                        stroke="hsl(var(--muted-foreground))"
+                        tick={{ fontSize: 10 }}
+                        angle={-30}
+                        textAnchor="end"
+                        height={40}
+                      />
+                      <YAxis
+                        tickFormatter={(tick) => formatDuration(tick)}
+                        stroke="hsl(var(--muted-foreground))"
+                        tick={{ fontSize: 10 }}
+                        width={80}
+                      />
+                      <RechartsTooltip content={<HistoryTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: "12px" }} />
+                      <Line
+                        type="monotone"
+                        dataKey="duration"
+                        name="Duration"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={<StatusDot />}
+                        activeDot={{ r: 7 }}
+                      />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </TabsContent>
 
             {isFailedTest && (
@@ -567,7 +956,6 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </div>
               </TabsContent>
             )}
-
           </Tabs>
         </CardContent>
       </Card>

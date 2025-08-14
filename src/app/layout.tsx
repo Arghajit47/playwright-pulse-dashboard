@@ -4,11 +4,11 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Pulse Dashboard',
-  description: 'Real-time Playwright test execution dashboard',
+  title: "Pulse Dashboard",
+  description: "Real-time Playwright test execution dashboard",
   icons: {
     icon: {
-      url: "https://i.postimg.cc/XqVn1NhF/pulse.png",
+      url: "https://i.postimg.cc/v817w4sg/logo.png",
       sizes: "48x48",
       type: "image/x-icon",
     },

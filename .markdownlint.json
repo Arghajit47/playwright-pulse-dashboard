@@ -1,4 +1,9 @@
 {
   "no-duplicate-heading": false,
-  "line-length": false
+  "line-length": false,
+  "blanks-around-headings": false,
+  "list-marker-space": false,
+  "ul-indent": false,
+  "blanks-around-lists": false,
+  "ul-style": false
 }
