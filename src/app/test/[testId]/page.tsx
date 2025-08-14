@@ -7,7 +7,8 @@ export const metadata: Metadata = {
   description: 'Detailed view of a specific test run.',
 };
 
-export default function TestDetailsPage({ params }: { params: { testId: string } }) {
-  return <TestDetailsClientPage testId={params.testId} />;
+export default async function TestDetailsPage({ params }: { params: Promise<{ testId: string }> }) {
+  const { testId } = await params;
+  return <TestDetailsClientPage testId={testId} />;
 }
 
