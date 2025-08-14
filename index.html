@@ -17,11 +17,11 @@
       rel="apple-touch-icon"
       href="https://i.postimg.cc/v817w4sg/logo.png"
     />
-    <!-- Google Fonts for a modern look -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <!-- Icon Font -->
@@ -31,261 +31,531 @@
     />
 
     <style>
-      /* --- CSS Variables for Theming --- */
+      /* --- CSS Variables --- */
       :root {
         --font-sans: "Inter", sans-serif;
-        --font-mono: "Fira+Code", monospace;
-        --navbar-height: 60px;
+        --font-mono: "JetBrains Mono", monospace;
+        --navbar-height: 70px;
+        --sidebar-width: 320px;
+        --border-radius: 16px;
+        --border-radius-lg: 24px;
+        --spacing-xs: 8px;
+        --spacing-sm: 16px;
+        --spacing-md: 24px;
+        --spacing-lg: 32px;
+        --spacing-xl: 48px;
+        --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+        --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.15);
       }
 
       .light-theme {
-        --color-bg: #f7f9fc;
+        --color-bg: #fafbfc;
+        --color-bg-secondary: #f4f6f8;
         --color-bg-content: #ffffff;
-        --color-text-primary: #2d3748;
-        --color-text-secondary: #5a6578;
-        --color-primary: #3182ce;
-        --color-primary-light: #ebf8ff;
+        --color-bg-glass: rgba(255, 255, 255, 0.8);
+        --color-text-primary: #0f172a;
+        --color-text-secondary: #475569;
+        --color-text-muted: #64748b;
+        --color-primary: #6366f1;
+        --color-primary-light: #a5b4fc;
+        --color-primary-dark: #4338ca;
+        --color-accent: #f59e0b;
+        --color-success: #10b981;
+        --color-warning: #f59e0b;
+        --color-error: #ef4444;
         --color-border: #e2e8f0;
-        --color-code-bg: #edf2f7;
-        --color-shadow: rgba(45, 55, 72, 0.1);
-        --color-success: #38a169;
+        --color-border-light: #f1f5f9;
+        --color-hover: #f8fafc;
+        --color-active: #f1f5f9;
+        --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(255, 255, 255, 0.2);
       }
 
       .dark-theme {
-        --color-bg: #1a202c;
-        --color-bg-content: #2d3748;
-        --color-text-primary: #e2e8f0;
-        --color-text-secondary: #a0aec0;
-        --color-primary: #63b3ed;
-        --color-primary-light: #2c5282;
-        --color-border: #4a5568;
-        --color-code-bg: #283141;
-        --color-shadow: rgba(0, 0, 0, 0.2);
-        --color-success: #68d391;
+        --color-bg: #0a0e1a;
+        --color-bg-secondary: #111827;
+        --color-bg-content: #1e293b;
+        --color-bg-glass: rgba(30, 41, 59, 0.8);
+        --color-text-primary: #f8fafc;
+        --color-text-secondary: #cbd5e1;
+        --color-text-muted: #94a3b8;
+        --color-primary: #818cf8;
+        --color-primary-light: #c7d2fe;
+        --color-primary-dark: #6366f1;
+        --color-accent: #fbbf24;
+        --color-success: #34d399;
+        --color-warning: #fbbf24;
+        --color-error: #f87171;
+        --color-border: #334155;
+        --color-border-light: #475569;
+        --color-hover: #334155;
+        --color-active: #475569;
+        --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --glass-bg: rgba(30, 41, 59, 0.85);
+        --glass-border: rgba(255, 255, 255, 0.1);
       }
 
-      /* --- Global & Reset Styles --- */
+      /* --- Global Styles --- */
       * {
         box-sizing: border-box;
       }
 
-      html,
+      html {
+        scroll-behavior: smooth;
+      }
+
       body {
         margin: 0;
         padding: 0;
-        background-color: var(--color-bg);
-        color: var(--color-text-primary);
         font-family: var(--font-sans);
-        line-height: 1.7;
-        transition: background-color 0.3s, color 0.3s;
+        background: var(--color-bg);
+        color: var(--color-text-primary);
+        line-height: 1.6;
+        font-weight: 400;
+        transition: all var(--transition-base);
+        overflow-x: hidden;
       }
 
-      /* --- Layout Structure --- */
-      .navbar {
-        background-color: var(--color-bg-content);
-        border-bottom: 1px solid var(--color-border);
-        height: var(--navbar-height);
-        width: 100%;
+      /* Animated background */
+      body::before {
+        content: '';
         position: fixed;
         top: 0;
         left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+          radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 40% 60%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: -1;
+        animation: float 20s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        33% { transform: translateY(-20px) rotate(1deg); }
+        66% { transform: translateY(-10px) rotate(-1deg); }
+      }
+
+      /* --- Enhanced Navbar --- */
+      .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--navbar-height);
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid var(--glass-border);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 24px;
+        padding: 0 var(--spacing-lg);
         z-index: 1000;
-        transition: background-color 0.3s, border-color 0.3s;
+        transition: all var(--transition-base);
+      }
+
+      .navbar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, 
+          transparent 0%, 
+          rgba(99, 102, 241, 0.05) 50%, 
+          transparent 100%);
+        pointer-events: none;
       }
 
       .navbar-left {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: var(--spacing-sm);
+        z-index: 1;
       }
+
       .navbar-brand {
         display: flex;
         align-items: center;
         gap: 12px;
         text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 12px;
+        transition: all var(--transition-base);
+        position: relative;
+        overflow: hidden;
       }
+
+      .navbar-brand::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+        transition: left 0.6s;
+      }
+
+      .navbar-brand:hover::before {
+        left: 100%;
+      }
+
       .navbar-brand .logo {
-        height: 40px;
-        width: 55px;
-        transition: opacity 0.3s ease-in-out; /* Smooth fade-in effect */
+        height: 44px;
+        width: auto;
+        filter: drop-shadow(0 4px 8px rgba(99, 102, 241, 0.3));
+        transition: all var(--transition-base);
       }
+
+      .navbar-brand:hover .logo {
+        transform: scale(1.05) rotate(2deg);
+      }
+
       .navbar-brand .title {
-        font-weight: bold;
-        font-size: 1.2rem;
-        color: #489ef9;
-        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.4rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
       }
 
-      .docs-wrapper {
-        display: flex;
-        padding-top: var(--navbar-height);
-      }
-
+      /* --- Enhanced Sidebar --- */
       .sidebar {
         position: fixed;
         top: var(--navbar-height);
         left: 0;
-        width: 280px;
+        width: var(--sidebar-width);
         height: calc(100vh - var(--navbar-height));
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-right: 1px solid var(--glass-border);
+        padding: var(--spacing-lg);
         overflow-y: auto;
-        padding: 24px;
-        border-right: 1px solid var(--color-border);
-        background-color: var(--color-bg-content);
-        transition: transform 0.3s ease, background-color 0.3s,
-          border-color 0.3s;
         z-index: 999;
+        transition: all var(--transition-base);
       }
 
-      main {
-        flex-grow: 1;
-        padding-left: 280px;
-        transition: padding-left 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        min-height: calc(100vh - var(--navbar-height));
-      }
-      .main-content-container {
-        max-width: 800px;
-        margin: 40px auto;
-        padding: 0 24px;
-        flex-grow: 1;
-      }
-
-      /* --- Typography & Content Styles --- */
-      h1,
-      h2,
-      h3,
-      h4 {
-        font-weight: 700;
-        color: var(--color-text-primary);
-      }
-      h1 {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid var(--color-border);
-      }
-      h2 {
-        font-size: 1.8rem;
-        margin-top: 48px;
-        margin-bottom: 20px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid var(--color-border);
-      }
-      p {
-        margin-bottom: 1rem;
-        color: var(--color-text-secondary);
-      }
-      code {
-        background-color: var(--color-code-bg);
-        color: var(--color-text-primary);
-        padding: 3px 6px;
-        border-radius: 6px;
-        font-family: var(--font-mono);
-        font-size: 0.9em;
-        transition: background-color 0.3s;
-      }
-      pre {
-        background-color: var(--color-code-bg);
-        padding: 16px;
-        border-radius: 8px;
-        overflow-x: auto;
-        font-family: var(--font-mono);
-        font-size: 0.9em;
-        transition: background-color 0.3s;
+      .sidebar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg, 
+          rgba(99, 102, 241, 0.02) 0%, 
+          transparent 50%, 
+          rgba(168, 85, 247, 0.02) 100%);
+        pointer-events: none;
       }
 
-      /* --- Component Styles --- */
-      .doc-image {
-        max-width: 100%;
-        border-radius: 8px;
-        margin: 24px 0;
-        border: 1px solid var(--color-border);
-        box-shadow: 0 4px 12px var(--color-shadow);
+      .sidebar-nav {
+        position: relative;
+        z-index: 1;
       }
 
-      /* Sidebar Navigation */
       .sidebar-nav ul {
         list-style: none;
         padding: 0;
-      }
-      .sidebar-nav a {
-        display: block;
-        padding: 8px;
-        border-radius: 6px;
-        color: var(--color-text-secondary);
-        font-weight: 500;
-        transition: background-color 0.2s, color 0.2s;
-      }
-      .sidebar-nav a:hover,
-      .sidebar-nav a.active {
-        background-color: var(--color-primary-light);
-        color: var(--color-primary);
-        text-decoration: none;
+        margin: 0;
       }
 
-      /* Theme Toggle Button */
-      .theme-toggle {
-        cursor: pointer;
-        background: none;
-        border: 1px solid var(--color-border);
-        border-radius: 8px;
-        padding: 8px;
+      .sidebar-nav li {
+        margin-bottom: 4px;
+      }
+
+      .sidebar-nav a {
         display: flex;
         align-items: center;
-        justify-content: center;
+        padding: 16px 20px;
+        border-radius: 12px;
         color: var(--color-text-secondary);
-        transition: background-color 0.3s, border-color 0.3s;
-      }
-      .theme-toggle:hover {
-        background-color: var(--color-bg);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all var(--transition-base);
+        position: relative;
+        overflow: hidden;
       }
 
-      /* Copy to Clipboard Styles */
+      .sidebar-nav a::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--gradient-primary);
+        opacity: 0.1;
+        transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .sidebar-nav a:hover::before,
+      .sidebar-nav a.active::before {
+        left: 0;
+      }
+
+      .sidebar-nav a:hover,
+      .sidebar-nav a.active {
+        color: var(--color-primary);
+        background: var(--color-hover);
+        border: 1px solid var(--color-border-light);
+        transform: translateX(4px);
+        box-shadow: var(--shadow-md);
+      }
+
+      .sidebar-nav a.active {
+        background: var(--color-primary-light);
+        color: var(--color-primary-dark);
+        font-weight: 600;
+      }
+
+      /* --- Main Content Area --- */
+      .docs-wrapper {
+        display: flex;
+        padding-top: var(--navbar-height);
+        min-height: 100vh;
+      }
+
+      main {
+        flex: 1;
+        margin-left: var(--sidebar-width);
+        display: flex;
+        flex-direction: column;
+        transition: margin-left var(--transition-base);
+      }
+
+      .main-content-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: var(--spacing-xl) var(--spacing-lg);
+        flex: 1;
+      }
+
+      /* --- Enhanced Typography --- */
+      h1, h2, h3, h4, h5, h6 {
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin: 0;
+        line-height: 1.2;
+      }
+
+      h1 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 800;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: var(--spacing-lg);
+        position: relative;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      h1::after {
+        content: '';
+        position: absolute;
+        bottom: -12px;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background: var(--gradient-primary);
+        border-radius: 2px;
+        animation: expandWidth 1s ease-out 0.5s both;
+      }
+
+      h2 {
+        font-size: 2.2rem;
+        margin-top: var(--spacing-xl);
+        margin-bottom: var(--spacing-md);
+        position: relative;
+        animation: fadeInUp 0.6s ease-out;
+      }
+
+      h2::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 30px;
+        background: var(--gradient-accent);
+        border-radius: 2px;
+        opacity: 0.7;
+      }
+
+      h3 {
+        font-size: 1.5rem;
+        margin-top: var(--spacing-lg);
+        margin-bottom: var(--spacing-sm);
+        color: var(--color-primary);
+      }
+
+      p {
+        color: var(--color-text-secondary);
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.05rem;
+        animation: fadeIn 0.8s ease-out;
+      }
+
+      /* --- Enhanced Code Blocks --- */
+      code {
+        background: var(--color-bg-secondary);
+        color: var(--color-primary);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        font-weight: 500;
+        border: 1px solid var(--color-border);
+        transition: all var(--transition-fast);
+      }
+
+      pre {
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-md);
+        overflow-x: auto;
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        box-shadow: var(--shadow-md);
+        position: relative;
+        transition: all var(--transition-base);
+      }
+
+      pre:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
+      }
+
       .copyable-code {
         position: relative;
-      }
-      .copyable-code pre {
-        padding-right: 50px;
-      }
-      .copy-btn {
-        position: absolute;
-        top: 50%;
-        right: 12px;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: var(--color-text-secondary);
-        cursor: pointer;
-        padding: 8px;
-        border-radius: 6px;
-        transition: color 0.2s, background-color 0.2s;
-      }
-      .copy-btn:hover {
-        color: var(--color-text-primary);
-        background-color: rgba(0, 0, 0, 0.05);
-      }
-      .dark-theme .copy-btn:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-      .copy-btn .fa-check {
-        color: var(--color-success);
+        margin: var(--spacing-md) 0;
+        animation: slideInUp 0.6s ease-out;
       }
 
-      /* Accordion Styles */
-      .accordion-item {
-        border-bottom: 1px solid var(--color-border);
+      .copy-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        transition: all var(--transition-fast);
+        backdrop-filter: blur(10px);
       }
+
+      .copy-btn:hover {
+        background: var(--color-primary);
+        color: white;
+        transform: scale(1.05);
+        box-shadow: var(--shadow-md);
+      }
+
+      /* --- Enhanced Images --- */
+      .doc-image {
+        width: 100%;
+        max-width: 100%;
+        border-radius: var(--border-radius);
+        margin: var(--spacing-lg) 0;
+        box-shadow: var(--shadow-xl);
+        transition: all var(--transition-base);
+        animation: fadeInScale 0.8s ease-out;
+        border: 1px solid var(--color-border-light);
+      }
+
+      .doc-image:hover {
+        transform: scale(1.02);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+      }
+
+      /* --- Enhanced Theme Toggle --- */
+      .theme-toggle {
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 12px;
+        cursor: pointer;
+        color: var(--color-text-secondary);
+        transition: all var(--transition-base);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--gradient-accent);
+        opacity: 0.1;
+        transition: left 0.4s;
+      }
+
+      .theme-toggle:hover::before {
+        left: 0;
+      }
+
+      .theme-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: var(--shadow-lg);
+        color: var(--color-primary);
+      }
+
+      /* --- Enhanced Accordion --- */
+      .accordion-container {
+        margin: var(--spacing-xl) 0;
+      }
+
+      .accordion-item {
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        margin-bottom: var(--spacing-sm);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: all var(--transition-base);
+        animation: slideInUp 0.6s ease-out;
+      }
+
+      .accordion-item:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+      }
+
       .accordion-trigger {
         background: none;
         border: none;
         width: 100%;
         text-align: left;
-        padding: 20px 0;
+        padding: var(--spacing-md);
         font-size: 1.2rem;
         font-weight: 600;
         color: var(--color-text-primary);
@@ -293,127 +563,396 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        transition: all var(--transition-base);
+        position: relative;
       }
+
+      .accordion-trigger::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--gradient-primary);
+        transform: scaleY(0);
+        transition: transform var(--transition-base);
+      }
+
+      .accordion-trigger:hover::before,
+      .accordion-trigger[aria-expanded="true"]::before {
+        transform: scaleY(1);
+      }
+
+      .accordion-trigger:hover {
+        background: var(--color-hover);
+        padding-left: calc(var(--spacing-md) + 8px);
+      }
+
       .accordion-icon {
-        transition: transform 0.3s ease;
-        font-size: 0.9em;
+        transition: all var(--transition-base);
+        color: var(--color-primary);
+        font-size: 1rem;
       }
+
       .accordion-trigger[aria-expanded="true"] .accordion-icon {
         transform: rotate(180deg);
+        color: var(--color-accent);
       }
+
       .accordion-panel {
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.3s ease-out;
-      }
-      .accordion-panel-content {
-        padding: 0 0 20px 0;
+        transition: max-height var(--transition-base);
       }
 
-      /* --- Mobile Responsive Styles --- */
+      .accordion-panel-content {
+        padding: 0 var(--spacing-md) var(--spacing-md);
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      /* --- Enhanced Lists --- */
+      ul {
+        padding-left: 0;
+      }
+
+      li {
+        position: relative;
+        margin-bottom: 12px;
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+      }
+
+      li strong {
+        color: var(--color-text-primary);
+        font-weight: 600;
+      }
+
+      /* --- Enhanced Footer --- */
+      footer {
+        background: var(--color-bg-content);
+        border-top: 1px solid var(--color-border);
+        padding: var(--spacing-xl);
+        margin-top: var(--spacing-xl);
+        position: relative;
+      }
+
+      footer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-primary);
+        opacity: 0.5;
+      }
+
+      .footer-content {
+        text-align: center;
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .footer-content a {
+        color: var(--color-primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all var(--transition-fast);
+        position: relative;
+      }
+
+      .footer-content a::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--gradient-primary);
+        transition: width var(--transition-base);
+      }
+
+      .footer-content a:hover::after {
+        width: 100%;
+      }
+
+      /* --- Mobile Navigation --- */
       .mobile-nav-toggle {
         display: none;
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 1.2rem;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        transition: all var(--transition-base);
       }
+
       .sidebar-overlay {
         display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity var(--transition-base);
+      }
+
+      /* --- Animations --- */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes expandWidth {
+        from { width: 0; }
+        to { width: 60px; }
+      }
+
+      @keyframes popIn {
+        from { transform: scale(0); }
+        to { transform: scale(1); }
+      }
+
+      /* --- Content Animations --- */
+      .section {
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      .section > * {
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+      }
+
+      .section > *:nth-child(1) { animation-delay: 0.1s; }
+      .section > *:nth-child(2) { animation-delay: 0.2s; }
+      .section > *:nth-child(3) { animation-delay: 0.3s; }
+      .section > *:nth-child(4) { animation-delay: 0.4s; }
+      .section > *:nth-child(5) { animation-delay: 0.5s; }
+
+      /* --- Enhanced Responsive Design --- */
+      @media (max-width: 1200px) {
+        :root {
+          --sidebar-width: 280px;
+        }
+        
+        .main-content-container {
+          max-width: 800px;
+        }
       }
 
       @media (max-width: 992px) {
-        /* .navbar-brand .title { display: none; } */
-
         .mobile-nav-toggle {
-          display: block;
-          background: none;
-          border: none;
-          font-size: 1.5rem;
-          color: var(--color-text-primary);
-          cursor: pointer;
-          padding: 0;
-          margin-right: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
-        .navbar-left {
-          gap: 0;
+
+        .mobile-nav-toggle:hover {
+          background: var(--color-hover);
+          transform: scale(1.1);
         }
+
         .navbar {
-          padding: 0 16px;
+          padding: 0 var(--spacing-sm);
         }
 
         .sidebar {
           transform: translateX(-100%);
           border-right: none;
-        }
-        body.sidebar-open .sidebar {
-          transform: translateX(0);
-          box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+          box-shadow: none;
         }
 
-        .sidebar-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0, 0, 0, 0.5);
-          z-index: 998;
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.3s ease;
+        body.sidebar-open .sidebar {
+          transform: translateX(0);
+          box-shadow: var(--shadow-xl);
         }
+
         body.sidebar-open .sidebar-overlay {
           display: block;
           opacity: 1;
-          pointer-events: auto;
         }
 
         main {
-          padding-left: 0;
+          margin-left: 0;
         }
+
         .main-content-container {
-          margin: 24px auto;
-          padding: 0 16px;
+          padding: var(--spacing-md) var(--spacing-sm);
         }
+
+        h1 {
+          font-size: 2.5rem;
+        }
+
+        h2 {
+          font-size: 1.8rem;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .navbar-brand .title {
+          display: none;
+        }
+
+        .main-content-container {
+          padding: var(--spacing-sm);
+        }
+
         h1 {
           font-size: 2rem;
         }
+
         h2 {
           font-size: 1.5rem;
         }
       }
 
-      /* --- Footer --- */
-      footer {
-        margin-top: 40px;
-        padding: 24px;
-        background-color: var(--color-bg-content);
-        border-top: 1px solid var(--color-border);
-        text-align: center;
-      }
-      .footer-content {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 12px;
-        color: var(--color-text-secondary);
-        font-size: 0.9em;
-      }
-      .footer-logo {
-        height: 30px;
-        width: auto;
-      }
-      .footer-content p {
-        margin: 0; /* Remove default paragraph margin */
-      }
-      .footer-content a {
-        color: var(--color-primary);
-        text-decoration: none;
-        font-weight: 500;
+      /* --- Scroll Animations --- */
+      @media (prefers-reduced-motion: no-preference) {
+        .content-animate {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: all 0.6s ease-out;
+        }
+
+        .content-animate.in-view {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
-      @media (max-width: 480px) {
-        .footer-content {
-          flex-direction: column; /* Stack logo and text on small screens */
-          gap: 8px;
+      /* --- Feature Cards --- */
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--spacing-md);
+        margin: var(--spacing-xl) 0;
+      }
+
+      .feature-card {
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-md);
+        transition: all var(--transition-base);
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 2px;
+        background: var(--gradient-primary);
+        transition: left 0.6s ease-out;
+      }
+
+      .feature-card:hover::before {
+        left: 0;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--color-primary-light);
+      }
+
+      /* --- Loading States --- */
+      .loading-skeleton {
+        background: linear-gradient(90deg, 
+          var(--color-bg) 25%, 
+          var(--color-hover) 50%, 
+          var(--color-bg) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite;
+        border-radius: var(--border-radius);
+      }
+
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+
+      /* --- Accessibility Enhancements --- */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
         }
+      }
+
+      /* Focus styles */
+      button:focus,
+      a:focus {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+      }
+
+      /* --- Custom Scrollbar --- */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--color-bg);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--color-border);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--color-primary-light);
       }
     </style>
   </head>
@@ -436,21 +975,20 @@
         class="theme-toggle"
         id="theme-toggle"
         title="Toggle light/dark mode"
+        aria-label="Toggle theme"
       ></button>
     </nav>
 
     <div class="docs-wrapper">
       <aside class="sidebar">
-        <nav class="sidebar-nav" aria-label="Docs sidebar">
+        <nav class="sidebar-nav" aria-label="Documentation navigation">
           <ul>
             <li><a href="#getting-started">Getting Started</a></li>
             <li><a href="#dashboard">Dashboard Overview</a></li>
             <li><a href="#test-results">Test Results</a></li>
             <li><a href="#trend-analysis">Trend Analysis</a></li>
             <li><a href="#flaky-tests">Flaky Tests</a></li>
-            <li>
-              <a href="#failure-categorization">Failure Categorization</a>
-            </li>
+            <li><a href="#failure-categorization">Failure Categorization</a></li>
             <li><a href="#test-details-page">Test Details Page</a></li>
           </ul>
         </nav>
@@ -478,18 +1016,35 @@
       </main>
     </div>
 
-    <!-- CONTENT TEMPLATES -->
-
+    <!-- ENHANCED CONTENT TEMPLATES -->
     <template id="template-getting-started">
-      <header><h1>Getting Started</h1></header>
+      <header>
+        <h1>Getting Started</h1>
+      </header>
       <div class="section">
         <p>
-          <strong>Pulse Dashboard</strong> is a reusable Next.js component and
+          <strong>Pulse Dashboard</strong> is a revolutionary Next.js component and
           standalone CLI tool designed to provide real-time monitoring and
-          historical analysis of Playwright test executions. It helps
+          historical analysis of Playwright test executions. It empowers
           development and QA teams to quickly identify issues, track test
-          performance over time, and gain insights into failure patterns.
+          performance over time, and gain deep insights into failure patterns.
         </p>
+        
+        <div class="feature-grid">
+          <div class="feature-card">
+            <h3>🚀 Real-time Monitoring</h3>
+            <p>Watch your tests execute in real-time with live updates and instant feedback on test results.</p>
+          </div>
+          <div class="feature-card">
+            <h3>📊 Historical Analysis</h3>
+            <p>Track performance trends and identify patterns across multiple test runs with rich visualizations.</p>
+          </div>
+          <div class="feature-card">
+            <h3>🔍 Smart Debugging</h3>
+            <p>Advanced failure categorization and AI-powered suggestions to resolve issues faster.</p>
+          </div>
+        </div>
+
         <p>
           It can be: <strong>Run as a Standalone CLI Tool</strong>: Install
           globally or use with <code>npx</code> to quickly view reports.
@@ -498,12 +1053,14 @@
           [Note: <strong>Pulse Dashboard</strong> uses playwright-pulse-report
           generated data]
         </p>
+
         <h2>👉🏼 Installation</h2>
         <p>
           Getting started with Pulse is simple. You can install it as an npm
           package and run it with a single command.
         </p>
-        <h4>1. Install the package</h4>
+
+        <h3>1. Install the package</h3>
         <p>Use npm package manager to add Pulse to your project.</p>
         <div class="copyable-code">
           <pre><code class="language-bash">npm install pulse-dashboard@latest</code></pre>
@@ -515,7 +1072,8 @@
             <i class="fa-regular fa-copy"></i>
           </button>
         </div>
-        <h4>2. Run the dashboard</h4>
+
+        <h3>2. Run the dashboard</h3>
         <p>
           After installation, start the dashboard using the following npx
           command from your project's root directory.
@@ -530,18 +1088,21 @@
             <i class="fa-regular fa-copy"></i>
           </button>
         </div>
+
         <h2>👉🏼 Key Features</h2>
         <img
           src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg"
           alt="Key Features"
           class="doc-image"
         />
+
         <h2>👉🏼 Client Side Folder Structure</h2>
         <img
           src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-client-folder-structure.svg"
           alt="Client Side Folder Structure"
           class="doc-image"
         />
+
         <h2>👉🏼 Technical Stack</h2>
         <img
           src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-framework.svg"
@@ -553,231 +1114,290 @@
 
     <template id="template-dashboard">
       <h2>Dashboard Overview</h2>
-      <p>
-        The dashboard provides a high-level, real-time overview of your latest
-        test run. It is the central hub for at-a-glance information about your
-        test suite's health.
-      </p>
-      <img
-        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Dashboard.png"
-        alt="Pulse Dashboard Overview"
-        class="doc-image"
-      />
-      <h3>Key Metrics</h3>
-      <ul>
-        <li>
-          <strong>Summary Cards:</strong> Quick stats on Total, Passed, Failed,
-          and Skipped tests, along with the total duration.
-        </li>
-        <li>
-          <strong>Test Runner System Information:</strong> A detailed preview of
-          the system where the test suite ran.
-        </li>
-        <li>
-          <strong>Charts & Graphs:</strong> Visual breakdowns of test
-          distribution, browser-wise test distribution, slowest tests, and tests
-          per suite.
-        </li>
-        <li>
-          <strong>Worker Utilization:</strong> Real-time status of each test
-          runner worker, showing their current progress and pass/fail rates.
-        </li>
-      </ul>
+      <div class="section">
+        <p>
+          The dashboard provides a high-level, real-time overview of your latest
+          test run. It is the central hub for at-a-glance information about your
+          test suite's health and performance metrics.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard.png"
+          alt="Pulse Dashboard Overview"
+          class="doc-image"
+        />
+        <h3>Key Metrics</h3>
+        <ul>
+          <li>
+            <strong>Summary Cards:</strong> Quick stats on Total, Passed, Failed,
+            and Skipped tests, along with the total duration.
+          </li>
+          <li>
+            <strong>Test Runner System Information:</strong> A detailed preview of
+            the system where the test suite ran.
+          </li>
+          <li>
+            <strong>Charts & Graphs:</strong> Visual breakdowns of test
+            distribution, browser-wise test distribution, slowest tests, and tests
+            per suite.
+          </li>
+          <li>
+            <strong>Worker Utilization:</strong> Real-time status of each test
+            runner worker, showing their current progress and pass/fail rates.
+          </li>
+        </ul>
+      </div>
     </template>
 
     <template id="template-test-results">
       <h2>Test Results</h2>
-      <p>
-        <strong>👉🏼</strong> The Test Results page allows user to browse and
-        filter the outcomes of the latest test run. You can expand each suite to
-        see the individual tests within it.
-      </p>
-      <img
-        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Test%20Results.png"
-        alt="Pulse Test Results Page"
-        class="doc-image"
-      />
-      <p>
-        <strong>👉🏼</strong> Expanded Test Results provides user a quick look for
-        the failed test cases, including the proper formated test error log and
-        with attached failure screenshot.
-      </p>
-      <img
-        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-details-expanded.png"
-        alt="Pulse Test Results - expanded details Page"
-        class="doc-image"
-      />
+      <div class="section">
+        <p>
+          <strong>👉🏼</strong> The Test Results page allows users to browse and
+          filter the outcomes of the latest test run. You can expand each suite to
+          see the individual tests within it.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-results.png"
+          alt="Pulse Test Results Page"
+          class="doc-image"
+        />
+        <p>
+          <strong>👉🏼</strong> Expanded Test Results provides users a quick look at
+          the failed test cases, including properly formatted test error logs and
+          attached failure screenshots.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-details-expanded.png"
+          alt="Pulse Test Results - expanded details Page"
+          class="doc-image"
+        />
+      </div>
     </template>
 
     <template id="template-trend-analysis">
       <h2>Trend Analysis</h2>
-      <p>
-        This page provides historical data visualization, allowing you to track
-        test performance and stability over time.
-      </p>
-      <p>
-        <strong>👉🏼 Test Outcomes Over Time:</strong> This chart provides an
-        detailed analysis of the test suite runs, for current & existing
-        historical run trends, in chronological order.
-      </p>
-      <p>
-        <strong>👉🏼 Test Duration Over Time:</strong> This chart provides total
-        duration of the test suite runs, for current & existing historical run
-        trends, in chronological order.
-      </p>
-      <img
-        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-run-history.png"
-        alt="Pulse Trend Analysis Page"
-        class="doc-image"
-      />
+      <div class="section">
+        <p>
+          This page provides historical data visualization, allowing you to track
+          test performance and stability over time with advanced analytics.
+        </p>
+        <p>
+          <strong>👉🏼 Test Outcomes Over Time:</strong> This chart provides
+          detailed analysis of the test suite runs, for current & existing
+          historical run trends, in chronological order.
+        </p>
+        <p>
+          <strong>👉🏼 Test Duration Over Time:</strong> This chart provides total
+          duration of the test suite runs, for current & existing historical run
+          trends, in chronological order.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-trend-analysis.png"
+          alt="Pulse Trend Analysis Page"
+          class="doc-image"
+        />
+      </div>
     </template>
 
     <template id="template-flaky-tests">
       <h2>Flaky Tests</h2>
-      <p>
-        Flaky tests are tests that exhibit inconsistent behavior. This page
-        helps you identify and analyze them by showing their historical
-        pass/fail rates.
-      </p>
-      <img
-        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-flaky-tests.png"
-        alt="Pulse Flaky Tests Page"
-        class="doc-image"
-      />
+      <div class="section">
+        <p>
+          Flaky tests are tests that exhibit inconsistent behavior. This page
+          helps you identify and analyze them by showing their historical
+          pass/fail rates with intelligent pattern recognition.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-flaky-tests.png"
+          alt="Pulse Flaky Tests Page"
+          class="doc-image"
+        />
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-flaky-test-expanded.png"
+          alt="Pulse Flaky Tests Page - expanded details"
+          class="doc-image"
+        />
+      </div>
     </template>
 
     <template id="template-failure-categorization">
       <h2>Failure Categorization</h2>
-      <p>
-        This powerful feature automatically groups failed tests by the common
-        type of error that occurred, helping you quickly identify the most
-        common root causes of failures.
-      </p>
-      <img
-        src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard%20Failure%20catagorize.png"
-        alt="Pulse Failure Categorization Page"
-        class="doc-image"
-      />
+      <div class="section">
+        <p>
+          This powerful feature automatically groups failed tests by the common
+          type of error that occurred, helping you quickly identify the most
+          common root causes of failures with AI-powered analysis.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-failure-categorization.png"
+          alt="Pulse Failure Categorization Page"
+          class="doc-image"
+        />
+      </div>
     </template>
 
     <template id="template-test-details-page">
       <h2>Test Details Page</h2>
-      <p>
-        This page provides an in-depth, granular view of a single test
-        execution. It is the primary tool for debugging a specific test failure.
-        The page is organized into several expandable sections.
-      </p>
-      <div class="accordion-container">
-        <div class="accordion-item">
-          <button
-            class="accordion-trigger"
-            aria-expanded="false"
-            aria-controls="panel-1"
-          >
-            <span>1. Execution Steps</span
-            ><i class="fa-solid fa-chevron-down accordion-icon"></i>
-          </button>
-          <div class="accordion-panel" id="panel-1" role="region">
-            <div class="accordion-panel-content">
-              <p>
-                A step-by-step log of every action performed during the test.
-                Failed steps and error messages are highlighted in red for easy
-                identification.
-              </p>
-              <img
-                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-execution-steps.png"
-                alt="Test Execution Steps"
-                class="doc-image"
-              />
+      <div class="section">
+        <p>
+          This page provides an in-depth, granular view of a single test
+          execution. It is the primary tool for debugging a specific test failure.
+          The page is organized into several expandable sections for optimal workflow.
+        </p>
+        <div class="accordion-container">
+          <div class="accordion-item">
+            <button
+              class="accordion-trigger"
+              aria-expanded="false"
+              aria-controls="panel-1"
+            >
+              <span>1. Execution Steps</span>
+              <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-panel" id="panel-1" role="region">
+              <div class="accordion-panel-content">
+                <p>
+                  A step-by-step log of every action performed during the test.
+                  Failed steps and error messages are highlighted in red for easy
+                  identification.
+                </p>
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-execution-steps.png"
+                  alt="Test Execution Steps"
+                  class="doc-image"
+                />
+              </div>
             </div>
           </div>
-        </div>
-        <div class="accordion-item">
-          <button
-            class="accordion-trigger"
-            aria-expanded="false"
-            aria-controls="panel-2"
-          >
-            <span>2. Attachments</span
-            ><i class="fa-solid fa-chevron-down accordion-icon"></i>
-          </button>
-          <div class="accordion-panel" id="panel-2" role="region">
-            <div class="accordion-panel-content">
-              <p>
-                Access to all artifacts captured during the test run, such as
-                screenshots on failure, videos of the execution, and detailed
-                Playwright trace files for debugging. Also provides a visual
-                scope for <code>test.info().attach()</code> files.
-              </p>
-              <img
-                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-json.png"
-                alt="pulse dashboard attachments json"
-                class="doc-image"
-              /><img
-                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-pdf.png"
-                alt="pulse dashboard attachments pdf"
-                class="doc-image"
-              /><img
-                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-screenshots.png"
-                alt="pulse dashboard attachments screenshots"
-                class="doc-image"
-              /><img
-                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-videos.png"
-                alt="pulse dashboard attachments videos"
-                class="doc-image"
-              /><img
-                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-text_csv.png"
-                alt="pulse dashboard attachments text-csv"
-                class="doc-image"
-              />
+          <div class="accordion-item">
+            <button
+              class="accordion-trigger"
+              aria-expanded="false"
+              aria-controls="panel-2"
+            >
+              <span>2. Attachments</span>
+              <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-panel" id="panel-2" role="region">
+              <div class="accordion-panel-content">
+                <p>
+                  Access to all artifacts captured during the test run, such as
+                  screenshots on failure, videos of the execution, and detailed
+                  Playwright trace files for debugging. Also provides a visual
+                  scope for <code>test.info().attach()</code> files.
+                </p>
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-json.png"
+                  alt="pulse dashboard attachments json"
+                  class="doc-image"
+                />
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-pdf.png"
+                  alt="pulse dashboard attachments pdf"
+                  class="doc-image"
+                />
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-screenshots.png"
+                  alt="pulse dashboard attachments screenshots"
+                  class="doc-image"
+                />
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-videos.png"
+                  alt="pulse dashboard attachments videos"
+                  class="doc-image"
+                />
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-text_csv.png"
+                  alt="pulse dashboard attachments text-csv"
+                  class="doc-image"
+                />
+              </div>
             </div>
           </div>
-        </div>
-        <div class="accordion-item">
-          <button
-            class="accordion-trigger"
-            aria-expanded="false"
-            aria-controls="panel-3"
-          >
-            <span>3. Logs</span
-            ><i class="fa-solid fa-chevron-down accordion-icon"></i>
-          </button>
-          <div class="accordion-panel" id="panel-3" role="region">
-            <div class="accordion-panel-content">
-              <p>
-                View any console output (from <code>console.log</code>) and
-                standard error streams that were generated by the test or the
-                application during the run.
-              </p>
-              <img
-                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-logs.png"
-                alt="pulse dashboard logs"
-                class="doc-image"
-              />
+          <div class="accordion-item">
+            <button
+              class="accordion-trigger"
+              aria-expanded="false"
+              aria-controls="panel-3"
+            >
+              <span>3. Logs</span>
+              <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-panel" id="panel-3" role="region">
+              <div class="accordion-panel-content">
+                <p>
+                  View any console output (from <code>console.log</code>) and
+                  standard error streams that were generated by the test or the
+                  application during the run.
+                </p>
+                <p>
+                  Also, for specific failed test cases, test case snippets are
+                  included in the logs for easy reference.
+                </p>
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-logs-tab.png"
+                  alt="pulse dashboard logs"
+                  class="doc-image"
+                />
+              </div>
             </div>
           </div>
-        </div>
-        <div class="accordion-item">
-          <button
-            class="accordion-trigger"
-            aria-expanded="false"
-            aria-controls="panel-4"
-          >
-            <span>4. Test Run History</span
-            ><i class="fa-solid fa-chevron-down accordion-icon"></i>
-          </button>
-          <div class="accordion-panel" id="panel-4" role="region">
-            <div class="accordion-panel-content">
-              <p>
-                A historical view of this specific test's performance and status
-                across previous runs. This helps identify if a failure is new,
-                recurring, or intermittent (flaky).
-              </p>
-              <img
-                src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-run-history.png"
-                alt="pulse dashboard attachments test run history"
-                class="doc-image"
-              />
+          <div class="accordion-item">
+            <button
+              class="accordion-trigger"
+              aria-expanded="false"
+              aria-controls="panel-4"
+            >
+              <span>4. Test Run History</span>
+              <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-panel" id="panel-4" role="region">
+              <div class="accordion-panel-content">
+                <p>
+                  A historical view of this specific test's performance and status
+                  across previous runs. This helps identify if a failure is new,
+                  recurring, or intermittent (flaky).
+                </p>
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-details-trends.png"
+                  alt="pulse dashboard test run history"
+                  class="doc-image"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button
+              class="accordion-trigger"
+              aria-expanded="false"
+              aria-controls="panel-5"
+            >
+              <span>5. AI Suggestions</span>
+              <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-panel" id="panel-5" role="region">
+              <div class="accordion-panel-content">
+                <p>
+                  Get AI-powered suggestions for fixing failed tests. The AI analyzes
+                  test case names, snippets, and error logs to provide
+                  actionable insights for resolving issues quickly.
+                </p>
+                <div class="feature-card" style="margin: 16px 0;">
+                  <p><strong>Note:</strong></p>
+                  <p>1. AI suggestions are based on the latest version of the test case.</p>
+                  <p>2. AI Suggestion tab is visible for failed test cases only.</p>
+                </div>
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-ai-generate.png"
+                  alt="pulse dashboard ai generate"
+                  class="doc-image"
+                />
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-ai-response.png"
+                  alt="pulse dashboard ai response"
+                  class="doc-image"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -786,32 +1406,55 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        // --- Theme Toggle ---
+        // --- Enhanced Theme System ---
         const themeToggle = document.getElementById("theme-toggle");
-        const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
-        const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+        const sunIcon = `<i class="fa-solid fa-sun"></i>`;
+        const moonIcon = `<i class="fa-solid fa-moon"></i>`;
 
         function setTheme(isLight) {
-          document.documentElement.classList.toggle("light-theme", isLight);
-          document.documentElement.classList.toggle("dark-theme", !isLight);
-          themeToggle.innerHTML = isLight ? sunIcon : moonIcon;
+          const html = document.documentElement;
+          html.classList.toggle("light-theme", isLight);
+          html.classList.toggle("dark-theme", !isLight);
+          themeToggle.innerHTML = isLight ? moonIcon : sunIcon;
+          
+          // Store preference
+          localStorage.setItem('theme', isLight ? 'light' : 'dark');
         }
-        themeToggle.addEventListener("click", () =>
-          setTheme(!document.documentElement.classList.contains("light-theme"))
-        );
-        setTheme(true);
 
-        // --- Mobile Navigation ---
+        // Initialize theme from storage or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme === 'light');
+
+        themeToggle.addEventListener("click", () => {
+          const isCurrentlyLight = document.documentElement.classList.contains("light-theme");
+          setTheme(!isCurrentlyLight);
+        });
+
+        // --- Enhanced Mobile Navigation ---
         const mobileNavToggle = document.querySelector(".mobile-nav-toggle");
         const sidebarOverlay = document.querySelector(".sidebar-overlay");
+        const body = document.body;
 
         function toggleSidebar() {
-          document.body.classList.toggle("sidebar-open");
+          body.classList.toggle("sidebar-open");
+          
+          // Update aria attributes
+          const isOpen = body.classList.contains("sidebar-open");
+          mobileNavToggle.setAttribute("aria-expanded", isOpen);
+          mobileNavToggle.setAttribute("aria-label", isOpen ? "Close navigation" : "Open navigation");
         }
+
         mobileNavToggle.addEventListener("click", toggleSidebar);
         sidebarOverlay.addEventListener("click", toggleSidebar);
 
-        // --- Page Content Loading & Routing ---
+        // Close sidebar on escape key
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && body.classList.contains("sidebar-open")) {
+            toggleSidebar();
+          }
+        });
+
+        // --- Enhanced Content Loading & Routing ---
         const contentDisplay = document.getElementById("content-display-area");
         const sidebarNav = document.querySelector(".sidebar-nav");
 
@@ -821,41 +1464,49 @@
           const template = document.getElementById(templateId);
           let targetHash = hash || "#getting-started";
 
-          contentDisplay.innerHTML = "";
-          if (template) {
-            contentDisplay.appendChild(template.content.cloneNode(true));
-          } else {
-            contentDisplay.appendChild(
-              document
-                .getElementById("template-getting-started")
-                .content.cloneNode(true)
-            );
-            targetHash = "#getting-started";
-          }
-          updateActiveLink(targetHash);
-          window.scrollTo(0, 0);
-        }
+          // Add loading animation
+          contentDisplay.style.opacity = "0";
+          contentDisplay.style.transform = "translateY(20px)";
 
-        document.addEventListener("DOMContentLoaded", function () {
-          const logo = document.querySelector(".navbar-brand .logo");
-
-          // Check if the image is already loaded (cached)
-          if (logo.complete) {
-            logo.classList.add("loaded");
-          } else {
-            // If not, wait for it to load
-            logo.addEventListener("load", function () {
-              logo.classList.add("loaded");
+          setTimeout(() => {
+            contentDisplay.innerHTML = "";
+            if (template) {
+              const content = template.content.cloneNode(true);
+              contentDisplay.appendChild(content);
+            } else {
+              const fallback = document.getElementById("template-getting-started").content.cloneNode(true);
+              contentDisplay.appendChild(fallback);
+              targetHash = "#getting-started";
+            }
+            
+            updateActiveLink(targetHash);
+            
+            // Animate content in
+            requestAnimationFrame(() => {
+              contentDisplay.style.opacity = "1";
+              contentDisplay.style.transform = "translateY(0)";
             });
-          }
-        });
+            
+            // Initialize scroll animations for new content
+            initScrollAnimations();
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }, 150);
+        }
 
         function updateActiveLink(hash) {
           sidebarNav.querySelectorAll("a").forEach((link) => {
-            link.classList.toggle("active", link.getAttribute("href") === hash);
+            const isActive = link.getAttribute("href") === hash;
+            link.classList.toggle("active", isActive);
+            if (isActive) {
+              link.setAttribute("aria-current", "page");
+            } else {
+              link.removeAttribute("aria-current");
+            }
           });
         }
 
+        // Enhanced navigation with smooth transitions
         sidebarNav.addEventListener("click", (event) => {
           const link = event.target.closest("a");
           if (link) {
@@ -865,48 +1516,156 @@
               history.pushState(null, "", hash);
               loadContent(hash);
             }
-            if (document.body.classList.contains("sidebar-open")) {
+            if (body.classList.contains("sidebar-open")) {
               toggleSidebar();
             }
           }
         });
 
-        // --- Global Event Delegation for Dynamic Content ---
-        document.addEventListener("click", (event) => {
+        // --- Scroll Animations ---
+        function initScrollAnimations() {
+          const animateElements = document.querySelectorAll('.section > *');
+          
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+              }
+            });
+          }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+          });
+
+          animateElements.forEach((el) => {
+            el.classList.add('content-animate');
+            observer.observe(el);
+          });
+        }
+
+        // --- Enhanced Global Event Delegation ---
+        document.addEventListener("click", async (event) => {
           const copyBtn = event.target.closest(".copy-btn");
           const accordionTrigger = event.target.closest(".accordion-trigger");
 
           if (copyBtn) {
             const textToCopy = copyBtn.dataset.copyText;
-            navigator.clipboard
-              .writeText(textToCopy)
-              .then(() => {
-                const originalIcon = copyBtn.innerHTML;
-                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
-                copyBtn.title = "Copied!";
-                setTimeout(() => {
-                  copyBtn.innerHTML = originalIcon;
-                  copyBtn.title = "Copy to clipboard";
-                }, 2000);
-              })
-              .catch((err) => console.error("Failed to copy text: ", err));
+            try {
+              await navigator.clipboard.writeText(textToCopy);
+              const originalContent = copyBtn.innerHTML;
+              copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+              copyBtn.style.background = 'var(--color-success)';
+              copyBtn.style.color = 'white';
+              copyBtn.title = "Copied!";
+              
+              setTimeout(() => {
+                copyBtn.innerHTML = originalContent;
+                copyBtn.style.background = '';
+                copyBtn.style.color = '';
+                copyBtn.title = "Copy to clipboard";
+              }, 2000);
+            } catch (err) {
+              console.error("Failed to copy text:", err);
+              // Fallback for older browsers
+              copyBtn.innerHTML = '<i class="fa-solid fa-exclamation"></i>';
+              setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+              }, 2000);
+            }
           } else if (accordionTrigger) {
             const panel = accordionTrigger.nextElementSibling;
-            const isExpanded =
-              accordionTrigger.getAttribute("aria-expanded") === "true";
+            const isExpanded = accordionTrigger.getAttribute("aria-expanded") === "true";
+            
+            // Close other panels for better UX
+            const allTriggers = document.querySelectorAll('.accordion-trigger');
+            const allPanels = document.querySelectorAll('.accordion-panel');
+            
+            allTriggers.forEach((trigger, index) => {
+              if (trigger !== accordionTrigger) {
+                trigger.setAttribute("aria-expanded", "false");
+                allPanels[index].style.maxHeight = "0";
+              }
+            });
+            
+            // Toggle current panel
             accordionTrigger.setAttribute("aria-expanded", !isExpanded);
-            panel.style.maxHeight = isExpanded
-              ? null
-              : panel.scrollHeight + "px";
+            if (!isExpanded) {
+              panel.style.maxHeight = panel.scrollHeight + "px";
+            } else {
+              panel.style.maxHeight = "0";
+            }
           }
         });
 
-        // --- Initial Load ---
-        window.addEventListener("popstate", () =>
-          loadContent(window.location.hash)
-        );
-        loadContent(window.location.hash);
+        // --- Enhanced Keyboard Navigation ---
+        document.addEventListener("keydown", (event) => {
+          if (event.ctrlKey || event.metaKey) {
+            switch (event.key) {
+              case 'k':
+                event.preventDefault();
+                // Focus first sidebar link
+                document.querySelector('.sidebar-nav a').focus();
+                break;
+              case '/':
+                event.preventDefault();
+                // Could add search functionality here
+                break;
+            }
+          }
+        });
+
+        // --- Page Load Handling ---
+        window.addEventListener("popstate", () => loadContent(window.location.hash));
+        
+        // Initial load with animation
+        setTimeout(() => {
+          loadContent(window.location.hash);
+        }, 100);
+
+        // --- Performance Monitoring ---
+        if ('performance' in window) {
+          window.addEventListener('load', () => {
+            const loadTime = performance.now();
+            console.log(`🚀 Pulse Dashboard loaded in ${loadTime.toFixed(2)}ms`);
+          });
+        }
+
+        // --- Enhanced User Experience Features ---
+        
+        // Smooth logo loading
+        const logo = document.querySelector(".navbar-brand .logo");
+        if (logo) {
+          logo.addEventListener('load', () => {
+            logo.style.opacity = '1';
+          });
+        }
+
+        // Add subtle parallax to background
+        window.addEventListener('scroll', () => {
+          const scrolled = window.pageYOffset;
+          const rate = scrolled * -0.5;
+          document.body.style.setProperty('--scroll-offset', `${rate}px`);
+        });
+
+        // Add intersection observer for lazy loading
+        const imageObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              if (img.dataset.src) {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+                imageObserver.unobserve(img);
+              }
+            }
+          });
+        });
+
+        // Observe all images for lazy loading
+        document.querySelectorAll('img[data-src]').forEach(img => {
+          imageObserver.observe(img);
+        });
       });
     </script>
   </body>
-</html>
+  </html>
