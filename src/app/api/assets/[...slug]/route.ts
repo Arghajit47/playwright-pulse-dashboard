@@ -31,15 +31,14 @@ try {
 
 export async function GET(
   request: NextRequest,
-  context: { params: { slug: string[] } } // Use 'context' or any other name for the second argument
+  context: { params: Promise<{ slug: string[] }> } // Next.js 15 async params
 ) {
-  const slug = context.params.slug; // Then access slug via context.params.slug
+  const { slug } = await context.params; // Await the params
   console.log(`[API ASSETS] Params slug:`, slug);
   // ...
   const requestedPathParts = slug; // Use the extracted slug
 
   try {
-    const requestedPathParts = slug;
     if (!requestedPathParts || requestedPathParts.length === 0) {
       console.warn("[API ASSETS] File path (slug) is missing");
       return new NextResponse("File path is required", { status: 400 });

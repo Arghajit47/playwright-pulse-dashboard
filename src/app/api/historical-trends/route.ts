@@ -24,36 +24,33 @@ export async function GET() {
     
     console.log(`[API /api/historical-trends] Received ${rawReports.length} raw reports from getRawHistoricalReports.`);
 
-    const historicalTrends: HistoricalTrend[] = rawReports.map(report => {
-      if (!report.run) {
-        console.warn('[API /api/historical-trends] Found a report in history without a .run property, skipping:', report);
-        return null; 
-      }
-
-      let workerCount: number | undefined = undefined;
-      if (report.results && report.results.length > 0) {
-        const workerIds = new Set<string | number>();
-        report.results.forEach((result: DetailedTestResult) => {
-          if (result.workerId !== undefined && result.workerId !== null) {
-            workerIds.add(result.workerId);
+    const historicalTrends: HistoricalTrend[] = rawReports
+      .filter(report => report.run !== undefined && report.run !== null)
+      .map(report => {
+        let workerCount: number | undefined = undefined;
+        if (report.results && report.results.length > 0) {
+          const workerIds = new Set<string | number>();
+          report.results.forEach((result: DetailedTestResult) => {
+            if (result.workerId !== undefined && result.workerId !== null) {
+              workerIds.add(result.workerId);
+            }
+          });
+          if (workerIds.size > 0) {
+            workerCount = workerIds.size;
           }
-        });
-        if (workerIds.size > 0) {
-          workerCount = workerIds.size;
         }
-      }
 
-      return {
-        date: report.run.timestamp,
-        totalTests: report.run.totalTests,
-        passed: report.run.passed,
-        failed: report.run.failed + (report.run.timedOut || 0),
-        skipped: report.run.skipped,
-        duration: report.run.duration,
-        flakinessRate: report.run.flakinessRate !== undefined ? report.run.flakinessRate : 0,
-        workerCount: workerCount,
-      };
-    }).filter((trend): trend is HistoricalTrend => trend !== null)
+        return {
+          date: report.run.timestamp,
+          totalTests: report.run.totalTests,
+          passed: report.run.passed,
+          failed: report.run.failed + (report.run.timedOut || 0),
+          skipped: report.run.skipped,
+          duration: report.run.duration,
+          flakinessRate: report.run.flakinessRate,
+          workerCount: workerCount,
+        };
+      })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); 
 
     console.log(`[API /api/historical-trends] Successfully processed ${historicalTrends.length} historical trend items.`);
