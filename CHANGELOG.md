@@ -2,12 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.1.3] - 2025-08-15
+
+### Added
+- **AI Suggestions**: Implemented AI Suggestions sub-tab inside failed test case details page.
+- **Test Case Snippet**: Added _Test Case Snippet_ section containing the failed test cases' entire test snippet, `Test Details` > `Logs` .
 
 ---
 
-## [1.1.1] - 2025-06-16
+## [1.1.2] - 2025-07-07
+
+### Added
+- **Copy Button**: Implemented copy functionality in the "Test Deatils" view to copy the console logs, error logs.
+- **Documentation Website**: Added Documentation website in the settings page, for reference.
+
+---
+
+## [1.1.1] - 2025-06-21
 
 ### Added
 - **Export Test Results as CSV**: Implemented functionality in the "Test Results" view to download the current run's test data as a CSV file.
