@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react"; // <-- Added import
 import type { TestStep } from "@/types/playwright.js";
 import {
   Accordion,
@@ -9,77 +8,16 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button"; // <-- Added import
-// --- START: Updated Import ---
 import {
   CheckCircle2,
   XCircle,
   AlertCircle,
   Clock,
+  ChevronsRightLeft,
   Info,
   Code2,
-  Copy,
-  Check,
 } from "lucide-react";
-// --- END: Updated Import ---
-import { ansiToHtml, ansiToText, cn } from "@/lib/utils"; // <-- Added 'cn' import
-
-// --- START: Added CodeBlockWithCopy Component ---
-interface CodeBlockWithCopyProps {
-  rawContent: string;
-  className?: string;
-  preClassName?: string;
-}
-
-const CodeBlockWithCopy: React.FC<CodeBlockWithCopyProps> = ({
-  rawContent,
-  className,
-  preClassName,
-}) => {
-  const [isCopied, setIsCopied] = useState(false);
-
-  const handleCopy = () => {
-    if (!rawContent) return;
-    navigator.clipboard.writeText(ansiToText(rawContent)).then(
-      () => {
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-      },
-      (err) => {
-        console.error("Failed to copy text: ", err);
-      }
-    );
-  };
-
-  return (
-    <div className={cn("relative", className)}>
-      <pre
-        className={cn(
-          "text-sm p-3 pr-12 whitespace-pre-wrap break-all font-code",
-          preClassName
-        )}
-      >
-        <span
-          dangerouslySetInnerHTML={{ __html: ansiToHtml(rawContent || "") }}
-        />
-      </pre>
-      <Button
-        size="icon"
-        variant="ghost"
-        className="absolute top-1 right-1 h-6 w-6" // Adjusted for smaller size
-        onClick={handleCopy}
-      >
-        {isCopied ? (
-          <Check className="h-3 w-3 text-green-500" />
-        ) : (
-          <Copy className="h-3 w-3" />
-        )}
-        <span className="sr-only">Copy code</span>
-      </Button>
-    </div>
-  );
-};
-// --- END: Added CodeBlockWithCopy Component ---
+import { ansiToHtml } from "@/lib/utils";
 
 interface TestStepItemRecursiveProps {
   step: TestStep;
@@ -153,13 +91,13 @@ export function TestStepItemRecursive({
           <p className="text-xs font-semibold text-destructive mb-0.5">
             Error:
           </p>
-          {/* --- START: Modified Code --- */}
-          <CodeBlockWithCopy
-            rawContent={step.errorMessage}
-            className="bg-destructive/10 rounded-md max-h-32 overflow-y-auto"
-            preClassName="text-xs p-2"
-          />
-          {/* --- END: Modified Code --- */}
+          <pre className="bg-destructive/10 text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code">
+            <span
+              dangerouslySetInnerHTML={{
+                __html: ansiToHtml(step.errorMessage),
+              }}
+            />
+          </pre>
         </div>
       )}
     </div>
