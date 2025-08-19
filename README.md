@@ -12,7 +12,7 @@ It can be: **Run as a Standalone CLI Tool**: Install globally or use with `npx` 
 [![pulse-dashboard-key-features](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg)](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg)
 
 *   **Real-time Dashboard**: View summary metrics (total, passed, failed, skipped, duration), test distribution charts, and system information from the latest test run.
-*   **Live Test Results**: Browse and filter test results by status, name, suite, tags, and browser. View detailed information for each test, including execution steps, error messages, and retries.
+*   **Test Results**: Browse and filter test results by status, name, suite, tags, and browser. View detailed information for each test, including execution steps, error messages, and retries.
 *   **Trend Analysis**: Visualize historical data for test outcomes and duration over time to identify patterns and regressions.
 *   **Flaky Test Analysis**: Identify tests that have shown inconsistent pass/fail behavior across historical runs.
 *   **Failure Categorization**: Group common failure types based on error messages to quickly pinpoint systemic issues.

@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.4] - 2025-08-20
+
+### Added
+- **Historical Run Navigation**: Added historical run selector dropdown functionality to test details page for improved test run navigation and comparison
+
+### Changed
+- **UI Enhancements**: Enhanced test details user interface with redesigned status indicators and visual styling improvements
+- **Modern Design**: Updated sidebar component design to incorporate glass morphism effects for modern aesthetics
+- **Terminology Update**: Renamed "Live Test Results" section to "Test Results" to maintain consistent terminology across the application
+
+### Fixed
+- **CSV Handling**: Resolved issues with CSV attachment filtering functionality and standardized date display format handling
+
+---
+
 ## [1.1.3] - 2025-08-15
 
 ### Added

@@ -46,9 +46,12 @@
         --spacing-xl: 48px;
         --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12),
+          0 1px 2px rgba(0, 0, 0, 0.24);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07),
+          0 2px 4px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1),
+          0 4px 6px rgba(0, 0, 0, 0.05);
         --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.15);
       }
 
@@ -127,25 +130,43 @@
 
       /* Animated background */
       body::before {
-        content: '';
+        content: "";
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: 
-          radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-          radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
-          radial-gradient(circle at 40% 60%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+        background: radial-gradient(
+            circle at 20% 20%,
+            rgba(99, 102, 241, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 80%,
+            rgba(168, 85, 247, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 60%,
+            rgba(59, 130, 246, 0.1) 0%,
+            transparent 50%
+          );
         pointer-events: none;
         z-index: -1;
         animation: float 20s ease-in-out infinite;
       }
 
       @keyframes float {
-        0%, 100% { transform: translateY(0px) rotate(0deg); }
-        33% { transform: translateY(-20px) rotate(1deg); }
-        66% { transform: translateY(-10px) rotate(-1deg); }
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        33% {
+          transform: translateY(-20px) rotate(1deg);
+        }
+        66% {
+          transform: translateY(-10px) rotate(-1deg);
+        }
       }
 
       /* --- Enhanced Navbar --- */
@@ -168,16 +189,18 @@
       }
 
       .navbar::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(90deg, 
-          transparent 0%, 
-          rgba(99, 102, 241, 0.05) 50%, 
-          transparent 100%);
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(99, 102, 241, 0.05) 50%,
+          transparent 100%
+        );
         pointer-events: none;
       }
 
@@ -201,13 +224,18 @@
       }
 
       .navbar-brand::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(99, 102, 241, 0.1),
+          transparent
+        );
         transition: left 0.6s;
       }
 
@@ -254,16 +282,18 @@
       }
 
       .sidebar::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(180deg, 
-          rgba(99, 102, 241, 0.02) 0%, 
-          transparent 50%, 
-          rgba(168, 85, 247, 0.02) 100%);
+        background: linear-gradient(
+          180deg,
+          rgba(99, 102, 241, 0.02) 0%,
+          transparent 50%,
+          rgba(168, 85, 247, 0.02) 100%
+        );
         pointer-events: none;
       }
 
@@ -297,7 +327,7 @@
       }
 
       .sidebar-nav a::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: -100%;
@@ -345,13 +375,17 @@
 
       .main-content-container {
         max-width: 900px;
-        margin: 0 auto;
         padding: var(--spacing-xl) var(--spacing-lg);
         flex: 1;
       }
 
       /* --- Enhanced Typography --- */
-      h1, h2, h3, h4, h5, h6 {
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
         font-weight: 700;
         color: var(--color-text-primary);
         margin: 0;
@@ -371,7 +405,7 @@
       }
 
       h1::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: -12px;
         left: 0;
@@ -391,7 +425,7 @@
       }
 
       h2::before {
-        content: '';
+        content: "";
         position: absolute;
         left: -20px;
         top: 50%;
@@ -508,7 +542,7 @@
       }
 
       .theme-toggle::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: -100%;
@@ -568,7 +602,7 @@
       }
 
       .accordion-trigger::before {
-        content: '';
+        content: "";
         position: absolute;
         left: 0;
         top: 0;
@@ -638,7 +672,7 @@
       }
 
       footer::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: 0;
@@ -665,7 +699,7 @@
       }
 
       .footer-content a::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: -2px;
         left: 0;
@@ -719,8 +753,12 @@
       }
 
       @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
       }
 
       @keyframes fadeInScale {
@@ -746,13 +784,21 @@
       }
 
       @keyframes expandWidth {
-        from { width: 0; }
-        to { width: 60px; }
+        from {
+          width: 0;
+        }
+        to {
+          width: 60px;
+        }
       }
 
       @keyframes popIn {
-        from { transform: scale(0); }
-        to { transform: scale(1); }
+        from {
+          transform: scale(0);
+        }
+        to {
+          transform: scale(1);
+        }
       }
 
       /* --- Content Animations --- */
@@ -765,18 +811,28 @@
         animation-fill-mode: both;
       }
 
-      .section > *:nth-child(1) { animation-delay: 0.1s; }
-      .section > *:nth-child(2) { animation-delay: 0.2s; }
-      .section > *:nth-child(3) { animation-delay: 0.3s; }
-      .section > *:nth-child(4) { animation-delay: 0.4s; }
-      .section > *:nth-child(5) { animation-delay: 0.5s; }
+      .section > *:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .section > *:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .section > *:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .section > *:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+      .section > *:nth-child(5) {
+        animation-delay: 0.5s;
+      }
 
       /* --- Enhanced Responsive Design --- */
       @media (max-width: 1200px) {
         :root {
           --sidebar-width: 280px;
         }
-        
+
         .main-content-container {
           max-width: 800px;
         }
@@ -883,7 +939,7 @@
       }
 
       .feature-card::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: -100%;
@@ -905,18 +961,24 @@
 
       /* --- Loading States --- */
       .loading-skeleton {
-        background: linear-gradient(90deg, 
-          var(--color-bg) 25%, 
-          var(--color-hover) 50%, 
-          var(--color-bg) 75%);
+        background: linear-gradient(
+          90deg,
+          var(--color-bg) 25%,
+          var(--color-hover) 50%,
+          var(--color-bg) 75%
+        );
         background-size: 200% 100%;
         animation: shimmer 2s infinite;
         border-radius: var(--border-radius);
       }
 
       @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
+        0% {
+          background-position: -200% 0;
+        }
+        100% {
+          background-position: 200% 0;
+        }
       }
 
       /* --- Accessibility Enhancements --- */
@@ -954,6 +1016,68 @@
       ::-webkit-scrollbar-thumb:hover {
         background: var(--color-primary-light);
       }
+
+      /* --- Changelog Table of Contents Sidebar --- */
+      .main-with-toc {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-md);
+        flex: 1;
+      }
+
+      .changelog-toc {
+        display: none; /* Hidden by default */
+        width: 220px;
+        flex-shrink: 0;
+        position: sticky;
+        top: calc(var(--navbar-height) + var(--spacing-xl));
+        align-self: flex-start;
+        max-height: calc(100vh - var(--navbar-height) - var(--spacing-xl) * 2);
+        overflow-y: auto;
+        padding-left: var(--spacing-sm);
+      }
+
+      /* This class will be added by JavaScript to show the sidebar */
+      body.changelog-active .changelog-toc {
+        display: block;
+      }
+
+      .changelog-toc h4 {
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin: 0 0 var(--spacing-sm) 0;
+        padding-bottom: var(--spacing-xs);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .changelog-toc ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .changelog-toc li a {
+        display: block;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        border-left: 2px solid var(--color-border);
+        transition: all var(--transition-fast);
+      }
+
+      .changelog-toc li a:hover {
+        color: var(--color-primary);
+        background-color: var(--color-hover);
+        border-left-color: var(--color-primary);
+      }
+
+      /* Hide the TOC on smaller screens to save space */
+      @media (max-width: 1200px) {
+        .changelog-toc {
+          display: none !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -988,16 +1112,23 @@
             <li><a href="#test-results">Test Results</a></li>
             <li><a href="#trend-analysis">Trend Analysis</a></li>
             <li><a href="#flaky-tests">Flaky Tests</a></li>
-            <li><a href="#failure-categorization">Failure Categorization</a></li>
+            <li>
+              <a href="#failure-categorization">Failure Categorization</a>
+            </li>
             <li><a href="#test-details-page">Test Details Page</a></li>
+            <li><a href="#changelogs">Changelogs</a></li>
           </ul>
         </nav>
       </aside>
       <div class="sidebar-overlay"></div>
 
       <main>
-        <div class="main-content-container">
-          <article id="content-display-area"></article>
+        <div class="main-with-toc">
+          <div class="main-content-container">
+            <article id="content-display-area"></article>
+          </div>
+          <!-- This is the new sidebar for the changelog versions -->
+          <aside id="changelog-toc-sidebar" class="changelog-toc"></aside>
         </div>
         <footer>
           <div class="footer-content">
@@ -1023,25 +1154,34 @@
       </header>
       <div class="section">
         <p>
-          <strong>Pulse Dashboard</strong> is a revolutionary Next.js component and
-          standalone CLI tool designed to provide real-time monitoring and
+          <strong>Pulse Dashboard</strong> is a revolutionary Next.js component
+          and standalone CLI tool designed to provide real-time monitoring and
           historical analysis of Playwright test executions. It empowers
           development and QA teams to quickly identify issues, track test
           performance over time, and gain deep insights into failure patterns.
         </p>
-        
+
         <div class="feature-grid">
           <div class="feature-card">
             <h3>🚀 Real-time Monitoring</h3>
-            <p>Watch your tests execute in real-time with live updates and instant feedback on test results.</p>
+            <p>
+              Watch your tests execute in real-time with live updates and
+              instant feedback on test results.
+            </p>
           </div>
           <div class="feature-card">
             <h3>📊 Historical Analysis</h3>
-            <p>Track performance trends and identify patterns across multiple test runs with rich visualizations.</p>
+            <p>
+              Track performance trends and identify patterns across multiple
+              test runs with rich visualizations.
+            </p>
           </div>
           <div class="feature-card">
             <h3>🔍 Smart Debugging</h3>
-            <p>Advanced failure categorization and AI-powered suggestions to resolve issues faster.</p>
+            <p>
+              Advanced failure categorization and AI-powered suggestions to
+              resolve issues faster.
+            </p>
           </div>
         </div>
 
@@ -1128,17 +1268,17 @@
         <h3>Key Metrics</h3>
         <ul>
           <li>
-            <strong>Summary Cards:</strong> Quick stats on Total, Passed, Failed,
-            and Skipped tests, along with the total duration.
+            <strong>Summary Cards:</strong> Quick stats on Total, Passed,
+            Failed, and Skipped tests, along with the total duration.
           </li>
           <li>
-            <strong>Test Runner System Information:</strong> A detailed preview of
-            the system where the test suite ran.
+            <strong>Test Runner System Information:</strong> A detailed preview
+            of the system where the test suite ran.
           </li>
           <li>
             <strong>Charts & Graphs:</strong> Visual breakdowns of test
-            distribution, browser-wise test distribution, slowest tests, and tests
-            per suite.
+            distribution, browser-wise test distribution, slowest tests, and
+            tests per suite.
           </li>
           <li>
             <strong>Worker Utilization:</strong> Real-time status of each test
@@ -1153,8 +1293,8 @@
       <div class="section">
         <p>
           <strong>👉🏼</strong> The Test Results page allows users to browse and
-          filter the outcomes of the latest test run. You can expand each suite to
-          see the individual tests within it.
+          filter the outcomes of the latest test run. You can expand each suite
+          to see the individual tests within it.
         </p>
         <img
           src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-results.png"
@@ -1162,9 +1302,9 @@
           class="doc-image"
         />
         <p>
-          <strong>👉🏼</strong> Expanded Test Results provides users a quick look at
-          the failed test cases, including properly formatted test error logs and
-          attached failure screenshots.
+          <strong>👉🏼</strong> Expanded Test Results provides users a quick look
+          at the failed test cases, including properly formatted test error logs
+          and attached failure screenshots.
         </p>
         <img
           src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-details-expanded.png"
@@ -1178,8 +1318,9 @@
       <h2>Trend Analysis</h2>
       <div class="section">
         <p>
-          This page provides historical data visualization, allowing you to track
-          test performance and stability over time with advanced analytics.
+          This page provides historical data visualization, allowing you to
+          track test performance and stability over time with advanced
+          analytics.
         </p>
         <p>
           <strong>👉🏼 Test Outcomes Over Time:</strong> This chart provides
@@ -1241,8 +1382,9 @@
       <div class="section">
         <p>
           This page provides an in-depth, granular view of a single test
-          execution. It is the primary tool for debugging a specific test failure.
-          The page is organized into several expandable sections for optimal workflow.
+          execution. It is the primary tool for debugging a specific test
+          failure. The page is organized into several expandable sections for
+          optimal workflow.
         </p>
         <div class="accordion-container">
           <div class="accordion-item">
@@ -1258,8 +1400,8 @@
               <div class="accordion-panel-content">
                 <p>
                   A step-by-step log of every action performed during the test.
-                  Failed steps and error messages are highlighted in red for easy
-                  identification.
+                  Failed steps and error messages are highlighted in red for
+                  easy identification.
                 </p>
                 <img
                   src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-execution-steps.png"
@@ -1354,9 +1496,9 @@
             <div class="accordion-panel" id="panel-4" role="region">
               <div class="accordion-panel-content">
                 <p>
-                  A historical view of this specific test's performance and status
-                  across previous runs. This helps identify if a failure is new,
-                  recurring, or intermittent (flaky).
+                  A historical view of this specific test's performance and
+                  status across previous runs. This helps identify if a failure
+                  is new, recurring, or intermittent (flaky).
                 </p>
                 <img
                   src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-details-trends.png"
@@ -1378,14 +1520,19 @@
             <div class="accordion-panel" id="panel-5" role="region">
               <div class="accordion-panel-content">
                 <p>
-                  Get AI-powered suggestions for fixing failed tests. The AI analyzes
-                  test case names, snippets, and error logs to provide
+                  Get AI-powered suggestions for fixing failed tests. The AI
+                  analyzes test case names, snippets, and error logs to provide
                   actionable insights for resolving issues quickly.
                 </p>
-                <div class="feature-card" style="margin: 16px 0;">
+                <div class="feature-card" style="margin: 16px 0">
                   <p><strong>Note:</strong></p>
-                  <p>1. AI suggestions are based on the latest version of the test case.</p>
-                  <p>2. AI Suggestion tab is visible for failed test cases only.</p>
+                  <p>
+                    1. AI suggestions are based on the latest version of the
+                    test case.
+                  </p>
+                  <p>
+                    2. AI Suggestion tab is visible for failed test cases only.
+                  </p>
                 </div>
                 <img
                   src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-ai-generate.png"
@@ -1404,6 +1551,440 @@
       </div>
     </template>
 
+    <!-- ADD THIS ENTIRE TEMPLATE BLOCK -->
+    <template id="template-changelogs">
+      <style>
+        .changelog-entry h2 {
+          display: flex;
+          align-items: baseline;
+          gap: var(--spacing-sm);
+          font-size: 1.8rem;
+          margin-bottom: 0;
+        }
+        .changelog-date {
+          font-size: 1rem;
+          font-weight: 500;
+          color: var(--color-text-muted);
+        }
+        .changelog-entry h3 {
+          font-size: 1.1rem;
+          margin-top: var(--spacing-md);
+          margin-bottom: var(--spacing-sm);
+          display: inline-block;
+          padding: 4px 12px;
+          border-radius: 9999px;
+          font-weight: 600;
+          color: #fff;
+        }
+        .changelog-badge.added {
+          background-color: var(--color-success);
+        }
+        .changelog-badge.changed {
+          background-color: var(--color-primary);
+        }
+        .changelog-badge.fixed {
+          background-color: var(--color-warning);
+        }
+        .changelog-badge.removed {
+          background-color: var(--color-error);
+        }
+        .changelog-entry ul {
+          list-style-type: disc;
+          padding-left: 20px;
+        }
+        .changelog-divider {
+          border: 0;
+          height: 1px;
+          background: var(--color-border);
+          margin: var(--spacing-xl) 0;
+        }
+      </style>
+
+      <header>
+        <h1>Changelogs</h1>
+      </header>
+      <div class="section">
+        <p>
+          All notable changes to this project are documented here, starting with
+          the most recent.
+        </p>
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.4 <span class="changelog-date">(2025-08-20)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Historical Run Navigation</strong>: Added historical run
+              selector dropdown functionality to test details page for improved
+              test run navigation and comparison.
+            </li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>UI Enhancements</strong>: Enhanced test details user
+              interface with redesigned status indicators and visual styling
+              improvements.
+            </li>
+            <li>
+              <strong>Modern Design</strong>: Updated sidebar component design
+              to incorporate glass morphism effects for modern aesthetics.
+            </li>
+            <li>
+              <strong>Terminology Update</strong>: Renamed "Live Test Results"
+              section to "Test Results" to maintain consistent terminology
+              across the application.
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              <strong>CSV Handling</strong>: Resolved issues with CSV attachment
+              filtering functionality and standardized date display format
+              handling.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.3 <span class="changelog-date">(2025-08-15)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>AI Suggestions</strong>: Implemented AI Suggestions
+              sub-tab inside failed test case details page.
+            </li>
+            <li>
+              <strong>Test Case Snippet</strong>: Added
+              <em>Test Case Snippet</em> section containing the failed test
+              cases' entire test snippet, in <code>Test Details > Logs</code>.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.2 <span class="changelog-date">(2025-07-07)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Copy Button</strong>: Implemented copy functionality in
+              the "Test Details" view to copy the console logs and error logs.
+            </li>
+            <li>
+              <strong>Documentation Website</strong>: Added a link to the
+              Documentation website in the settings page for reference.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.1 <span class="changelog-date">(2025-06-21)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Export Test Results as CSV</strong>: Implemented
+              functionality in the "Test Results" view to download the current
+              run's test data as a CSV file.
+            </li>
+            <li>
+              <strong>Responsive Attachment Tabs</strong>: Ensured the
+              attachment type tabs in the "Test Details" view are horizontally
+              scrollable on smaller screens.
+            </li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Attachment Handling Documentation</strong>: Updated
+              <code>README.md</code> to clarify how different attachment types
+              are sourced and displayed.
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>Corrected CSV export filename generation to be more robust.</li>
+            <li>
+              Resolved a runtime error by adding a type check before string
+              operations on <code>videoPath</code>.
+            </li>
+            <li>
+              Ensured case-insensitive matching for attachment properties to
+              improve visibility.
+            </li>
+          </ul>
+        </div>
+
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.0 <span class="changelog-date">(2025-06-16)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Worker Utilization View (Dashboard Overview)</strong>:
+              Replaced the Gantt chart with individual Donut Charts for each
+              worker, rendered using Recharts for better clarity on test
+              distribution per worker.
+            </li>
+          </ul>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Advance System Information (Dashboard Overview)</strong>:
+              Introduced a section detailing the test execution environment,
+              including OS, CPU, Memory, and Node versions.
+            </li>
+            <li>
+              <strong
+                >Advanced Filtering for Worker Donut Charts (Dashboard
+                Overview)</strong
+              >: Added filters for test name, suite, and a checklist to
+              show/hide specific workers.
+            </li>
+          </ul>
+          <h3 class="changelog-badge removed">Removed</h3>
+          <ul>
+            <li>
+              <strong>Highcharts Library</strong>: Completely removed the
+              Highcharts library as a dependency to simplify the charting stack.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.0.0 <span class="changelog-date">(2025-06-14)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Worker Utilization Chart (Dashboard Overview)</strong>:
+              Replaced Highcharts Gantt chart with Google Gantt chart for a
+              cleaner visualization.
+            </li>
+          </ul>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              "Active Worker Count Over Time" chart added to the Trend Analysis
+              view.
+            </li>
+            <li>
+              <code>workerCount</code> field added to the historical trend data
+              type.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.9 <span class="changelog-date">(2025-06-13)</span>
+          </h2>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              Fixed incorrect attachment paths for Screenshots, Video, and
+              Traces in the Test Details view.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.8 <span class="changelog-date">(2025-06-12)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              "Total Tests" line added to the "Test Outcomes Over Time" chart in
+              Trend Analysis view.
+            </li>
+            <li>Tooltip in Trend Analysis now includes "Total Tests" data.</li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              Data fetching strategy in <code>useTestData</code> hook changed
+              from polling to a single fetch on load.
+            </li>
+            <li>
+              Sidebar: Active menu items now have distinct styles for better
+              clarity.
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              Fixed <code>trends.map is not a function</code> error in
+              <code>TrendAnalysis.tsx</code>.
+            </li>
+            <li>Improved resilience in API routes and server actions.</li>
+            <li>
+              Ensured <code>flakinessRate</code> is passed correctly from
+              historical data.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.7 <span class="changelog-date">(2025-05-31)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Major UI Revamp: "Neon Noir & Arctic Sky" Theme</strong>:
+              Implemented new palettes, enhanced card and button styles, and
+              improved skeleton loaders for a unified, modern look.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.6 <span class="changelog-date">(2025-05-25)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              Display "Latest Run Date" in the main dashboard and Test Details
+              page.
+            </li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              Implemented <code>ansiToHtml</code> to correctly render colored
+              console logs in the UI.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.5 <span class="changelog-date">(2025-05-21)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Attachment Handling (Local CLI)</strong>: Centralized
+              asset path resolution to ensure attachment URLs work correctly
+              across all deployment environments.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.4 <span class="changelog-date">(2025-05-17)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              Introduced <code>PULSE_USER_CWD</code> environment variable to
+              help locate the correct working directory.
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              Addressed crashes on API routes due to bad paths or unhandled
+              exceptions.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.3 <span class="changelog-date">(2025-05-10)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>Flaky Tests and Failure Categorization pages.</li>
+            <li>Settings view for theme toggling.</li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              Integrated Recharts for data visualization in Trend Analysis and
+              Dashboard Overview.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.2 <span class="changelog-date">(2025-05-05)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              Dashboard overview charts for test and browser distribution.
+            </li>
+            <li>Structured test display components.</li>
+            <li>Basic light/dark theme persistence.</li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              Restructured dashboard to manage different views and improve
+              layout.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.1 <span class="changelog-date">(2025-04-29)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>Core dashboard component and basic test display views.</li>
+            <li>API routes for current and historical run data.</li>
+            <li><code>useTestData</code> custom hook for data fetching.</li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.0 <span class="changelog-date">(2025-04-20)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              Initial Next.js application setup with Tailwind CSS and ShadCN UI.
+            </li>
+            <li>CLI entry script for running the dashboard.</li>
+            <li>Basic project configuration files and component structure.</li>
+          </ul>
+        </div>
+      </div>
+    </template>
+
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         // --- Enhanced Theme System ---
@@ -1416,17 +1997,18 @@
           html.classList.toggle("light-theme", isLight);
           html.classList.toggle("dark-theme", !isLight);
           themeToggle.innerHTML = isLight ? moonIcon : sunIcon;
-          
+
           // Store preference
-          localStorage.setItem('theme', isLight ? 'light' : 'dark');
+          localStorage.setItem("theme", isLight ? "light" : "dark");
         }
 
         // Initialize theme from storage or default to light
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        setTheme(savedTheme === 'light');
+        const savedTheme = localStorage.getItem("theme") || "light";
+        setTheme(savedTheme === "light");
 
         themeToggle.addEventListener("click", () => {
-          const isCurrentlyLight = document.documentElement.classList.contains("light-theme");
+          const isCurrentlyLight =
+            document.documentElement.classList.contains("light-theme");
           setTheme(!isCurrentlyLight);
         });
 
@@ -1437,11 +2019,14 @@
 
         function toggleSidebar() {
           body.classList.toggle("sidebar-open");
-          
+
           // Update aria attributes
           const isOpen = body.classList.contains("sidebar-open");
           mobileNavToggle.setAttribute("aria-expanded", isOpen);
-          mobileNavToggle.setAttribute("aria-label", isOpen ? "Close navigation" : "Open navigation");
+          mobileNavToggle.setAttribute(
+            "aria-label",
+            isOpen ? "Close navigation" : "Open navigation"
+          );
         }
 
         mobileNavToggle.addEventListener("click", toggleSidebar);
@@ -1459,6 +2044,10 @@
         const sidebarNav = document.querySelector(".sidebar-nav");
 
         function loadContent(hash) {
+          // Reset state on every page load
+          document.body.classList.remove("changelog-active");
+          document.getElementById("changelog-toc-sidebar").innerHTML = "";
+
           const pageId = (hash || "#getting-started").substring(1);
           const templateId = `template-${pageId}`;
           const template = document.getElementById(templateId);
@@ -1473,24 +2062,32 @@
             if (template) {
               const content = template.content.cloneNode(true);
               contentDisplay.appendChild(content);
+
+              // If we are on the changelogs page, show and build the TOC sidebar
+              if (pageId === "changelogs") {
+                document.body.classList.add("changelog-active");
+                buildChangelogTOC();
+              }
             } else {
-              const fallback = document.getElementById("template-getting-started").content.cloneNode(true);
+              const fallback = document
+                .getElementById("template-getting-started")
+                .content.cloneNode(true);
               contentDisplay.appendChild(fallback);
               targetHash = "#getting-started";
             }
-            
+
             updateActiveLink(targetHash);
-            
+
             // Animate content in
             requestAnimationFrame(() => {
               contentDisplay.style.opacity = "1";
               contentDisplay.style.transform = "translateY(0)";
             });
-            
+
             // Initialize scroll animations for new content
             initScrollAnimations();
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            window.scrollTo({ top: 0, behavior: "smooth" });
           }, 150);
         }
 
@@ -1524,21 +2121,24 @@
 
         // --- Scroll Animations ---
         function initScrollAnimations() {
-          const animateElements = document.querySelectorAll('.section > *');
-          
-          const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('in-view');
-              }
-            });
-          }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-          });
+          const animateElements = document.querySelectorAll(".section > *");
+
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("in-view");
+                }
+              });
+            },
+            {
+              threshold: 0.1,
+              rootMargin: "0px 0px -50px 0px",
+            }
+          );
 
           animateElements.forEach((el) => {
-            el.classList.add('content-animate');
+            el.classList.add("content-animate");
             observer.observe(el);
           });
         }
@@ -1554,14 +2154,14 @@
               await navigator.clipboard.writeText(textToCopy);
               const originalContent = copyBtn.innerHTML;
               copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
-              copyBtn.style.background = 'var(--color-success)';
-              copyBtn.style.color = 'white';
+              copyBtn.style.background = "var(--color-success)";
+              copyBtn.style.color = "white";
               copyBtn.title = "Copied!";
-              
+
               setTimeout(() => {
                 copyBtn.innerHTML = originalContent;
-                copyBtn.style.background = '';
-                copyBtn.style.color = '';
+                copyBtn.style.background = "";
+                copyBtn.style.color = "";
                 copyBtn.title = "Copy to clipboard";
               }, 2000);
             } catch (err) {
@@ -1574,25 +2174,37 @@
             }
           } else if (accordionTrigger) {
             const panel = accordionTrigger.nextElementSibling;
-            const isExpanded = accordionTrigger.getAttribute("aria-expanded") === "true";
-            
+            const isExpanded =
+              accordionTrigger.getAttribute("aria-expanded") === "true";
+
             // Close other panels for better UX
-            const allTriggers = document.querySelectorAll('.accordion-trigger');
-            const allPanels = document.querySelectorAll('.accordion-panel');
-            
+            const allTriggers = document.querySelectorAll(".accordion-trigger");
+            const allPanels = document.querySelectorAll(".accordion-panel");
+
             allTriggers.forEach((trigger, index) => {
               if (trigger !== accordionTrigger) {
                 trigger.setAttribute("aria-expanded", "false");
                 allPanels[index].style.maxHeight = "0";
               }
             });
-            
+
             // Toggle current panel
             accordionTrigger.setAttribute("aria-expanded", !isExpanded);
             if (!isExpanded) {
               panel.style.maxHeight = panel.scrollHeight + "px";
             } else {
               panel.style.maxHeight = "0";
+            }
+          } else if (event.target.closest("#changelog-toc-sidebar a")) {
+            event.preventDefault();
+            const link = event.target.closest("a");
+            const targetId = link.getAttribute("href");
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
             }
           }
         });
@@ -1601,12 +2213,12 @@
         document.addEventListener("keydown", (event) => {
           if (event.ctrlKey || event.metaKey) {
             switch (event.key) {
-              case 'k':
+              case "k":
                 event.preventDefault();
                 // Focus first sidebar link
-                document.querySelector('.sidebar-nav a').focus();
+                document.querySelector(".sidebar-nav a").focus();
                 break;
-              case '/':
+              case "/":
                 event.preventDefault();
                 // Could add search functionality here
                 break;
@@ -1615,46 +2227,50 @@
         });
 
         // --- Page Load Handling ---
-        window.addEventListener("popstate", () => loadContent(window.location.hash));
-        
+        window.addEventListener("popstate", () =>
+          loadContent(window.location.hash)
+        );
+
         // Initial load with animation
         setTimeout(() => {
           loadContent(window.location.hash);
         }, 100);
 
         // --- Performance Monitoring ---
-        if ('performance' in window) {
-          window.addEventListener('load', () => {
+        if ("performance" in window) {
+          window.addEventListener("load", () => {
             const loadTime = performance.now();
-            console.log(`🚀 Pulse Dashboard loaded in ${loadTime.toFixed(2)}ms`);
+            console.log(
+              `🚀 Pulse Dashboard loaded in ${loadTime.toFixed(2)}ms`
+            );
           });
         }
 
         // --- Enhanced User Experience Features ---
-        
+
         // Smooth logo loading
         const logo = document.querySelector(".navbar-brand .logo");
         if (logo) {
-          logo.addEventListener('load', () => {
-            logo.style.opacity = '1';
+          logo.addEventListener("load", () => {
+            logo.style.opacity = "1";
           });
         }
 
         // Add subtle parallax to background
-        window.addEventListener('scroll', () => {
+        window.addEventListener("scroll", () => {
           const scrolled = window.pageYOffset;
           const rate = scrolled * -0.5;
-          document.body.style.setProperty('--scroll-offset', `${rate}px`);
+          document.body.style.setProperty("--scroll-offset", `${rate}px`);
         });
 
         // Add intersection observer for lazy loading
         const imageObserver = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
+          entries.forEach((entry) => {
             if (entry.isIntersecting) {
               const img = entry.target;
               if (img.dataset.src) {
                 img.src = img.dataset.src;
-                img.removeAttribute('data-src');
+                img.removeAttribute("data-src");
                 imageObserver.unobserve(img);
               }
             }
@@ -1662,10 +2278,47 @@
         });
 
         // Observe all images for lazy loading
-        document.querySelectorAll('img[data-src]').forEach(img => {
+        document.querySelectorAll("img[data-src]").forEach((img) => {
           imageObserver.observe(img);
         });
       });
+
+      // --- ADD THIS ENTIRE NEW FUNCTION ---
+      function buildChangelogTOC() {
+        const tocContainer = document.getElementById("changelog-toc-sidebar");
+        const contentArea = document.getElementById("content-display-area");
+        if (!tocContainer || !contentArea) return;
+
+        tocContainer.innerHTML = ""; // Clear previous content
+
+        const headers = contentArea.querySelectorAll(".changelog-entry h2");
+        if (headers.length === 0) return;
+
+        const title = document.createElement("h4");
+        title.textContent = "Versions";
+        tocContainer.appendChild(title);
+
+        const list = document.createElement("ul");
+        headers.forEach((header) => {
+          // Sanitize text and create a valid ID
+          const versionText = header.textContent.split("(")[0].trim();
+          const id = versionText
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/\./g, "-");
+          header.id = id; // Assign the ID to the header for scrolling
+
+          const listItem = document.createElement("li");
+          const link = document.createElement("a");
+          link.href = `#${id}`;
+          link.textContent = versionText;
+
+          listItem.appendChild(link);
+          list.appendChild(listItem);
+        });
+
+        tocContainer.appendChild(list);
+      }
     </script>
   </body>
-  </html>
+</html>
