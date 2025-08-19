@@ -268,10 +268,10 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
   }
 
   if (error) {
-     return (
+    return (
       <Alert variant="destructive" className="mt-4 shadow-md">
         <Terminal className="h-4 w-4" />
-        <AlertTitle>Error Fetching Live Test Results</AlertTitle>
+        <AlertTitle>Error Fetching Test Results</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
@@ -282,19 +282,30 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
       <Card className="shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
+            <CardTitle className="text-2xl font-headline text-primary">
+              Test Results
+            </CardTitle>
             {(report?.metadata?.generatedAt || report?.run?.timestamp) && (
               <CardDescription>
-                Last updated: {new Date(report.metadata?.generatedAt || report.run?.timestamp || Date.now()).toLocaleString()}
+                Last updated:{" "}
+                {new Date(
+                  report.metadata?.generatedAt ||
+                    report.run?.timestamp ||
+                    Date.now()
+                ).toLocaleString()}
               </CardDescription>
             )}
           </div>
         </CardHeader>
         <CardContent>
-           <Alert className="shadow-sm rounded-lg">
+          <Alert className="shadow-sm rounded-lg">
             <Info className="h-4 w-4" />
             <AlertTitle>No Test Data</AlertTitle>
-            <AlertDescription>No test results available. Ensure 'playwright-pulse-report.json' exists in 'pulse-report/' and is correctly formatted, or that the data source is providing results.</AlertDescription>
+            <AlertDescription>
+              No test results available. Ensure 'playwright-pulse-report.json'
+              exists in 'pulse-report/' and is correctly formatted, or that the
+              data source is providing results.
+            </AlertDescription>
           </Alert>
         </CardContent>
       </Card>
@@ -305,14 +316,24 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     <Card className="shadow-xl">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-2xl font-headline text-primary">Live Test Results</CardTitle>
+          <CardTitle className="text-2xl font-headline text-primary">
+            Test Results
+          </CardTitle>
           {(report.metadata?.generatedAt || report.run?.timestamp) && (
             <CardDescription>
-              Last updated: {new Date(report.metadata.generatedAt || report.run.timestamp).toLocaleString()}
+              Last updated:{" "}
+              {new Date(
+                report.metadata.generatedAt || report.run.timestamp
+              ).toLocaleString()}
             </CardDescription>
           )}
         </div>
-        <Button onClick={handleExportCsv} variant="outline" size="sm" className="ml-auto rounded-md shadow-md">
+        <Button
+          onClick={handleExportCsv}
+          variant="outline"
+          size="sm"
+          className="ml-auto rounded-md shadow-md"
+        >
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           Export as CSV
         </Button>
@@ -321,14 +342,31 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         <div className="p-6 border rounded-xl bg-muted/50 shadow-lg space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="status-filter" className="text-sm font-medium text-muted-foreground">Filter by Status</Label>
-              <Select value={statusFilter} onValueChange={(value: string) => setStatusFilter(value as TestStatusFilter)}>
-                <SelectTrigger id="status-filter" className="w-full bg-background shadow-inner rounded-md">
+              <Label
+                htmlFor="status-filter"
+                className="text-sm font-medium text-muted-foreground"
+              >
+                Filter by Status
+              </Label>
+              <Select
+                value={statusFilter}
+                onValueChange={(value: string) =>
+                  setStatusFilter(value as TestStatusFilter)
+                }
+              >
+                <SelectTrigger
+                  id="status-filter"
+                  className="w-full bg-background shadow-inner rounded-md"
+                >
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent className="rounded-md">
-                  {testStatuses.map(status => (
-                    <SelectItem key={status} value={status} className="capitalize">
+                  {testStatuses.map((status) => (
+                    <SelectItem
+                      key={status}
+                      value={status}
+                      className="capitalize"
+                    >
                       {status.charAt(0).toUpperCase() + status.slice(1)}
                     </SelectItem>
                   ))}
@@ -336,191 +374,320 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="search-filter" className="text-sm font-medium text-muted-foreground">Search by Name/Suite</Label>
+              <Label
+                htmlFor="search-filter"
+                className="text-sm font-medium text-muted-foreground"
+              >
+                Search by Name/Suite
+              </Label>
               <Input
                 id="search-filter"
                 type="text"
                 placeholder="Enter test or suite name..."
                 value={searchTerm}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setSearchTerm(e.target.value)
+                }
                 className="w-full bg-background shadow-inner rounded-md"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-muted-foreground">Filter by Tags</Label>
+              <Label className="text-sm font-medium text-muted-foreground">
+                Filter by Tags
+              </Label>
               <Popover open={tagPopoverOpen} onOpenChange={setTagPopoverOpen}>
-                  <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full bg-background shadow-inner justify-between rounded-md">
-                          {selectedTags.length > 0 ? `Tags (${selectedTags.length})` : "Select Tags"}
-                          <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                      </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-md" align="start">
-                      <div className="p-2 border-b">
-                          <p className="text-sm font-medium">Filter by Tags</p>
-                      </div>
-                      <ScrollArea className="h-48">
-                          <div className="p-2 space-y-1">
-                          {allTags.length > 0 ? allTags.map(tag => (
-                              <Label key={tag} htmlFor={`tag-${tag}`} className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-accent/10 cursor-pointer">
-                                  <Checkbox
-                                      id={`tag-${tag}`}
-                                      checked={selectedTags.includes(tag)}
-                                      onCheckedChange={(checked: boolean | 'indeterminate') => {
-                                          setSelectedTags(prev =>
-                                              checked === true
-                                                  ? [...prev, tag]
-                                                  : prev.filter(t => t !== tag)
-                                          );
-                                      }}
-                                      className="rounded-sm"
-                                  />
-                                  <span>{tag}</span>
-                              </Label>
-                          )) : <p className="text-xs text-muted-foreground p-2">No tags available in this report.</p>}
-                          </div>
-                      </ScrollArea>
-                      {selectedTags.length > 0 && (
-                          <div className="p-2 border-t flex justify-end">
-                              <Button variant="ghost" size="sm" onClick={() => setSelectedTags([])}>Clear selected</Button>
-                          </div>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full bg-background shadow-inner justify-between rounded-md"
+                  >
+                    {selectedTags.length > 0
+                      ? `Tags (${selectedTags.length})`
+                      : "Select Tags"}
+                    <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[var(--radix-popover-trigger-width)] p-0 rounded-md"
+                  align="start"
+                >
+                  <div className="p-2 border-b">
+                    <p className="text-sm font-medium">Filter by Tags</p>
+                  </div>
+                  <ScrollArea className="h-48">
+                    <div className="p-2 space-y-1">
+                      {allTags.length > 0 ? (
+                        allTags.map((tag) => (
+                          <Label
+                            key={tag}
+                            htmlFor={`tag-${tag}`}
+                            className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-accent/10 cursor-pointer"
+                          >
+                            <Checkbox
+                              id={`tag-${tag}`}
+                              checked={selectedTags.includes(tag)}
+                              onCheckedChange={(
+                                checked: boolean | "indeterminate"
+                              ) => {
+                                setSelectedTags((prev) =>
+                                  checked === true
+                                    ? [...prev, tag]
+                                    : prev.filter((t) => t !== tag)
+                                );
+                              }}
+                              className="rounded-sm"
+                            />
+                            <span>{tag}</span>
+                          </Label>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground p-2">
+                          No tags available in this report.
+                        </p>
                       )}
-                  </PopoverContent>
+                    </div>
+                  </ScrollArea>
+                  {selectedTags.length > 0 && (
+                    <div className="p-2 border-t flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedTags([])}
+                      >
+                        Clear selected
+                      </Button>
+                    </div>
+                  )}
+                </PopoverContent>
               </Popover>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="browser-filter" className="text-sm font-medium text-muted-foreground">Filter by Browser</Label>
-              <Select value={selectedBrowser} onValueChange={setSelectedBrowser}>
-                <SelectTrigger id="browser-filter" className="w-full bg-background shadow-inner rounded-md">
+              <Label
+                htmlFor="browser-filter"
+                className="text-sm font-medium text-muted-foreground"
+              >
+                Filter by Browser
+              </Label>
+              <Select
+                value={selectedBrowser}
+                onValueChange={setSelectedBrowser}
+              >
+                <SelectTrigger
+                  id="browser-filter"
+                  className="w-full bg-background shadow-inner rounded-md"
+                >
                   <SelectValue placeholder="Select browser" />
                 </SelectTrigger>
                 <SelectContent className="rounded-md">
-                  {allBrowsers.map(browser => (
-                    <SelectItem key={browser} value={browser} className="capitalize">
-                      {browser === 'all' ? 'All Browsers' : browser}
+                  {allBrowsers.map((browser) => (
+                    <SelectItem
+                      key={browser}
+                      value={browser}
+                      className="capitalize"
+                    >
+                      {browser === "all" ? "All Browsers" : browser}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="suite-filter" className="text-sm font-medium text-muted-foreground">Filter by Test Suite</Label>
+              <Label
+                htmlFor="suite-filter"
+                className="text-sm font-medium text-muted-foreground"
+              >
+                Filter by Test Suite
+              </Label>
               <Select value={selectedSuite} onValueChange={setSelectedSuite}>
-                <SelectTrigger id="suite-filter" className="w-full bg-background shadow-inner rounded-md">
+                <SelectTrigger
+                  id="suite-filter"
+                  className="w-full bg-background shadow-inner rounded-md"
+                >
                   <SelectValue placeholder="Select test suite" />
                 </SelectTrigger>
                 <SelectContent className="rounded-md">
-                  {allSuites.map(suite => (
-                    <SelectItem key={suite} value={suite} className="capitalize truncate">
-                      {suite === 'all' ? 'All Suites' : (suite.length > 40 ? suite.substring(0, 37) + '...' : suite)}
+                  {allSuites.map((suite) => (
+                    <SelectItem
+                      key={suite}
+                      value={suite}
+                      className="capitalize truncate"
+                    >
+                      {suite === "all"
+                        ? "All Suites"
+                        : suite.length > 40
+                        ? suite.substring(0, 37) + "..."
+                        : suite}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center space-x-2 pt-5"> 
+            <div className="flex items-center space-x-2 pt-5">
               <Checkbox
                 id="retries-filter"
                 checked={showRetriesOnly}
-                onCheckedChange={(checked: boolean | 'indeterminate') => setShowRetriesOnly(Boolean(checked))}
+                onCheckedChange={(checked: boolean | "indeterminate") =>
+                  setShowRetriesOnly(Boolean(checked))
+                }
                 className="rounded-sm"
               />
-              <Label htmlFor="retries-filter" className="text-sm font-medium text-muted-foreground cursor-pointer flex items-center">
-                <Repeat1 className="h-4 w-4 mr-1.5 text-muted-foreground"/>
+              <Label
+                htmlFor="retries-filter"
+                className="text-sm font-medium text-muted-foreground cursor-pointer flex items-center"
+              >
+                <Repeat1 className="h-4 w-4 mr-1.5 text-muted-foreground" />
                 Retries Only
               </Label>
             </div>
           </div>
           {isAnyFilterActive && (
             <div className="mt-4 flex justify-end">
-              <Button variant="ghost" onClick={handleClearAllFilters} className="text-sm rounded-md">
+              <Button
+                variant="ghost"
+                onClick={handleClearAllFilters}
+                className="text-sm rounded-md"
+              >
                 <FilterX className="mr-2 h-4 w-4" />
                 Clear All Filters
               </Button>
             </div>
           )}
         </div>
-        
+
         {selectedTags.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2 items-center">
-                <span className="text-sm text-muted-foreground">Active tags:</span>
-                {selectedTags.map(tag => (
-                    <Badge
-                        key={tag}
-                        variant="secondary"
-                        className="flex items-center rounded-full"
-                    >
-                        {tag}
-                        <button
-                            type="button"
-                            aria-label={`Remove ${tag} filter`}
-                            onClick={() => {
-                                setSelectedTags(prev => prev.filter(t => t !== tag));
-                            }}
-                            className="ml-1.5 p-0.5 rounded-full hover:bg-muted-foreground/20 focus:outline-none focus:ring-1 focus:ring-ring"
-                        >
-                            <XCircle className="h-3.5 w-3.5" />
-                        </button>
-                    </Badge>
-                ))}
-            </div>
+          <div className="mb-4 flex flex-wrap gap-2 items-center">
+            <span className="text-sm text-muted-foreground">Active tags:</span>
+            {selectedTags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="flex items-center rounded-full"
+              >
+                {tag}
+                <button
+                  type="button"
+                  aria-label={`Remove ${tag} filter`}
+                  onClick={() => {
+                    setSelectedTags((prev) => prev.filter((t) => t !== tag));
+                  }}
+                  className="ml-1.5 p-0.5 rounded-full hover:bg-muted-foreground/20 focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <XCircle className="h-3.5 w-3.5" />
+                </button>
+              </Badge>
+            ))}
+          </div>
         )}
 
         {groupedAndFilteredSuites.length > 0 ? (
           <Accordion type="multiple" className="w-full space-y-3">
-            {groupedAndFilteredSuites.map((suite: GroupedSuite, index: number) => (
-              <AccordionItem value={`suite-${suite.title.replace(/\s+/g, '-')}-${index}`} key={`suite-${suite.title.replace(/\s+/g, '-')}-${index}`} className="border rounded-xl shadow-lg bg-card hover:shadow-xl transition-shadow duration-300">
-                <AccordionTrigger className="p-4 hover:no-underline text-left w-full group">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="flex-grow min-w-0">
-                      <h3 
-                        className="text-lg font-semibold group-hover:opacity-80 transition-opacity" 
-                        title={suite.title}
-                        style={{ color: `hsl(var(${suiteColorsCssVars[index % suiteColorsCssVars.length]}))` }}
-                      >
-                        {suite.title}
-                      </h3>
-                      <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
-                        <Badge variant="outline" className="text-xs border-muted-foreground/50">
-                            <ListChecks className="mr-1.5 h-3 w-3 text-muted-foreground" />Total: {suite.stats.total}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs" style={{color: 'hsl(var(--chart-3))', borderColor: 'hsl(var(--chart-3) / 0.5)'}}>
-                            <CheckCircle2 className="mr-1.5 h-3 w-3" />Passed: {suite.stats.passed}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs" style={{color: 'hsl(var(--destructive))', borderColor: 'hsl(var(--destructive) / 0.5)'}}>
-                            <XCircle className="mr-1.5 h-3 w-3" />Failed: {suite.stats.failed}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs" style={{color: 'hsl(var(--accent))', borderColor: 'hsl(var(--accent) / 0.5)'}}>
-                            <SkipForward className="mr-1.5 h-3 w-3" />Skipped: {suite.stats.skipped}
-                        </Badge>
-                        {suite.stats.pending > 0 && (
-                          <Badge variant="outline" className="text-xs" style={{color: 'hsl(var(--primary))', borderColor: 'hsl(var(--primary) / 0.5)'}}>
-                              <Clock className="mr-1.5 h-3 w-3" />Pending: {suite.stats.pending}
+            {groupedAndFilteredSuites.map(
+              (suite: GroupedSuite, index: number) => (
+                <AccordionItem
+                  value={`suite-${suite.title.replace(/\s+/g, "-")}-${index}`}
+                  key={`suite-${suite.title.replace(/\s+/g, "-")}-${index}`}
+                  className="border rounded-xl shadow-lg bg-card hover:shadow-xl transition-shadow duration-300"
+                >
+                  <AccordionTrigger className="p-4 hover:no-underline text-left w-full group">
+                    <div className="flex justify-between items-center w-full">
+                      <div className="flex-grow min-w-0">
+                        <h3
+                          className="text-lg font-semibold group-hover:opacity-80 transition-opacity"
+                          title={suite.title}
+                          style={{
+                            color: `hsl(var(${
+                              suiteColorsCssVars[
+                                index % suiteColorsCssVars.length
+                              ]
+                            }))`,
+                          }}
+                        >
+                          {suite.title}
+                        </h3>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
+                          <Badge
+                            variant="outline"
+                            className="text-xs border-muted-foreground/50"
+                          >
+                            <ListChecks className="mr-1.5 h-3 w-3 text-muted-foreground" />
+                            Total: {suite.stats.total}
                           </Badge>
-                        )}
+                          <Badge
+                            variant="outline"
+                            className="text-xs"
+                            style={{
+                              color: "hsl(var(--chart-3))",
+                              borderColor: "hsl(var(--chart-3) / 0.5)",
+                            }}
+                          >
+                            <CheckCircle2 className="mr-1.5 h-3 w-3" />
+                            Passed: {suite.stats.passed}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className="text-xs"
+                            style={{
+                              color: "hsl(var(--destructive))",
+                              borderColor: "hsl(var(--destructive) / 0.5)",
+                            }}
+                          >
+                            <XCircle className="mr-1.5 h-3 w-3" />
+                            Failed: {suite.stats.failed}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className="text-xs"
+                            style={{
+                              color: "hsl(var(--accent))",
+                              borderColor: "hsl(var(--accent) / 0.5)",
+                            }}
+                          >
+                            <SkipForward className="mr-1.5 h-3 w-3" />
+                            Skipped: {suite.stats.skipped}
+                          </Badge>
+                          {suite.stats.pending > 0 && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs"
+                              style={{
+                                color: "hsl(var(--primary))",
+                                borderColor: "hsl(var(--primary) / 0.5)",
+                              }}
+                            >
+                              <Clock className="mr-1.5 h-3 w-3" />
+                              Pending: {suite.stats.pending}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-4 pt-0">
-                  {suite.tests.length > 0 ? (
-                    <div className="space-y-1 mt-2">
-                      {suite.tests.map(test => (
-                        <TestItem key={test.id} test={test} />
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground mt-2">No tests in this suite match the current filters.</p>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
+                  </AccordionTrigger>
+                  <AccordionContent className="p-4 pt-0">
+                    {suite.tests.length > 0 ? (
+                      <div className="space-y-1 mt-2">
+                        {suite.tests.map((test) => (
+                          <TestItem key={test.id} test={test} />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        No tests in this suite match the current filters.
+                      </p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              )
+            )}
           </Accordion>
         ) : (
-           <div className="text-center py-8">
-             <p className="text-muted-foreground text-lg">No test results match your current filters.</p>
-              <p className="text-sm text-muted-foreground mt-1">Try adjusting the status, search term, or tag filters.</p>
-           </div>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground text-lg">
+              No test results match your current filters.
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Try adjusting the status, search term, or tag filters.
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>

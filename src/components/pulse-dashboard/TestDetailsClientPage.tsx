@@ -15,10 +15,18 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { History } from "lucide-react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -43,7 +51,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { TestStepItemRecursive } from "./TestStepItemRecursive";
 import { getRawHistoricalReports } from "@/app/actions";
 import {
@@ -106,7 +114,7 @@ const HistoryTooltip = ({ active, payload, label }: any) => {
       <div className="bg-card p-3 border border-border rounded-md shadow-lg">
         <p className="label text-sm font-semibold text-foreground">{`Date: ${new Date(
           data.date
-        ).toLocaleDateString()}`}</p>
+        ).toLocaleString()}`}</p>
         <p className="text-xs text-foreground">{`Duration: ${formatDuration(
           data.duration
         )}`}</p>
@@ -225,8 +233,11 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   const router = useRouter();
   const { currentRun, loadingCurrent, errorCurrent } = useTestData();
   const [test, setTest] = useState<DetailedTestResult | null>(null);
+  const [historicalReports, setHistoricalReports] = useState<
+    PlaywrightPulseReport[]
+  >([]);
   const [testHistory, setTestHistory] = useState<TestRunHistoryData[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [errorHistory, setErrorHistory] = useState<string | null>(null);
   const historyChartRef = useRef<HTMLDivElement>(null);
   const [aiSuggestion, setAiSuggestion] = useState<any>(null);
@@ -234,6 +245,16 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   const [aiSuggestionError, setAiSuggestionError] = useState<string | null>(
     null
   );
+  const [historyFetched, setHistoryFetched] = useState(false);
+  const [selectedRunTimestamp, setSelectedRunTimestamp] = useState<
+    string | "current"
+  >("current");
+  const initialTest = useMemo(() => {
+    return (
+      currentRun?.results?.find((t: DetailedTestResult) => t.id === testId) ||
+      null
+    );
+  }, [currentRun, testId]);
 
   const handleGenerateSuggestion = async () => {
     if (!test) return;
@@ -278,52 +299,77 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   };
 
   useEffect(() => {
-    if (currentRun?.results) {
-      const foundTest = currentRun.results.find(
-        (t: DetailedTestResult) => t.id === testId
+    setTest(initialTest);
+  }, [initialTest]);
+
+  const fetchTestHistory = useCallback(async () => {
+    if (
+      !testId ||
+      historyFetched ||
+      !initialTest?.suiteName ||
+      !currentRun?.run?.timestamp
+    )
+      return;
+
+    setLoadingHistory(true);
+    setErrorHistory(null);
+    try {
+      const allHistoricalReports: PlaywrightPulseReport[] =
+        await getRawHistoricalReports();
+
+      // Filter out the current run from the historical list to prevent duplicates
+      const filteredReports = allHistoricalReports.filter(
+        (report) => report.run.timestamp !== currentRun.run.timestamp
       );
-      setTest(foundTest || null);
+
+      setHistoricalReports(filteredReports);
+
+      const historyData: TestRunHistoryData[] = [];
+      filteredReports.forEach((report) => {
+        const historicalTest = report.results.find(
+          (r: DetailedTestResult) =>
+            r.id === testId && r.suiteName === initialTest.suiteName
+        );
+        if (historicalTest) {
+          historyData.push({
+            date: report.run.timestamp,
+            duration: historicalTest.duration,
+            status: historicalTest.status,
+          });
+        }
+      });
+
+      historyData.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      setTestHistory(historyData);
+      setHistoryFetched(true);
+    } catch (error) {
+      console.error("Error fetching test history:", error);
+      setErrorHistory(
+        error instanceof Error ? error.message : "Failed to load test history"
+      );
+    } finally {
+      setLoadingHistory(false);
     }
-  }, [currentRun, testId]);
+  }, [testId, historyFetched, initialTest, currentRun]);
 
   useEffect(() => {
-    if (!testId) return;
-
-    const fetchTestHistory = async () => {
-      setLoadingHistory(true);
-      setErrorHistory(null);
-      try {
-        const rawReports: PlaywrightPulseReport[] =
-          await getRawHistoricalReports();
-        const historyData: TestRunHistoryData[] = [];
-        rawReports.forEach((report) => {
-          const historicalTest = report.results.find(
-            (r: DetailedTestResult) => r.id === testId
-          );
-          if (historicalTest) {
-            historyData.push({
-              date: report.run.timestamp,
-              duration: historicalTest.duration,
-              status: historicalTest.status,
-            });
-          }
-        });
-        historyData.sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    if (selectedRunTimestamp === "current") {
+      setTest(initialTest);
+    } else {
+      const report = historicalReports.find(
+        (r) => r.run.timestamp === selectedRunTimestamp
+      );
+      if (report?.results && initialTest) {
+        const foundTest = report.results.find(
+          (t: DetailedTestResult) =>
+            t.id === testId && t.suiteName === initialTest.suiteName
         );
-        setTestHistory(historyData);
-      } catch (error) {
-        console.error("Error fetching test history:", error);
-        setErrorHistory(
-          error instanceof Error ? error.message : "Failed to load test history"
-        );
-      } finally {
-        setLoadingHistory(false);
+        setTest(foundTest || null);
       }
-    };
-
-    fetchTestHistory();
-  }, [testId]);
+    }
+  }, [selectedRunTimestamp, initialTest, historicalReports, testId]);
 
   const screenshotAttachments: DisplayAttachment[] = useMemo(() => {
     if (!test || !Array.isArray(test.screenshots)) return [];
@@ -390,8 +436,10 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   );
   const textCsvAttachments: DisplayAttachment[] = useMemo(
     () =>
-      allOtherAttachments.filter((a) =>
-        a.contentType.toLowerCase().startsWith("text/")
+      allOtherAttachments.filter(
+        (a) =>
+          a.contentType.toLowerCase().startsWith("text/") ||
+          a.contentType.toLowerCase().includes("csv")
       ),
     [allOtherAttachments]
   );
@@ -426,6 +474,21 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     traceAttachment,
     allOtherAttachments,
   ]);
+
+  // Helper function to get color class based on test status
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case "passed":
+        return "bg-green-500";
+      case "failed":
+      case "timedOut":
+        return "bg-red-500";
+      case "skipped":
+        return "bg-yellow-500";
+      default:
+        return "bg-gray-400";
+    }
+  };
 
   const isFailedTest = test?.status === "failed" || test?.status === "timedOut";
 
@@ -477,8 +540,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         </Alert>
         <Button
           onClick={() => router.push("/")}
-          variant="outline"
-          className="mt-6 rounded-lg"
+          // No variant needed, we are applying custom styles
+          className="mt-6 inline-flex items-center justify-center rounded-xl border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-lg hover:bg-primary hover:text-primary-foreground hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
         </Button>
@@ -492,9 +555,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     <div className="container mx-auto px-4 py-8 space-y-6">
       <Button
         onClick={() => router.push("/")}
-        variant="outline"
-        size="sm"
-        className="mb-6 rounded-lg"
+        // No variant needed, we are applying custom styles
+        className="mt-6 inline-flex items-center justify-center rounded-xl border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-lg hover:bg-primary hover:text-primary-foreground hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       >
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
       </Button>
@@ -516,19 +578,25 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 </CardDescription>
               )}
               <p className="text-sm text-muted-foreground mt-2">
-                Latest Run Date:{" "}
-                {loadingCurrent ? (
-                  <span className="text-muted-foreground">Loading...</span>
-                ) : currentRun?.run?.timestamp ? (
-                  <span className="font-medium">
-                    {new Date(currentRun.run.timestamp).toLocaleString()}
-                  </span>
-                ) : errorCurrent && !currentRun?.run?.timestamp ? (
-                  <span className="text-destructive font-medium">
-                    Error loading date
-                  </span>
+                Run Date:{" "}
+                {selectedRunTimestamp === "current" ? (
+                  loadingCurrent ? (
+                    <span className="text-muted-foreground">Loading...</span>
+                  ) : currentRun?.run?.timestamp ? (
+                    <span className="font-medium">
+                      {new Date(currentRun.run.timestamp).toLocaleString()}
+                    </span>
+                  ) : errorCurrent && !currentRun?.run?.timestamp ? (
+                    <span className="text-destructive font-medium">
+                      Error loading date
+                    </span>
+                  ) : (
+                    <span className="font-medium">Not available</span>
+                  )
                 ) : (
-                  <span className="font-medium">Not available</span>
+                  <span className="font-medium">
+                    {new Date(selectedRunTimestamp).toLocaleString()}
+                  </span>
                 )}
               </p>
               <div className="mt-1 text-xs text-muted-foreground">
@@ -565,9 +633,71 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               )}
             </div>
           </div>
+          <div className="mt-4">
+            <Select
+              value={selectedRunTimestamp}
+              onValueChange={setSelectedRunTimestamp}
+              onOpenChange={(isOpen) => {
+                if (isOpen && !historyFetched) {
+                  fetchTestHistory();
+                }
+              }}
+            >
+              <SelectTrigger className="w-full md:w-[350px] h-12 rounded-xl bg-card/50 border-2 border-transparent hover:border-primary/30 focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background transition-colors duration-200 group">
+                <div className="flex items-center gap-3">
+                  <History className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
+                  <SelectValue placeholder="Switch to a past run" />
+                </div>
+              </SelectTrigger>
+              <SelectContent
+                sideOffset={8}
+                className="bg-card/80 backdrop-blur-lg border border-border/50 rounded-xl shadow-2xl data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+              >
+                <SelectItem value="current" className="rounded-lg">
+                  Current Run
+                </SelectItem>
+                {loadingHistory && (
+                  <SelectItem value="loading" disabled className="rounded-lg">
+                    Loading history...
+                  </SelectItem>
+                )}
+                {testHistory.map((run) => (
+                  <SelectItem
+                    key={run.date}
+                    value={run.date}
+                    className="rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={cn(
+                          "h-2 w-2 rounded-full",
+                          getStatusColorClass(run.status)
+                        )}
+                        title={`Status: ${run.status}`}
+                      />
+                      <span className="text-sm">
+                        {new Date(run.date).toLocaleString()} -{" "}
+                        <span className="font-medium capitalize">
+                          {run.status}
+                        </span>
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="steps" className="w-full">
+          <Tabs
+            defaultValue="steps"
+            className="w-full"
+            onValueChange={(value) => {
+              if (value === "history" && !historyFetched) {
+                fetchTestHistory();
+              }
+            }}
+          >
             <TabsList
               className={cn(
                 "grid w-full mb-4 rounded-lg",
@@ -1026,16 +1156,19 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   <AlertDescription>{errorHistory}</AlertDescription>
                 </Alert>
               )}
-              {!loadingHistory && !errorHistory && testHistory.length === 0 && (
-                <Alert className="rounded-lg">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>No Historical Data</AlertTitle>
-                  <AlertDescription>
-                    No historical run data found for this specific test (ID:{" "}
-                    {testId}).
-                  </AlertDescription>
-                </Alert>
-              )}
+              {!loadingHistory &&
+                !errorHistory &&
+                historyFetched &&
+                testHistory.length === 0 && (
+                  <Alert className="rounded-lg">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>No Historical Data</AlertTitle>
+                    <AlertDescription>
+                      No historical run data found for this specific test (ID:{" "}
+                      {testId}) in this suite.
+                    </AlertDescription>
+                  </Alert>
+                )}
               {!loadingHistory && !errorHistory && testHistory.length > 0 && (
                 <div
                   ref={historyChartRef}
@@ -1043,7 +1176,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsLineChart
-                      data={testHistory}
+                      data={[...testHistory].reverse()} // Show oldest to newest
                       margin={{ top: 5, right: 20, left: -20, bottom: 5 }}
                     >
                       <CartesianGrid
