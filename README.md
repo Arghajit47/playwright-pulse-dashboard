@@ -1,6 +1,8 @@
 
 # Pulse Dashboard
 
+![pulse dashboard](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-report/pulse_dashboard_full_icon.png)
+
 **Pulse Dashboard** is a reusable Next.js component and standalone CLI tool designed to provide real-time monitoring and historical analysis of Playwright test executions. It helps development and QA teams to quickly identify issues, track test performance over time, and gain insights into failure patterns.
 
 It can be: **Run as a Standalone CLI Tool**: Install globally or use with `npx` to quickly view reports.

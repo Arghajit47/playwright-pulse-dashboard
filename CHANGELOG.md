@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.5] - 2025-11-22
+
+### Fixed
+- **Package Vulnerabilities**: Resolved security vulnerabilities in project dependencies to ensure enhanced application security
+- **Next.js Update**: Upgraded Next.js to version 15.5.6 to address security and performance improvements
+- **README Update**: Updated `README.md` to include new logo image for Pulse Dashboard
+
 ## [1.1.4] - 2025-08-20
 
 ### Added
