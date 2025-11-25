@@ -1,94 +1,2375 @@
+<!DOCTYPE html>
+<html lang="en" class="light-theme">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Elevate your Playwright test analysis with the Pulse Dashboard. Our official guide shows you how to monitor results, track trends, and debug failures faster than ever."
+    />
+    <title data-rh="true">Pulse Dashboard</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://i.postimg.cc/v817w4sg/logo.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="https://i.postimg.cc/v817w4sg/logo.png"
+    />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Icon Font -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
 
-# Pulse Dashboard
+    <style>
+      /* --- CSS Variables --- */
+      :root {
+        --font-sans: "Inter", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+        --navbar-height: 70px;
+        --sidebar-width: 320px;
+        --border-radius: 16px;
+        --border-radius-lg: 24px;
+        --spacing-xs: 8px;
+        --spacing-sm: 16px;
+        --spacing-md: 24px;
+        --spacing-lg: 32px;
+        --spacing-xl: 48px;
+        --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12),
+          0 1px 2px rgba(0, 0, 0, 0.24);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07),
+          0 2px 4px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1),
+          0 4px 6px rgba(0, 0, 0, 0.05);
+        --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+      }
 
-[![NPM Version](https://img.shields.io/npm/v/pulse-dashboard.svg)](https://www.npmjs.com/package/pulse-dashboard)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![NPM Downloads](https://img.shields.io/npm/dm/pulse-dashboard.svg)](https://www.npmjs.com/package/pulse-dashboard)
+      .light-theme {
+        --color-bg: #fafbfc;
+        --color-bg-secondary: #f4f6f8;
+        --color-bg-content: #ffffff;
+        --color-bg-glass: rgba(255, 255, 255, 0.8);
+        --color-text-primary: #0f172a;
+        --color-text-secondary: #475569;
+        --color-text-muted: #64748b;
+        --color-primary: #6366f1;
+        --color-primary-light: #a5b4fc;
+        --color-primary-dark: #4338ca;
+        --color-accent: #f59e0b;
+        --color-success: #10b981;
+        --color-warning: #f59e0b;
+        --color-error: #ef4444;
+        --color-border: #e2e8f0;
+        --color-border-light: #f1f5f9;
+        --color-hover: #f8fafc;
+        --color-active: #f1f5f9;
+        --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(255, 255, 255, 0.2);
+      }
 
-![pulse dashboard](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-report/pulse_dashboard_full_icon.png)
+      .dark-theme {
+        --color-bg: #0a0e1a;
+        --color-bg-secondary: #111827;
+        --color-bg-content: #1e293b;
+        --color-bg-glass: rgba(30, 41, 59, 0.8);
+        --color-text-primary: #f8fafc;
+        --color-text-secondary: #cbd5e1;
+        --color-text-muted: #94a3b8;
+        --color-primary: #818cf8;
+        --color-primary-light: #c7d2fe;
+        --color-primary-dark: #6366f1;
+        --color-accent: #fbbf24;
+        --color-success: #34d399;
+        --color-warning: #fbbf24;
+        --color-error: #f87171;
+        --color-border: #334155;
+        --color-border-light: #475569;
+        --color-hover: #334155;
+        --color-active: #475569;
+        --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --glass-bg: rgba(30, 41, 59, 0.85);
+        --glass-border: rgba(255, 255, 255, 0.1);
+      }
 
-**Pulse Dashboard** is a reusable Next.js component and standalone CLI tool designed to provide real-time monitoring and historical analysis of Playwright test executions. It helps development and QA teams to quickly identify issues, track test performance over time, and gain insights into failure patterns.
+      /* --- Global Styles --- */
+      * {
+        box-sizing: border-box;
+      }
 
-It can be: **Run as a Standalone CLI Tool**: Install globally or use with `npx` to quickly view reports.
+      html {
+        scroll-behavior: smooth;
+      }
 
-[Note: **Pulse Dashboard** uses playwright-pulse-report generated data]
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: var(--font-sans);
+        background: var(--color-bg);
+        color: var(--color-text-primary);
+        line-height: 1.6;
+        font-weight: 400;
+        transition: all var(--transition-base);
+        overflow-x: hidden;
+      }
 
-## Key Features
+      /* Animated background */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+            circle at 20% 20%,
+            rgba(99, 102, 241, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 80%,
+            rgba(168, 85, 247, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 60%,
+            rgba(59, 130, 246, 0.1) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+        z-index: -1;
+        animation: float 20s ease-in-out infinite;
+      }
 
-[![pulse-dashboard-key-features](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg)](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg)
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        33% {
+          transform: translateY(-20px) rotate(1deg);
+        }
+        66% {
+          transform: translateY(-10px) rotate(-1deg);
+        }
+      }
 
-*   **Real-time Dashboard**: View summary metrics (total, passed, failed, skipped, duration), test distribution charts, and system information from the latest test run.
-*   **Test Results**: Browse and filter test results by status, name, suite, tags, and browser. View detailed information for each test, including execution steps, error messages, and retries.
-*   **Trend Analysis**: Visualize historical data for test outcomes and duration over time to identify patterns and regressions.
-*   **Flaky Test Analysis**: Identify tests that have shown inconsistent pass/fail behavior across historical runs.
-*   **Failure Categorization**: Group common failure types based on error messages to quickly pinpoint systemic issues.
-*   **Attachment Viewing**:
-    *   **Screenshots**: Displays images captured during test execution (sourced from the `screenshots: string[]` field in each test result).
-    *   **Videos**: Allows viewing of video recordings of test runs (sourced from the `videoPath: string[]` field).
-    *   **Trace Files**: Provides download links for Playwright trace files for in-depth debugging (sourced from the `tracePath: string` field).
-    *   **Other File Types**: The UI includes tabs for HTML, PDF, JSON, Text/CSV, and other generic file types. *Note: To populate these tabs, your `playwright-pulse-report.json` would need to include an `attachments` array (or similar structured data) within each test result, where each element is an object like `{ name: string, path: string, contentType: string }`. Currently, these specific tabs are not populated directly from the `screenshots`, `videoPath`, or `tracePath` fields.*
-*   **Export to CSV**: Download the current run's test results as a CSV file for external analysis.
-*   **Customizable Theme**: Toggle between light and dark modes for optimal viewing.
-*   **Responsive Design**: Access the dashboard on various devices.
+      /* --- Enhanced Navbar --- */
+      .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--navbar-height);
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--spacing-lg);
+        z-index: 1000;
+        transition: all var(--transition-base);
+      }
 
-## How to Use Pulse Dashboard
+      .navbar::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(99, 102, 241, 0.05) 50%,
+          transparent 100%
+        );
+        pointer-events: none;
+      }
 
-### 1. As a Standalone CLI Tool (Recommended for quick report viewing)
+      .navbar-left {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        z-index: 1;
+      }
 
-Install the package globally or use `npx` to run the dashboard directly.
+      .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 12px;
+        transition: all var(--transition-base);
+        position: relative;
+        overflow: hidden;
+      }
 
-**Prerequisites:**
-*   Node.js and npm/npx installed.
-*   playwright installed.
-*   Playwright-pulse-report npm package integrated into the playwright test repository (`playwright-pulse-report.json` and optional `history/trend-*.json` files) organized in a `pulse-report` directory.
+      .navbar-brand::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(99, 102, 241, 0.1),
+          transparent
+        );
+        transition: left 0.6s;
+      }
 
-**Installation & Usage:**
+      .navbar-brand:hover::before {
+        left: 100%;
+      }
 
-*   **Using npx (Recommended for easy, one-time use):**
-    Navigate to your project directory that contains the `pulse-report` folder (with your `playwright-pulse-report.json` inside it), and run:
+      .navbar-brand .logo {
+        height: 44px;
+        width: auto;
+        filter: drop-shadow(0 4px 8px rgba(99, 102, 241, 0.3));
+        transition: all var(--transition-base);
+      }
 
-    ```bash
-    npx pulse-dashboard
-    ```
+      .navbar-brand:hover .logo {
+        transform: scale(1.05) rotate(2deg);
+      }
 
-    This will download and run the latest version of Pulse Dashboard without a global installation.
+      .navbar-brand .title {
+        font-weight: 700;
+        font-size: 1.4rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+      }
 
-    **[NOTE: user does not need to navigate inside `pulse-report` folder]**
+      /* --- Enhanced Sidebar --- */
+      .sidebar {
+        position: fixed;
+        top: var(--navbar-height);
+        left: 0;
+        width: var(--sidebar-width);
+        height: calc(100vh - var(--navbar-height));
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-right: 1px solid var(--glass-border);
+        padding: var(--spacing-lg);
+        overflow-y: auto;
+        z-index: 999;
+        transition: all var(--transition-base);
+      }
 
-*   **Global Installation (if you use it frequently):**
+      .sidebar::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(99, 102, 241, 0.02) 0%,
+          transparent 50%,
+          rgba(168, 85, 247, 0.02) 100%
+        );
+        pointer-events: none;
+      }
 
-    ```bash
-    npm install -g pulse-dashboard
-    ```
+      .sidebar-nav {
+        position: relative;
+        z-index: 1;
+      }
 
-    Then, navigate to your project directory that contains the `pulse-report` folder (not inside `pulse-report` folder) and run:
+      .sidebar-nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
 
-    ```bash
-    npm run pulse-dashboard
-    ```
+      .sidebar-nav li {
+        margin-bottom: 4px;
+      }
 
-The dashboard will start (usually on `http://localhost:9002`) and serve data from the `pulse-report` directory located in your current working directory.
+      .sidebar-nav a {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        border-radius: 12px;
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all var(--transition-base);
+        position: relative;
+        overflow: hidden;
+      }
 
-**Data Directory Structure for CLI Usage:**
-When you run `pulse-dashboard` or `npx pulse-dashboard`, it expects the following structure in the directory **from where you run the command**:
+      .sidebar-nav a::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--gradient-primary);
+        opacity: 0.1;
+        transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
 
-[![pulse-dashboard-client-folder-structure](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-client-folder-structure.svg)](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-client-folder-structure.svg)
+      .sidebar-nav a:hover::before,
+      .sidebar-nav a.active::before {
+        left: 0;
+      }
 
-## Technical Stack (of this Dashboard Project/Component Package)
+      .sidebar-nav a:hover,
+      .sidebar-nav a.active {
+        color: var(--color-primary);
+        background: var(--color-hover);
+        border: 1px solid var(--color-border-light);
+        transform: translateX(4px);
+        box-shadow: var(--shadow-md);
+      }
 
-[![pulse-dashboard-framework](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-framework.svg)](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-framework.svg)
+      .sidebar-nav a.active {
+        background: var(--color-primary-light);
+        color: var(--color-primary-dark);
+        font-weight: 600;
+      }
 
-## NPM Scripts (for developing this project)
+      /* --- Main Content Area --- */
+      .docs-wrapper {
+        display: flex;
+        padding-top: var(--navbar-height);
+        min-height: 100vh;
+      }
 
--   `npm run pulse-dashboard`: Starts the Next.js development server for standalone source viewing.
+      main {
+        flex: 1;
+        margin-left: var(--sidebar-width);
+        display: flex;
+        flex-direction: column;
+        transition: margin-left var(--transition-base);
+      }
 
-## Thank You
+      .main-content-container {
+        max-width: 900px;
+        padding: var(--spacing-xl) var(--spacing-lg);
+        flex: 1;
+      }
 
-Special Thanks to **[@Suman Vishwakarma](https://www.linkedin.com/in/suman-vishwakarma-426108185/)** for continuous UAT feedback and **[@Sagnik Ghosh](https://www.linkedin.com/in/sagnikghosh99/)** for continuous development related help.
+      /* --- Enhanced Typography --- */
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin: 0;
+        line-height: 1.2;
+      }
 
-## **[View the Live Documentation](https://arghajit47.github.io/playwright-pulse-dashboard/)**
+      h1 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 800;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: var(--spacing-lg);
+        position: relative;
+        animation: fadeInUp 0.8s ease-out;
+      }
 
-## License
+      h1::after {
+        content: "";
+        position: absolute;
+        bottom: -12px;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background: var(--gradient-primary);
+        border-radius: 2px;
+        animation: expandWidth 1s ease-out 0.5s both;
+      }
 
-This project is licensed under the Apache 2.0 License.
-# playwright-pulse-dashboard
+      h2 {
+        font-size: 2.2rem;
+        margin-top: var(--spacing-xl);
+        margin-bottom: var(--spacing-md);
+        position: relative;
+        animation: fadeInUp 0.6s ease-out;
+      }
+
+      h2::before {
+        content: "";
+        position: absolute;
+        left: -20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 30px;
+        background: var(--gradient-accent);
+        border-radius: 2px;
+        opacity: 0.7;
+      }
+
+      h3 {
+        font-size: 1.5rem;
+        margin-top: var(--spacing-lg);
+        margin-bottom: var(--spacing-sm);
+        color: var(--color-primary);
+      }
+
+      p {
+        color: var(--color-text-secondary);
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.05rem;
+        animation: fadeIn 0.8s ease-out;
+      }
+
+      /* --- Enhanced Code Blocks --- */
+      code {
+        background: var(--color-bg-secondary);
+        color: var(--color-primary);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        font-weight: 500;
+        border: 1px solid var(--color-border);
+        transition: all var(--transition-fast);
+      }
+
+      pre {
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-md);
+        overflow-x: auto;
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+        box-shadow: var(--shadow-md);
+        position: relative;
+        transition: all var(--transition-base);
+      }
+
+      pre:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
+      }
+
+      .copyable-code {
+        position: relative;
+        margin: var(--spacing-md) 0;
+        animation: slideInUp 0.6s ease-out;
+      }
+
+      .copy-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        transition: all var(--transition-fast);
+        backdrop-filter: blur(10px);
+      }
+
+      .copy-btn:hover {
+        background: var(--color-primary);
+        color: white;
+        transform: scale(1.05);
+        box-shadow: var(--shadow-md);
+      }
+
+      /* --- Enhanced Images --- */
+      .doc-image {
+        width: 100%;
+        max-width: 100%;
+        border-radius: var(--border-radius);
+        margin: var(--spacing-lg) 0;
+        box-shadow: var(--shadow-xl);
+        transition: all var(--transition-base);
+        animation: fadeInScale 0.8s ease-out;
+        border: 1px solid var(--color-border-light);
+      }
+
+      .doc-image:hover {
+        transform: scale(1.02);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+      }
+
+      /* --- Enhanced Theme Toggle --- */
+      .theme-toggle {
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 12px;
+        cursor: pointer;
+        color: var(--color-text-secondary);
+        transition: all var(--transition-base);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--gradient-accent);
+        opacity: 0.1;
+        transition: left 0.4s;
+      }
+
+      .theme-toggle:hover::before {
+        left: 0;
+      }
+
+      .theme-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: var(--shadow-lg);
+        color: var(--color-primary);
+      }
+
+      /* --- Enhanced Accordion --- */
+      .accordion-container {
+        margin: var(--spacing-xl) 0;
+      }
+
+      .accordion-item {
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        margin-bottom: var(--spacing-sm);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: all var(--transition-base);
+        animation: slideInUp 0.6s ease-out;
+      }
+
+      .accordion-item:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+      }
+
+      .accordion-trigger {
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        padding: var(--spacing-md);
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all var(--transition-base);
+        position: relative;
+      }
+
+      .accordion-trigger::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--gradient-primary);
+        transform: scaleY(0);
+        transition: transform var(--transition-base);
+      }
+
+      .accordion-trigger:hover::before,
+      .accordion-trigger[aria-expanded="true"]::before {
+        transform: scaleY(1);
+      }
+
+      .accordion-trigger:hover {
+        background: var(--color-hover);
+        padding-left: calc(var(--spacing-md) + 8px);
+      }
+
+      .accordion-icon {
+        transition: all var(--transition-base);
+        color: var(--color-primary);
+        font-size: 1rem;
+      }
+
+      .accordion-trigger[aria-expanded="true"] .accordion-icon {
+        transform: rotate(180deg);
+        color: var(--color-accent);
+      }
+
+      .accordion-panel {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height var(--transition-base);
+      }
+
+      .accordion-panel-content {
+        padding: 0 var(--spacing-md) var(--spacing-md);
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      /* --- Enhanced Lists --- */
+      ul {
+        padding-left: 0;
+      }
+
+      li {
+        position: relative;
+        margin-bottom: 12px;
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+      }
+
+      li strong {
+        color: var(--color-text-primary);
+        font-weight: 600;
+      }
+
+      /* --- Enhanced Footer --- */
+      footer {
+        background: var(--color-bg-content);
+        border-top: 1px solid var(--color-border);
+        padding: var(--spacing-xl);
+        margin-top: var(--spacing-xl);
+        position: relative;
+      }
+
+      footer::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-primary);
+        opacity: 0.5;
+      }
+
+      .footer-content {
+        text-align: center;
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .footer-content a {
+        color: var(--color-primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all var(--transition-fast);
+        position: relative;
+      }
+
+      .footer-content a::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--gradient-primary);
+        transition: width var(--transition-base);
+      }
+
+      .footer-content a:hover::after {
+        width: 100%;
+      }
+
+      /* --- Mobile Navigation --- */
+      .mobile-nav-toggle {
+        display: none;
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 1.2rem;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        transition: all var(--transition-base);
+      }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity var(--transition-base);
+      }
+
+      /* --- Animations --- */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes expandWidth {
+        from {
+          width: 0;
+        }
+        to {
+          width: 60px;
+        }
+      }
+
+      @keyframes popIn {
+        from {
+          transform: scale(0);
+        }
+        to {
+          transform: scale(1);
+        }
+      }
+
+      /* --- Content Animations --- */
+      .section {
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      .section > * {
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+      }
+
+      .section > *:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .section > *:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .section > *:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .section > *:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+      .section > *:nth-child(5) {
+        animation-delay: 0.5s;
+      }
+
+      /* --- Enhanced Responsive Design --- */
+      @media (max-width: 1200px) {
+        :root {
+          --sidebar-width: 280px;
+        }
+
+        .main-content-container {
+          max-width: 800px;
+        }
+      }
+
+      @media (max-width: 992px) {
+        .mobile-nav-toggle {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .mobile-nav-toggle:hover {
+          background: var(--color-hover);
+          transform: scale(1.1);
+        }
+
+        .navbar {
+          padding: 0 var(--spacing-sm);
+        }
+
+        .sidebar {
+          transform: translateX(-100%);
+          border-right: none;
+          box-shadow: none;
+        }
+
+        body.sidebar-open .sidebar {
+          transform: translateX(0);
+          box-shadow: var(--shadow-xl);
+        }
+
+        body.sidebar-open .sidebar-overlay {
+          display: block;
+          opacity: 1;
+        }
+
+        main {
+          margin-left: 0;
+        }
+
+        .main-content-container {
+          padding: var(--spacing-md) var(--spacing-sm);
+        }
+
+        h1 {
+          font-size: 2.5rem;
+        }
+
+        h2 {
+          font-size: 1.8rem;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .navbar-brand .title {
+          display: none;
+        }
+
+        .navbar-left {
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-sm);
+          z-index: 1;
+        }
+
+        .badges {
+          margin: auto;
+          gap: var(--spacing-sm);
+        }
+
+        .main-content-container {
+          padding: var(--spacing-sm);
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        h2 {
+          font-size: 1.5rem;
+        }
+      }
+
+      /* --- Scroll Animations --- */
+      @media (prefers-reduced-motion: no-preference) {
+        .content-animate {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: all 0.6s ease-out;
+        }
+
+        .content-animate.in-view {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* --- Feature Cards --- */
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--spacing-md);
+        margin: var(--spacing-xl) 0;
+      }
+
+      .feature-card {
+        background: var(--color-bg-content);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-md);
+        transition: all var(--transition-base);
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .feature-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 2px;
+        background: var(--gradient-primary);
+        transition: left 0.6s ease-out;
+      }
+
+      .feature-card:hover::before {
+        left: 0;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--color-primary-light);
+      }
+
+      /* --- Loading States --- */
+      .loading-skeleton {
+        background: linear-gradient(
+          90deg,
+          var(--color-bg) 25%,
+          var(--color-hover) 50%,
+          var(--color-bg) 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite;
+        border-radius: var(--border-radius);
+      }
+
+      @keyframes shimmer {
+        0% {
+          background-position: -200% 0;
+        }
+        100% {
+          background-position: 200% 0;
+        }
+      }
+
+      /* --- Accessibility Enhancements --- */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* Focus styles */
+      button:focus,
+      a:focus {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+      }
+
+      /* --- Custom Scrollbar --- */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--color-bg);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--color-border);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--color-primary-light);
+      }
+
+      /* --- Changelog Table of Contents Sidebar --- */
+      .main-with-toc {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-md);
+        flex: 1;
+      }
+
+      .changelog-toc {
+        display: none; /* Hidden by default */
+        width: 220px;
+        flex-shrink: 0;
+        position: sticky;
+        top: calc(var(--navbar-height) + var(--spacing-xl));
+        align-self: flex-start;
+        max-height: calc(100vh - var(--navbar-height) - var(--spacing-xl) * 2);
+        overflow-y: auto;
+        padding-left: var(--spacing-sm);
+      }
+
+      /* This class will be added by JavaScript to show the sidebar */
+      body.changelog-active .changelog-toc {
+        display: block;
+      }
+
+      .changelog-toc h4 {
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin: 0 0 var(--spacing-sm) 0;
+        padding-bottom: var(--spacing-xs);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .changelog-toc ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .changelog-toc li a {
+        display: block;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        border-left: 2px solid var(--color-border);
+        transition: all var(--transition-fast);
+      }
+
+      .changelog-toc li a:hover {
+        color: var(--color-primary);
+        background-color: var(--color-hover);
+        border-left-color: var(--color-primary);
+      }
+
+      /* Hide the TOC on smaller screens to save space */
+      @media (max-width: 1200px) {
+        .changelog-toc {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="navbar-left">
+        <button class="mobile-nav-toggle" aria-label="Open navigation">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <a href="#getting-started" class="navbar-brand">
+          <img
+            src="https://i.postimg.cc/v817w4sg/logo.png"
+            class="logo"
+            alt="Pulse Logo"
+          />
+          <span class="title">Pulse Dashboard</span>
+        </a>
+      </div>
+      <div class="badges">
+        <a href="https://www.npmjs.com/package/pulse-dashboard">
+          <img
+            src="https://img.shields.io/npm/v/pulse-dashboard.svg"
+            alt="NPM Version"
+          />
+        </a>
+        <a href="https://www.npmjs.com/package/pulse-dashboard">
+          <img
+            src="https://img.shields.io/npm/dm/pulse-dashboard.svg"
+            alt="NPM Downloads"
+          />
+        </a>
+      </div>
+      <button
+        class="theme-toggle"
+        id="theme-toggle"
+        title="Toggle light/dark mode"
+        aria-label="Toggle theme"
+      ></button>
+    </nav>
+
+    <div class="docs-wrapper">
+      <aside class="sidebar">
+        <nav class="sidebar-nav" aria-label="Documentation navigation">
+          <ul>
+            <li><a href="#getting-started">Getting Started</a></li>
+            <li><a href="#dashboard">Dashboard Overview</a></li>
+            <li><a href="#test-results">Test Results</a></li>
+            <li><a href="#trend-analysis">Trend Analysis</a></li>
+            <li><a href="#flaky-tests">Flaky Tests</a></li>
+            <li>
+              <a href="#failure-categorization">Failure Categorization</a>
+            </li>
+            <li><a href="#test-details-page">Test Details Page</a></li>
+            <li><a href="#changelogs">Changelogs</a></li>
+          </ul>
+        </nav>
+      </aside>
+      <div class="sidebar-overlay"></div>
+
+      <main>
+        <div class="main-with-toc">
+          <div class="main-content-container">
+            <article id="content-display-area"></article>
+          </div>
+          <!-- This is the new sidebar for the changelog versions -->
+          <aside id="changelog-toc-sidebar" class="changelog-toc"></aside>
+        </div>
+        <footer>
+          <div class="footer-content">
+            <p>
+              © 2025 Pulse Dashboard. Crafted by
+              <a
+                href="https://github.com/arghajit47"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Arghajit Singha</a
+              >
+              with precision
+            </p>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <!-- ENHANCED CONTENT TEMPLATES -->
+    <template id="template-getting-started">
+      <header>
+        <h1>Getting Started</h1>
+      </header>
+      <div class="section">
+        <p>
+          <strong>Pulse Dashboard</strong> is a revolutionary Next.js component
+          and standalone CLI tool designed to provide real-time monitoring and
+          historical analysis of Playwright test executions. It empowers
+          development and QA teams to quickly identify issues, track test
+          performance over time, and gain deep insights into failure patterns.
+        </p>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <h3>🖥️ Real-time Monitoring</h3>
+            <p>
+              Watch your tests execute in real-time with live updates and
+              instant feedback on test results.
+            </p>
+          </div>
+          <div class="feature-card">
+            <h3>📊 Historical Analysis</h3>
+            <p>
+              Track performance trends and identify patterns across multiple
+              test runs with rich visualizations.
+            </p>
+          </div>
+          <div class="feature-card">
+            <h3>🔍 Smart Debugging</h3>
+            <p>
+              Advanced failure categorization and AI-powered suggestions to
+              resolve issues faster.
+            </p>
+          </div>
+        </div>
+
+        <p>
+          It can be: <strong>Run as a Standalone CLI Tool</strong>: Install
+          globally or use with <code>npx</code> to quickly view reports.
+        </p>
+        <p>
+          [Note: <strong>Pulse Dashboard</strong> uses playwright-pulse-report
+          generated data]
+        </p>
+
+        <h2>👉🏼 Installation</h2>
+        <p>
+          Getting started with Pulse is simple. You can install it as an npm
+          package and run it with a single command.
+        </p>
+
+        <h3>1. Install the package</h3>
+        <p>Use npm package manager to add Pulse to your project.</p>
+        <div class="copyable-code">
+          <pre><code class="language-bash">npm install pulse-dashboard@latest</code></pre>
+          <button
+            class="copy-btn"
+            data-copy-text="npm install pulse-dashboard@latest"
+            title="Copy to clipboard"
+          >
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        </div>
+
+        <h3>2. Run the dashboard</h3>
+        <p>
+          After installation, start the dashboard using the following npx
+          command from your project's root directory.
+        </p>
+        <div class="copyable-code">
+          <pre><code class="language-bash">npx start-dashboard</code></pre>
+          <button
+            class="copy-btn"
+            data-copy-text="npx start-dashboard"
+            title="Copy to clipboard"
+          >
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        </div>
+
+        <h2>👉🏼 Key Features</h2>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-key-features.svg"
+          alt="Key Features"
+          class="doc-image"
+        />
+
+        <h2>👉🏼 Client Side Folder Structure</h2>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-client-folder-structure.svg"
+          alt="Client Side Folder Structure"
+          class="doc-image"
+        />
+
+        <h2>👉🏼 Technical Stack</h2>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-framework.svg"
+          alt="Technical Stack"
+          class="doc-image"
+        />
+      </div>
+    </template>
+
+    <template id="template-dashboard">
+      <h2>Dashboard Overview</h2>
+      <div class="section">
+        <p>
+          The dashboard provides a high-level, real-time overview of your latest
+          test run. It is the central hub for at-a-glance information about your
+          test suite's health and performance metrics.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard.png"
+          alt="Pulse Dashboard Overview"
+          class="doc-image"
+        />
+        <h3>Key Metrics</h3>
+        <ul>
+          <li>
+            <strong>Summary Cards:</strong> Quick stats on Total, Passed,
+            Failed, and Skipped tests, along with the total duration.
+          </li>
+          <li>
+            <strong>Test Runner System Information:</strong> A detailed preview
+            of the system where the test suite ran.
+          </li>
+          <li>
+            <strong>Charts & Graphs:</strong> Visual breakdowns of test
+            distribution, browser-wise test distribution, slowest tests, and
+            tests per suite.
+          </li>
+          <li>
+            <strong>Worker Utilization:</strong> Real-time status of each test
+            runner worker, showing their current progress and pass/fail rates.
+          </li>
+        </ul>
+      </div>
+    </template>
+
+    <template id="template-test-results">
+      <h2>Test Results</h2>
+      <div class="section">
+        <p>
+          <strong>👉🏼</strong> The Test Results page allows users to browse and
+          filter the outcomes of the latest test run. You can expand each suite
+          to see the individual tests within it.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-results.png"
+          alt="Pulse Test Results Page"
+          class="doc-image"
+        />
+        <p>
+          <strong>👉🏼</strong> Expanded Test Results provides users a quick look
+          at the failed test cases, including properly formatted test error logs
+          and attached failure screenshots.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-details-expanded.png"
+          alt="Pulse Test Results - expanded details Page"
+          class="doc-image"
+        />
+      </div>
+    </template>
+
+    <template id="template-trend-analysis">
+      <h2>Trend Analysis</h2>
+      <div class="section">
+        <p>
+          This page provides historical data visualization, allowing you to
+          track test performance and stability over time with advanced
+          analytics.
+        </p>
+        <p>
+          <strong>👉🏼 Test Outcomes Over Time:</strong> This chart provides
+          detailed analysis of the test suite runs, for current & existing
+          historical run trends, in chronological order.
+        </p>
+        <p>
+          <strong>👉🏼 Test Duration Over Time:</strong> This chart provides total
+          duration of the test suite runs, for current & existing historical run
+          trends, in chronological order.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-trend-analysis.png"
+          alt="Pulse Trend Analysis Page"
+          class="doc-image"
+        />
+      </div>
+    </template>
+
+    <template id="template-flaky-tests">
+      <h2>Flaky Tests</h2>
+      <div class="section">
+        <p>
+          Flaky tests are tests that exhibit inconsistent behavior. This page
+          helps you identify and analyze them by showing their historical
+          pass/fail rates with intelligent pattern recognition.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-flaky-tests.png"
+          alt="Pulse Flaky Tests Page"
+          class="doc-image"
+        />
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-flaky-test-expanded.png"
+          alt="Pulse Flaky Tests Page - expanded details"
+          class="doc-image"
+        />
+      </div>
+    </template>
+
+    <template id="template-failure-categorization">
+      <h2>Failure Categorization</h2>
+      <div class="section">
+        <p>
+          This powerful feature automatically groups failed tests by the common
+          type of error that occurred, helping you quickly identify the most
+          common root causes of failures with AI-powered analysis.
+        </p>
+        <img
+          src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-failure-categorization.png"
+          alt="Pulse Failure Categorization Page"
+          class="doc-image"
+        />
+      </div>
+    </template>
+
+    <template id="template-test-details-page">
+      <h2>Test Details Page</h2>
+      <div class="section">
+        <p>
+          This page provides an in-depth, granular view of a single test
+          execution. It is the primary tool for debugging a specific test
+          failure. The page is organized into several expandable sections for
+          optimal workflow.
+        </p>
+        <div class="accordion-container">
+          <div class="accordion-item">
+            <button
+              class="accordion-trigger"
+              aria-expanded="false"
+              aria-controls="panel-1"
+            >
+              <span>1. Execution Steps</span>
+              <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-panel" id="panel-1" role="region">
+              <div class="accordion-panel-content">
+                <p>
+                  A step-by-step log of every action performed during the test.
+                  Failed steps and error messages are highlighted in red for
+                  easy identification.
+                </p>
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-execution-steps.png"
+                  alt="Test Execution Steps"
+                  class="doc-image"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button
+              class="accordion-trigger"
+              aria-expanded="false"
+              aria-controls="panel-2"
+            >
+              <span>2. Attachments</span>
+              <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-panel" id="panel-2" role="region">
+              <div class="accordion-panel-content">
+                <p>
+                  Access to all artifacts captured during the test run, such as
+                  screenshots on failure, videos of the execution, and detailed
+                  Playwright trace files for debugging. Also provides a visual
+                  scope for <code>test.info().attach()</code> files.
+                </p>
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-json.png"
+                  alt="pulse dashboard attachments json"
+                  class="doc-image"
+                />
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-pdf.png"
+                  alt="pulse dashboard attachments pdf"
+                  class="doc-image"
+                />
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-screenshots.png"
+                  alt="pulse dashboard attachments screenshots"
+                  class="doc-image"
+                />
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-videos.png"
+                  alt="pulse dashboard attachments videos"
+                  class="doc-image"
+                />
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-attachments-text_csv.png"
+                  alt="pulse dashboard attachments text-csv"
+                  class="doc-image"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button
+              class="accordion-trigger"
+              aria-expanded="false"
+              aria-controls="panel-3"
+            >
+              <span>3. Logs</span>
+              <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-panel" id="panel-3" role="region">
+              <div class="accordion-panel-content">
+                <p>
+                  View any console output (from <code>console.log</code>) and
+                  standard error streams that were generated by the test or the
+                  application during the run.
+                </p>
+                <p>
+                  Also, for specific failed test cases, test case snippets are
+                  included in the logs for easy reference.
+                </p>
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-logs-tab.png"
+                  alt="pulse dashboard logs"
+                  class="doc-image"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button
+              class="accordion-trigger"
+              aria-expanded="false"
+              aria-controls="panel-4"
+            >
+              <span>4. Test Run History</span>
+              <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-panel" id="panel-4" role="region">
+              <div class="accordion-panel-content">
+                <p>
+                  A historical view of this specific test's performance and
+                  status across previous runs. This helps identify if a failure
+                  is new, recurring, or intermittent (flaky).
+                </p>
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-test-details-trends.png"
+                  alt="pulse dashboard test run history"
+                  class="doc-image"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button
+              class="accordion-trigger"
+              aria-expanded="false"
+              aria-controls="panel-5"
+            >
+              <span>5. AI Suggestions</span>
+              <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-panel" id="panel-5" role="region">
+              <div class="accordion-panel-content">
+                <p>
+                  Get AI-powered suggestions for fixing failed tests. The AI
+                  analyzes test case names, snippets, and error logs to provide
+                  actionable insights for resolving issues quickly.
+                </p>
+                <div class="feature-card" style="margin: 16px 0">
+                  <p><strong>Note:</strong></p>
+                  <p>
+                    1. AI suggestions are based on the latest version of the
+                    test case.
+                  </p>
+                  <p>
+                    2. AI Suggestion tab is visible for failed test cases only.
+                  </p>
+                </div>
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-ai-generate.png"
+                  alt="pulse dashboard ai generate"
+                  class="doc-image"
+                />
+                <img
+                  src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-dashboard/pulse-dashboard-ai-response.png"
+                  alt="pulse dashboard ai response"
+                  class="doc-image"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ADD THIS ENTIRE TEMPLATE BLOCK -->
+    <template id="template-changelogs">
+      <style>
+        .changelog-entry h2 {
+          display: flex;
+          align-items: baseline;
+          gap: var(--spacing-sm);
+          font-size: 1.8rem;
+          margin-bottom: 0;
+        }
+        .changelog-date {
+          font-size: 1rem;
+          font-weight: 500;
+          color: var(--color-text-muted);
+        }
+        .changelog-entry h3 {
+          font-size: 1.1rem;
+          margin-top: var(--spacing-md);
+          margin-bottom: var(--spacing-sm);
+          display: inline-block;
+          padding: 4px 12px;
+          border-radius: 9999px;
+          font-weight: 600;
+          color: #fff;
+        }
+        .changelog-badge.added {
+          background-color: var(--color-success);
+        }
+        .changelog-badge.changed {
+          background-color: var(--color-primary);
+        }
+        .changelog-badge.fixed {
+          background-color: var(--color-warning);
+        }
+        .changelog-badge.removed {
+          background-color: var(--color-error);
+        }
+        .changelog-entry ul {
+          list-style-type: disc;
+          padding-left: 20px;
+        }
+        .changelog-divider {
+          border: 0;
+          height: 1px;
+          background: var(--color-border);
+          margin: var(--spacing-xl) 0;
+        }
+      </style>
+
+      <header>
+        <h1>Changelogs</h1>
+      </header>
+      <div class="section">
+        <p>
+          All notable changes to this project are documented here, starting with
+          the most recent.
+        </p>
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.5 <span class="changelog-date">(2025-11-22)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Next.js Update</strong>: Upgraded Next.js to version
+              15.5.6 to address security and performance improvements.
+            </li>
+            <li>
+              <strong>README Update</strong>: Included new logo image for Pulse
+              Dashboard.
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              <strong>Package Vulnerabilities</strong>: Security vulnerabilities
+              in project dependencies to ensure enhanced application security
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.4 <span class="changelog-date">(2025-08-20)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Historical Run Navigation</strong>: Added historical run
+              selector dropdown functionality to test details page for improved
+              test run navigation and comparison.
+            </li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>UI Enhancements</strong>: Enhanced test details user
+              interface with redesigned status indicators and visual styling
+              improvements.
+            </li>
+            <li>
+              <strong>Modern Design</strong>: Updated sidebar component design
+              to incorporate glass morphism effects for modern aesthetics.
+            </li>
+            <li>
+              <strong>Terminology Update</strong>: Renamed "Live Test Results"
+              section to "Test Results" to maintain consistent terminology
+              across the application.
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              <strong>CSV Handling</strong>: Resolved issues with CSV attachment
+              filtering functionality and standardized date display format
+              handling.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.3 <span class="changelog-date">(2025-08-15)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>AI Suggestions</strong>: Implemented AI Suggestions
+              sub-tab inside failed test case details page.
+            </li>
+            <li>
+              <strong>Test Case Snippet</strong>: Added
+              <em>Test Case Snippet</em> section containing the failed test
+              cases' entire test snippet, in <code>Test Details > Logs</code>.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.2 <span class="changelog-date">(2025-07-07)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Copy Button</strong>: Implemented copy functionality in
+              the "Test Details" view to copy the console logs and error logs.
+            </li>
+            <li>
+              <strong>Documentation Website</strong>: Added a link to the
+              Documentation website in the settings page for reference.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.1 <span class="changelog-date">(2025-06-21)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Export Test Results as CSV</strong>: Implemented
+              functionality in the "Test Results" view to download the current
+              run's test data as a CSV file.
+            </li>
+            <li>
+              <strong>Responsive Attachment Tabs</strong>: Ensured the
+              attachment type tabs in the "Test Details" view are horizontally
+              scrollable on smaller screens.
+            </li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Attachment Handling Documentation</strong>: Updated
+              <code>README.md</code> to clarify how different attachment types
+              are sourced and displayed.
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>Corrected CSV export filename generation to be more robust.</li>
+            <li>
+              Resolved a runtime error by adding a type check before string
+              operations on <code>videoPath</code>.
+            </li>
+            <li>
+              Ensured case-insensitive matching for attachment properties to
+              improve visibility.
+            </li>
+          </ul>
+        </div>
+
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.0 <span class="changelog-date">(2025-06-16)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Worker Utilization View (Dashboard Overview)</strong>:
+              Replaced the Gantt chart with individual Donut Charts for each
+              worker, rendered using Recharts for better clarity on test
+              distribution per worker.
+            </li>
+          </ul>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Advance System Information (Dashboard Overview)</strong>:
+              Introduced a section detailing the test execution environment,
+              including OS, CPU, Memory, and Node versions.
+            </li>
+            <li>
+              <strong
+                >Advanced Filtering for Worker Donut Charts (Dashboard
+                Overview)</strong
+              >: Added filters for test name, suite, and a checklist to
+              show/hide specific workers.
+            </li>
+          </ul>
+          <h3 class="changelog-badge removed">Removed</h3>
+          <ul>
+            <li>
+              <strong>Highcharts Library</strong>: Completely removed the
+              Highcharts library as a dependency to simplify the charting stack.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.0.0 <span class="changelog-date">(2025-06-14)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Worker Utilization Chart (Dashboard Overview)</strong>:
+              Replaced Highcharts Gantt chart with Google Gantt chart for a
+              cleaner visualization.
+            </li>
+          </ul>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              "Active Worker Count Over Time" chart added to the Trend Analysis
+              view.
+            </li>
+            <li>
+              <code>workerCount</code> field added to the historical trend data
+              type.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.9 <span class="changelog-date">(2025-06-13)</span>
+          </h2>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              Fixed incorrect attachment paths for Screenshots, Video, and
+              Traces in the Test Details view.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.8 <span class="changelog-date">(2025-06-12)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              "Total Tests" line added to the "Test Outcomes Over Time" chart in
+              Trend Analysis view.
+            </li>
+            <li>Tooltip in Trend Analysis now includes "Total Tests" data.</li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              Data fetching strategy in <code>useTestData</code> hook changed
+              from polling to a single fetch on load.
+            </li>
+            <li>
+              Sidebar: Active menu items now have distinct styles for better
+              clarity.
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              Fixed <code>trends.map is not a function</code> error in
+              <code>TrendAnalysis.tsx</code>.
+            </li>
+            <li>Improved resilience in API routes and server actions.</li>
+            <li>
+              Ensured <code>flakinessRate</code> is passed correctly from
+              historical data.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.7 <span class="changelog-date">(2025-05-31)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Major UI Revamp: "Neon Noir & Arctic Sky" Theme</strong>:
+              Implemented new palettes, enhanced card and button styles, and
+              improved skeleton loaders for a unified, modern look.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.6 <span class="changelog-date">(2025-05-25)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              Display "Latest Run Date" in the main dashboard and Test Details
+              page.
+            </li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              Implemented <code>ansiToHtml</code> to correctly render colored
+              console logs in the UI.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.5 <span class="changelog-date">(2025-05-21)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Attachment Handling (Local CLI)</strong>: Centralized
+              asset path resolution to ensure attachment URLs work correctly
+              across all deployment environments.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.4 <span class="changelog-date">(2025-05-17)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              Introduced <code>PULSE_USER_CWD</code> environment variable to
+              help locate the correct working directory.
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              Addressed crashes on API routes due to bad paths or unhandled
+              exceptions.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.3 <span class="changelog-date">(2025-05-10)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>Flaky Tests and Failure Categorization pages.</li>
+            <li>Settings view for theme toggling.</li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              Integrated Recharts for data visualization in Trend Analysis and
+              Dashboard Overview.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.2 <span class="changelog-date">(2025-05-05)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              Dashboard overview charts for test and browser distribution.
+            </li>
+            <li>Structured test display components.</li>
+            <li>Basic light/dark theme persistence.</li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              Restructured dashboard to manage different views and improve
+              layout.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.1 <span class="changelog-date">(2025-04-29)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>Core dashboard component and basic test display views.</li>
+            <li>API routes for current and historical run data.</li>
+            <li><code>useTestData</code> custom hook for data fetching.</li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 0.1.0 <span class="changelog-date">(2025-04-20)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              Initial Next.js application setup with Tailwind CSS and ShadCN UI.
+            </li>
+            <li>CLI entry script for running the dashboard.</li>
+            <li>Basic project configuration files and component structure.</li>
+          </ul>
+        </div>
+      </div>
+    </template>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Enhanced Theme System ---
+        const themeToggle = document.getElementById("theme-toggle");
+        const sunIcon = `<i class="fa-solid fa-sun"></i>`;
+        const moonIcon = `<i class="fa-solid fa-moon"></i>`;
+
+        function setTheme(isLight) {
+          const html = document.documentElement;
+          html.classList.toggle("light-theme", isLight);
+          html.classList.toggle("dark-theme", !isLight);
+          themeToggle.innerHTML = isLight ? moonIcon : sunIcon;
+
+          // Store preference
+          localStorage.setItem("theme", isLight ? "light" : "dark");
+        }
+
+        // Initialize theme from storage or default to light
+        const savedTheme = localStorage.getItem("theme") || "light";
+        setTheme(savedTheme === "light");
+
+        themeToggle.addEventListener("click", () => {
+          const isCurrentlyLight =
+            document.documentElement.classList.contains("light-theme");
+          setTheme(!isCurrentlyLight);
+        });
+
+        // --- Enhanced Mobile Navigation ---
+        const mobileNavToggle = document.querySelector(".mobile-nav-toggle");
+        const sidebarOverlay = document.querySelector(".sidebar-overlay");
+        const body = document.body;
+
+        function toggleSidebar() {
+          body.classList.toggle("sidebar-open");
+
+          // Update aria attributes
+          const isOpen = body.classList.contains("sidebar-open");
+          mobileNavToggle.setAttribute("aria-expanded", isOpen);
+          mobileNavToggle.setAttribute(
+            "aria-label",
+            isOpen ? "Close navigation" : "Open navigation"
+          );
+        }
+
+        mobileNavToggle.addEventListener("click", toggleSidebar);
+        sidebarOverlay.addEventListener("click", toggleSidebar);
+
+        // Close sidebar on escape key
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && body.classList.contains("sidebar-open")) {
+            toggleSidebar();
+          }
+        });
+
+        // --- Enhanced Content Loading & Routing ---
+        const contentDisplay = document.getElementById("content-display-area");
+        const sidebarNav = document.querySelector(".sidebar-nav");
+
+        function loadContent(hash) {
+          // Reset state on every page load
+          document.body.classList.remove("changelog-active");
+          document.getElementById("changelog-toc-sidebar").innerHTML = "";
+
+          const pageId = (hash || "#getting-started").substring(1);
+          const templateId = `template-${pageId}`;
+          const template = document.getElementById(templateId);
+          let targetHash = hash || "#getting-started";
+
+          // Add loading animation
+          contentDisplay.style.opacity = "0";
+          contentDisplay.style.transform = "translateY(20px)";
+
+          setTimeout(() => {
+            contentDisplay.innerHTML = "";
+            if (template) {
+              const content = template.content.cloneNode(true);
+              contentDisplay.appendChild(content);
+
+              // If we are on the changelogs page, show and build the TOC sidebar
+              if (pageId === "changelogs") {
+                document.body.classList.add("changelog-active");
+                buildChangelogTOC();
+              }
+            } else {
+              const fallback = document
+                .getElementById("template-getting-started")
+                .content.cloneNode(true);
+              contentDisplay.appendChild(fallback);
+              targetHash = "#getting-started";
+            }
+
+            updateActiveLink(targetHash);
+
+            // Animate content in
+            requestAnimationFrame(() => {
+              contentDisplay.style.opacity = "1";
+              contentDisplay.style.transform = "translateY(0)";
+            });
+
+            // Initialize scroll animations for new content
+            initScrollAnimations();
+
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }, 150);
+        }
+
+        function updateActiveLink(hash) {
+          sidebarNav.querySelectorAll("a").forEach((link) => {
+            const isActive = link.getAttribute("href") === hash;
+            link.classList.toggle("active", isActive);
+            if (isActive) {
+              link.setAttribute("aria-current", "page");
+            } else {
+              link.removeAttribute("aria-current");
+            }
+          });
+        }
+
+        // Enhanced navigation with smooth transitions
+        sidebarNav.addEventListener("click", (event) => {
+          const link = event.target.closest("a");
+          if (link) {
+            event.preventDefault();
+            const hash = link.getAttribute("href");
+            if (window.location.hash !== hash) {
+              history.pushState(null, "", hash);
+              loadContent(hash);
+            }
+            if (body.classList.contains("sidebar-open")) {
+              toggleSidebar();
+            }
+          }
+        });
+
+        // --- Scroll Animations ---
+        function initScrollAnimations() {
+          const animateElements = document.querySelectorAll(".section > *");
+
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("in-view");
+                }
+              });
+            },
+            {
+              threshold: 0.1,
+              rootMargin: "0px 0px -50px 0px",
+            }
+          );
+
+          animateElements.forEach((el) => {
+            el.classList.add("content-animate");
+            observer.observe(el);
+          });
+        }
+
+        // --- Enhanced Global Event Delegation ---
+        document.addEventListener("click", async (event) => {
+          const copyBtn = event.target.closest(".copy-btn");
+          const accordionTrigger = event.target.closest(".accordion-trigger");
+
+          if (copyBtn) {
+            const textToCopy = copyBtn.dataset.copyText;
+            try {
+              await navigator.clipboard.writeText(textToCopy);
+              const originalContent = copyBtn.innerHTML;
+              copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+              copyBtn.style.background = "var(--color-success)";
+              copyBtn.style.color = "white";
+              copyBtn.title = "Copied!";
+
+              setTimeout(() => {
+                copyBtn.innerHTML = originalContent;
+                copyBtn.style.background = "";
+                copyBtn.style.color = "";
+                copyBtn.title = "Copy to clipboard";
+              }, 2000);
+            } catch (err) {
+              console.error("Failed to copy text:", err);
+              // Fallback for older browsers
+              copyBtn.innerHTML = '<i class="fa-solid fa-exclamation"></i>';
+              setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+              }, 2000);
+            }
+          } else if (accordionTrigger) {
+            const panel = accordionTrigger.nextElementSibling;
+            const isExpanded =
+              accordionTrigger.getAttribute("aria-expanded") === "true";
+
+            // Close other panels for better UX
+            const allTriggers = document.querySelectorAll(".accordion-trigger");
+            const allPanels = document.querySelectorAll(".accordion-panel");
+
+            allTriggers.forEach((trigger, index) => {
+              if (trigger !== accordionTrigger) {
+                trigger.setAttribute("aria-expanded", "false");
+                allPanels[index].style.maxHeight = "0";
+              }
+            });
+
+            // Toggle current panel
+            accordionTrigger.setAttribute("aria-expanded", !isExpanded);
+            if (!isExpanded) {
+              panel.style.maxHeight = panel.scrollHeight + "px";
+            } else {
+              panel.style.maxHeight = "0";
+            }
+          } else if (event.target.closest("#changelog-toc-sidebar a")) {
+            event.preventDefault();
+            const link = event.target.closest("a");
+            const targetId = link.getAttribute("href");
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }
+          }
+        });
+
+        // --- Enhanced Keyboard Navigation ---
+        document.addEventListener("keydown", (event) => {
+          if (event.ctrlKey || event.metaKey) {
+            switch (event.key) {
+              case "k":
+                event.preventDefault();
+                // Focus first sidebar link
+                document.querySelector(".sidebar-nav a").focus();
+                break;
+              case "/":
+                event.preventDefault();
+                // Could add search functionality here
+                break;
+            }
+          }
+        });
+
+        // --- Page Load Handling ---
+        window.addEventListener("popstate", () =>
+          loadContent(window.location.hash)
+        );
+
+        // Initial load with animation
+        setTimeout(() => {
+          loadContent(window.location.hash);
+        }, 100);
+
+        // --- Performance Monitoring ---
+        if ("performance" in window) {
+          window.addEventListener("load", () => {
+            const loadTime = performance.now();
+            console.log(
+              `🚀 Pulse Dashboard loaded in ${loadTime.toFixed(2)}ms`
+            );
+          });
+        }
+
+        // --- Enhanced User Experience Features ---
+
+        // Smooth logo loading
+        const logo = document.querySelector(".navbar-brand .logo");
+        if (logo) {
+          logo.addEventListener("load", () => {
+            logo.style.opacity = "1";
+          });
+        }
+
+        // Add subtle parallax to background
+        window.addEventListener("scroll", () => {
+          const scrolled = window.pageYOffset;
+          const rate = scrolled * -0.5;
+          document.body.style.setProperty("--scroll-offset", `${rate}px`);
+        });
+
+        // Add intersection observer for lazy loading
+        const imageObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              if (img.dataset.src) {
+                img.src = img.dataset.src;
+                img.removeAttribute("data-src");
+                imageObserver.unobserve(img);
+              }
+            }
+          });
+        });
+
+        // Observe all images for lazy loading
+        document.querySelectorAll("img[data-src]").forEach((img) => {
+          imageObserver.observe(img);
+        });
+      });
+
+      // --- ADD THIS ENTIRE NEW FUNCTION ---
+      function buildChangelogTOC() {
+        const tocContainer = document.getElementById("changelog-toc-sidebar");
+        const contentArea = document.getElementById("content-display-area");
+        if (!tocContainer || !contentArea) return;
+
+        tocContainer.innerHTML = ""; // Clear previous content
+
+        const headers = contentArea.querySelectorAll(".changelog-entry h2");
+        if (headers.length === 0) return;
+
+        const title = document.createElement("h4");
+        title.textContent = "Versions";
+        tocContainer.appendChild(title);
+
+        const list = document.createElement("ul");
+        headers.forEach((header) => {
+          // Sanitize text and create a valid ID
+          const versionText = header.textContent.split("(")[0].trim();
+          const id = versionText
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/\./g, "-");
+          header.id = id; // Assign the ID to the header for scrolling
+
+          const listItem = document.createElement("li");
+          const link = document.createElement("a");
+          link.href = `#${id}`;
+          link.textContent = versionText;
+
+          listItem.appendChild(link);
+          list.appendChild(listItem);
+        });
+
+        tocContainer.appendChild(list);
+      }
+    </script>
+  </body>
+</html>
