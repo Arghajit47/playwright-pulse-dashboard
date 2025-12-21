@@ -10,7 +10,7 @@ type SidebarContext = {
     isMobile: boolean;
     toggleSidebar: () => void;
 };
-declare const SidebarContext: React.Context<SidebarContext | null>;
+declare const SidebarContext: React.Context<SidebarContext>;
 declare function useSidebar(): SidebarContext;
 declare const SidebarProvider: React.ForwardRefExoticComponent<Omit<React.ClassAttributes<HTMLDivElement> & React.HTMLAttributes<HTMLDivElement> & {
     defaultOpen?: boolean;
@@ -31,9 +31,9 @@ declare const SidebarMenuButton: React.ForwardRefExoticComponent<Omit<React.Clas
     asChild?: boolean;
     isActive?: boolean;
     tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-} & VariantProps<(props?: ({
-    variant?: "default" | null | undefined;
-} & import("class-variance-authority/types").ClassProp) | undefined) => string>, "ref"> & React.RefAttributes<HTMLButtonElement>>;
+} & VariantProps<(props?: {
+    variant?: "default";
+} & import("class-variance-authority/types").ClassProp) => string>, "ref"> & React.RefAttributes<HTMLButtonElement>>;
 declare const SidebarFooter: React.ForwardRefExoticComponent<Omit<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & React.RefAttributes<HTMLDivElement>>;
 declare const SidebarSeparator: React.ForwardRefExoticComponent<Omit<Omit<import("@radix-ui/react-separator").SeparatorProps & React.RefAttributes<HTMLDivElement>, "ref"> & React.RefAttributes<HTMLDivElement>, "ref"> & React.RefAttributes<HTMLDivElement>>;
 declare const SidebarGroup: React.ForwardRefExoticComponent<Omit<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & React.RefAttributes<HTMLDivElement>>;
