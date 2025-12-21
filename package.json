@@ -32,7 +32,9 @@
   "files": [
     "dist",
     "bin",
-    ".next",
+    ".next/static",
+    ".next/server",
+    ".next/BUILD_ID",
     "public",
     "next.config.ts",
     "README.md",
