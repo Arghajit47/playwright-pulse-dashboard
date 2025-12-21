@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2025-12-21
+
+### Added
+- **Custom Output Directory Support**: Implemented dynamic report directory detection and configuration
+  - Added CLI argument support (`--output-dir` / `-o`) to specify custom report directories
+  - Created `getOutputDir` utility that automatically detects output directory from Playwright config files
+  - Supports reading `outputDir` from playwright-pulse-report reporter configuration in `playwright.config.ts/js/mjs`
+  - Falls back gracefully to default `pulse-report` directory when no custom directory is specified
+- **Annotations Support**: Enhanced test result display with support for Playwright test annotations
+  - Test annotations are now visible in test details and results views
+  - Supports all standard Playwright annotation types (skip, fixme, fail, slow, etc.)
+
+### Changed
+- **Next.js Update**: Upgraded Next.js from version 15.5.9 to 16.1.0 for latest features, performance improvements, and security enhancements
+- **Environment Variable Integration**: Updated bin script to pass resolved report directory via `PULSE_REPORT_DIR` environment variable
+- **API Routes Enhancement**: All API routes now dynamically resolve report directories using environment variables
+  - Updated `/api/current-run` to use dynamic report directory
+  - Updated `/api/historical-trends` to use dynamic report directory  
+  - Updated `/api/assets` to use dynamic report directory
+- **Actions Enhancement**: Updated server actions (`getRawHistoricalReports`, `getFlakyTestsAnalysis`) to support dynamic report directories
+- **Dependency Cleanup**: Removed unused dependencies to reduce package size and improve installation times
+  - Removed unused form dependencies (react-hook-form, @hookform/resolvers, zod)
+  - Removed unused calendar dependencies (react-day-picker, date-fns)
+  - Removed unused dev dependencies (dotenv, patch-package)
+  - Deleted unused UI components (form.tsx, calendar.tsx)
+  - **Result**: 440 packages removed, significantly reducing node_modules size and installation time
+
+### Fixed
+- **Security Vulnerabilities**: Resolved multiple package vulnerabilities to enhance application security
+- **TypeScript Compatibility**: Fixed Buffer type incompatibility in assets route for Next.js 15
+- **Build Configuration**: Updated bin script to use compiled JavaScript from dist folder instead of TypeScript source
+
+### Technical Improvements
+- Enhanced error handling and logging for report directory resolution
+- Improved fallback mechanisms for missing or invalid directory configurations
+- Added comprehensive documentation for custom directory usage
+
 ## [1.1.5] - 2025-11-22
 
 ### Fixed

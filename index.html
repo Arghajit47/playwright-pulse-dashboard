@@ -1279,7 +1279,7 @@
     </template>
 
     <template id="template-dashboard">
-      <h2>Dashboard Overview</h2>
+      <h1>Dashboard Overview</h1>
       <div class="section">
         <p>
           The dashboard provides a high-level, real-time overview of your latest
@@ -1315,7 +1315,7 @@
     </template>
 
     <template id="template-test-results">
-      <h2>Test Results</h2>
+      <h1>Test Results</h1>
       <div class="section">
         <p>
           <strong>👉🏼</strong> The Test Results page allows users to browse and
@@ -1341,7 +1341,7 @@
     </template>
 
     <template id="template-trend-analysis">
-      <h2>Trend Analysis</h2>
+      <h1>Trend Analysis</h1>
       <div class="section">
         <p>
           This page provides historical data visualization, allowing you to
@@ -1367,7 +1367,7 @@
     </template>
 
     <template id="template-flaky-tests">
-      <h2>Flaky Tests</h2>
+      <h1>Flaky Tests</h1>
       <div class="section">
         <p>
           Flaky tests are tests that exhibit inconsistent behavior. This page
@@ -1388,7 +1388,7 @@
     </template>
 
     <template id="template-failure-categorization">
-      <h2>Failure Categorization</h2>
+      <h1>Failure Categorization</h1>
       <div class="section">
         <p>
           This powerful feature automatically groups failed tests by the common
@@ -1404,7 +1404,7 @@
     </template>
 
     <template id="template-test-details-page">
-      <h2>Test Details Page</h2>
+      <h1>Test Details Page</h1>
       <div class="section">
         <p>
           This page provides an in-depth, granular view of a single test
@@ -1634,6 +1634,128 @@
           All notable changes to this project are documented here, starting with
           the most recent.
         </p>
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.2.0 <span class="changelog-date">(2025-12-21)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Custom Output Directory Support</strong>: Implemented
+              dynamic report directory detection and configuration.
+              <ul>
+                <li>
+                  Added CLI argument support (<code>--output-dir</code> /
+                  <code>-o</code>) to specify custom report directories.
+                </li>
+                <li>
+                  Created <code>getOutputDir</code> utility that automatically
+                  detects output directory from Playwright config files.
+                </li>
+                <li>
+                  Supports reading <code>outputDir</code> from
+                  playwright-pulse-report reporter configuration in
+                  <code>playwright.config.ts/js/mjs</code>.
+                </li>
+                <li>
+                  Falls back gracefully to default <code>pulse-report</code>
+                  directory when no custom directory is specified.
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Annotations Support</strong>: Enhanced test result display
+              with support for Playwright test annotations.
+              <ul>
+                <li>
+                  Test annotations are now visible in test details and results
+                  views.
+                </li>
+                <li>
+                  Supports all standard Playwright annotation types (skip,
+                  fixme, fail, slow, etc.).
+                </li>
+              </ul>
+            </li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Next.js Update</strong>: Upgraded Next.js from version
+              15.5.9 to 16.1.0 for latest features, performance improvements,
+              and security enhancements.
+            </li>
+            <li>
+              <strong>Environment Variable Integration</strong>: Updated bin
+              script to pass resolved report directory via
+              <code>PULSE_REPORT_DIR</code> environment variable.
+            </li>
+            <li>
+              <strong>API Routes Enhancement</strong>: All API routes now
+              dynamically resolve report directories using environment
+              variables.
+              <ul>
+                <li>
+                  Updated <code>/api/current-run</code> to use dynamic report
+                  directory.
+                </li>
+                <li>
+                  Updated <code>/api/historical-trends</code> to use dynamic
+                  report directory.
+                </li>
+                <li>
+                  Updated <code>/api/assets</code> to use dynamic report
+                  directory.
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Actions Enhancement</strong>: Updated server actions
+              (<code>getRawHistoricalReports</code>,
+              <code>getFlakyTestsAnalysis</code>) to support dynamic report
+              directories.
+            </li>
+            <li>
+              <strong>Dependency Cleanup</strong>: Removed unused dependencies
+              to reduce package size and improve installation times.
+              <ul>
+                <li>
+                  Removed unused form dependencies (react-hook-form,
+                  @hookform/resolvers, zod).
+                </li>
+                <li>
+                  Removed unused calendar dependencies (react-day-picker,
+                  date-fns).
+                </li>
+                <li>
+                  Removed unused dev dependencies (dotenv, patch-package).
+                </li>
+                <li>Deleted unused UI components (form.tsx, calendar.tsx).</li>
+                <li>
+                  <strong>Result</strong>: 440 packages removed, significantly
+                  reducing node_modules size and installation time.
+                </li>
+              </ul>
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              <strong>Security Vulnerabilities</strong>: Resolved multiple
+              package vulnerabilities to enhance application security.
+            </li>
+            <li>
+              <strong>TypeScript Compatibility</strong>: Fixed Buffer type
+              incompatibility in assets route for Next.js 15.
+            </li>
+            <li>
+              <strong>Build Configuration</strong>: Updated bin script to use
+              compiled JavaScript from dist folder instead of TypeScript source.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
 
         <div class="changelog-entry">
           <h2>

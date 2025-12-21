@@ -5,6 +5,15 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { getOutputDir } from "../dist/lib/getOutputDir.js";
 
+console.log(
+  "\n🎯 Pulse Dashboard is an extensive visualization of playwright-pulse-report."
+);
+console.log(
+  "📦 Kindly run 'npm install @arghajit/playwright-pulse-report@latest' to install the pulse-report package."
+);
+console.log("📖 Follow the readme file for setup instructions.");
+console.log("✅ If already installed, please ignore. Happy reporting!\n");
+
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
