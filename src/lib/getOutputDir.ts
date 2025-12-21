@@ -46,9 +46,6 @@ async function extractOutputDirFromConfig(
 
           config = await import(pathToFileURL(configPath).href);
         } catch (tsError) {
-          console.warn(
-            "TypeScript config could not be loaded with ts-node/esm, skipping TypeScript config support"
-          );
           return null;
         }
       } else {
