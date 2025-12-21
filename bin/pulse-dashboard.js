@@ -3,6 +3,7 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync } from "fs";
 import { getOutputDir } from "../dist/lib/getOutputDir.js";
 
 console.log(
@@ -20,8 +21,18 @@ const __dirname = path.dirname(__filename);
 
 // Command to run Next.js
 const projectRoot = path.resolve(__dirname, ".."); // This is the root of the installed pulse-dashboard package
-const nextCommand = path.join(projectRoot, "node_modules", ".bin", "next");
 const userCwd = process.cwd(); // Capture the CWD from where the user ran the command
+
+// Try to find next binary - look in user's node_modules first (when installed as dependency)
+const userNextCommand = path.join(userCwd, "node_modules", ".bin", "next");
+const localNextCommand = path.join(projectRoot, "node_modules", ".bin", "next");
+
+// Use 'next' from user's project if available, otherwise from pulse-dashboard's own node_modules
+const nextCommand = existsSync(userNextCommand)
+  ? userNextCommand
+  : existsSync(localNextCommand)
+  ? localNextCommand
+  : "next";
 
 // Parse CLI arguments for custom output directory
 const args = process.argv.slice(2);
