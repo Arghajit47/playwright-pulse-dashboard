@@ -4,30 +4,50 @@ import path from 'path';
 import fs from 'fs';
 import mime from 'mime-types';
 
-const PULSE_REPORT_ROOT_FROM_PROJECT_ROOT = 'pulse-report';
-const ATTACHMENTS_FOLDER_NAME = 'attachments';
-const RELATIVE_PATH_TO_PROJECT_ROOT_FROM_CWD = "../../";
-const ATTACHMENTS_BASE_PATH = path.resolve(
-  process.cwd(),
-  RELATIVE_PATH_TO_PROJECT_ROOT_FROM_CWD,
-  PULSE_REPORT_ROOT_FROM_PROJECT_ROOT,
-  ATTACHMENTS_FOLDER_NAME
-);
+const ATTACHMENTS_FOLDER_NAME = "attachments";
+
+function getAttachmentsBasePath() {
+  const pulseUserCwdFromEnv = process.env.PULSE_USER_CWD;
+  const pulseReportDirFromEnv = process.env.PULSE_REPORT_DIR;
+  const currentProcessCwd = process.cwd();
+
+  const baseDir =
+    pulseUserCwdFromEnv && pulseUserCwdFromEnv.trim() !== ""
+      ? pulseUserCwdFromEnv.trim()
+      : currentProcessCwd;
+  const reportDir =
+    pulseReportDirFromEnv && pulseReportDirFromEnv.trim() !== ""
+      ? pulseReportDirFromEnv.trim()
+      : path.join(baseDir, "pulse-report");
+
+  return path.join(reportDir, ATTACHMENTS_FOLDER_NAME);
+}
+
+const ATTACHMENTS_BASE_PATH = getAttachmentsBasePath();
 
 // Initial log to confirm paths on server start (or first request in dev)
 console.log(`[API ASSETS] Initializing:`);
 console.log(`[API ASSETS] Project Root (process.cwd()): ${process.cwd()}`);
-console.log(`[API ASSETS] Resolved Attachments Base Path: ${ATTACHMENTS_BASE_PATH}`);
+console.log(`[API ASSETS] PULSE_USER_CWD: ${process.env.PULSE_USER_CWD}`);
+console.log(`[API ASSETS] PULSE_REPORT_DIR: ${process.env.PULSE_REPORT_DIR}`);
+console.log(
+  `[API ASSETS] Resolved Attachments Base Path: ${ATTACHMENTS_BASE_PATH}`
+);
 try {
-    if (fs.existsSync(ATTACHMENTS_BASE_PATH)) {
-        console.log(`[API ASSETS] ATTACHMENTS_BASE_PATH (${ATTACHMENTS_BASE_PATH}) exists.`);
-    } else {
-        console.error(`[API ASSETS] CRITICAL: ATTACHMENTS_BASE_PATH (${ATTACHMENTS_BASE_PATH}) does NOT exist.`);
-    }
+  if (fs.existsSync(ATTACHMENTS_BASE_PATH)) {
+    console.log(
+      `[API ASSETS] ATTACHMENTS_BASE_PATH (${ATTACHMENTS_BASE_PATH}) exists.`
+    );
+  } else {
+    console.error(
+      `[API ASSETS] CRITICAL: ATTACHMENTS_BASE_PATH (${ATTACHMENTS_BASE_PATH}) does NOT exist.`
+    );
+  }
 } catch (e: any) {
-    console.error(`[API ASSETS] CRITICAL: Error checking ATTACHMENTS_BASE_PATH: ${e.message}`);
+  console.error(
+    `[API ASSETS] CRITICAL: Error checking ATTACHMENTS_BASE_PATH: ${e.message}`
+  );
 }
-
 
 export async function GET(
   request: NextRequest,
@@ -69,7 +89,10 @@ export async function GET(
           `attachment; filename="${path.basename(filePath)}"`
         );
       }
-      return new NextResponse(fileBuffer, { status: 200, headers: headers });
+      return new NextResponse(fileBuffer as any, {
+        status: 200,
+        headers: headers,
+      });
     } else {
       console.warn(
         `[API ASSETS] File does NOT exist or is not a file at: ${filePath}`

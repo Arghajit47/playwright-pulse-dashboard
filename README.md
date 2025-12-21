@@ -53,6 +53,15 @@ Install the package globally or use `npx` to run the dashboard directly.
 
     This will download and run the latest version of Pulse Dashboard without a global installation.
 
+    **Custom Output Directory Support:**
+    If you're using a custom output directory in your `playwright-pulse-report` configuration, Pulse Dashboard will automatically detect it from your `playwright.config.ts/js` file. Alternatively, you can specify it explicitly:
+
+    ```bash
+    npx pulse-dashboard --output-dir custom-report-folder
+    # OR using short form
+    npx pulse-dashboard -o custom-report-folder
+    ```
+
     **[NOTE: user does not need to navigate inside `pulse-report` folder]**
 
 *   **Global Installation (if you use it frequently):**

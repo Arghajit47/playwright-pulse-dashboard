@@ -6,15 +6,35 @@ import type { PlaywrightPulseReport } from '@/types/playwright';
 
 export async function GET() {
   console.log('[API /api/current-run] Raw process.env.PULSE_USER_CWD:', process.env.PULSE_USER_CWD);
-  console.log('[API /api/current-run] Current process.cwd() for Next.js server:', process.cwd());
+  console.log(
+    "[API /api/current-run] Raw process.env.PULSE_REPORT_DIR:",
+    process.env.PULSE_REPORT_DIR
+  );
+  console.log(
+    "[API /api/current-run] Current process.cwd() for Next.js server:",
+    process.cwd()
+  );
 
   const pulseUserCwdFromEnv = process.env.PULSE_USER_CWD;
+  const pulseReportDirFromEnv = process.env.PULSE_REPORT_DIR;
   const currentProcessCwd = process.cwd();
-  const baseDir = (pulseUserCwdFromEnv && pulseUserCwdFromEnv.trim() !== '') ? pulseUserCwdFromEnv.trim() : currentProcessCwd;
-  
-  console.log('[API /api/current-run] Effective baseDir determined:', baseDir);
-  
-  const filePath = path.join(baseDir, 'pulse-report', 'playwright-pulse-report.json');
+
+  const baseDir =
+    pulseUserCwdFromEnv && pulseUserCwdFromEnv.trim() !== ""
+      ? pulseUserCwdFromEnv.trim()
+      : currentProcessCwd;
+  const reportDir =
+    pulseReportDirFromEnv && pulseReportDirFromEnv.trim() !== ""
+      ? pulseReportDirFromEnv.trim()
+      : path.join(baseDir, "pulse-report");
+
+  console.log("[API /api/current-run] Effective baseDir determined:", baseDir);
+  console.log(
+    "[API /api/current-run] Effective reportDir determined:",
+    reportDir
+  );
+
+  const filePath = path.join(reportDir, "playwright-pulse-report.json");
   console.log('[API /api/current-run] Attempting to read current run report from:', filePath);
 
   let fileContent: string;

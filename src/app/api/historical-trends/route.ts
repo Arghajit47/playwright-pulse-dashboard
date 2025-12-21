@@ -1,18 +1,33 @@
 
 import { NextResponse } from 'next/server';
+import path from "path";
 import { getRawHistoricalReports } from '@/app/actions';
 import type { PlaywrightPulseReport, HistoricalTrend, DetailedTestResult } from '@/types/playwright';
 
 export async function GET() {
   console.log('[API /api/historical-trends] Route hit.');
   const pulseUserCwdFromEnv = process.env.PULSE_USER_CWD;
+  const pulseReportDirFromEnv = process.env.PULSE_REPORT_DIR;
   const currentProcessCwd = process.cwd();
 
   console.log('[API /api/historical-trends] process.env.PULSE_USER_CWD (inside API route):', pulseUserCwdFromEnv);
+  console.log(
+    "[API /api/historical-trends] process.env.PULSE_REPORT_DIR (inside API route):",
+    pulseReportDirFromEnv
+  );
   console.log('[API /api/historical-trends] process.cwd() (inside API route):', currentProcessCwd);
   
   const baseDir = (pulseUserCwdFromEnv && pulseUserCwdFromEnv.trim() !== '') ? pulseUserCwdFromEnv.trim() : currentProcessCwd;
+  const reportDir =
+    pulseReportDirFromEnv && pulseReportDirFromEnv.trim() !== ""
+      ? pulseReportDirFromEnv.trim()
+      : path.join(baseDir, "pulse-report");
+  
   console.log('[API /api/historical-trends] Effective baseDir determined for API route (should match actions):', baseDir);
+  console.log(
+    "[API /api/historical-trends] Effective reportDir determined for API route:",
+    reportDir
+  );
 
   try {
     const rawReports: PlaywrightPulseReport[] = await getRawHistoricalReports(); 

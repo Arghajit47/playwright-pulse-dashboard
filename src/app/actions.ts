@@ -9,15 +9,29 @@ import type { PlaywrightPulseReport, DetailedTestResult, FlakyTestDetail, FlakyT
 export async function getRawHistoricalReports(): Promise<PlaywrightPulseReport[]> {
   console.log('[ACTIONS getRawHistoricalReports] ------------- START -------------');
   const pulseUserCwdFromEnv = process.env.PULSE_USER_CWD;
+  const pulseReportDirFromEnv = process.env.PULSE_REPORT_DIR;
   const currentProcessCwd = process.cwd();
 
   console.log('[ACTIONS getRawHistoricalReports] process.env.PULSE_USER_CWD:', pulseUserCwdFromEnv);
+  console.log(
+    "[ACTIONS getRawHistoricalReports] process.env.PULSE_REPORT_DIR:",
+    pulseReportDirFromEnv
+  );
   console.log('[ACTIONS getRawHistoricalReports] process.cwd():', currentProcessCwd);
 
   const baseDir = (pulseUserCwdFromEnv && pulseUserCwdFromEnv.trim() !== '') ? pulseUserCwdFromEnv.trim() : currentProcessCwd;
-  console.log('[ACTIONS getRawHistoricalReports] Effective baseDir determined:', baseDir);
+  const reportDir =
+    pulseReportDirFromEnv && pulseReportDirFromEnv.trim() !== ""
+      ? pulseReportDirFromEnv.trim()
+      : path.join(baseDir, "pulse-report");
   
-  const historyDir = path.join(baseDir, 'pulse-report', 'history');
+  console.log('[ACTIONS getRawHistoricalReports] Effective baseDir determined:', baseDir);
+  console.log(
+    "[ACTIONS getRawHistoricalReports] Effective reportDir determined:",
+    reportDir
+  );
+  
+  const historyDir = path.join(reportDir, "history");
   console.log('[ACTIONS getRawHistoricalReports] Attempting to read history directory:', historyDir);
 
   try {

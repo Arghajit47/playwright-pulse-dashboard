@@ -95,8 +95,6 @@ web_modules/
 storybook-static
 
 # For this project
-src/ai/
-src/app/dev.ts
 *.bk
 *~
 # If you have test files alongside components that are not part of dist, ignore them.
@@ -104,7 +102,3 @@ src/app/dev.ts
 
 # Ensure src is not packaged for this CLI tool, dist is for library use.
 # src/
-
-# Genkit files that are not needed for the runtime of the dashboard itself
-.genkit-cache/
-genkit.state
