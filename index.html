@@ -1634,6 +1634,40 @@
           All notable changes to this project are documented here, starting with
           the most recent.
         </p>
+        <div class="changelog-entry">
+          ers
+          <h2>Vion 1.2.5 <span class="changelog-date">(2026-01-06)</span></h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Severity Distribution Chart</strong>: New chart in Trend
+              Analysis view showing test counts grouped by severity levels
+              (Critical, High, Medium, Low, Minor) with stacked bar
+              visualization for Passed, Failed, and Skipped tests.
+            </li>
+            <li>
+              <strong>Tags and Severity Badges</strong>: Test results now
+              display tags and severity badges with color-coded styling for
+              better visual identification.
+            </li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Test Results Display</strong>: Cleaner test item layout
+              with improved visual hierarchy.
+            </li>
+            <li>
+              <strong>Trend Analysis</strong>: Improved chart organization with
+              severity-based analytics.
+            </li>
+            <li>
+              <strong>Chart Visibility</strong>: Hidden X-axis labels from "Test
+              Describe Duration" chart for cleaner presentation.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
 
         <div class="changelog-entry">
           <h2>
@@ -1643,51 +1677,6 @@
           <ul>
             <li>
               <strong>Custom Output Directory Support</strong>: Implemented
-              dynamic report directory detection and configuration.
-              <ul>
-                <li>
-                  Added CLI argument support (<code>--output-dir</code> /
-                  <code>-o</code>) to specify custom report directories.
-                </li>
-                <li>
-                  Created <code>getOutputDir</code> utility that automatically
-                  detects output directory from Playwright config files.
-                </li>
-                <li>
-                  Supports reading <code>outputDir</code> from
-                  playwright-pulse-report reporter configuration in
-                  <code>playwright.config.ts/js/mjs</code>.
-                </li>
-                <li>
-                  Falls back gracefully to default <code>pulse-report</code>
-                  directory when no custom directory is specified.
-                </li>
-              </ul>
-            </li>
-            <li>
-              <strong>Annotations Support</strong>: Enhanced test result display
-              with support for Playwright test annotations.
-              <ul>
-                <li>
-                  Test annotations are now visible in test details and results
-                  views.
-                </li>
-                <li>
-                  Supports all standard Playwright annotation types (skip,
-                  fixme, fail, slow, etc.).
-                </li>
-              </ul>
-            </li>
-          </ul>
-          <h3 class="changelog-badge changed">Changed</h3>
-          <ul>
-            <li>
-              <strong>Next.js Update</strong>: Upgraded Next.js from version
-              15.5.9 to 16.1.0 for latest features, performance improvements,
-              and security enhancements.
-            </li>
-            <li>
-              <strong>Environment Variable Integration</strong>: Updated bin
               script to pass resolved report directory via
               <code>PULSE_REPORT_DIR</code> environment variable.
             </li>

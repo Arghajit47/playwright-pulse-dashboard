@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.5] - 2026-01-06
+
+### Added
+- **Severity Distribution Chart**: New chart in Trend Analysis view showing test counts grouped by severity levels (Critical, High, Medium, Low, Minor) with stacked bar visualization for Passed, Failed, and Skipped tests
+- **Tags and Severity Badges**: Test results now display tags and severity badges with color-coded styling for better visual identification
+
+### Changed
+- **Test Results Display**: Cleaner test item layout with improved visual hierarchy
+- **Trend Analysis**: Improved chart organization with severity-based analytics
+- **Chart Visibility**: Hidden X-axis labels from "Test Describe Duration" chart for cleaner presentation
+
 ## [1.2.4] - 2025-12-21
 
 ### Added
