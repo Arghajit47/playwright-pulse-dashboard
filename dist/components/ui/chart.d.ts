@@ -23,7 +23,7 @@ declare const ChartContainer: React.ForwardRefExoticComponent<Omit<React.ClassAt
 declare const ChartStyle: ({ id, config }: {
     id: string;
     config: ChartConfig;
-}) => React.JSX.Element | null;
+}) => React.JSX.Element;
 declare const ChartTooltip: typeof RechartsPrimitive.Tooltip;
 declare const ChartTooltipContent: React.ForwardRefExoticComponent<Omit<RechartsPrimitive.DefaultTooltipContentProps<import("recharts/types/component/DefaultTooltipContent").ValueType, import("recharts/types/component/DefaultTooltipContent").NameType> & {
     accessibilityLayer?: boolean;
@@ -32,14 +32,14 @@ declare const ChartTooltipContent: React.ForwardRefExoticComponent<Omit<Recharts
     allowEscapeViewBox?: import("recharts/types/util/types").AllowInDimension;
     animationDuration?: import("recharts/types/util/types").AnimationDuration;
     animationEasing?: import("recharts/types/util/types").AnimationTiming;
-    content?: import("recharts/types/component/Tooltip").ContentType<import("recharts/types/component/DefaultTooltipContent").ValueType, import("recharts/types/component/DefaultTooltipContent").NameType> | undefined;
+    content?: import("recharts/types/component/Tooltip").ContentType<import("recharts/types/component/DefaultTooltipContent").ValueType, import("recharts/types/component/DefaultTooltipContent").NameType>;
     coordinate?: Partial<import("recharts/types/util/types").Coordinate>;
     cursor?: boolean | React.ReactElement | React.SVGProps<SVGElement>;
     filterNull?: boolean;
     defaultIndex?: number;
     isAnimationActive?: boolean;
     offset?: number;
-    payloadUniqBy?: import("recharts/types/util/payload/getUniqPayload").UniqueOption<import("recharts/types/component/DefaultTooltipContent").Payload<import("recharts/types/component/DefaultTooltipContent").ValueType, import("recharts/types/component/DefaultTooltipContent").NameType>> | undefined;
+    payloadUniqBy?: import("recharts/types/util/payload/getUniqPayload").UniqueOption<import("recharts/types/component/DefaultTooltipContent").Payload<import("recharts/types/component/DefaultTooltipContent").ValueType, import("recharts/types/component/DefaultTooltipContent").NameType>>;
     position?: Partial<import("recharts/types/util/types").Coordinate>;
     reverseDirection?: import("recharts/types/util/types").AllowInDimension;
     shared?: boolean;

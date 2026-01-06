@@ -892,6 +892,18 @@
           display: none;
         }
 
+        .navbar-left {
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-sm);
+          z-index: 1;
+        }
+
+        .badges {
+          margin: auto;
+          gap: var(--spacing-sm);
+        }
+
         .main-content-container {
           padding: var(--spacing-sm);
         }
@@ -1095,6 +1107,20 @@
           <span class="title">Pulse Dashboard</span>
         </a>
       </div>
+      <div class="badges">
+        <a href="https://www.npmjs.com/package/pulse-dashboard">
+          <img
+            src="https://img.shields.io/npm/v/pulse-dashboard.svg"
+            alt="NPM Version"
+          />
+        </a>
+        <a href="https://www.npmjs.com/package/pulse-dashboard">
+          <img
+            src="https://img.shields.io/npm/dm/pulse-dashboard.svg"
+            alt="NPM Downloads"
+          />
+        </a>
+      </div>
       <button
         class="theme-toggle"
         id="theme-toggle"
@@ -1163,7 +1189,7 @@
 
         <div class="feature-grid">
           <div class="feature-card">
-            <h3>🚀 Real-time Monitoring</h3>
+            <h3>🖥️ Real-time Monitoring</h3>
             <p>
               Watch your tests execute in real-time with live updates and
               instant feedback on test results.
@@ -1253,7 +1279,7 @@
     </template>
 
     <template id="template-dashboard">
-      <h2>Dashboard Overview</h2>
+      <h1>Dashboard Overview</h1>
       <div class="section">
         <p>
           The dashboard provides a high-level, real-time overview of your latest
@@ -1289,7 +1315,7 @@
     </template>
 
     <template id="template-test-results">
-      <h2>Test Results</h2>
+      <h1>Test Results</h1>
       <div class="section">
         <p>
           <strong>👉🏼</strong> The Test Results page allows users to browse and
@@ -1315,7 +1341,7 @@
     </template>
 
     <template id="template-trend-analysis">
-      <h2>Trend Analysis</h2>
+      <h1>Trend Analysis</h1>
       <div class="section">
         <p>
           This page provides historical data visualization, allowing you to
@@ -1341,7 +1367,7 @@
     </template>
 
     <template id="template-flaky-tests">
-      <h2>Flaky Tests</h2>
+      <h1>Flaky Tests</h1>
       <div class="section">
         <p>
           Flaky tests are tests that exhibit inconsistent behavior. This page
@@ -1362,7 +1388,7 @@
     </template>
 
     <template id="template-failure-categorization">
-      <h2>Failure Categorization</h2>
+      <h1>Failure Categorization</h1>
       <div class="section">
         <p>
           This powerful feature automatically groups failed tests by the common
@@ -1378,7 +1404,7 @@
     </template>
 
     <template id="template-test-details-page">
-      <h2>Test Details Page</h2>
+      <h1>Test Details Page</h1>
       <div class="section">
         <p>
           This page provides an in-depth, granular view of a single test
@@ -1608,6 +1634,142 @@
           All notable changes to this project are documented here, starting with
           the most recent.
         </p>
+        <div class="changelog-entry">
+          ers
+          <h2>Vion 1.2.5 <span class="changelog-date">(2026-01-06)</span></h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Severity Distribution Chart</strong>: New chart in Trend
+              Analysis view showing test counts grouped by severity levels
+              (Critical, High, Medium, Low, Minor) with stacked bar
+              visualization for Passed, Failed, and Skipped tests.
+            </li>
+            <li>
+              <strong>Tags and Severity Badges</strong>: Test results now
+              display tags and severity badges with color-coded styling for
+              better visual identification.
+            </li>
+          </ul>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Test Results Display</strong>: Cleaner test item layout
+              with improved visual hierarchy.
+            </li>
+            <li>
+              <strong>Trend Analysis</strong>: Improved chart organization with
+              severity-based analytics.
+            </li>
+            <li>
+              <strong>Chart Visibility</strong>: Hidden X-axis labels from "Test
+              Describe Duration" chart for cleaner presentation.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.2.4 <span class="changelog-date">(2025-12-21)</span>
+          </h2>
+          <h3 class="changelog-badge added">Added</h3>
+          <ul>
+            <li>
+              <strong>Custom Output Directory Support</strong>: Implemented
+              script to pass resolved report directory via
+              <code>PULSE_REPORT_DIR</code> environment variable.
+            </li>
+            <li>
+              <strong>API Routes Enhancement</strong>: All API routes now
+              dynamically resolve report directories using environment
+              variables.
+              <ul>
+                <li>
+                  Updated <code>/api/current-run</code> to use dynamic report
+                  directory.
+                </li>
+                <li>
+                  Updated <code>/api/historical-trends</code> to use dynamic
+                  report directory.
+                </li>
+                <li>
+                  Updated <code>/api/assets</code> to use dynamic report
+                  directory.
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Actions Enhancement</strong>: Updated server actions
+              (<code>getRawHistoricalReports</code>,
+              <code>getFlakyTestsAnalysis</code>) to support dynamic report
+              directories.
+            </li>
+            <li>
+              <strong>Dependency Cleanup</strong>: Removed unused dependencies
+              to reduce package size and improve installation times.
+              <ul>
+                <li>
+                  Removed unused form dependencies (react-hook-form,
+                  @hookform/resolvers, zod).
+                </li>
+                <li>
+                  Removed unused calendar dependencies (react-day-picker,
+                  date-fns).
+                </li>
+                <li>
+                  Removed unused dev dependencies (dotenv, patch-package).
+                </li>
+                <li>Deleted unused UI components (form.tsx, calendar.tsx).</li>
+                <li>
+                  <strong>Result</strong>: 440 packages removed, significantly
+                  reducing node_modules size and installation time.
+                </li>
+              </ul>
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              <strong>Security Vulnerabilities</strong>: Resolved multiple
+              package vulnerabilities to enhance application security.
+            </li>
+            <li>
+              <strong>TypeScript Compatibility</strong>: Fixed Buffer type
+              incompatibility in assets route for Next.js 15.
+            </li>
+            <li>
+              <strong>Build Configuration</strong>: Updated bin script to use
+              compiled JavaScript from dist folder instead of TypeScript source.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+
+        <div class="changelog-entry">
+          <h2>
+            Version 1.1.5 <span class="changelog-date">(2025-11-22)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>Next.js Update</strong>: Upgraded Next.js to version
+              15.5.6 to address security and performance improvements.
+            </li>
+            <li>
+              <strong>README Update</strong>: Included new logo image for Pulse
+              Dashboard.
+            </li>
+          </ul>
+          <h3 class="changelog-badge fixed">Fixed</h3>
+          <ul>
+            <li>
+              <strong>Package Vulnerabilities</strong>: Security vulnerabilities
+              in project dependencies to ensure enhanced application security
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
 
         <div class="changelog-entry">
           <h2>

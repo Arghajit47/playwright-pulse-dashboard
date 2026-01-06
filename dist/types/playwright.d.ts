@@ -12,6 +12,15 @@ export interface TestStep {
     steps: TestStep[];
     errorMessage?: string | null;
 }
+export interface Annotation {
+    type: string;
+    description?: string;
+    location?: {
+        file: string;
+        line: number;
+        column: number;
+    };
+}
 export interface DetailedTestResult {
     id: string;
     runId: string;
@@ -33,6 +42,7 @@ export interface DetailedTestResult {
     videoPath?: string[];
     tracePath?: string;
     attachments?: any;
+    annotations?: Annotation[];
     workerId?: string | number;
     totalWorkers?: number;
     configFile?: string;

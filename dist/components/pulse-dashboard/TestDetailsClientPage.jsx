@@ -485,6 +485,53 @@ export function TestDetailsClientPage({ testId }) {
             }}/>
                   </pre>
                 </div>)}
+              {test.annotations && test.annotations.length > 0 && (<div className="mb-4 p-3 md:p-0">
+                  <div style={{
+                margin: "12px 0",
+                padding: "12px",
+                backgroundColor: "rgba(139, 92, 246, 0.1)",
+                border: "1px solid rgba(139, 92, 246, 0.3)",
+                borderLeft: "4px solid #8b5cf6",
+                borderRadius: "4px",
+            }}>
+                    <h4 style={{
+                marginTop: 0,
+                marginBottom: "10px",
+                color: "#8b5cf6",
+                fontSize: "1.1em",
+            }}>
+                      📌 Annotations
+                    </h4>
+                    {test.annotations.map((annotation, index) => (<div key={index} style={{
+                    marginBottom: index === test.annotations.length - 1 ? "0" : "10px",
+                }}>
+                        <strong style={{ color: "#8b5cf6" }}>Type:</strong>{" "}
+                        <span style={{
+                    backgroundColor: "rgba(139, 92, 246, 0.2)",
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    fontSize: "0.9em",
+                }}>
+                          {annotation.type}
+                        </span>
+                        {annotation.description && (<>
+                            <br />
+                            <strong style={{ color: "#8b5cf6" }}>
+                              Description:
+                            </strong>{" "}
+                            {annotation.description}
+                          </>)}
+                        {annotation.location && (<div style={{
+                        fontSize: "0.85em",
+                        color: "#6b7280",
+                        marginTop: "4px",
+                    }}>
+                            Location: {annotation.location.file}:
+                            {annotation.location.line}:{annotation.location.column}
+                          </div>)}
+                      </div>))}
+                  </div>
+                </div>)}
               {test.steps && test.steps.length > 0 ? (<ScrollArea className="h-[600px] w-full">
                   <div className="pr-4">
                     {test.steps.map((step, index) => (<TestStepItemRecursive key={step.id || index} step={step}/>))}

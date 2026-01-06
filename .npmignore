@@ -83,7 +83,12 @@ web_modules/
 
 # Next.js build cache and other artifacts not strictly needed for runtime
 .next/cache/
+.next/trace
+.next/trace-build
+.next/turbopack/
+.next/types/
 **/*.map
+**/*.map.js
 
 # VSCode
 .vscode/
@@ -95,16 +100,22 @@ web_modules/
 storybook-static
 
 # For this project
-src/ai/
-src/app/dev.ts
 *.bk
 *~
 # If you have test files alongside components that are not part of dist, ignore them.
 # e.g. **/*.test.tsx, **/*.spec.tsx
 
 # Ensure src is not packaged for this CLI tool, dist is for library use.
-# src/
+src/
+!src/lib/
+!src/types/
 
-# Genkit files that are not needed for the runtime of the dashboard itself
-.genkit-cache/
-genkit.state
+# Additional build artifacts and development files
+docs/
+*.md.bak
+.modified
+.idx/
+pulse-dashboard-v1.2.0-blog.md
+pulse-report/
+test-results/
+playwright-report/

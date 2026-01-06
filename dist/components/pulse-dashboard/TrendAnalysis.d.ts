@@ -4,6 +4,7 @@ interface TrendAnalysisProps {
     trends: HistoricalTrend[];
     loading: boolean;
     error: string | null;
+    currentResults?: any[];
 }
 export declare const TrendAnalysis: React.NamedExoticComponent<TrendAnalysisProps>;
 export {};

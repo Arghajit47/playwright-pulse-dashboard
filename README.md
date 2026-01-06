@@ -1,6 +1,12 @@
 
 # Pulse Dashboard
 
+[![NPM Version](https://img.shields.io/npm/v/pulse-dashboard.svg)](https://www.npmjs.com/package/pulse-dashboard)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![NPM Downloads](https://img.shields.io/npm/dm/pulse-dashboard.svg)](https://www.npmjs.com/package/pulse-dashboard)
+
+![pulse dashboard](https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-report/pulse_dashboard_full_icon.png)
+
 **Pulse Dashboard** is a reusable Next.js component and standalone CLI tool designed to provide real-time monitoring and historical analysis of Playwright test executions. It helps development and QA teams to quickly identify issues, track test performance over time, and gain insights into failure patterns.
 
 It can be: **Run as a Standalone CLI Tool**: Install globally or use with `npx` to quickly view reports.
@@ -47,6 +53,15 @@ Install the package globally or use `npx` to run the dashboard directly.
 
     This will download and run the latest version of Pulse Dashboard without a global installation.
 
+    **Custom Output Directory Support:**
+    If you're using a custom output directory in your `playwright-pulse-report` configuration, Pulse Dashboard will automatically detect it from your `playwright.config.ts/js` file. Alternatively, you can specify it explicitly:
+
+    ```bash
+    npx pulse-dashboard --output-dir custom-report-folder
+    # OR using short form
+    npx pulse-dashboard -o custom-report-folder
+    ```
+
     **[NOTE: user does not need to navigate inside `pulse-report` folder]**
 
 *   **Global Installation (if you use it frequently):**
@@ -85,4 +100,4 @@ Special Thanks to **[@Suman Vishwakarma](https://www.linkedin.com/in/suman-vishw
 ## License
 
 This project is licensed under the Apache 2.0 License.
-# playwright-pulse-dashboard
+

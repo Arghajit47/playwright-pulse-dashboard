@@ -6,9 +6,9 @@ declare const SheetTrigger: React.ForwardRefExoticComponent<SheetPrimitive.Dialo
 declare const SheetClose: React.ForwardRefExoticComponent<SheetPrimitive.DialogCloseProps & React.RefAttributes<HTMLButtonElement>>;
 declare const SheetPortal: React.FC<SheetPrimitive.DialogPortalProps>;
 declare const SheetOverlay: React.ForwardRefExoticComponent<Omit<SheetPrimitive.DialogOverlayProps & React.RefAttributes<HTMLDivElement>, "ref"> & React.RefAttributes<HTMLDivElement>>;
-declare const sheetVariants: (props?: ({
-    side?: "top" | "right" | "bottom" | "left" | null | undefined;
-} & import("class-variance-authority/types").ClassProp) | undefined) => string;
+declare const sheetVariants: (props?: {
+    side?: "top" | "right" | "bottom" | "left";
+} & import("class-variance-authority/types").ClassProp) => string;
 interface SheetContentProps extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>, VariantProps<typeof sheetVariants> {
 }
 declare const SheetContent: React.ForwardRefExoticComponent<SheetContentProps & React.RefAttributes<HTMLDivElement>>;
