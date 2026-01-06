@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [1.2.5] - 2026-01-06
 
 ### Added
+- **Pulse Command Tab**: New sidebar tab for generating different report formats directly from the dashboard
+  - Generate Attachment Based Report (`npx generate-pulse-report`)
+  - Generate Embedded Single File Report (`npx generate-report`)
+  - Generate Email Report (`npx generate-email-report`)
+  - Re-run button to execute commands via API
+  - View button to open generated reports in new tab
+- **Report Serving API**: New `/api/reports/[filename]` endpoint to serve HTML report files dynamically
+- **Command Execution API**: New `/api/run-command` endpoint to securely execute whitelisted report generation commands
 - **Severity Distribution Chart**: New chart in Trend Analysis view showing test counts grouped by severity levels (Critical, High, Medium, Low, Minor) with stacked bar visualization for Passed, Failed, and Skipped tests
 - **Tags and Severity Badges**: Test results now display tags and severity badges with color-coded styling for better visual identification
 
@@ -12,6 +20,8 @@ All notable changes to this project will be documented in this file.
 - **Test Results Display**: Cleaner test item layout with improved visual hierarchy
 - **Trend Analysis**: Improved chart organization with severity-based analytics
 - **Chart Visibility**: Hidden X-axis labels from "Test Describe Duration" chart for cleaner presentation
+
+---
 
 ## [1.2.4] - 2025-12-21
 
@@ -50,12 +60,16 @@ All notable changes to this project will be documented in this file.
 - Improved fallback mechanisms for missing or invalid directory configurations
 - Added comprehensive documentation for custom directory usage
 
+---
+
 ## [1.1.5] - 2025-11-22
 
 ### Fixed
 - **Package Vulnerabilities**: Resolved security vulnerabilities in project dependencies to ensure enhanced application security
 - **Next.js Update**: Upgraded Next.js to version 15.5.6 to address security and performance improvements
 - **README Update**: Updated `README.md` to include new logo image for Pulse Dashboard
+
+---
 
 ## [1.1.4] - 2025-08-20
 

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Real-time Playwright test execution dashboard",
   icons: {
     icon: {
-      url: "https://i.postimg.cc/v817w4sg/logo.png",
+      url: "https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-report/playwright_pulse_icon.png",
       sizes: "48x48",
       type: "image/x-icon",
     },
