@@ -38,6 +38,7 @@
     "!.next/trace-build",
     "!.next/turbopack",
     "!.next/types",
+    "!.next/**/*.map",
     "next.config.ts",
     "README.md",
     "LICENSE"

@@ -45,7 +45,7 @@ export function PulseDashboard() {
             componentToRender = <LiveTestResults report={currentRun} loading={loadingCurrent} error={errorCurrent} initialFilter={initialLiveResultsFilter}/>;
             break;
         case 'trend-analysis':
-            componentToRender = <TrendAnalysis trends={historicalTrends} loading={loadingHistorical} error={errorHistorical}/>;
+            componentToRender = (<TrendAnalysis trends={historicalTrends} loading={loadingHistorical} error={errorHistorical} currentResults={currentRun?.results}/>);
             break;
         case 'flaky-tests':
             componentToRender = <FlakyTestsWidget />;
