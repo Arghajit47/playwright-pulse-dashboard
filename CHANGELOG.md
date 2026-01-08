@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.6] - 2026-01-09
+
+### Changed
+- **License**: Switched from Apache 2.0 to MIT License for more permissive use and contributions
+- **Dependencies**: Updated all dependencies to their latest versions for improved security and feature support, and resolved the AGPL license conflict
+
+
 ## [1.2.5] - 2026-01-06
 
 ### Added
