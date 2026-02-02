@@ -335,25 +335,22 @@ export function FailureCategorizationView() {
                       className="border border-border/50 rounded-lg bg-card hover:bg-muted/30 transition-all duration-200 hover:shadow-md overflow-hidden"
                     >
                       <AccordionTrigger className="px-4 py-3 text-left hover:no-underline group/trigger">
-                        <div className="flex justify-between items-center w-full gap-4">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="h-2 w-2 rounded-full bg-destructive flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p
-                                className="font-medium text-sm text-foreground group-hover/trigger:text-primary transition-colors truncate"
-                                title={formatTestName(test.name)}
-                              >
-                                {formatTestName(test.name)}
-                              </p>
-                              <p
-                                className="text-xs text-muted-foreground mt-0.5 truncate"
-                                title={test.suiteName}
-                              >
-                                Suite: {test.suiteName || "N/A"}
-                              </p>
-                            </div>
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="h-2 w-2 rounded-full bg-destructive flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="font-medium text-sm text-foreground group-hover/trigger:text-primary transition-colors truncate"
+                              title={formatTestName(test.name)}
+                            >
+                              {formatTestName(test.name)}
+                            </p>
+                            <p
+                              className="text-xs text-muted-foreground mt-0.5 truncate"
+                              title={test.suiteName}
+                            >
+                              Suite: {test.suiteName || "N/A"}
+                            </p>
                           </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground group-data-[state=open]:rotate-90 transition-transform duration-200 flex-shrink-0" />
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="px-4 pb-4 pt-2 bg-muted/10">

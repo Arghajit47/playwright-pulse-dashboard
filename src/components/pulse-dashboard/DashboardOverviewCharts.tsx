@@ -636,10 +636,16 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                   Max Retries
                 </p>
                 {retryStats.maxRetryTests.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-2 truncate" title={retryStats.maxRetryTests.join(', ')}>
+                  <p
+                    className="text-xs text-muted-foreground mt-2 truncate"
+                    title={retryStats.maxRetryTests.join(", ")}
+                  >
                     {retryStats.maxRetryTests[0]}
                     {retryStats.maxRetryTests.length > 1 && (
-                      <span> and {retryStats.maxRetryTests.length - 1} more</span>
+                      <span>
+                        {" "}
+                        and {retryStats.maxRetryTests.length - 1} more
+                      </span>
                     )}
                   </p>
                 )}
@@ -841,11 +847,14 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 </div>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Note: Icons are representative. Full browser name (including
-              version) is shown in tooltip.
-            </p>
           </CardContent>
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Note:</strong> Icons are representative. Full browser name
+              (including version) is shown in tooltip.
+            </AlertDescription>
+          </Alert>
         </Card>
       </div>
 

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.7] - 2026-02-03
+
+### Added
+- **New Card components**: Added 2 new card components, "Retry Count" and "Browser Distribution" for better visual organization and layout
+
+### Changed
+- **UI Revamp**: Improved layout for "Failure Categorization" and "Dashboard" Tab, with better spacing and alignments.
+- **Chart Alignment Adjustment**: Made minor adjustments to chart alignments for better visual consistency.
+
 ## [1.2.6] - 2026-01-09
 
 ### Changed
