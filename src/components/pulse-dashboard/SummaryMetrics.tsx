@@ -120,11 +120,11 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5 mb-8">
         {metrics.map(metric => (
           <Card 
             key={metric.title} 
-            className={`shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl ${metric.filterKey && onMetricClick ? 'cursor-pointer hover:ring-2 hover:ring-primary' : ''}`}
+            className={`relative overflow-hidden shadow-2xl hover:shadow-[0_20px_50px_rgba(8,_112,_184,_0.3)] transition-all duration-500 rounded-2xl border-0 bg-gradient-to-br from-card via-card to-card/80 backdrop-blur-sm group ${metric.filterKey && onMetricClick ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
             onClick={() => handleCardClick(metric.filterKey)}
             tabIndex={metric.filterKey && onMetricClick ? 0 : -1}
             onKeyDown={(e: React.KeyboardEvent) => {
@@ -135,13 +135,16 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
             role={metric.filterKey && onMetricClick ? "button" : undefined}
             aria-label={metric.filterKey && onMetricClick ? `View ${metric.filterKey} tests` : undefined}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{metric.title}</CardTitle>
-              {metric.icon}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+              <CardTitle className="text-sm font-semibold text-muted-foreground/90 uppercase tracking-wide">{metric.title}</CardTitle>
+              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center backdrop-blur-sm">
+                {metric.icon}
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">{metric.value}</div>
-              {metric.change && <p className="text-xs text-muted-foreground pt-1">{metric.change}</p>}
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-extrabold bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">{metric.value}</div>
+              {metric.change && <p className="text-xs font-medium text-muted-foreground/70 pt-1.5">{metric.change}</p>}
             </CardContent>
           </Card>
         ))}
