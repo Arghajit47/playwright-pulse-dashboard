@@ -108,25 +108,64 @@ export function SystemInformationWidget({ environmentInfo, loading }: SystemInfo
   }
 
   return (
-    <Card className="shadow-lg rounded-xl mt-6 hover:shadow-xl transition-shadow duration-300">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-primary flex items-center">
-          <Server className="h-5 w-5 mr-2" /> System Information
-        </CardTitle>
-        <CardDescription className="text-xs">Details about the test execution environment.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3 pr-2">
-        {Object.entries(environmentInfo).map(([key, value]) => (
-          <div key={key} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/30 transition-colors">
-            <div className="flex-shrink-0 pt-1">{getIcon(key)}</div>
-            <div className="flex-grow">
-              <span className="text-sm font-semibold text-muted-foreground capitalize">
-                {key.replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1").replace(/^./, str => str.toUpperCase())}:
-              </span>
-              {renderEnvironmentValue(value, key)}
-            </div>
+    <Card className="shadow-lg rounded-xl mt-6 hover:shadow-2xl transition-all duration-300 border-0 bg-gradient-to-br from-card via-card to-card/95 group">
+      <CardHeader className="pb-3">
+        <div className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-base font-semibold text-foreground group-hover:text-primary transition-colors flex items-center">
+              <Server className="h-4 w-4 mr-2" /> System Information
+            </CardTitle>
+            <CardDescription className="text-xs mt-1">Test execution environment details</CardDescription>
           </div>
-        ))}
+          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+            <Laptop className="h-4 w-4 text-primary" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Object.entries(environmentInfo).map(([key, value]) => {
+            const getDisplayValue = (val: any): string => {
+              if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
+                return String(val);
+              }
+              if (Array.isArray(val)) {
+                return val.length > 0 ? val.join(', ') : 'Empty';
+              }
+              if (typeof val === 'object' && val !== null) {
+                const entries = Object.entries(val);
+                if (entries.length === 0) return 'Empty';
+                if (entries.length <= 3) {
+                  return entries
+                    .map(([k, v]) => {
+                      const displayKey = k.replace(/([A-Z])/g, ' $1').trim();
+                      return `${displayKey}: ${String(v)}`;
+                    })
+                    .join(', ');
+                }
+                return `${entries.length} items`;
+              }
+              return 'N/A';
+            };
+
+            const displayValue = getDisplayValue(value);
+            const fullValue = typeof value === 'object' && value !== null ? JSON.stringify(value, null, 2) : String(value);
+
+            return (
+              <div key={key} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 group/item">
+                <div className="flex-shrink-0">{getIcon(key)}</div>
+                <div className="flex-grow min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground truncate">
+                    {key.replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1").replace(/^./, str => str.toUpperCase())}
+                  </p>
+                  <div className="text-xs font-semibold text-foreground truncate" title={fullValue}>
+                    {displayValue}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );

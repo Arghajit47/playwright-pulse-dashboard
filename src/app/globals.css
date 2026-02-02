@@ -10,7 +10,7 @@ body {
 @layer base {
   :root { /* Arctic Sky - Light Theme */
     --background: 220 60% 98%; /* Very light cool gray */
-    --foreground: 220 25% 25%; /* Dark desaturated blue/gray */
+    --foreground: 220 25% 25%; /* Dark de-saturated blue/gray */
 
     --muted: 220 30% 92%; /* Light gray for muted backgrounds */
     --muted-foreground: 220 20% 50%; /* Mid-gray for muted text */
@@ -201,5 +201,65 @@ body {
 /* Remove default focus outline from Recharts areas when using custom focus */
 .recharts-wrapper:focus, .recharts-surface:focus {
   outline: none !important;
+}
+
+/* Dashboard Card Animations */
+@keyframes card-gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: card-gradient-shift 8s ease infinite;
+}
+
+/* Metric Card Hover Scale */
+@keyframes metric-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.01);
+  }
+}
+
+/* Icon Badge Rotation on Hover */
+@keyframes icon-spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-icon-spin-slow {
+  animation: icon-spin-slow 20s linear infinite;
+}
+
+/* Shimmer Effect for Loading States */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    to right,
+    hsl(var(--muted)) 4%,
+    hsl(var(--muted-foreground) / 0.1) 25%,
+    hsl(var(--muted)) 36%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
 }
 

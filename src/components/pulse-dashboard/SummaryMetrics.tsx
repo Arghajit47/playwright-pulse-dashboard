@@ -118,6 +118,19 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
     }
   };
 
+  const getLastUpdatedText = () => {
+    if (!runMetadata?.timestamp) return 'Just now';
+    const startTime = new Date(runMetadata.timestamp).getTime();
+    const now = Date.now();
+    const diffMinutes = Math.floor((now - startTime) / (1000 * 60));
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes === 1) return '1 min ago';
+    if (diffMinutes < 60) return `${diffMinutes} mins ago`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours === 1) return '1 hour ago';
+    return `${diffHours} hours ago`;
+  };
+
   return (
     <>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5 mb-8">

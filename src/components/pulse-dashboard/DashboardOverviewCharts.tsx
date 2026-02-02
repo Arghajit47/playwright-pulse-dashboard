@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Search,
   RefreshCw,
+  XCircle,
 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
@@ -406,39 +407,74 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   
   if (loading) {
     return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
-        {[...Array(5)].map((_, i) => (
-          <Card key={i} className="shadow-md rounded-xl">
-            <CardHeader>
-              <Skeleton className="h-5 w-3/4 rounded-md" />
-              <Skeleton className="h-4 w-1/2 mt-1 rounded-md" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-48 w-full rounded-lg" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <>
+        <div className="mt-8 mb-6">
+          <h3 className="text-xl font-bold text-foreground mb-2">
+            Test Execution Analytics
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Detailed visualization of test distribution, performance metrics,
+            and worker utilization
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
+          {[...Array(5)].map((_, i) => (
+            <Card key={i} className="shadow-md rounded-xl">
+              <CardHeader>
+                <Skeleton className="h-5 w-3/4 rounded-md" />
+                <Skeleton className="h-4 w-1/2 mt-1 rounded-md" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-48 w-full rounded-lg" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <Alert variant="destructive" className="mt-6 rounded-lg">
-        <Terminal className="h-4 w-4" />
-        <AlertTitle>Error Loading Chart Data</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <>
+        <div className="mt-8 mb-6">
+          <h3 className="text-xl font-bold text-foreground mb-2">
+            Test Execution Analytics
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Detailed visualization of test distribution, performance metrics,
+            and worker utilization
+          </p>
+        </div>
+        <Alert variant="destructive" className="mt-6 rounded-lg shadow-lg">
+          <Terminal className="h-4 w-4" />
+          <AlertTitle>Error Loading Chart Data</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </>
     );
   }
 
   if (!currentRun || !currentRun.run || !currentRun.results) {
     return (
-      <Alert className="mt-6 rounded-lg">
-        <Info className="h-4 w-4" />
-        <AlertTitle>No Data for Charts</AlertTitle>
-        <AlertDescription>Current run data is not available to display charts.</AlertDescription>
-      </Alert>
+      <>
+        <div className="mt-8 mb-6">
+          <h3 className="text-xl font-bold text-foreground mb-2">
+            Test Execution Analytics
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Detailed visualization of test distribution, performance metrics,
+            and worker utilization
+          </p>
+        </div>
+        <Alert className="mt-6 rounded-lg shadow-lg">
+          <Info className="h-4 w-4" />
+          <AlertTitle>No Data for Charts</AlertTitle>
+          <AlertDescription>
+            Current run data is not available to display charts.
+          </AlertDescription>
+        </Alert>
+      </>
     );
   }
 
@@ -471,19 +507,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const browserChartData = Object.values(browserDistributionRaw).sort((a, b) => b.total - a.total);
 
 
-  const failedTestsDurationData = currentRun.results
-    .filter((test: DetailedTestResult) => test.status === 'failed' || test.status === 'timedOut')
-    .map((test: DetailedTestResult) => {
-      const shortName = formatTestNameForChart(test.name);
-      return {
-        name: shortName.length > 50 ? shortName.substring(0, 47) + '...' : shortName,
-        duration: test.duration,
-        durationFormatted: formatDurationForChart(test.duration),
-        fullTestName: test.name,
-      };
-    })
-    .sort((a,b) => b.duration - a.duration)
-    .slice(0, 10);
+
 
   const suiteDistributionRaw = currentRun.results.reduce((acc, test: DetailedTestResult) => {
     const suiteName = test.suiteName || 'Unknown Suite';
@@ -503,7 +527,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   const slowestTestsData = [...currentRun.results]
     .sort((a, b) => b.duration - a.duration)
-    .slice(0, 5)
+    .slice(0, 10)
     .map((test: DetailedTestResult) => {
       const shortName = formatTestNameForChart(test.name);
       return {
@@ -557,85 +581,36 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
 
   return (
     <div className="mt-6 space-y-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg font-semibold text-foreground">
-              Test Distribution
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Passed, Failed, Skipped for the current run.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="flex justify-center items-center min-h-[280px]">
-          <div className="w-full h-[280px]">
-            {testDistributionData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart
-                  margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-                  onMouseLeave={onPieMouseLeave}
-                >
-                  <Pie
-                    activeIndex={activeIndex}
-                    activeShape={ActiveShape as any}
-                    data={testDistributionData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    dataKey="value"
-                    nameKey="name"
-                    onMouseEnter={onPieEnter}
-                    paddingAngle={2}
-                    stroke="hsl(var(--card))"
-                  >
-                    {testDistributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <RechartsRechartsTooltip content={<CustomTooltip />} />
-                  <Legend
-                    iconSize={10}
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
-                  />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-center text-muted-foreground">
-                No test distribution data.
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg font-semibold text-foreground">
+      <div className="mt-8 mb-6">
+        <h3 className="text-xl font-bold text-foreground mb-2">
+          Test Execution Analytics
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Detailed visualization of test distribution, performance metrics, and
+          worker utilization
+        </p>
+      </div>
+      {/* Row 1: Retry Count (Full Width) */}
+      <div className="grid gap-6 md:grid-cols-1">
+        <Card className="shadow-lg hover:shadow-2xl transition-shadow duration-300 rounded-xl border-0 bg-gradient-to-br from-card via-card to-card/95 group">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
               Retry Count
             </CardTitle>
             <CardDescription className="text-xs">
-              Statistics on test retries for the current run.
+              Test retry statistics
             </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="flex justify-center items-center min-h-[280px]">
-          <div className="w-full space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <div className="text-3xl font-bold text-foreground">
                   {retryStats.testsWithRetries}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-2 font-medium">
                   Tests with Retries
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground mt-1">
                   {retryStats.totalTests > 0
                     ? (
                         (retryStats.testsWithRetries / retryStats.totalTests) *
@@ -649,410 +624,359 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                 <div className="text-3xl font-bold text-foreground">
                   {retryStats.totalRetries}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-2 font-medium">
                   Total Retries
                 </p>
               </div>
-            </div>
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold text-foreground">
-                {retryStats.maxRetries}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Maximum Retries
-              </p>
-              {retryStats.maxRetryTests.length > 0 && (
-                <p
-                  className="text-xs text-muted-foreground mt-0.5 truncate"
-                  title={retryStats.maxRetryTests[0]}
-                >
-                  Test Name: `
-                  {formatTestNameForChart(retryStats.maxRetryTests[0])}` and
-                  {retryStats.maxRetryTests.length > 1 &&
-                    ` +${retryStats.maxRetryTests.length - 1} more`}
+              <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <div className="text-3xl font-bold text-foreground">
+                  {retryStats.maxRetries}
+                </div>
+                <p className="text-sm text-muted-foreground mt-2 font-medium">
+                  Max Retries
                 </p>
-              )}
+                {retryStats.maxRetryTests.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2 truncate" title={retryStats.maxRetryTests.join(', ')}>
+                    {retryStats.maxRetryTests[0]}
+                    {retryStats.maxRetryTests.length > 1 && (
+                      <span> and {retryStats.maxRetryTests.length - 1} more</span>
+                    )}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Second Row: Browser Analytics */}
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg font-semibold text-foreground">
-              Browser Distribution
+      {/* Row 2: Test Status + Browser Distribution (3 columns) */}
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+        <Card className="shadow-lg hover:shadow-2xl transition-all duration-300 rounded-xl border-0 bg-gradient-to-br from-card via-card to-card/95 group lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+              Test Status Distribution
             </CardTitle>
             <CardDescription className="text-xs">
-              Test execution distribution across browsers.
+              Overall test execution outcomes.
             </CardDescription>
-          </div>
-          <Globe className="h-5 w-5 text-primary" />
-        </CardHeader>
-        <CardContent className="flex justify-center items-center min-h-[280px]">
-          <div className="w-full h-[280px]">
-            {browserDistributionData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart
-                  margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-                  onMouseLeave={onPieMouseLeave}
-                >
-                  <Pie
-                    activeIndex={activeIndex}
-                    activeShape={SimplePieShape as any}
-                    data={browserDistributionData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    dataKey="value"
-                    nameKey="name"
-                    onMouseEnter={onPieEnter}
-                    paddingAngle={2}
-                    stroke="hsl(var(--card))"
+          </CardHeader>
+          <CardContent className="flex justify-center items-center min-h-[280px]">
+            <div className="w-full h-[280px]">
+              {testDistributionData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart
+                    margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                    onMouseLeave={onPieMouseLeave}
                   >
-                    {browserDistributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <RechartsRechartsTooltip content={<CustomTooltip />} />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-center text-muted-foreground">
-                No browser distribution data.
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                    <Pie
+                      activeIndex={activeIndex}
+                      activeShape={ActiveShape as any}
+                      data={testDistributionData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      dataKey="value"
+                      nameKey="name"
+                      onMouseEnter={onPieEnter}
+                      paddingAngle={2}
+                      stroke="hsl(var(--card))"
+                    >
+                      {testDistributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <RechartsRechartsTooltip content={<CustomTooltip />} />
+                    <Legend
+                      iconSize={10}
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                      wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  No test distribution data.
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg font-semibold text-foreground">
+        <Card className="shadow-lg hover:shadow-2xl transition-all duration-300 rounded-xl border-0 bg-gradient-to-br from-card via-card to-card/95 group">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              Browser Distribution
+              {browserDistributionData.length > 0 && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  ({browserDistributionData.length} total)
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+              {browserDistributionData.length > 0 ? (
+                browserDistributionData.slice(0, 5).map((browser, index) => (
+                  <div
+                    key={browser.name}
+                    className="flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 transition-all duration-200 group/item"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <BrowserIcon
+                        browserName={browser.name}
+                        className="flex-shrink-0"
+                      />
+                      <span className="text-sm font-medium text-foreground truncate">
+                        {browser.name}
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-foreground whitespace-nowrap ml-2">
+                      {browser.percentage}% ({browser.value})
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-muted-foreground py-8 text-sm">
+                  No browser data.
+                </div>
+              )}
+              {browserDistributionData.length > 5 && (
+                <div className="flex items-center justify-center pt-2 mt-2 border-t border-border opacity-60 italic text-xs text-muted-foreground">
+                  +{browserDistributionData.length - 5} more browsers
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 3: Tests by Browser (Full Width) */}
+      <div className="grid gap-6 md:grid-cols-1">
+        <Card className="shadow-lg hover:shadow-2xl transition-all duration-300 rounded-xl border-0 bg-gradient-to-br from-card via-card to-card/95 group">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
               Tests by Browser
             </CardTitle>
             <CardDescription className="text-xs">
               Breakdown of test outcomes per browser.
             </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="w-full h-[250px]">
-            {browserChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsBarChart
-                  data={browserChartData}
-                  layout="vertical"
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    type="number"
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={10}
-                  />
-                  <YAxis dataKey="name" type="category" hide={true} />
-                  <RechartsRechartsTooltip
-                    content={<CustomTooltip />}
-                    cursor={{ fill: "hsl(var(--muted))", fillOpacity: 0.3 }}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
-                  />
-                  <Bar
-                    dataKey="passed"
-                    name="Passed"
-                    stackId="a"
-                    fill={COLORS.passed}
-                    barSize={20}
-                  />
-                  <Bar
-                    dataKey="failed"
-                    name="Failed"
-                    stackId="a"
-                    fill={COLORS.failed}
-                    barSize={20}
-                  />
-                  <Bar
-                    dataKey="skipped"
-                    name="Skipped"
-                    stackId="a"
-                    fill={COLORS.skipped}
-                    barSize={20}
-                  />
-                  {showPendingInBrowserChart && (
+          </CardHeader>
+          <CardContent>
+            <div className="w-full h-[250px]">
+              {browserChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsBarChart
+                    data={browserChartData}
+                    layout="vertical"
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                    />
+                    <XAxis
+                      type="number"
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={10}
+                    />
+                    <YAxis dataKey="name" type="category" hide={true} />
+                    <RechartsRechartsTooltip
+                      content={<CustomTooltip />}
+                      cursor={{ fill: "hsl(var(--muted))", fillOpacity: 0.3 }}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
+                    />
                     <Bar
-                      dataKey="pending"
-                      name="Pending"
+                      dataKey="passed"
+                      name="Passed"
                       stackId="a"
-                      fill={COLORS.pending}
+                      fill={COLORS.passed}
                       barSize={20}
                     />
-                  )}
-                </RechartsBarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-center text-muted-foreground h-[250px] flex items-center justify-center">
-                No browser data.
-              </div>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-xs text-muted-foreground">
-            {browserChartData.map((b) => (
-              <div
-                key={b.name}
-                className="flex items-center gap-1"
-                title={b.name}
-              >
-                <BrowserIcon browserName={b.name} className="mr-1" />
-                <span className="truncate max-w-[150px]">{b.name}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Note: Icons are representative. Full browser name (including
-            version) is shown in tooltip.
-          </p>
-        </CardContent>
-      </Card>
+                    <Bar
+                      dataKey="failed"
+                      name="Failed"
+                      stackId="a"
+                      fill={COLORS.failed}
+                      barSize={20}
+                    />
+                    <Bar
+                      dataKey="skipped"
+                      name="Skipped"
+                      stackId="a"
+                      fill={COLORS.skipped}
+                      barSize={20}
+                    />
+                    {showPendingInBrowserChart && (
+                      <Bar
+                        dataKey="pending"
+                        name="Pending"
+                        stackId="a"
+                        fill={COLORS.pending}
+                        barSize={20}
+                      />
+                    )}
+                  </RechartsBarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center text-muted-foreground h-[250px] flex items-center justify-center">
+                  No browser data.
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-xs text-muted-foreground">
+              {browserChartData.map((b) => (
+                <div
+                  key={b.name}
+                  className="flex items-center gap-1"
+                  title={b.name}
+                >
+                  <BrowserIcon browserName={b.name} className="mr-1" />
+                  <span className="truncate max-w-[150px]">{b.name}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Note: Icons are representative. Full browser name (including
+              version) is shown in tooltip.
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Third Row: Test Performance Metrics */}
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg font-semibold text-foreground">
-              Failed Tests Duration
+      {/* Row 3: Top 10 Slowest Tests */}
+      <div className="grid gap-6 md:grid-cols-1">
+        <Card className="shadow-lg hover:shadow-2xl transition-all duration-300 rounded-xl border-0 bg-gradient-to-br from-card via-card to-card/95 group lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+              Top 10 Slowest Tests
             </CardTitle>
             <CardDescription className="text-xs">
-              Duration of failed or timed out tests (Top 10).
+              Top 10 longest running tests in this run. Full names in tooltip.
             </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="w-full h-[250px]">
-            {failedTestsDurationData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsBarChart
-                  data={failedTestsDurationData}
-                  margin={{ top: 5, right: 5, left: 5, bottom: 20 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis dataKey="name" hide={true} />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={10}
-                    tickFormatter={(value: number) =>
-                      formatDurationForChart(value)
-                    }
-                    domain={[
-                      0,
-                      (dataMax: number) =>
-                        dataMax > 0 ? Math.round(dataMax * 1.2) : 100,
-                    ]}
-                  />
-                  <RechartsRechartsTooltip
-                    content={({
-                      active,
-                      payload,
-                      label,
-                    }: RechartsTooltipProps) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload as {
-                          duration: number;
-                          fullTestName: string;
-                        };
-                        return (
-                          <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-                            <p
-                              className="label text-sm font-semibold text-foreground truncate max-w-xs"
-                              title={data.fullTestName}
-                            >
-                              {formatTestNameForChart(data.fullTestName)}
-                            </p>
-                            <p
-                              className="text-xs"
-                              style={{ color: COLORS.failed }}
-                            >
-                              Duration: {formatDurationForChart(data.duration)}
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                    cursor={{ fill: "hsl(var(--muted))", fillOpacity: 0.3 }}
-                  />
-                  <Bar
-                    dataKey="duration"
-                    name="Duration"
-                    fill={COLORS.failed}
-                    barSize={20}
+          </CardHeader>
+          <CardContent>
+            <div className="w-full h-[250px]">
+              {slowestTestsData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsBarChart
+                    data={slowestTestsData}
+                    margin={{ top: 5, right: 5, left: 5, bottom: 30 }}
                   >
-                    <LabelList
-                      dataKey="durationFormatted"
-                      position="top"
-                      style={{
-                        fontSize: "10px",
-                        fill: "hsl(var(--destructive))",
-                      }}
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
                     />
-                  </Bar>
-                </RechartsBarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-[250px] text-center">
-                <CheckCircle className="h-12 w-12 text-green-500 mb-2" />
-                <p className="text-muted-foreground">
-                  No failed tests in this run!
-                </p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg font-semibold text-foreground">
-              Slowest Tests (Top 5)
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Top 5 longest running tests in this run. Full names in tooltip.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="w-full h-[250px]">
-            {slowestTestsData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsBarChart
-                  data={slowestTestsData}
-                  margin={{ top: 5, right: 5, left: 5, bottom: 30 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    tickLine={false}
-                    tickFormatter={() => ""}
-                    stroke="hsl(var(--muted-foreground))"
-                  />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={10}
-                    tickFormatter={(value: number) =>
-                      formatDurationForChart(value)
-                    }
-                    domain={[
-                      0,
-                      (dataMax: number) =>
-                        dataMax > 0 ? Math.round(dataMax * 1.2) : 100,
-                    ]}
-                  />
-                  <RechartsRechartsTooltip
-                    content={({
-                      active,
-                      payload,
-                      label,
-                    }: RechartsTooltipProps) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload as {
-                          duration: number;
-                          fullTestName: string;
-                          status: DetailedTestResult["status"];
-                        };
-                        return (
-                          <div className="bg-card p-3 border border-border rounded-md shadow-lg">
-                            <p
-                              className="label text-sm font-semibold text-foreground truncate max-w-xs"
-                              title={data.fullTestName}
-                            >
-                              {formatTestNameForChart(data.fullTestName)}
-                            </p>
-                            <p
-                              className="text-xs"
-                              style={{
-                                color:
-                                  data.status === "passed"
-                                    ? COLORS.passed
-                                    : data.status === "failed" ||
-                                        data.status === "timedOut"
-                                      ? COLORS.failed
-                                      : COLORS.skipped,
-                              }}
-                            >
-                              Duration: {formatDurationForChart(data.duration)}{" "}
-                              (Status: {data.status})
-                            </p>
-                          </div>
-                        );
+                    <XAxis
+                      dataKey="name"
+                      tickLine={false}
+                      tickFormatter={() => ""}
+                      stroke="hsl(var(--muted-foreground))"
+                    />
+                    <YAxis
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={10}
+                      tickFormatter={(value: number) =>
+                        formatDurationForChart(value)
                       }
-                      return null;
-                    }}
-                    cursor={{ fill: "hsl(var(--muted))", fillOpacity: 0.3 }}
-                  />
-                  <Bar dataKey="duration" name="Duration" barSize={20}>
-                    {slowestTestsData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={
-                          entry.status === "passed"
-                            ? COLORS.passed
-                            : entry.status === "failed" ||
-                                entry.status === "timedOut"
-                              ? COLORS.failed
-                              : COLORS.skipped
-                        }
-                      />
-                    ))}
-                    <LabelList
-                      dataKey="durationFormatted"
-                      position="top"
-                      style={{
-                        fontSize: "10px",
-                        fill: "hsl(var(--foreground))",
-                      }}
+                      domain={[
+                        0,
+                        (dataMax: number) =>
+                          dataMax > 0 ? Math.round(dataMax * 1.2) : 100,
+                      ]}
                     />
-                  </Bar>
-                </RechartsBarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-muted-foreground h-[250px] flex items-center justify-center">
-                No test data to display for slowest tests.
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                    <RechartsRechartsTooltip
+                      content={({
+                        active,
+                        payload,
+                        label,
+                      }: RechartsTooltipProps) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload as {
+                            duration: number;
+                            fullTestName: string;
+                            status: DetailedTestResult["status"];
+                          };
+                          return (
+                            <div className="bg-card p-3 border border-border rounded-md shadow-lg">
+                              <p
+                                className="label text-sm font-semibold text-foreground truncate max-w-xs"
+                                title={data.fullTestName}
+                              >
+                                {formatTestNameForChart(data.fullTestName)}
+                              </p>
+                              <p
+                                className="text-xs"
+                                style={{
+                                  color:
+                                    data.status === "passed"
+                                      ? COLORS.passed
+                                      : data.status === "failed" ||
+                                          data.status === "timedOut"
+                                        ? COLORS.failed
+                                        : COLORS.skipped,
+                                }}
+                              >
+                                Duration:{" "}
+                                {formatDurationForChart(data.duration)} (Status:{" "}
+                                {data.status})
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                      cursor={{ fill: "hsl(var(--muted))", fillOpacity: 0.3 }}
+                    />
+                    <Bar dataKey="duration" name="Duration" barSize={20}>
+                      {slowestTestsData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            entry.status === "passed"
+                              ? COLORS.passed
+                              : entry.status === "failed" ||
+                                  entry.status === "timedOut"
+                                ? COLORS.failed
+                                : COLORS.skipped
+                          }
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="durationFormatted"
+                        position="top"
+                        style={{
+                          fontSize: "10px",
+                          fill: "hsl(var(--foreground))",
+                        }}
+                      />
+                    </Bar>
+                  </RechartsBarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-muted-foreground h-[250px] flex items-center justify-center">
+                  No test data to display for slowest tests.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Full Width: Suite Overview */}
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg font-semibold text-foreground">
-              Tests per Suite
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Breakdown of test outcomes per suite.
-            </CardDescription>
-          </div>
+      <Card className="shadow-lg hover:shadow-2xl transition-all duration-300 rounded-xl border-0 bg-gradient-to-br from-card via-card to-card/95 group">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+            Test Results by Suite
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Breakdown of test outcomes per suite.
+          </CardDescription>
         </CardHeader>
         <CardContent className="max-h-[400px] overflow-y-auto">
           <div
@@ -1137,20 +1061,25 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
       </Card>
 
       {/* Full Width: Worker Utilization */}
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl">
+      <Card className="shadow-lg hover:shadow-2xl transition-all duration-300 rounded-xl border-0 bg-gradient-to-br from-card via-card to-card/95 group">
         <CardHeader>
           <div className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-primary flex items-center">
-              <Users className="h-5 w-5 mr-2" /> Worker Utilization
-            </CardTitle>
+            <div>
+              <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                Worker Utilization
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Filter and inspect tests chronologically for each worker. Slice
+                size represents test duration.
+              </CardDescription>
+            </div>
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
           </div>
-          <CardDescription className="text-xs">
-            Filter and inspect tests chronologically for each worker. Slice size
-            represents test duration.
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 p-6 border border-border/50 rounded-xl bg-muted/40 shadow-inner backdrop-blur-sm">
             <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
