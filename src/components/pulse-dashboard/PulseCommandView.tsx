@@ -121,8 +121,8 @@ export function PulseCommandView() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <strong>Note:</strong> These report generation commands are valid if
-          the report directory is <strong>'pulse-report'</strong>, default
+          <strong>Note:</strong> These report generation commands are only valid
+          if the report directory is <strong>'pulse-report'</strong>, default
           report folder. Otherwise kindly use the CLI commands, for custom
           report directory.
         </AlertDescription>

@@ -69,7 +69,7 @@ export interface RunMetadata {
   pending?: number;
   flakinessRate?: number;
   userProjectDir?: string;
-  environment?: EnvironmentInfo;
+  environment?: EnvironmentInfo | EnvironmentInfo[];
 }
 
 export interface ReportFileMetadata {
@@ -81,7 +81,7 @@ export interface PlaywrightPulseReport {
   run: RunMetadata;
   results: DetailedTestResult[];
   metadata: ReportFileMetadata;
-  environment?: EnvironmentInfo; // Can also be at the root as per some report structures
+  environment?: EnvironmentInfo | EnvironmentInfo[];
 }
 
 export interface HistoricalTrend {

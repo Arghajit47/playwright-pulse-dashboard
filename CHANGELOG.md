@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **UI Revamp**: Improved layout for "Failure Categorization" and "Dashboard" Tab, with better spacing and alignments.
 - **Chart Alignment Adjustment**: Made minor adjustments to chart alignments for better visual consistency.
+- **Added Multi-Environment Support**: Enhanced dashboard to display results from multiple environments side-by-side for comparative analysis in Dashboard.
 
 ## [1.2.6] - 2026-01-09
 
