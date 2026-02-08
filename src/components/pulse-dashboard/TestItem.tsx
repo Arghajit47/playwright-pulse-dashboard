@@ -102,6 +102,9 @@ export function TestItem({ test }: TestItemProps) {
     test.errorMessage || quickLookScreenshots.length > 0;
   const displayName = formatTestName(test.name);
 
+  // --- Retry Count Badge (only show if retries occurred) ---
+  const retryCount = test.retryHistory ? test.retryHistory.length : 0;
+
   return (
     <div className="border-b border-border last:border-b-0 py-3 hover:bg-muted/20 transition-colors duration-200 px-4 rounded-lg mb-2 shadow-md bg-card hover:shadow-lg">
       <div className="flex items-center justify-between">
@@ -128,6 +131,15 @@ export function TestItem({ test }: TestItemProps) {
                 {tag}
               </Badge>
             ))}
+          {retryCount > 0 && (
+            <Badge
+              variant="outline"
+              className="retry-badge text-xs px-2 py-0.5 rounded-md border"
+              style={{ backgroundColor: "#ff9800", color: "#fff", borderColor: "#f57c00" }}
+            >
+              Retry Count: {retryCount}
+            </Badge>
+          )}
           {severityAnnotation && (
             <Badge
               variant="outline"

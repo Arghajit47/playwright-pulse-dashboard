@@ -117,7 +117,8 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
       const browserMatch = selectedBrowser === 'all' || test.browser === selectedBrowser;
       const currentSuiteName = test.suiteName || "Untitled Suite";
       const suiteMatch = selectedSuite === 'all' || currentSuiteName === selectedSuite;
-      const retriesMatch = !showRetriesOnly || (showRetriesOnly && test.retries > 0);
+      const retries = (test.retryHistory && test.retryHistory.length > 0) ? test.retryHistory.length : test.retries;
+      const retriesMatch = !showRetriesOnly || (showRetriesOnly && retries > 0);
       
       return statusMatch && searchTermMatch && tagMatch && browserMatch && suiteMatch && retriesMatch;
     });
