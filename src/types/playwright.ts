@@ -35,6 +35,7 @@ export interface DetailedTestResult {
   endTime: string; // ISO string
   browser: string;
   retries: number;
+  retryHistory?: any[];
   steps: TestStep[];
   errorMessage?: string | null;
   stdout?: string[] | null;

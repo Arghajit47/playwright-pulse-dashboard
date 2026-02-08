@@ -343,10 +343,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
     }
   }, [availableWorkers]);
 
-  const workerDonutData = useMemo(() => {
+  const filteredTests = useMemo(() => {
     if (!currentRun?.results) return [];
 
-    const filteredTests = currentRun.results.filter(test => {
+    return currentRun.results.filter(test => {
         const workerIdStr = test.workerId != null ? String(test.workerId) : '';
 
         if (workerFilter.length > 0 && !workerFilter.includes(workerIdStr)) {
@@ -363,6 +363,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         }
         return test.startTime && typeof test.duration === 'number';
     });
+  }, [currentRun?.results, testNameFilter, suiteFilter, workerFilter]);
+
+  const workerDonutData = useMemo(() => {
+    if (!currentRun?.results) return [];
 
     const testsByWorker = filteredTests.reduce((acc, test) => {
       const workerId = test.workerId != null ? String(test.workerId) : 'unknown';
@@ -539,31 +543,33 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const showPendingInBrowserChart = browserChartData.some(d => d.pending > 0);
   const showPendingInSuiteChart = testsPerSuiteChartData.some(s => s.pending > 0);
 
-  const retryStats = currentRun.results.reduce(
-    (acc, test: DetailedTestResult) => {
-      acc.totalTests++;
-      if (test.retries > 0) {
-        acc.testsWithRetries++;
-        acc.totalRetries += test.retries;
-        if (test.retries > acc.maxRetries) {
-          acc.maxRetries = test.retries;
-          acc.maxRetryTests = [test.name];
-        } else if (test.retries === acc.maxRetries && acc.maxRetries > 0) {
-          acc.maxRetryTests.push(test.name);
-        }
-      }
-      return acc;
-    },
-    {
-      totalTests: 0,
-      testsWithRetries: 0,
-      totalRetries: 0,
-      maxRetries: 0,
-      maxRetryTests: [] as string[],
-    },
-  );
+  const retryStats = useMemo(() => {
+    return filteredTests.reduce(
+      (acc, test: DetailedTestResult) => {
+        acc.totalTests++;
+        const retries = (test.retryHistory && test.retryHistory.length > 0) ? test.retryHistory.length : test.retries;
 
-  console.log("Retry Stats:", retryStats);
+        if (retries > 0) {
+          acc.testsWithRetries++;
+          acc.totalRetries += retries;
+          if (retries > acc.maxRetries) {
+            acc.maxRetries = retries;
+            acc.maxRetryTests = [test.name];
+          } else if (retries === acc.maxRetries && acc.maxRetries > 0) {
+            acc.maxRetryTests.push(test.name);
+          }
+        }
+        return acc;
+      },
+      {
+        totalTests: 0,
+        testsWithRetries: 0,
+        totalRetries: 0,
+        maxRetries: 0,
+        maxRetryTests: [] as string[],
+      },
+    );
+  }, [filteredTests]);
 
   const browserDistributionData = browserChartData.map((browser) => ({
     name: browser.name,
