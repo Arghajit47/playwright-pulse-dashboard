@@ -10,9 +10,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Repeat, Terminal, CheckCircle, XCircle, SkipForward, Clock, CalendarDays, BarChartHorizontalBig } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 
 function StatusBadge({ status }: { status: FlakyTestOccurrence['status'] }) {
   let badgeStyle: React.CSSProperties = {};

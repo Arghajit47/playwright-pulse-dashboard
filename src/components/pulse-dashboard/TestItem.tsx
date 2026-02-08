@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle2, XCircle, AlertCircle, Clock, Eye, ChevronRight, Info } from 'lucide-react';
-import { cn, ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
+import { ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
 import { useMemo } from 'react';
 
 interface TestItemProps {

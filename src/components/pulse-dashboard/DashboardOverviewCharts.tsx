@@ -8,7 +8,6 @@ import { PieChart as RechartsPieChart, Pie, BarChart as RechartsBarChart, Bar, X
 import type { PieSectorDataItem } from 'recharts/types/polar/Pie.d.ts';
 import {
   Terminal,
-  CheckCircle,
   Info,
   Chrome,
   Globe,
@@ -17,8 +16,6 @@ import {
   ListFilter,
   RotateCcw,
   Search,
-  RefreshCw,
-  XCircle,
 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
