@@ -28,6 +28,8 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 // --- FIX: Import Tooltip components for the reset button ---
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 
 interface LazyChartWrapperProps {
@@ -639,18 +641,32 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                   Max Retries
                 </p>
                 {retryStats.maxRetryTests.length > 0 && (
-                  <p
-                    className="text-xs text-muted-foreground mt-2 truncate"
-                    title={retryStats.maxRetryTests.join(", ")}
-                  >
-                    {retryStats.maxRetryTests[0]}
-                    {retryStats.maxRetryTests.length > 1 && (
-                      <span>
-                        {" "}
-                        and {retryStats.maxRetryTests.length - 1} more
-                      </span>
-                    )}
-                  </p>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="text-xs text-muted-foreground mt-2 truncate cursor-pointer border-b border-dotted border-muted-foreground/50 inline-block max-w-[180px] hover:text-foreground transition-colors focus:outline-none">
+                        Tests with Max Retries ({retryStats.maxRetryTests.length})
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0 overflow-hidden border-border shadow-xl">
+                      <div className="bg-muted/50 px-3 py-2 border-b border-border">
+                        <h4 className="font-semibold text-xs text-foreground">
+                          Tests with Max Retries ({retryStats.maxRetries})
+                        </h4>
+                      </div>
+                      <ScrollArea className="max-h-[200px] overflow-y-auto p-2">
+                        <ul className="space-y-1">
+                          {retryStats.maxRetryTests.map((testName, i) => (
+                            <li
+                              key={i}
+                              className="text-xs text-muted-foreground break-words leading-tight bg-card/50 p-1.5 rounded-md border border-transparent hover:border-border transition-colors text-left"
+                            >
+                              {testName.replace(">", "•")}
+                            </li>
+                          ))}
+                        </ul>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
                 )}
               </div>
             </div>
