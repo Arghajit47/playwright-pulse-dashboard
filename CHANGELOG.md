@@ -2,15 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.7] - 2026-02-03
+## [1.2.7] - 2026-02-11
 
 ### Added
-- **New Card components**: Added 2 new card components, "Retry Count" and "Browser Distribution" for better visual organization and layout
+- **New Card components**: Added new KPI card components, "Total Retries Count", "Avg. Test Time" and "Flaky" for better visual organization and layout.
 
 ### Changed
 - **UI Revamp**: Improved layout for "Failure Categorization" and "Dashboard" Tab, with better spacing and alignments.
 - **Chart Alignment Adjustment**: Made minor adjustments to chart alignments for better visual consistency.
 - **Added Multi-Environment Support**: Enhanced dashboard to display results from multiple environments side-by-side for comparative analysis in Dashboard.
+- **Added Test retry statistics**: Added test retry statistics to the dashboard for 'Tests with Retries', 'Total Retries', 'Max Retries' and 'Tests with Max Retries'.
+- **Added Test Flakiness**: Added test flakiness through out the dashboard tabs for 'Flaky Tests' analysis.
+- **Flaky Test Analysis tab**: Upgraded the flaky test analysis tab to display the flaky tests in "Current Run" and "Historical Data" for comparative analysis.
+- **Added Retry Count**: Added retry count to the test results for better understanding of test failures. Also, each retry run steps are now visible in the test results with proper attachments, logs, etc.
+- **Added Browser Distribution**: Added browser distribution to the dashboard for better understanding of test distribution across browsers.
 
 ## [1.2.6] - 2026-01-09
 

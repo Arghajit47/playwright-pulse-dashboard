@@ -444,7 +444,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                   {retryStats.totalRetries}
                 </div>
                 <p className="text-sm text-muted-foreground mt-2 font-medium">
-                  Total Retries
+                  Total Retries Count
                 </p>
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
