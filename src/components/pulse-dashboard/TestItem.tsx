@@ -6,7 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle2, XCircle, AlertCircle, Clock, Eye, ChevronRight, Info } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, Clock, Eye, ChevronRight, Info, AlertTriangle } from 'lucide-react';
 import { ansiToHtml, getAssetPath as getUtilAssetPath } from '@/lib/utils';
 import { useMemo } from 'react';
 
@@ -31,6 +31,8 @@ function StatusIcon({ status }: { status: DetailedTestResult['status'] }) {
       return <AlertCircle className="h-5 w-5 text-[hsl(var(--accent))]" />;
     case 'timedOut':
       return <Clock className="h-5 w-5 text-destructive" />;
+    case 'flaky':
+      return <AlertTriangle className="h-5 w-5 text-[hsl(var(--flaky))]" />;
     case 'pending':
       return <Clock className="h-5 w-5 text-primary animate-pulse" />;
     default:
@@ -103,7 +105,10 @@ export function TestItem({ test }: TestItemProps) {
   const displayName = formatTestName(test.name);
 
   // --- Retry Count Badge (only show if retries occurred) ---
-  const retryCount = test.retryHistory ? test.retryHistory.length : 0;
+  // Count failed attempts in history. If no history, 0.
+  const retryCount = test.retryHistory 
+    ? test.retryHistory.filter((r: any) => r.status !== 'passed' && r.status !== 'skipped').length 
+    : 0;
 
   return (
     <div className="border-b border-border last:border-b-0 py-3 hover:bg-muted/20 transition-colors duration-200 px-4 rounded-lg mb-2 shadow-md bg-card hover:shadow-lg">

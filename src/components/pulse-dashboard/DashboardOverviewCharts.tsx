@@ -1,6 +1,7 @@
 'use client';
 
 import type { PlaywrightPulseReport, DetailedTestResult } from '@/types/playwright.js';
+import { getEffectiveTestStatus } from '@/lib/testUtils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -115,6 +116,7 @@ const COLORS = {
   passed: 'hsl(var(--chart-3))',
   failed: 'hsl(var(--destructive))',
   skipped: 'hsl(var(--accent))',
+  flaky: 'hsl(var(--flaky))', // Consistently use flaky sky color
   timedOut: 'hsl(var(--destructive))',
   pending: 'hsl(var(--muted-foreground))',
   default1: 'hsl(var(--chart-1))',
@@ -482,13 +484,32 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   }
 
   const { passed, failed, skipped, timedOut = 0, pending = 0 } = currentRun.run;
-  const totalTestsForPie = passed + failed + skipped + timedOut + pending;
+  // Calculate strict status counts from results for the chart, ignoring run summary if it doesn't match strict logic
+  const strictCounts = {
+      passed: 0,
+      failed: 0,
+      skipped: 0,
+      flaky: 0,
+      pending: 0
+  };
+  
+  currentRun.results.forEach(test => {
+      const status = getEffectiveTestStatus(test);
+      if (status === 'passed') strictCounts.passed++;
+      else if (status === 'failed' || status === 'timedOut') strictCounts.failed++;
+      else if (status === 'skipped') strictCounts.skipped++;
+      else if (status === 'flaky') strictCounts.flaky++;
+      else if (status === 'pending') strictCounts.pending++;
+  });
+
+  const totalTestsForPie = strictCounts.passed + strictCounts.failed + strictCounts.skipped + strictCounts.flaky + strictCounts.pending;
 
   const testDistributionData = [
-    { name: 'Passed', value: passed, fill: COLORS.passed },
-    { name: 'Failed', value: failed + timedOut, fill: COLORS.failed },
-    { name: 'Skipped', value: skipped, fill: COLORS.skipped },
-    ...(pending > 0 ? [{ name: 'Pending', value: pending, fill: COLORS.pending }] : []),
+    { name: 'Passed', value: strictCounts.passed, fill: COLORS.passed },
+    { name: 'Failed', value: strictCounts.failed, fill: COLORS.failed },
+    { name: 'Skipped', value: strictCounts.skipped, fill: COLORS.skipped },
+    { name: 'Flaky', value: strictCounts.flaky, fill: COLORS.flaky },
+    ...(strictCounts.pending > 0 ? [{ name: 'Pending', value: strictCounts.pending, fill: COLORS.pending }] : []),
   ]
   .filter(d => d.value > 0)
   .map(d => ({ ...d, name: d.name, value: d.value, fill: d.fill, percentage: totalTestsForPie > 0 ? ((d.value / totalTestsForPie) * 100).toFixed(1) : '0.0' }));
@@ -497,33 +518,36 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const browserDistributionRaw = currentRun.results.reduce((acc, test: DetailedTestResult) => {
     const browserName = test.browser || 'Unknown';
     if (!acc[browserName]) {
-      acc[browserName] = { name: browserName, passed: 0, failed: 0, skipped: 0, pending: 0, total: 0 };
+      acc[browserName] = { name: browserName, passed: 0, failed: 0, skipped: 0, flaky: 0, pending: 0, total: 0 };
     }
-    if (test.status === 'passed') acc[browserName].passed++;
-    else if (test.status === 'failed' || test.status === 'timedOut') acc[browserName].failed++;
-    else if (test.status === 'skipped') acc[browserName].skipped++;
-    else if (test.status === 'pending') acc[browserName].pending++;
+    const status = getEffectiveTestStatus(test);
+    
+    if (status === 'passed') acc[browserName].passed++;
+    else if (status === 'failed' || status === 'timedOut') acc[browserName].failed++;
+    else if (status === 'skipped') acc[browserName].skipped++;
+    else if (status === 'flaky') acc[browserName].flaky++;
+    else if (status === 'pending') acc[browserName].pending++;
     acc[browserName].total++;
     return acc;
-  }, {} as Record<string, { name: string; passed: number; failed: number; skipped: number; pending: number; total: number }>);
+  }, {} as Record<string, { name: string; passed: number; failed: number; skipped: number; flaky: number; pending: number; total: number }>);
 
   const browserChartData = Object.values(browserDistributionRaw).sort((a, b) => b.total - a.total);
-
-
-
 
   const suiteDistributionRaw = currentRun.results.reduce((acc, test: DetailedTestResult) => {
     const suiteName = test.suiteName || 'Unknown Suite';
     if (!acc[suiteName]) {
-      acc[suiteName] = { name: suiteName, passed: 0, failed: 0, skipped: 0, pending: 0, total: 0 };
+      acc[suiteName] = { name: suiteName, passed: 0, failed: 0, skipped: 0, flaky: 0, pending: 0, total: 0 };
     }
-    if (test.status === 'passed') acc[suiteName].passed++;
-    else if (test.status === 'failed' || test.status === 'timedOut') acc[suiteName].failed++;
-    else if (test.status === 'skipped') acc[suiteName].skipped++;
-    else if (test.status === 'pending') acc[suiteName].pending++;
+    const status = getEffectiveTestStatus(test);
+    
+    if (status === 'passed') acc[suiteName].passed++;
+    else if (status === 'failed' || status === 'timedOut') acc[suiteName].failed++;
+    else if (status === 'skipped') acc[suiteName].skipped++;
+    else if (status === 'flaky') acc[suiteName].flaky++;
+    else if (status === 'pending') acc[suiteName].pending++;
     acc[suiteName].total++;
     return acc;
-  }, {} as Record<string, { name: string; passed: number; failed: number; skipped: number; pending: number; total: number }>);
+  }, {} as Record<string, { name: string; passed: number; failed: number; skipped: number; flaky: number; pending: number; total: number }>);
 
   const testsPerSuiteChartData = Object.values(suiteDistributionRaw).sort((a, b) => b.total - a.total);
 
@@ -538,7 +562,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
         duration: test.duration,
         durationFormatted: formatDurationForChart(test.duration),
         fullTestName: test.name,
-        status: test.status,
+        status: getEffectiveTestStatus(test),
       };
     });
 
@@ -546,10 +570,17 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
   const showPendingInSuiteChart = testsPerSuiteChartData.some(s => s.pending > 0);
 
   const retryStats = useMemo(() => {
-    return filteredTests.reduce(
+    return filteredTests.reduce( // Use filteredTests to reflect current view? Or original results? Usually stats are global unless filtered.
+        // Wait, the logic for retryStats was using filteredTests before. I will keep it consistent.
       (acc, test: DetailedTestResult) => {
         acc.totalTests++;
-        const retries = (test.retryHistory && test.retryHistory.length > 0) ? test.retryHistory.length : test.retries;
+        // FIX: Calculate actual retries by counting non-passed/non-skipped attempts in history.
+        // This avoids counting multiple passed runs (e.g. repeat-each) as retries.
+        const retries = test.retryHistory
+          ? test.retryHistory.filter(
+              (r: any) => r.status !== "passed" && r.status !== "skipped"
+            ).length
+          : 0;
 
         if (retries > 0) {
           acc.testsWithRetries++;
@@ -837,6 +868,13 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                       fill={COLORS.skipped}
                       barSize={20}
                     />
+                    <Bar
+                      dataKey="flaky"
+                      name="Flaky"
+                      stackId="a"
+                      fill={COLORS.flaky}
+                      barSize={20}
+                    />
                     {showPendingInBrowserChart && (
                       <Bar
                         dataKey="pending"
@@ -941,13 +979,15 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                               <p
                                 className="text-xs"
                                 style={{
-                                  color:
+                              color:
                                     data.status === "passed"
                                       ? COLORS.passed
                                       : data.status === "failed" ||
                                           data.status === "timedOut"
                                         ? COLORS.failed
-                                        : COLORS.skipped,
+                                        : data.status === "flaky"
+                                          ? COLORS.flaky
+                                          : COLORS.skipped,
                                 }}
                               >
                                 Duration:{" "}
@@ -971,7 +1011,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                               : entry.status === "failed" ||
                                   entry.status === "timedOut"
                                 ? COLORS.failed
-                                : COLORS.skipped
+                                : entry.status === "flaky"
+                                  ? COLORS.flaky
+                                  : COLORS.skipped
                           }
                         />
                       ))}
@@ -1066,6 +1108,13 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                     name="Skipped"
                     stackId="suiteStack"
                     fill={COLORS.skipped}
+                    barSize={15}
+                  />
+                  <Bar
+                    dataKey="flaky"
+                    name="Flaky"
+                    stackId="suiteStack"
+                    fill={COLORS.flaky}
                     barSize={15}
                   />
                   {showPendingInSuiteChart && (
@@ -1291,6 +1340,12 @@ export function DashboardOverviewCharts({ currentRun, loading, error }: Dashboar
                                 type: "square",
                                 id: "ID03",
                                 color: COLORS.skipped,
+                              },
+                              {
+                                value: "Flaky",
+                                type: "square",
+                                id: "ID04",
+                                color: COLORS.flaky,
                               },
                             ]}
                           />

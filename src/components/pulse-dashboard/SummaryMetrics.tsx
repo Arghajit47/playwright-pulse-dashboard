@@ -5,10 +5,11 @@ import type { PlaywrightPulseReport } from '@/types/playwright';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, XCircle, SkipForward, Clock, Terminal, ListFilter } from 'lucide-react';
+import { CheckCircle, XCircle, SkipForward, Clock, Terminal, ListFilter, AlertTriangle } from 'lucide-react';
 import { SystemInformationWidget } from './SystemInformationWidget';
 import type { TestStatusFilter } from './LiveTestResults';
 import dynamic from 'next/dynamic'; // Import next/dynamic
+import { getEffectiveTestStatus } from '@/lib/testUtils';
 
 interface SummaryMetricsProps {
   currentRun: PlaywrightPulseReport | null;
@@ -103,12 +104,30 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
       </>
     );
   }
-  
+
+  // Calculate strict counts based on getEffectiveTestStatus
+  const counts = {
+    total: currentRun?.results?.length || 0,
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    flaky: 0,
+  };
+
+  currentRun?.results?.forEach((test) => {
+    const effectiveStatus = getEffectiveTestStatus(test);
+    if (effectiveStatus === 'passed') counts.passed++;
+    else if (effectiveStatus === 'failed' || effectiveStatus === 'timedOut') counts.failed++;
+    else if (effectiveStatus === 'skipped') counts.skipped++;
+    else if (effectiveStatus === 'flaky') counts.flaky++;
+  });
+
   const metrics = runMetadata ? [
-    { title: 'Total Tests', value: runMetadata.totalTests.toString(), icon: <ListFilter className="h-5 w-5 text-muted-foreground" />, change: null, filterKey: null },
-    { title: 'Passed', value: runMetadata.passed.toString(), icon: <CheckCircle className="h-5 w-5 text-[hsl(var(--chart-3))]" />, change: `${runMetadata.totalTests > 0 ? ((runMetadata.passed / runMetadata.totalTests) * 100).toFixed(1) : '0.0'}% pass rate`, filterKey: 'passed' as TestStatusFilter },
-    { title: 'Failed', value: runMetadata.failed.toString(), icon: <XCircle className="h-5 w-5 text-destructive" />, change: `${runMetadata.totalTests > 0 ? ((runMetadata.failed / runMetadata.totalTests) * 100).toFixed(1) : '0.0'}% fail rate`, filterKey: 'failed' as TestStatusFilter },
-    { title: 'Skipped', value: runMetadata.skipped.toString(), icon: <SkipForward className="h-5 w-5 text-[hsl(var(--accent))]" />, change: `${runMetadata.totalTests > 0 ? ((runMetadata.skipped / runMetadata.totalTests) * 100).toFixed(1) : '0.0'}% skip rate`, filterKey: 'skipped' as TestStatusFilter },
+    { title: 'Total Tests', value: counts.total.toString(), icon: <ListFilter className="h-5 w-5 text-muted-foreground" />, change: null, filterKey: 'all' as TestStatusFilter },
+    { title: 'Passed', value: counts.passed.toString(), icon: <CheckCircle className="h-5 w-5 text-[hsl(var(--chart-3))]" />, change: `${counts.total > 0 ? ((counts.passed / counts.total) * 100).toFixed(1) : '0.0'}% pass rate`, filterKey: 'passed' as TestStatusFilter },
+    { title: 'Flaky', value: counts.flaky.toString(), icon: <AlertTriangle className="h-5 w-5 text-[hsl(var(--flaky))]" />, change: `${counts.total > 0 ? ((counts.flaky / counts.total) * 100).toFixed(1) : '0.0'}% flaky rate`, filterKey: 'flaky' as TestStatusFilter },
+    { title: 'Failed', value: counts.failed.toString(), icon: <XCircle className="h-5 w-5 text-destructive" />, change: `${counts.total > 0 ? ((counts.failed / counts.total) * 100).toFixed(1) : '0.0'}% fail rate`, filterKey: 'failed' as TestStatusFilter },
+    { title: 'Skipped', value: counts.skipped.toString(), icon: <SkipForward className="h-5 w-5 text-[hsl(var(--accent))]" />, change: `${counts.total > 0 ? ((counts.skipped / counts.total) * 100).toFixed(1) : '0.0'}% skip rate`, filterKey: 'skipped' as TestStatusFilter },
     { title: 'Duration', value: formatDuration(runMetadata.duration), icon: <Clock className="h-5 w-5 text-primary" />, change: `Total execution time`, filterKey: null },
   ] : [];
 

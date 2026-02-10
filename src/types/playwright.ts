@@ -29,7 +29,9 @@ export interface DetailedTestResult {
   runId: string;
   name: string;
   suiteName: string;
-  status: "passed" | "failed" | "skipped" | "timedOut" | "pending";
+  status: "passed" | "failed" | "skipped" | "timedOut" | "pending" | "flaky"; // Added 'flaky' to status type
+  outcome?: 'flaky' | 'expected' | 'unexpected' | 'skipped'; // Added outcome field
+  final_status?: 'passed' | 'failed' | 'skipped' | 'timedOut' | 'flaky'; // Added final_status field
   duration: number;
   startTime: string; // ISO string
   endTime: string; // ISO string
@@ -91,6 +93,7 @@ export interface HistoricalTrend {
   passed: number;
   failed: number;
   skipped: number;
+  flaky?: number; // Added flaky count (optional for backward compatibility)
   duration: number;
   flakinessRate?: number;
   workerCount?: number; // Added workerCount

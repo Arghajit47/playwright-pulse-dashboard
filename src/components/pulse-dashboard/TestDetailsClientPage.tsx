@@ -2,11 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useTestData } from "@/hooks/useTestData";
-import type {
+import {
   DetailedTestResult,
   PlaywrightPulseReport,
   TestStep,
 } from "@/types/playwright";
+import { getEffectiveTestStatus } from "@/lib/testUtils";
 import {
   Card,
   CardContent,
@@ -91,6 +92,7 @@ const StatusDot = (props: CustomDotProps) => {
 
   let color = "hsl(var(--muted-foreground))"; // Default color
   if (payload.status === "passed") color = "hsl(var(--chart-3))";
+  else if (payload.status === "flaky") color = "hsl(var(--flaky))";
   else if (payload.status === "failed" || payload.status === "timedOut")
     color = "hsl(var(--destructive))";
   else if (payload.status === "skipped") color = "hsl(var(--accent))";
@@ -119,11 +121,13 @@ const HistoryTooltip = ({ active, payload, label }: any) => {
           data.duration
         )}`}</p>
         <p
-          className="text-xs"
+          className="text-xs capitalize font-medium"
           style={{
             color:
               data.status === "passed"
                 ? "hsl(var(--chart-3))"
+                : data.status === "flaky"
+                ? "hsl(var(--flaky))"
                 : data.status === "failed" || data.status === "timedOut"
                 ? "hsl(var(--destructive))"
                 : "hsl(var(--accent))",
@@ -193,6 +197,11 @@ function getStatusBadgeStyle(
       return {
         backgroundColor: "hsl(var(--primary))",
         color: "hsl(var(--primary-foreground))",
+      };
+    case "flaky":
+      return {
+        backgroundColor: "hsl(var(--flaky))",
+        color: "hsl(var(--flaky-foreground))",
       };
     default:
       return {
@@ -1026,7 +1035,11 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
   useEffect(() => {
     setTest(initialTest);
-  }, [initialTest]);
+    // Reset history states when testId changes to allow refetching for the new test
+    setHistoryFetched(false);
+    setTestHistory([]);
+    setErrorHistory(null);
+  }, [initialTest, testId]);
 
   const fetchTestHistory = useCallback(async () => {
     if (
@@ -1057,13 +1070,24 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             r.id === testId && r.suiteName === initialTest.suiteName
         );
         if (historicalTest) {
+          const finalStatus = getEffectiveTestStatus(historicalTest);
+
           historyData.push({
             date: report.run.timestamp,
             duration: historicalTest.duration,
-            status: historicalTest.status,
+            status: finalStatus,
           });
         }
       });
+
+      // Add the current run to historyData so it shows up in the chart
+      if (initialTest && currentRun?.run?.timestamp) {
+        historyData.push({
+          date: currentRun.run.timestamp,
+          duration: initialTest.duration,
+          status: getEffectiveTestStatus(initialTest),
+        });
+      }
 
       historyData.sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -1104,6 +1128,8 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
     switch (status) {
       case "passed":
         return "bg-green-500";
+      case "flaky":
+        return "bg-sky-500";
       case "failed":
       case "timedOut":
         return "bg-red-500";
@@ -1116,8 +1142,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
   const isFailedTest = test?.status === "failed" || test?.status === "timedOut";
 
-  // Calculate retry count from retryHistory if available
-  const retryCount = test?.retryHistory?.length || 0;
+  // Calculate retry count by counting failed attempts in history
+  const retryCount = test?.retryHistory
+    ? test.retryHistory.filter(
+        (r: any) => r.status !== "passed" && r.status !== "skipped"
+      ).length
+    : 0;
 
   if (loadingCurrent && !test) {
     return (
@@ -1232,13 +1262,18 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               </div>
             </div>
             <div className="text-right flex-shrink-0">
-              <Badge
-                variant="outline"
-                className="capitalize text-sm px-3 py-1 rounded-full border"
-                style={getStatusBadgeStyle(test.status)}
-              >
-                {test.status}
-              </Badge>
+              {(() => {
+                const effectiveStatus = getEffectiveTestStatus(test);
+                return (
+                  <Badge
+                    variant="outline"
+                    className="capitalize text-sm px-3 py-1 rounded-full border"
+                    style={getStatusBadgeStyle(effectiveStatus)}
+                  >
+                    {effectiveStatus}
+                  </Badge>
+                );
+              })()}
               <p className="text-sm text-muted-foreground mt-1">
                 Duration: {formatDuration(test.duration)}
               </p>
@@ -1247,6 +1282,26 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                   Retry Count: {retryCount}
                 </Badge>
               )}
+              {/* Outcome Badge */}
+              {retryCount > 0 && test.status === "passed" && (
+                <Badge
+                  variant="outline"
+                  className="ml-2 mt-1 border-sky-500 text-sky-600 bg-sky-500/10"
+                >
+                  Flaky
+                </Badge>
+              )}
+               {/* Severity Badge */}
+              {test.annotations?.map((note, i) => {
+                 if (note.type === 'severity' || note.type === 'priority') {
+                     return (
+                         <Badge key={i} variant="outline" className="ml-2 mt-1 border-blue-500 text-blue-600 bg-blue-500/10 capitalize">
+                             {note.description || note.type}
+                         </Badge>
+                     )
+                 }
+                 return null;
+              })}
               {test.tags && test.tags.length > 0 && (
                 <div className="mt-1 space-x-1">
                   {test.tags.map((tag: string) => (
@@ -1290,8 +1345,10 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     Loading history...
                   </SelectItem>
                 )}
-                {testHistory.map((run) => (
-                  <SelectItem
+                {testHistory
+                  .filter((run) => run.date !== currentRun?.run?.timestamp) // Avoid duplicating "Current Run" in dropdown
+                  .map((run) => (
+                    <SelectItem
                     key={run.date}
                     value={run.date}
                     className="rounded-lg"
@@ -1356,10 +1413,14 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {retryCount > 0 ? (
                 <Tabs defaultValue="base-run" className="w-full">
                   <TabsList className="mb-4">
-                    <TabsTrigger value="base-run">Base Run</TabsTrigger>
-                    {test.retryHistory?.map((_, index) => (
-                      <TabsTrigger key={index} value={`retry-${index}`}>
+                    <TabsTrigger value="base-run" className="flex items-center gap-2">
+                        Base Run
+                        <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(test.status))} />
+                    </TabsTrigger>
+                    {test.retryHistory?.map((retry, index) => (
+                      <TabsTrigger key={index} value={`retry-${index}`} className="flex items-center gap-2">
                         Retry {index + 1}
+                        <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(retry.status))} />
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -1381,10 +1442,14 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {retryCount > 0 ? (
                 <Tabs defaultValue="base-run" className="w-full">
                   <TabsList className="mb-4">
-                    <TabsTrigger value="base-run">Base Run</TabsTrigger>
-                    {test.retryHistory?.map((_, index) => (
-                      <TabsTrigger key={index} value={`retry-${index}`}>
+                    <TabsTrigger value="base-run" className="flex items-center gap-2">
+                        Base Run
+                        <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(test.status))} />
+                    </TabsTrigger>
+                    {test.retryHistory?.map((retry, index) => (
+                      <TabsTrigger key={index} value={`retry-${index}`} className="flex items-center gap-2">
                         Retry {index + 1}
+                        <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(retry.status))} />
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -1406,10 +1471,14 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {retryCount > 0 ? (
                 <Tabs defaultValue="base-run" className="w-full">
                   <TabsList className="mb-4">
-                    <TabsTrigger value="base-run">Base Run</TabsTrigger>
-                    {test.retryHistory?.map((_, index) => (
-                      <TabsTrigger key={index} value={`retry-${index}`}>
-                        Retry {index + 1}
+                    <TabsTrigger value="base-run" className="flex items-center gap-2">
+                        Base Run
+                        <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(test.status))} />
+                    </TabsTrigger>
+                    {test.retryHistory?.map((retry, index) => (
+                      <TabsTrigger key={index} value={`retry-${index}`} className="flex items-center gap-2">
+                         Retry {index + 1}
+                         <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(retry.status))} />
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -1519,10 +1588,14 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 {retryCount > 0 ? (
                   <Tabs defaultValue="base-run" className="w-full">
                     <TabsList className="mb-4">
-                      <TabsTrigger value="base-run">Base Run</TabsTrigger>
-                      {test.retryHistory?.map((_, index) => (
-                        <TabsTrigger key={index} value={`retry-${index}`}>
-                          Retry {index + 1}
+                      <TabsTrigger value="base-run" className="flex items-center gap-2">
+                          Base Run
+                          <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(test.status))} />
+                      </TabsTrigger>
+                      {test.retryHistory?.map((retry, index) => (
+                        <TabsTrigger key={index} value={`retry-${index}`} className="flex items-center gap-2">
+                           Retry {index + 1}
+                           <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(retry.status))} />
                         </TabsTrigger>
                       ))}
                     </TabsList>
