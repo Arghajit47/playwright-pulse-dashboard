@@ -2,10 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.7] - 2026-02-11
+## [1.2.7] - 2026-02-13
 
 ### Added
 - **New Card components**: Added new KPI card components, "Total Retries Count", "Avg. Test Time" and "Flaky" for better visual organization and layout.
+- **Automatic Trend Generation Added**: Modified bin/pulse-dashboard.js to automatically run npx generate-trend before starting the dashboard.
+Now when users run: `npx pulse-dashboard` and it will:
+  - Generate trends (if possible)
+  - Start the dashboard
+  - Handle errors gracefully (dashboard starts even if trend generation fails)
 
 ### Changed
 - **UI Revamp**: Improved layout for "Failure Categorization" and "Dashboard" Tab, with better spacing and alignments.
@@ -16,6 +21,10 @@ All notable changes to this project will be documented in this file.
 - **Flaky Test Analysis tab**: Upgraded the flaky test analysis tab to display the flaky tests in "Current Run" and "Historical Data" for comparative analysis.
 - **Added Retry Count**: Added retry count to the test results for better understanding of test failures. Also, each retry run steps are now visible in the test results with proper attachments, logs, etc.
 - **Added Browser Distribution**: Added browser distribution to the dashboard for better understanding of test distribution across browsers.
+- **Configurable port support**: The dashboard now supports custom port configuration via:
+  - `--port 8080` or `-p 8080` CLI flag
+  - `PORT=8080` environment variable
+  - Default: 9002
 
 ## [1.2.6] - 2026-01-09
 

@@ -1644,6 +1644,16 @@
                 <strong>New Card components</strong>: Added new KPI card components, "Total Retries Count", "Avg. Test Time" and
                 "Flaky" for better visual organization and layout.
               </li>
+              <li>
+                <strong>Automatic Trend Generation Added</strong>: Modified bin/pulse-dashboard.js to automatically run npx
+                generate-trend before starting the dashboard.
+                Now when users run: `npx pulse-dashboard` and it will:
+                <ul>
+                  <li>Generate trends (if possible)</li>
+                  <li>Start the dashboard</li>
+                  <li>Handle errors gracefully (dashboard starts even if trend generation fails)</li>
+                </ul>
+              </li>
             </ul>
             <h3 class="changelog-badge changed">Changed</h3>
             <ul>
@@ -1678,6 +1688,14 @@
               <li>
                 <strong>Added Browser Distribution</strong>: Added browser distribution to the dashboard for better understanding of
                 test distribution across browsers.
+              </li>
+              <li>
+                <strong>Configurable port support</strong>: The dashboard now supports custom port configuration via:
+                <ul>
+                  <li>`--port 8080` or `-p 8080` CLI flag</li>
+                  <li>`PORT=8080` environment variable</li>
+                  <li>Default: 9002</li>
+                </ul>
               </li>
             </ul>
             </div>

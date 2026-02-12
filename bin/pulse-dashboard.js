@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from "fs";
@@ -34,9 +34,12 @@ const nextCommand = existsSync(userNextCommand)
   ? localNextCommand
   : "next";
 
-// Parse CLI arguments for custom output directory
+// Parse CLI arguments for custom output directory and port
 const args = process.argv.slice(2);
 let customOutputDir = null;
+let customPort = null;
+
+// Parse --output-dir or -o
 const outputDirIndex = args.findIndex(
   (arg) => arg === "--output-dir" || arg === "-o"
 );
@@ -44,6 +47,16 @@ if (outputDirIndex !== -1 && args[outputDirIndex + 1]) {
   customOutputDir = args[outputDirIndex + 1];
   // Remove the --output-dir and its value from args to pass clean args to next
   args.splice(outputDirIndex, 2);
+}
+
+// Parse --port or -p for custom port
+const portIndex = args.findIndex(
+  (arg) => arg === "--port" || arg === "-p"
+);
+if (portIndex !== -1 && args[portIndex + 1]) {
+  customPort = args[portIndex + 1];
+  // Remove the --port and its value from args
+  args.splice(portIndex, 2);
 }
 
 // Determine the output directory
@@ -62,13 +75,46 @@ try {
   reportDir = path.join(userCwd, "pulse-report");
 }
 
-const nextArgs = ["start", "-p", "9002"];
+// Determine the port: CLI flag > Environment variable > Default (9002)
+let port = "9002"; // Default port
+if (customPort) {
+  port = customPort;
+  console.log(`[BIN SCRIPT] Using port from CLI argument: ${port}`);
+} else if (process.env.PORT) {
+  port = process.env.PORT;
+  console.log(`[BIN SCRIPT] Using port from PORT environment variable: ${port}`);
+} else {
+  console.log(`[BIN SCRIPT] Using default port: ${port}`);
+}
+
+// Validate port
+const portNum = parseInt(port, 10);
+if (isNaN(portNum) || portNum < 1 || portNum > 65535 || port !== portNum.toString()) {
+  console.error(`[BIN SCRIPT] Error: Invalid port number '${port}'. Port must be a number between 1 and 65535.`);
+  process.exit(1);
+}
+
+const nextArgs = ["start", "-p", port];
 
 console.log(
   `[BIN SCRIPT] Starting Pulse Dashboard from (projectRoot): ${projectRoot}`
 );
 console.log(`[BIN SCRIPT] User CWD (userCwd): ${userCwd}`);
 console.log(`[BIN SCRIPT] Report directory: ${reportDir}`);
+
+// Run generate-trend to ensure trends are up-to-date
+console.log('[BIN SCRIPT] Generating trends...');
+try {
+  // We use npx to run the command, assuming it's available in the environment
+  execSync('npx generate-trend', { 
+    stdio: 'inherit',
+    cwd: userCwd 
+  });
+  console.log('[BIN SCRIPT] Trends generated successfully.');
+} catch (error) {
+  console.warn('[BIN SCRIPT] Warning: Failed to generate trends:', error.message);
+  console.warn('[BIN SCRIPT] Continuing with dashboard startup...');
+}
 
 const envForSpawn = {
   ...process.env, // Inherit existing environment variables
