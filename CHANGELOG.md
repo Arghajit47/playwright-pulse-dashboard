@@ -2,9 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.7] - 2026-02-13
+
+### Added
+- **New Card components**: Added new KPI card components, "Total Retries Count", "Avg. Test Time" and "Flaky" for better visual organization and layout.
+- **Automatic Trend Generation Added**: Modified bin/pulse-dashboard.js to automatically run npx generate-trend before starting the dashboard.
+Now when users run: `npx pulse-dashboard` and it will:
+  - Generate trends (if possible)
+  - Start the dashboard
+  - Handle errors gracefully (dashboard starts even if trend generation fails)
+
+### Changed
+- **UI Revamp**: Improved layout for "Failure Categorization" and "Dashboard" Tab, with better spacing and alignments.
+- **Chart Alignment Adjustment**: Made minor adjustments to chart alignments for better visual consistency.
+- **Added Multi-Environment Support**: Enhanced dashboard to display results from multiple environments side-by-side for comparative analysis in Dashboard.
+- **Added Test retry statistics**: Added test retry statistics to the dashboard for 'Tests with Retries', 'Total Retries', 'Max Retries' and 'Tests with Max Retries'.
+- **Added Test Flakiness**: Added test flakiness through out the dashboard tabs for 'Flaky Tests' analysis.
+- **Flaky Test Analysis tab**: Upgraded the flaky test analysis tab to display the flaky tests in "Current Run" and "Historical Data" for comparative analysis.
+- **Added Retry Count**: Added retry count to the test results for better understanding of test failures. Also, each retry run steps are now visible in the test results with proper attachments, logs, etc.
+- **Added Browser Distribution**: Added browser distribution to the dashboard for better understanding of test distribution across browsers.
+- **Configurable port support**: The dashboard now supports custom port configuration via:
+  - `--port 8080` or `-p 8080` CLI flag
+  - `PORT=8080` environment variable
+  - Default: 9002
+
+## [1.2.6] - 2026-01-09
+
+### Changed
+- **License**: Switched from Apache 2.0 to MIT License for more permissive use and contributions
+- **Dependencies**: Updated all dependencies to their latest versions for improved security and feature support, and resolved the AGPL license conflict
+
 ## [1.2.5] - 2026-01-06
 
 ### Added
+- **Pulse Command Tab**: New sidebar tab for generating different report formats directly from the dashboard
+  - Generate Attachment Based Report (`npx generate-pulse-report`)
+  - Generate Embedded Single File Report (`npx generate-report`)
+  - Generate Email Report (`npx generate-email-report`)
+  - Re-run button to execute commands via API
+  - View button to open generated reports in new tab
+- **Report Serving API**: New `/api/reports/[filename]` endpoint to serve HTML report files dynamically
+- **Command Execution API**: New `/api/run-command` endpoint to securely execute whitelisted report generation commands
 - **Severity Distribution Chart**: New chart in Trend Analysis view showing test counts grouped by severity levels (Critical, High, Medium, Low, Minor) with stacked bar visualization for Passed, Failed, and Skipped tests
 - **Tags and Severity Badges**: Test results now display tags and severity badges with color-coded styling for better visual identification
 
@@ -12,6 +50,8 @@ All notable changes to this project will be documented in this file.
 - **Test Results Display**: Cleaner test item layout with improved visual hierarchy
 - **Trend Analysis**: Improved chart organization with severity-based analytics
 - **Chart Visibility**: Hidden X-axis labels from "Test Describe Duration" chart for cleaner presentation
+
+---
 
 ## [1.2.4] - 2025-12-21
 
@@ -50,12 +90,16 @@ All notable changes to this project will be documented in this file.
 - Improved fallback mechanisms for missing or invalid directory configurations
 - Added comprehensive documentation for custom directory usage
 
+---
+
 ## [1.1.5] - 2025-11-22
 
 ### Fixed
 - **Package Vulnerabilities**: Resolved security vulnerabilities in project dependencies to ensure enhanced application security
 - **Next.js Update**: Upgraded Next.js to version 15.5.6 to address security and performance improvements
 - **README Update**: Updated `README.md` to include new logo image for Pulse Dashboard
+
+---
 
 ## [1.1.4] - 2025-08-20
 

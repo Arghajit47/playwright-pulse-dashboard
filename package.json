@@ -1,12 +1,16 @@
 {
   "name": "pulse-dashboard",
-  "version": "1.2.4",
+  "version": "1.2.7",
   "private": false,
   "type": "module",
   "description": "A Next.js Dashboard application for real-time monitoring and historical analysis of Playwright test executions, based on playwright-pulse-report. This component provides the UI for visualizing Playwright test results and can be run as a standalone CLI tool.",
   "author": "Arghajit Singha",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "homepage": "https://arghajit47.github.io/playwright-pulse-dashboard/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Arghajit47/playwright-pulse-dashboard"
+  },
   "keywords": [
     "react",
     "nextjs",
@@ -32,13 +36,19 @@
   "files": [
     "dist",
     "bin",
-    ".next",
+    ".next/static",
+    ".next/server",
+    ".next/*.json",
+    ".next/BUILD_ID",
     "!.next/cache",
     "!.next/trace",
     "!.next/trace-build",
     "!.next/turbopack",
     "!.next/types",
     "!.next/**/*.map",
+    "!.next/server/pages",
+    "!.next/build",
+    "!.next/diagnostics",
     "next.config.ts",
     "README.md",
     "LICENSE"
@@ -57,6 +67,7 @@
     "postinstall": "echo \"Pulse Dashboard is an extensive visualization of playwright-pulse-report, kindly run the 'npm install @arghajit/playwright-pulse-report@latest' to install pulse-report package and follow the readme file. If already installed please ignore, happy reporting!\""
   },
   "dependencies": {
+    "@arghajit/playwright-pulse-report": "^0.3.2",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-avatar": "^1.1.3",
@@ -84,9 +95,9 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",
     "mime-types": "^3.0.1",
-    "next": "^16.1.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "next": ">=15.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.0.1"
   },

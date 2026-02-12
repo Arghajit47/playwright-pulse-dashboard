@@ -4,7 +4,30 @@
 import fs from 'fs/promises';
 import path from 'path';
 import type { PlaywrightPulseReport, DetailedTestResult, FlakyTestDetail, FlakyTestOccurrence } from '@/types/playwright';
+import { getEffectiveTestStatus } from '@/lib/testUtils';
 
+
+export async function getCurrentRunReport(): Promise<PlaywrightPulseReport | null> {
+  const pulseUserCwdFromEnv = process.env.PULSE_USER_CWD;
+  const pulseReportDirFromEnv = process.env.PULSE_REPORT_DIR;
+  const currentProcessCwd = process.cwd();
+
+  const baseDir = (pulseUserCwdFromEnv && pulseUserCwdFromEnv.trim() !== '') ? pulseUserCwdFromEnv.trim() : currentProcessCwd;
+  const reportDir =
+    pulseReportDirFromEnv && pulseReportDirFromEnv.trim() !== ""
+      ? pulseReportDirFromEnv.trim()
+      : path.join(baseDir, "pulse-report");
+
+  const filePath = path.join(reportDir, "playwright-pulse-report.json");
+  
+  try {
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileContent) as PlaywrightPulseReport;
+  } catch (error) {
+    console.error(`[ACTIONS getCurrentRunReport] Error reading current run report:`, error);
+    return null;
+  }
+}
 
 export async function getRawHistoricalReports(): Promise<PlaywrightPulseReport[]> {
   console.log('[ACTIONS getRawHistoricalReports] ------------- START -------------');
@@ -73,16 +96,39 @@ export async function getRawHistoricalReports(): Promise<PlaywrightPulseReport[]
   }
 }
 
-export async function getFlakyTestsAnalysis(): Promise<{ success: boolean; flakyTests?: FlakyTestDetail[]; error?: string }> {
+export async function getFlakyTestsAnalysis(): Promise<{ success: boolean; currentFlakyTests?: FlakyTestDetail[]; historicalFlakyTests?: FlakyTestDetail[]; error?: string }> {
   try {
+    const currentReport = await getCurrentRunReport();
     const historicalReports = await getRawHistoricalReports();
+
+    // 1. Current Run Flaky Tests
+    const currentFlakyTests: FlakyTestDetail[] = [];
+    if (currentReport?.results) {
+      currentReport.results.forEach((testResult) => {
+        if (getEffectiveTestStatus(testResult) === 'flaky') {
+          currentFlakyTests.push({
+            id: testResult.id,
+            name: testResult.name,
+            suiteName: testResult.suiteName,
+            occurrences: [{
+              runTimestamp: currentReport.run.timestamp,
+              status: 'flaky',
+            }],
+            passedCount: 1, // It's flaky, so it eventually passed
+            failedCount: 0,
+            skippedCount: 0,
+            pendingCount: 0,
+            totalRuns: 1,
+            firstSeen: currentReport.run.timestamp,
+            lastSeen: currentReport.run.timestamp,
+          });
+        }
+      });
+    }
+
+    // 2. Historical Run Flaky Tests (Natural Logic)
     if (historicalReports.length === 0) {
-      // Check if this is due to an actual lack of files or an error in getRawHistoricalReports
-      // The logs from getRawHistoricalReports will indicate this.
-      // If an error occurred there, it would have logged and returned empty.
-      // So, here we assume if it's empty, it's genuinely no data or a handled error.
-      console.log('[ACTIONS getFlakyTestsAnalysis] No historical reports found or an error occurred in getRawHistoricalReports. Returning empty flaky tests.');
-      return { success: true, flakyTests: [] };
+      return { success: true, currentFlakyTests, historicalFlakyTests: [] };
     }
 
     const testStatsMap = new Map<string, {
@@ -92,10 +138,7 @@ export async function getFlakyTestsAnalysis(): Promise<{ success: boolean; flaky
     }>();
 
     for (const report of historicalReports) {
-      if (!report.results) { // Additional safety check
-        console.warn('[ACTIONS getFlakyTestsAnalysis] Skipping a report in history due to missing .results property.');
-        continue;
-      }
+      if (!report.results) continue;
       for (const testResult of report.results) {
         if (!testStatsMap.has(testResult.id)) {
           testStatsMap.set(testResult.id, {
@@ -111,7 +154,7 @@ export async function getFlakyTestsAnalysis(): Promise<{ success: boolean; flaky
       }
     }
 
-    const flakyTests: FlakyTestDetail[] = [];
+    const historicalFlakyTests: FlakyTestDetail[] = [];
     for (const [id, data] of testStatsMap.entries()) {
       const statuses = new Set(data.occurrences.map(o => o.status));
       const hasPassed = statuses.has('passed');
@@ -132,7 +175,7 @@ export async function getFlakyTestsAnalysis(): Promise<{ success: boolean; flaky
         
         const sortedOccurrences = data.occurrences.sort((a,b) => new Date(a.runTimestamp).getTime() - new Date(b.runTimestamp).getTime());
 
-        flakyTests.push({
+        historicalFlakyTests.push({
           id,
           name: data.name,
           suiteName: data.suiteName,
@@ -148,9 +191,9 @@ export async function getFlakyTestsAnalysis(): Promise<{ success: boolean; flaky
       }
     }
     
-    flakyTests.sort((a,b) => (b.failedCount / b.totalRuns) - (a.failedCount / a.totalRuns) || b.totalRuns - a.totalRuns);
+    historicalFlakyTests.sort((a,b) => (b.failedCount / b.totalRuns) - (a.failedCount / a.totalRuns) || b.totalRuns - a.totalRuns);
 
-    return { success: true, flakyTests };
+    return { success: true, currentFlakyTests, historicalFlakyTests };
   } catch (error) {
     console.error('[ACTIONS getFlakyTestsAnalysis] Error analyzing flaky tests:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during flaky test analysis.';

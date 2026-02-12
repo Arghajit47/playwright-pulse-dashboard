@@ -1635,10 +1635,126 @@
           the most recent.
         </p>
         <div class="changelog-entry">
-          ers
-          <h2>Vion 1.2.5 <span class="changelog-date">(2026-01-06)</span></h2>
+          <h2>
+            Version 1.2.7 <span class="changelog-date">(2026-02-11)</span>
+            </h2>
+            <h3 class="changelog-badge added">Added</h3>
+            <ul>
+              <li>
+                <strong>New Card components</strong>: Added new KPI card components, "Total Retries Count", "Avg. Test Time" and
+                "Flaky" for better visual organization and layout.
+              </li>
+              <li>
+                <strong>Automatic Trend Generation Added</strong>: Modified bin/pulse-dashboard.js to automatically run npx
+                generate-trend before starting the dashboard.
+                Now when users run: `npx pulse-dashboard` and it will:
+                <ul>
+                  <li>Generate trends (if possible)</li>
+                  <li>Start the dashboard</li>
+                  <li>Handle errors gracefully (dashboard starts even if trend generation fails)</li>
+                </ul>
+              </li>
+            </ul>
+            <h3 class="changelog-badge changed">Changed</h3>
+            <ul>
+              <li>
+                <strong>UI Revamp</strong>: Improved layout for "Failure Categorization" and "Dashboard" Tab, with better spacing
+                and alignments.
+              </li>
+              <li>
+                <strong>Chart Alignment Adjustment</strong>: Made minor adjustments to chart alignments for better visual
+                consistency.
+              </li>
+              <li>
+                <strong>Added Multi-Environment Support</strong>: Enhanced dashboard to display results from multiple environments
+                side-by-side for comparative analysis in Dashboard.
+              </li>
+              <li>
+                <strong>Added Test retry statistics</strong>: Added test retry statistics to the dashboard for 'Tests with Retries',
+                'Total Retries', 'Max Retries' and 'Tests with Max Retries'.
+              </li>
+              <li>
+                <strong>Added Test Flakiness</strong>: Added test flakiness through out the dashboard tabs for 'Flaky Tests'
+                analysis.
+              </li>
+              <li>
+                <strong>Flaky Test Analysis tab</strong>: Upgraded the flaky test analysis tab to display the flaky tests in
+                "Current Run" and "Historical Data" for comparative analysis.
+              </li>
+              <li>
+                <strong>Added Retry Count</strong>: Added retry count to the test results for better understanding of test failures.
+                Also, each retry run steps are now visible in the test results with proper attachments, logs, etc.
+              </li>
+              <li>
+                <strong>Added Browser Distribution</strong>: Added browser distribution to the dashboard for better understanding of
+                test distribution across browsers.
+              </li>
+              <li>
+                <strong>Configurable port support</strong>: The dashboard now supports custom port configuration via:
+                <ul>
+                  <li>`--port 8080` or `-p 8080` CLI flag</li>
+                  <li>`PORT=8080` environment variable</li>
+                  <li>Default: 9002</li>
+                </ul>
+              </li>
+            </ul>
+            </div>
+            <hr class="changelog-divider" />
+            <div class="changelog-entry">
+              <h2>
+            Version 1.2.6 <span class="changelog-date">(2026-01-09)</span>
+          </h2>
+          <h3 class="changelog-badge changed">Changed</h3>
+          <ul>
+            <li>
+              <strong>License</strong>: Switched from Apache 2.0 to MIT License
+              for more permissive use and contributions.
+            </li>
+            <li>
+              <strong>Dependencies</strong>: Updated all dependencies to their
+              latest versions for improved security and feature support, and
+              resolved the AGPL license conflict.
+            </li>
+          </ul>
+        </div>
+        <hr class="changelog-divider" />
+        <div class="changelog-entry">
+          <h2>
+            Version 1.2.5 <span class="changelog-date">(2026-01-06)</span>
+          </h2>
           <h3 class="changelog-badge added">Added</h3>
           <ul>
+            <li>
+              <strong>Pulse Command Tab</strong>: New sidebar tab for generating
+              different report formats directly from the dashboard.
+              <ul>
+                <li>
+                  Generate Attachment Based Report (<code
+                    >npx generate-pulse-report</code
+                  >)
+                </li>
+                <li>
+                  Generate Embedded Single File Report (<code
+                    >npx generate-report</code
+                  >)
+                </li>
+                <li>
+                  Generate Email Report (<code>npx generate-email-report</code>)
+                </li>
+                <li>Re-run button to execute commands via API</li>
+                <li>View button to open generated reports in new tab</li>
+              </ul>
+            </li>
+            <li>
+              <strong>Report Serving API</strong>: New
+              <code>/api/reports/[filename]</code> endpoint to serve HTML report
+              files dynamically.
+            </li>
+            <li>
+              <strong>Command Execution API</strong>: New
+              <code>/api/run-command</code> endpoint to securely execute
+              whitelisted report generation commands.
+            </li>
             <li>
               <strong>Severity Distribution Chart</strong>: New chart in Trend
               Analysis view showing test counts grouped by severity levels

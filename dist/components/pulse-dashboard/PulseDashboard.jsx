@@ -8,62 +8,109 @@ import { TrendAnalysis } from './TrendAnalysis';
 import { FlakyTestsWidget } from './FlakyTestsWidget';
 import { SettingsView } from './SettingsView';
 import { FailureCategorizationView } from './FailureCategorizationView';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarTrigger, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter, SidebarSeparator } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, TrendingUp, Settings, Repeat, ListX, ShieldCheck } from 'lucide-react';
-import Link from 'next/link';
+import { PulseCommandView } from "./PulseCommandView";
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarTrigger, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter, SidebarSeparator, } from "@/components/ui/sidebar";
+import { LayoutDashboard, ListChecks, TrendingUp, Settings, Repeat, ListX, ShieldCheck, Terminal, } from "lucide-react";
+import Link from "next/link";
 export function PulseDashboard() {
-    const { currentRun, historicalTrends, loadingCurrent, loadingHistorical, errorCurrent, errorHistorical } = useTestData();
-    const [activeView, setActiveView] = useState('dashboard');
+    const { currentRun, historicalTrends, loadingCurrent, loadingHistorical, errorCurrent, errorHistorical, } = useTestData();
+    const [activeView, setActiveView] = useState("dashboard");
     const [initialLiveResultsFilter, setInitialLiveResultsFilter] = useState(undefined);
-    const [linkColor, setLinkColor] = useState('#7737BF'); // For footer link
+    const [linkColor, setLinkColor] = useState("#7737BF"); // For footer link
     const handleMetricCardClick = (filter) => {
         setInitialLiveResultsFilter(filter);
-        setActiveView('live-results');
+        setActiveView("live-results");
     };
     useEffect(() => {
-        if (activeView !== 'live-results' && initialLiveResultsFilter) {
+        if (activeView !== "live-results" && initialLiveResultsFilter) {
             setInitialLiveResultsFilter(undefined);
         }
     }, [activeView, initialLiveResultsFilter]);
     const allMenuItemsConfig = [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: "Real-time Playwright Test Execution Monitoring & Analysis Overview", labelColorVar: '--sidebar-tab-dashboard-color-hsl' },
-        { id: 'live-results', label: 'Test Results', icon: ListChecks, description: "Detailed view of the latest test run results with filters.", labelColorVar: '--sidebar-tab-results-color-hsl' },
-        { id: 'trend-analysis', label: 'Trend Analysis', icon: TrendingUp, description: "Historical data visualization for test performance.", labelColorVar: '--sidebar-tab-trends-color-hsl' },
-        { id: 'flaky-tests', label: 'Flaky Tests', icon: Repeat, description: "Analysis of historically flaky tests.", labelColorVar: '--sidebar-tab-flaky-color-hsl' },
-        { id: 'failure-categorization', label: 'Failure Categorization', icon: ListX, description: "Categorize and view common failure types.", labelColorVar: '--sidebar-tab-failures-color-hsl' },
-        { id: 'settings', label: 'Settings', icon: Settings, description: "Configure dashboard appearance and preferences.", labelColorVar: '--sidebar-tab-settings-color-hsl' },
+        {
+            id: "dashboard",
+            label: "Dashboard",
+            icon: LayoutDashboard,
+            description: "Real-time Playwright Test Execution Monitoring & Analysis Overview",
+            labelColorVar: "--sidebar-tab-dashboard-color-hsl",
+        },
+        {
+            id: "live-results",
+            label: "Test Results",
+            icon: ListChecks,
+            description: "Detailed view of the latest test run results with filters.",
+            labelColorVar: "--sidebar-tab-results-color-hsl",
+        },
+        {
+            id: "trend-analysis",
+            label: "Trend Analysis",
+            icon: TrendingUp,
+            description: "Historical data visualization for test performance.",
+            labelColorVar: "--sidebar-tab-trends-color-hsl",
+        },
+        {
+            id: "flaky-tests",
+            label: "Flaky Tests",
+            icon: Repeat,
+            description: "Analysis of historically flaky tests.",
+            labelColorVar: "--sidebar-tab-flaky-color-hsl",
+        },
+        {
+            id: "failure-categorization",
+            label: "Failure Categorization",
+            icon: ListX,
+            description: "Categorize and view common failure types.",
+            labelColorVar: "--sidebar-tab-failures-color-hsl",
+        },
+        {
+            id: "pulse-command",
+            label: "Pulse Command",
+            icon: Terminal,
+            description: "Generate various report formats using playwright-pulse-report commands.",
+            labelColorVar: "--sidebar-tab-command-color-hsl",
+        },
+        {
+            id: "settings",
+            label: "Settings",
+            icon: Settings,
+            description: "Configure dashboard appearance and preferences.",
+            labelColorVar: "--sidebar-tab-settings-color-hsl",
+        },
     ];
-    const settingsMenuItem = allMenuItemsConfig.find(item => item.id === 'settings');
-    const mainMenuItems = allMenuItemsConfig.filter(item => item.id !== 'settings');
-    const activeMenuItem = allMenuItemsConfig.find(item => item.id === activeView);
+    const settingsMenuItem = allMenuItemsConfig.find((item) => item.id === "settings");
+    const mainMenuItems = allMenuItemsConfig.filter((item) => item.id !== "settings");
+    const activeMenuItem = allMenuItemsConfig.find((item) => item.id === activeView);
     let componentToRender;
     switch (activeView) {
-        case 'dashboard':
-            componentToRender = <SummaryMetrics currentRun={currentRun} loading={loadingCurrent} error={errorCurrent} onMetricClick={handleMetricCardClick}/>;
+        case "dashboard":
+            componentToRender = (<SummaryMetrics currentRun={currentRun} loading={loadingCurrent} error={errorCurrent} onMetricClick={handleMetricCardClick}/>);
             break;
-        case 'live-results':
-            componentToRender = <LiveTestResults report={currentRun} loading={loadingCurrent} error={errorCurrent} initialFilter={initialLiveResultsFilter}/>;
+        case "live-results":
+            componentToRender = (<LiveTestResults report={currentRun} loading={loadingCurrent} error={errorCurrent} initialFilter={initialLiveResultsFilter}/>);
             break;
-        case 'trend-analysis':
+        case "trend-analysis":
             componentToRender = (<TrendAnalysis trends={historicalTrends} loading={loadingHistorical} error={errorHistorical} currentResults={currentRun?.results}/>);
             break;
-        case 'flaky-tests':
+        case "flaky-tests":
             componentToRender = <FlakyTestsWidget />;
             break;
-        case 'failure-categorization':
+        case "failure-categorization":
             componentToRender = <FailureCategorizationView />;
             break;
-        case 'settings':
+        case "pulse-command":
+            componentToRender = <PulseCommandView />;
+            break;
+        case "settings":
             componentToRender = <SettingsView />;
             break;
         default:
-            componentToRender = <SummaryMetrics currentRun={currentRun} loading={loadingCurrent} error={errorCurrent} onMetricClick={handleMetricCardClick}/>;
+            componentToRender = (<SummaryMetrics currentRun={currentRun} loading={loadingCurrent} error={errorCurrent} onMetricClick={handleMetricCardClick}/>);
     }
     return (<SidebarProvider defaultOpen>
       <Sidebar collapsible="icon" className="border-r border-sidebar-border shadow-lg">
         <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-2 flex items-center justify-between group-data-[collapsible=icon]:justify-center border-b border-sidebar-border">
           <Link href="/" className="flex items-center" onClick={() => setActiveView("dashboard")}>
-            <Image src="https://i.postimg.cc/v817w4sg/logo.png" alt="Pulse Dashboard Logo" width={120} // Adjusted width for the new logo
+            <Image src="https://ocpaxmghzmfbuhxzxzae.supabase.co/storage/v1/object/public/images/pulse-report/playwright_pulse_icon.png" alt="Pulse Dashboard Logo" width={120} // Adjusted width for the new logo
      height={30} // Adjusted height for the new logo
      style={{ objectFit: "fill" }} // Ensures the logo scales nicely
      className="transition-all duration-200" data-ai-hint="pulse logo"/>

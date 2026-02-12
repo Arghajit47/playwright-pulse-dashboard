@@ -26,12 +26,15 @@ export interface DetailedTestResult {
     runId: string;
     name: string;
     suiteName: string;
-    status: "passed" | "failed" | "skipped" | "timedOut" | "pending";
+    status: "passed" | "failed" | "skipped" | "timedOut" | "pending" | "flaky";
+    outcome?: 'flaky' | 'expected' | 'unexpected' | 'skipped';
+    final_status?: 'passed' | 'failed' | 'skipped' | 'timedOut' | 'flaky';
     duration: number;
     startTime: string;
     endTime: string;
     browser: string;
     retries: number;
+    retryHistory?: any[];
     steps: TestStep[];
     errorMessage?: string | null;
     stdout?: string[] | null;
@@ -63,7 +66,7 @@ export interface RunMetadata {
     pending?: number;
     flakinessRate?: number;
     userProjectDir?: string;
-    environment?: EnvironmentInfo;
+    environment?: EnvironmentInfo | EnvironmentInfo[];
 }
 export interface ReportFileMetadata {
     generatedAt: string;
@@ -73,7 +76,7 @@ export interface PlaywrightPulseReport {
     run: RunMetadata;
     results: DetailedTestResult[];
     metadata: ReportFileMetadata;
-    environment?: EnvironmentInfo;
+    environment?: EnvironmentInfo | EnvironmentInfo[];
 }
 export interface HistoricalTrend {
     date: string;
@@ -81,6 +84,7 @@ export interface HistoricalTrend {
     passed: number;
     failed: number;
     skipped: number;
+    flaky?: number;
     duration: number;
     flakinessRate?: number;
     workerCount?: number;

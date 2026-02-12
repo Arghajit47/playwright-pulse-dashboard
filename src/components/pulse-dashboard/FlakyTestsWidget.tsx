@@ -10,9 +10,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Repeat, Terminal, CheckCircle, XCircle, SkipForward, Clock, CalendarDays, BarChartHorizontalBig } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 
 function StatusBadge({ status }: { status: FlakyTestOccurrence['status'] }) {
   let badgeStyle: React.CSSProperties = {};
@@ -78,7 +78,10 @@ function StatusBadge({ status }: { status: FlakyTestOccurrence['status'] }) {
 
 
 export function FlakyTestsWidget() {
-  const [flakyTests, setFlakyTests] = useState<FlakyTestDetail[] | null>(null);
+  const [data, setData] = useState<{
+    currentFlakyTests: FlakyTestDetail[];
+    historicalFlakyTests: FlakyTestDetail[];
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,8 +90,11 @@ export function FlakyTestsWidget() {
       setIsLoading(true);
       setError(null);
       const result = await getFlakyTestsAnalysis(); 
-      if (result.success && result.flakyTests) {
-        setFlakyTests(result.flakyTests);
+      if (result.success && result.currentFlakyTests && result.historicalFlakyTests) {
+        setData({
+          currentFlakyTests: result.currentFlakyTests,
+          historicalFlakyTests: result.historicalFlakyTests
+        });
       } else {
         setError(result.error || 'Failed to fetch flaky test analysis.');
       }
@@ -127,35 +133,65 @@ export function FlakyTestsWidget() {
     );
   }
 
-  if (!flakyTests || flakyTests.length === 0) {
-    return (
-      <Card className="shadow-xl">
-        <CardHeader>
-          <CardTitle className="text-2xl font-headline text-primary flex items-center">
-            <Repeat className="h-7 w-7 mr-2" />
-            Flaky Test Analysis
-          </CardTitle>
-          <CardDescription>
-            Analysis of tests that have shown inconsistent pass/fail behavior across historical runs.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert>
-            <CheckCircle className="h-4 w-4" />
-            <AlertTitle>No Flaky Tests Identified</AlertTitle>
-            <AlertDescription>
-              No tests were identified as flaky based on the available historical data.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
-  }
-  
   const formatTestNameForDisplay = (fullName: string): string => {
     if (!fullName) return 'Unknown Test';
     const parts = fullName.split(' > ');
     return parts[parts.length -1] || fullName;
+  };
+
+  const renderFlakyList = (tests: FlakyTestDetail[], emptyMessage: string) => {
+    if (tests.length === 0) {
+      return (
+        <Alert className="mt-4">
+          <CheckCircle className="h-4 w-4" />
+          <AlertTitle>No Flaky Tests</AlertTitle>
+          <AlertDescription>{emptyMessage}</AlertDescription>
+        </Alert>
+      );
+    }
+
+    return (
+      <Accordion type="multiple" className="w-full space-y-3 mt-4">
+        {tests.map((test, index) => (
+          <AccordionItem value={`flaky-${test.id}-${index}`} key={test.id + index} className="border rounded-lg bg-card hover:bg-muted/20 transition-colors">
+            <AccordionTrigger className="p-4 text-left hover:no-underline">
+              <div className="flex flex-col w-full">
+                <Link href={`/test/${test.id}`} className="hover:underline text-base font-semibold text-primary" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                  {formatTestNameForDisplay(test.name)}
+                </Link>
+                <p className="text-xs text-muted-foreground mt-0.5">Suite: {test.suiteName}</p>
+                <div className="flex flex-wrap gap-2 text-xs mt-2 items-center">
+                   <Badge variant="outline" style={{borderColor: 'hsl(var(--chart-3))', color: 'hsl(var(--chart-3))'}}>
+                    <CheckCircle className="h-3 w-3 mr-1.5"/> {test.passedCount} Passed
+                  </Badge>
+                   <Badge variant="outline" style={{borderColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive))'}}>
+                    <XCircle className="h-3 w-3 mr-1.5"/> {test.failedCount} Failed
+                  </Badge>
+                  <Badge variant="secondary">
+                    <BarChartHorizontalBig className="h-3 w-3 mr-1.5"/> {test.totalRuns} Total Runs
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                      <CalendarDays className="h-3 w-3 mr-1.5"/> 
+                      Seen: {new Date(test.firstSeen).toLocaleDateString()} - {new Date(test.lastSeen).toLocaleDateString()}
+                  </Badge>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-4 pt-0">
+              <h4 className="text-sm font-semibold mb-2 text-foreground">Run History ({test.occurrences.length}):</h4>
+              <div className="max-h-60 overflow-y-auto space-y-1.5 pr-2">
+                {test.occurrences.map((occ: FlakyTestOccurrence, occIndex: number) => (
+                  <div key={occIndex} className="flex justify-between items-center text-xs p-1.5 bg-muted/30 rounded-md">
+                    <span>{new Date(occ.runTimestamp).toLocaleString()}</span>
+                    <StatusBadge status={occ.status} />
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    );
   };
 
   return (
@@ -163,53 +199,37 @@ export function FlakyTestsWidget() {
       <CardHeader>
         <CardTitle className="text-2xl font-headline text-primary flex items-center">
           <Repeat className="h-7 w-7 mr-2" />
-          Flaky Test Analysis ({flakyTests.length})
+          Flaky Test Analysis
         </CardTitle>
         <CardDescription>
-          Tests that have shown inconsistent pass/fail behavior across historical runs. Click on a test to see its run history.
+          Analysis of tests that have shown inconsistent pass/fail behavior across current and historical runs.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Accordion type="multiple" className="w-full space-y-3">
-          {flakyTests.map((test, index) => (
-            <AccordionItem value={`flaky-${test.id}-${index}`} key={test.id + index} className="border rounded-lg bg-card hover:bg-muted/20 transition-colors">
-              <AccordionTrigger className="p-4 text-left hover:no-underline">
-                <div className="flex flex-col w-full">
-                  <Link href={`/test/${test.id}`} className="hover:underline text-base font-semibold text-primary" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                    {formatTestNameForDisplay(test.name)}
-                  </Link>
-                  <p className="text-xs text-muted-foreground mt-0.5">Suite: {test.suiteName}</p>
-                  <div className="flex flex-wrap gap-2 text-xs mt-2 items-center">
-                     <Badge variant="outline" style={{borderColor: 'hsl(var(--chart-3))', color: 'hsl(var(--chart-3))'}}>
-                      <CheckCircle className="h-3 w-3 mr-1.5"/> {test.passedCount} Passed
-                    </Badge>
-                     <Badge variant="outline" style={{borderColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive))'}}>
-                      <XCircle className="h-3 w-3 mr-1.5"/> {test.failedCount} Failed
-                    </Badge>
-                    <Badge variant="secondary">
-                      <BarChartHorizontalBig className="h-3 w-3 mr-1.5"/> {test.totalRuns} Total Runs
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                        <CalendarDays className="h-3 w-3 mr-1.5"/> 
-                        Seen: {new Date(test.firstSeen).toLocaleDateString()} - {new Date(test.lastSeen).toLocaleDateString()}
-                    </Badge>
-                  </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="p-4 pt-0">
-                <h4 className="text-sm font-semibold mb-2 text-foreground">Run History ({test.occurrences.length}):</h4>
-                <div className="max-h-60 overflow-y-auto space-y-1.5 pr-2">
-                  {test.occurrences.map((occ: FlakyTestOccurrence, occIndex: number) => (
-                    <div key={occIndex} className="flex justify-between items-center text-xs p-1.5 bg-muted/30 rounded-md">
-                      <span>{new Date(occ.runTimestamp).toLocaleString()}</span>
-                      <StatusBadge status={occ.status} />
-                    </div>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <Tabs defaultValue="current" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+            <TabsTrigger value="current" className="font-semibold">
+              Current Run ({data?.currentFlakyTests.length || 0})
+            </TabsTrigger>
+            <TabsTrigger value="historical" className="font-semibold">
+              Historical Run ({data?.historicalFlakyTests.length || 0})
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="current">
+            {renderFlakyList(
+              data?.currentFlakyTests || [], 
+              "No tests were identified as flaky in the current run."
+            )}
+          </TabsContent>
+          
+          <TabsContent value="historical">
+            {renderFlakyList(
+              data?.historicalFlakyTests || [], 
+              "No tests were identified as flaky based on historical pattern analysis."
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

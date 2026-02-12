@@ -1,5 +1,5 @@
 import type { PlaywrightPulseReport } from '@/types/playwright';
-declare const testStatuses: readonly ["all", "passed", "failed", "skipped", "timedOut", "pending"];
+declare const testStatuses: readonly ["all", "passed", "failed", "skipped", "flaky"];
 export type TestStatusFilter = typeof testStatuses[number];
 interface LiveTestResultsProps {
     report: PlaywrightPulseReport | null;
