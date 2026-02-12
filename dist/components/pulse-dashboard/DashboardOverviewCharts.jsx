@@ -1,4 +1,5 @@
 'use client';
+import { getEffectiveTestStatus } from '@/lib/testUtils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,6 +14,8 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 // --- FIX: Import Tooltip components for the reset button ---
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 const LazyChartWrapper = ({ children, placeholderHeight = '300px' }) => {
     const [isVisible, setIsVisible] = useState(false);
     const ref = useRef(null);
@@ -43,6 +46,7 @@ const COLORS = {
     passed: 'hsl(var(--chart-3))',
     failed: 'hsl(var(--destructive))',
     skipped: 'hsl(var(--accent))',
+    flaky: 'hsl(var(--flaky))', // Consistently use flaky sky color
     timedOut: 'hsl(var(--destructive))',
     pending: 'hsl(var(--muted-foreground))',
     default1: 'hsl(var(--chart-1))',
@@ -201,10 +205,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
             setWorkerFilter(availableWorkers);
         }
     }, [availableWorkers]);
-    const workerDonutData = useMemo(() => {
+    const filteredTests = useMemo(() => {
         if (!currentRun?.results)
             return [];
-        const filteredTests = currentRun.results.filter(test => {
+        return currentRun.results.filter(test => {
             const workerIdStr = test.workerId != null ? String(test.workerId) : '';
             if (workerFilter.length > 0 && !workerFilter.includes(workerIdStr)) {
                 return false;
@@ -220,6 +224,10 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
             }
             return test.startTime && typeof test.duration === 'number';
         });
+    }, [currentRun?.results, testNameFilter, suiteFilter, workerFilter]);
+    const workerDonutData = useMemo(() => {
+        if (!currentRun?.results)
+            return [];
         const testsByWorker = filteredTests.reduce((acc, test) => {
             const workerId = test.workerId != null ? String(test.workerId) : 'unknown';
             if (!acc[workerId]) {
@@ -314,27 +322,52 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
       </>);
     }
     const { passed, failed, skipped, timedOut = 0, pending = 0 } = currentRun.run;
-    const totalTestsForPie = passed + failed + skipped + timedOut + pending;
+    // Calculate strict status counts from results for the chart, ignoring run summary if it doesn't match strict logic
+    const strictCounts = {
+        passed: 0,
+        failed: 0,
+        skipped: 0,
+        flaky: 0,
+        pending: 0
+    };
+    currentRun.results.forEach(test => {
+        const status = getEffectiveTestStatus(test);
+        if (status === 'passed')
+            strictCounts.passed++;
+        else if (status === 'failed' || status === 'timedOut')
+            strictCounts.failed++;
+        else if (status === 'skipped')
+            strictCounts.skipped++;
+        else if (status === 'flaky')
+            strictCounts.flaky++;
+        else if (status === 'pending')
+            strictCounts.pending++;
+    });
+    const totalTestsForPie = strictCounts.passed + strictCounts.failed + strictCounts.skipped + strictCounts.flaky + strictCounts.pending;
     const testDistributionData = [
-        { name: 'Passed', value: passed, fill: COLORS.passed },
-        { name: 'Failed', value: failed + timedOut, fill: COLORS.failed },
-        { name: 'Skipped', value: skipped, fill: COLORS.skipped },
-        ...(pending > 0 ? [{ name: 'Pending', value: pending, fill: COLORS.pending }] : []),
+        { name: 'Passed', value: strictCounts.passed, fill: COLORS.passed },
+        { name: 'Failed', value: strictCounts.failed, fill: COLORS.failed },
+        { name: 'Skipped', value: strictCounts.skipped, fill: COLORS.skipped },
+        { name: 'Flaky', value: strictCounts.flaky, fill: COLORS.flaky },
+        ...(strictCounts.pending > 0 ? [{ name: 'Pending', value: strictCounts.pending, fill: COLORS.pending }] : []),
     ]
         .filter(d => d.value > 0)
         .map(d => ({ ...d, name: d.name, value: d.value, fill: d.fill, percentage: totalTestsForPie > 0 ? ((d.value / totalTestsForPie) * 100).toFixed(1) : '0.0' }));
     const browserDistributionRaw = currentRun.results.reduce((acc, test) => {
         const browserName = test.browser || 'Unknown';
         if (!acc[browserName]) {
-            acc[browserName] = { name: browserName, passed: 0, failed: 0, skipped: 0, pending: 0, total: 0 };
+            acc[browserName] = { name: browserName, passed: 0, failed: 0, skipped: 0, flaky: 0, pending: 0, total: 0 };
         }
-        if (test.status === 'passed')
+        const status = getEffectiveTestStatus(test);
+        if (status === 'passed')
             acc[browserName].passed++;
-        else if (test.status === 'failed' || test.status === 'timedOut')
+        else if (status === 'failed' || status === 'timedOut')
             acc[browserName].failed++;
-        else if (test.status === 'skipped')
+        else if (status === 'skipped')
             acc[browserName].skipped++;
-        else if (test.status === 'pending')
+        else if (status === 'flaky')
+            acc[browserName].flaky++;
+        else if (status === 'pending')
             acc[browserName].pending++;
         acc[browserName].total++;
         return acc;
@@ -343,15 +376,18 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
     const suiteDistributionRaw = currentRun.results.reduce((acc, test) => {
         const suiteName = test.suiteName || 'Unknown Suite';
         if (!acc[suiteName]) {
-            acc[suiteName] = { name: suiteName, passed: 0, failed: 0, skipped: 0, pending: 0, total: 0 };
+            acc[suiteName] = { name: suiteName, passed: 0, failed: 0, skipped: 0, flaky: 0, pending: 0, total: 0 };
         }
-        if (test.status === 'passed')
+        const status = getEffectiveTestStatus(test);
+        if (status === 'passed')
             acc[suiteName].passed++;
-        else if (test.status === 'failed' || test.status === 'timedOut')
+        else if (status === 'failed' || status === 'timedOut')
             acc[suiteName].failed++;
-        else if (test.status === 'skipped')
+        else if (status === 'skipped')
             acc[suiteName].skipped++;
-        else if (test.status === 'pending')
+        else if (status === 'flaky')
+            acc[suiteName].flaky++;
+        else if (status === 'pending')
             acc[suiteName].pending++;
         acc[suiteName].total++;
         return acc;
@@ -367,33 +403,41 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
             duration: test.duration,
             durationFormatted: formatDurationForChart(test.duration),
             fullTestName: test.name,
-            status: test.status,
+            status: getEffectiveTestStatus(test),
         };
     });
     const showPendingInBrowserChart = browserChartData.some(d => d.pending > 0);
     const showPendingInSuiteChart = testsPerSuiteChartData.some(s => s.pending > 0);
-    const retryStats = currentRun.results.reduce((acc, test) => {
-        acc.totalTests++;
-        if (test.retries > 0) {
-            acc.testsWithRetries++;
-            acc.totalRetries += test.retries;
-            if (test.retries > acc.maxRetries) {
-                acc.maxRetries = test.retries;
-                acc.maxRetryTests = [test.name];
+    const retryStats = useMemo(() => {
+        return filteredTests.reduce(// Use filteredTests to reflect current view? Or original results? Usually stats are global unless filtered.
+        // Wait, the logic for retryStats was using filteredTests before. I will keep it consistent.
+        (acc, test) => {
+            acc.totalTests++;
+            // FIX: Calculate actual retries by counting non-passed/non-skipped attempts in history.
+            // This avoids counting multiple passed runs (e.g. repeat-each) as retries.
+            const retries = test.retryHistory
+                ? test.retryHistory.filter((r) => r.status !== "passed" && r.status !== "skipped").length
+                : 0;
+            if (retries > 0) {
+                acc.testsWithRetries++;
+                acc.totalRetries += retries;
+                if (retries > acc.maxRetries) {
+                    acc.maxRetries = retries;
+                    acc.maxRetryTests = [test.name];
+                }
+                else if (retries === acc.maxRetries && acc.maxRetries > 0) {
+                    acc.maxRetryTests.push(test.name);
+                }
             }
-            else if (test.retries === acc.maxRetries && acc.maxRetries > 0) {
-                acc.maxRetryTests.push(test.name);
-            }
-        }
-        return acc;
-    }, {
-        totalTests: 0,
-        testsWithRetries: 0,
-        totalRetries: 0,
-        maxRetries: 0,
-        maxRetryTests: [],
-    });
-    console.log("Retry Stats:", retryStats);
+            return acc;
+        }, {
+            totalTests: 0,
+            testsWithRetries: 0,
+            totalRetries: 0,
+            maxRetries: 0,
+            maxRetryTests: [],
+        });
+    }, [filteredTests]);
     const browserDistributionData = browserChartData.map((browser) => ({
         name: browser.name,
         value: browser.total,
@@ -444,7 +488,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                   {retryStats.totalRetries}
                 </div>
                 <p className="text-sm text-muted-foreground mt-2 font-medium">
-                  Total Retries Count
+                  Total Retries
                 </p>
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
@@ -454,13 +498,27 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                 <p className="text-sm text-muted-foreground mt-2 font-medium">
                   Max Retries
                 </p>
-                {retryStats.maxRetryTests.length > 0 && (<p className="text-xs text-muted-foreground mt-2 truncate" title={retryStats.maxRetryTests.join(", ")}>
-                    {retryStats.maxRetryTests[0]}
-                    {retryStats.maxRetryTests.length > 1 && (<span>
-                        {" "}
-                        and {retryStats.maxRetryTests.length - 1} more
-                      </span>)}
-                  </p>)}
+                {retryStats.maxRetryTests.length > 0 && (<Popover>
+                    <PopoverTrigger asChild>
+                      <button className="text-xs text-muted-foreground mt-2 truncate cursor-pointer border-b border-dotted border-muted-foreground/50 inline-block max-w-[180px] hover:text-foreground transition-colors focus:outline-none">
+                        Tests with Max Retries ({retryStats.maxRetryTests.length})
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0 overflow-hidden border-border shadow-xl">
+                      <div className="bg-muted/50 px-3 py-2 border-b border-border">
+                        <h4 className="font-semibold text-xs text-foreground">
+                          Tests with Max Retries ({retryStats.maxRetries})
+                        </h4>
+                      </div>
+                      <ScrollArea className="max-h-[200px] overflow-y-auto p-2">
+                        <ul className="space-y-1">
+                          {retryStats.maxRetryTests.map((testName, i) => (<li key={i} className="text-xs text-muted-foreground break-words leading-tight bg-card/50 p-1.5 rounded-md border border-transparent hover:border-border transition-colors text-left">
+                              {testName.replace(">", "•")}
+                            </li>))}
+                        </ul>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>)}
               </div>
             </div>
           </CardContent>
@@ -551,6 +609,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                     <Bar dataKey="passed" name="Passed" stackId="a" fill={COLORS.passed} barSize={20}/>
                     <Bar dataKey="failed" name="Failed" stackId="a" fill={COLORS.failed} barSize={20}/>
                     <Bar dataKey="skipped" name="Skipped" stackId="a" fill={COLORS.skipped} barSize={20}/>
+                    <Bar dataKey="flaky" name="Flaky" stackId="a" fill={COLORS.flaky} barSize={20}/>
                     {showPendingInBrowserChart && (<Bar dataKey="pending" name="Pending" stackId="a" fill={COLORS.pending} barSize={20}/>)}
                   </RechartsBarChart>
                 </ResponsiveContainer>) : (<div className="text-center text-muted-foreground h-[250px] flex items-center justify-center">
@@ -608,7 +667,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                                 : data.status === "failed" ||
                                     data.status === "timedOut"
                                     ? COLORS.failed
-                                    : COLORS.skipped,
+                                    : data.status === "flaky"
+                                        ? COLORS.flaky
+                                        : COLORS.skipped,
                         }}>
                                 Duration:{" "}
                                 {formatDurationForChart(data.duration)} (Status:{" "}
@@ -624,7 +685,9 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                     : entry.status === "failed" ||
                         entry.status === "timedOut"
                         ? COLORS.failed
-                        : COLORS.skipped}/>))}
+                        : entry.status === "flaky"
+                            ? COLORS.flaky
+                            : COLORS.skipped}/>))}
                       <LabelList dataKey="durationFormatted" position="top" style={{
                 fontSize: "10px",
                 fill: "hsl(var(--foreground))",
@@ -663,6 +726,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                   <Bar dataKey="passed" name="Passed" stackId="suiteStack" fill={COLORS.passed} barSize={15}/>
                   <Bar dataKey="failed" name="Failed" stackId="suiteStack" fill={COLORS.failed} barSize={15}/>
                   <Bar dataKey="skipped" name="Skipped" stackId="suiteStack" fill={COLORS.skipped} barSize={15}/>
+                  <Bar dataKey="flaky" name="Flaky" stackId="suiteStack" fill={COLORS.flaky} barSize={15}/>
                   {showPendingInSuiteChart && (<Bar dataKey="pending" name="Pending" stackId="suiteStack" fill={COLORS.pending} barSize={15}/>)}
                 </RechartsBarChart>
               </ResponsiveContainer>) : (<div className="text-center text-muted-foreground h-[250px] flex items-center justify-center">
@@ -808,6 +872,12 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                         type: "square",
                         id: "ID03",
                         color: COLORS.skipped,
+                    },
+                    {
+                        value: "Flaky",
+                        type: "square",
+                        id: "ID04",
+                        color: COLORS.flaky,
                     },
                 ]}/>
                         </RechartsPieChart>
