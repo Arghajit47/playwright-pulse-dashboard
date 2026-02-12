@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, Eye, FileText, Mail, Paperclip } from "lucide-react";
+import { PlayCircle, Eye, FileText, Mail, Paperclip, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 export function PulseCommandView() {
     const [runningCommand, setRunningCommand] = useState(null);
@@ -87,6 +87,16 @@ export function PulseCommandView() {
           These commands require <strong>playwright-pulse-report</strong> to be
           installed in your project. Run commands to generate different report
           formats from your test results.
+        </AlertDescription>
+      </Alert>
+
+      <Alert>
+        <Info className="h-4 w-4"/>
+        <AlertDescription>
+          <strong>Note:</strong> These report generation commands are only valid
+          if the report directory is <strong>'pulse-report'</strong>, default
+          report folder. Otherwise kindly use the CLI commands, for custom
+          report directory.
         </AlertDescription>
       </Alert>
 

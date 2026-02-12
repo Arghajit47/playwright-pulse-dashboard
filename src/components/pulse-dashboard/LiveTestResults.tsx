@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Terminal, Info, ChevronDown, XCircle, FilterX, Repeat1, ListChecks, CheckCircle2, SkipForward, Clock, FileSpreadsheet } from "lucide-react";
+import { Terminal, Info, ChevronDown, XCircle, FilterX, Repeat1, ListChecks, CheckCircle2, SkipForward, Clock, FileSpreadsheet, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -18,9 +18,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { getEffectiveTestStatus } from '@/lib/testUtils';
 
 
-const testStatuses = ['all', 'passed', 'failed', 'skipped', 'timedOut', 'pending'] as const;
+const testStatuses = ['all', 'passed', 'failed', 'skipped', 'flaky'] as const;
 export type TestStatusFilter = typeof testStatuses[number];
 
 interface GroupedSuite {
@@ -32,6 +33,7 @@ interface GroupedSuite {
     failed: number; // includes timedOut
     skipped: number;
     pending: number;
+    flaky: number; // Added flaky count
   };
 }
 
@@ -110,21 +112,35 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
     if (!report?.results) return [];
 
     const filteredTests = report.results.filter((test: DetailedTestResult) => {
-      const statusMatch = statusFilter === 'all' || test.status === statusFilter || (statusFilter === 'failed' && test.status === 'timedOut');
+      const effectiveStatus = getEffectiveTestStatus(test);
+      
+      let statusMatch = false;
+      if (statusFilter === 'all') statusMatch = true;
+      else if (statusFilter === 'flaky') statusMatch = effectiveStatus === 'flaky';
+      else if (statusFilter === 'passed') statusMatch = effectiveStatus === 'passed';
+      else if (statusFilter === 'failed') statusMatch = (effectiveStatus === 'failed' || effectiveStatus === 'timedOut');
+      else if (statusFilter === 'skipped') statusMatch = effectiveStatus === 'skipped';
+      else statusMatch = effectiveStatus === statusFilter;
+
       const searchTermMatch = (test.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                               (test.suiteName || '').toLowerCase().includes(searchTerm.toLowerCase());
       const tagMatch = selectedTags.length === 0 || (test.tags && test.tags.some((tag: string) => selectedTags.includes(tag)));
       const browserMatch = selectedBrowser === 'all' || test.browser === selectedBrowser;
       const currentSuiteName = test.suiteName || "Untitled Suite";
       const suiteMatch = selectedSuite === 'all' || currentSuiteName === selectedSuite;
-      const retriesMatch = !showRetriesOnly || (showRetriesOnly && test.retries > 0);
+      const retries = test.retryHistory
+        ? test.retryHistory.filter(
+            (r: any) => r.status !== "passed" && r.status !== "skipped"
+          ).length
+        : 0;
+      const retriesMatch = !showRetriesOnly || (showRetriesOnly && retries > 0);
       
       return statusMatch && searchTermMatch && tagMatch && browserMatch && suiteMatch && retriesMatch;
     });
 
     const suitesMap = new Map<string, {
         tests: DetailedTestResult[];
-        stats: { total: number; passed: number; failed: number; skipped: number; pending: number; };
+        stats: { total: number; passed: number; failed: number; skipped: number; pending: number; flaky: number };
     }>();
 
     filteredTests.forEach((test: DetailedTestResult) => {
@@ -132,16 +148,20 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         if (!suitesMap.has(suiteName)) {
             suitesMap.set(suiteName, {
                 tests: [],
-                stats: { total: 0, passed: 0, failed: 0, skipped: 0, pending: 0 },
+                stats: { total: 0, passed: 0, failed: 0, skipped: 0, pending: 0, flaky: 0 },
             });
         }
         const currentSuiteData = suitesMap.get(suiteName)!;
         currentSuiteData.tests.push(test);
         currentSuiteData.stats.total++;
-        if (test.status === 'passed') currentSuiteData.stats.passed++;
-        else if (test.status === 'failed' || test.status === 'timedOut') currentSuiteData.stats.failed++;
-        else if (test.status === 'skipped') currentSuiteData.stats.skipped++;
-        else if (test.status === 'pending') currentSuiteData.stats.pending++;
+        
+        const effectiveStatus = getEffectiveTestStatus(test);
+
+        if (effectiveStatus === 'flaky') currentSuiteData.stats.flaky++;
+        else if (effectiveStatus === 'passed') currentSuiteData.stats.passed++;
+        else if (effectiveStatus === 'failed' || effectiveStatus === 'timedOut') currentSuiteData.stats.failed++;
+        else if (effectiveStatus === 'skipped') currentSuiteData.stats.skipped++;
+        else if (effectiveStatus === 'pending') currentSuiteData.stats.pending++;
     });
 
     return Array.from(suitesMap.entries()).map(([title, data]) => ({
@@ -623,6 +643,19 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                             <CheckCircle2 className="mr-1.5 h-3 w-3" />
                             Passed: {suite.stats.passed}
                           </Badge>
+                          {suite.stats.flaky > 0 && (
+                            <Badge
+                                variant="outline"
+                                className="text-xs"
+                                style={{
+                                color: "hsl(var(--flaky))",
+                                borderColor: "hsl(var(--flaky) / 0.5)",
+                                }}
+                            >
+                                <AlertTriangle className="mr-1.5 h-3 w-3 text-[hsl(var(--flaky))]" />
+                                <span className="text-[hsl(var(--flaky))]">Flaky: {suite.stats.flaky}</span>
+                            </Badge>
+                          )}
                           <Badge
                             variant="outline"
                             className="text-xs"
@@ -652,7 +685,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                               style={{
                                 color: "hsl(var(--primary))",
                                 borderColor: "hsl(var(--primary) / 0.5)",
-                              }}
+                                }}
                             >
                               <Clock className="mr-1.5 h-3 w-3" />
                               Pending: {suite.stats.pending}
@@ -664,11 +697,13 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                   </AccordionTrigger>
                   <AccordionContent className="p-4 pt-0">
                     {suite.tests.length > 0 ? (
-                      <div className="space-y-1 mt-2">
-                        {suite.tests.map((test) => (
-                          <TestItem key={test.id} test={test} />
-                        ))}
-                      </div>
+                      <ScrollArea className="h-[600px] pr-4">
+                        <div className="space-y-1 mt-2">
+                            {suite.tests.map((test) => (
+                            <TestItem key={test.id} test={test} />
+                            ))}
+                        </div>
+                      </ScrollArea>
                     ) : (
                       <p className="text-sm text-muted-foreground mt-2">
                         No tests in this suite match the current filters.

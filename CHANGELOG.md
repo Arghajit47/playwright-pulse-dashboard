@@ -2,12 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.7] - 2026-02-13
+
+### Added
+- **New Card components**: Added new KPI card components, "Total Retries Count", "Avg. Test Time" and "Flaky" for better visual organization and layout.
+- **Automatic Trend Generation Added**: Modified bin/pulse-dashboard.js to automatically run npx generate-trend before starting the dashboard.
+Now when users run: `npx pulse-dashboard` and it will:
+  - Generate trends (if possible)
+  - Start the dashboard
+  - Handle errors gracefully (dashboard starts even if trend generation fails)
+
+### Changed
+- **UI Revamp**: Improved layout for "Failure Categorization" and "Dashboard" Tab, with better spacing and alignments.
+- **Chart Alignment Adjustment**: Made minor adjustments to chart alignments for better visual consistency.
+- **Added Multi-Environment Support**: Enhanced dashboard to display results from multiple environments side-by-side for comparative analysis in Dashboard.
+- **Added Test retry statistics**: Added test retry statistics to the dashboard for 'Tests with Retries', 'Total Retries', 'Max Retries' and 'Tests with Max Retries'.
+- **Added Test Flakiness**: Added test flakiness through out the dashboard tabs for 'Flaky Tests' analysis.
+- **Flaky Test Analysis tab**: Upgraded the flaky test analysis tab to display the flaky tests in "Current Run" and "Historical Data" for comparative analysis.
+- **Added Retry Count**: Added retry count to the test results for better understanding of test failures. Also, each retry run steps are now visible in the test results with proper attachments, logs, etc.
+- **Added Browser Distribution**: Added browser distribution to the dashboard for better understanding of test distribution across browsers.
+- **Configurable port support**: The dashboard now supports custom port configuration via:
+  - `--port 8080` or `-p 8080` CLI flag
+  - `PORT=8080` environment variable
+  - Default: 9002
+
 ## [1.2.6] - 2026-01-09
 
 ### Changed
 - **License**: Switched from Apache 2.0 to MIT License for more permissive use and contributions
 - **Dependencies**: Updated all dependencies to their latest versions for improved security and feature support, and resolved the AGPL license conflict
-
 
 ## [1.2.5] - 2026-01-06
 

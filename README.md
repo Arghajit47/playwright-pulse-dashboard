@@ -62,6 +62,27 @@ Install the package globally or use `npx` to run the dashboard directly.
     npx pulse-dashboard -o custom-report-folder
     ```
 
+    **Custom Port Configuration:**
+    You can specify a custom port for the dashboard server using either a CLI flag or environment variable. This is especially useful for Docker, cloud deployments, CI environments, or shared servers:
+
+    ```bash
+    # Using CLI flag
+    npx pulse-dashboard --port 8080
+    # OR using short form
+    npx pulse-dashboard -p 8080
+    
+    # Using environment variable
+    PORT=8080 npx pulse-dashboard
+    
+    # Combining custom output directory and port
+    npx pulse-dashboard --output-dir custom-report --port 3000
+    
+    # In Docker/CI environments
+    PORT=8080 npx pulse-dashboard -o /app/reports
+    ```
+
+    **Port Precedence:** CLI flag (`--port`) > Environment variable (`PORT`) > Default (`9002`)
+
     **[NOTE: user does not need to navigate inside `pulse-report` folder]**
 
 *   **Global Installation (if you use it frequently):**
@@ -76,7 +97,7 @@ Install the package globally or use `npx` to run the dashboard directly.
     npm run pulse-dashboard
     ```
 
-The dashboard will start (usually on `http://localhost:9002`) and serve data from the `pulse-report` directory located in your current working directory.
+The dashboard will start on the specified port (default: `http://localhost:9002`) and serve data from the `pulse-report` directory located in your current working directory.
 
 **Data Directory Structure for CLI Usage:**
 When you run `pulse-dashboard` or `npx pulse-dashboard`, it expects the following structure in the directory **from where you run the command**:

@@ -29,12 +29,15 @@ export interface DetailedTestResult {
   runId: string;
   name: string;
   suiteName: string;
-  status: "passed" | "failed" | "skipped" | "timedOut" | "pending";
+  status: "passed" | "failed" | "skipped" | "timedOut" | "pending" | "flaky"; // Added 'flaky' to status type
+  outcome?: 'flaky' | 'expected' | 'unexpected' | 'skipped'; // Added outcome field
+  final_status?: 'passed' | 'failed' | 'skipped' | 'timedOut' | 'flaky'; // Added final_status field
   duration: number;
   startTime: string; // ISO string
   endTime: string; // ISO string
   browser: string;
   retries: number;
+  retryHistory?: any[];
   steps: TestStep[];
   errorMessage?: string | null;
   stdout?: string[] | null;
@@ -69,7 +72,7 @@ export interface RunMetadata {
   pending?: number;
   flakinessRate?: number;
   userProjectDir?: string;
-  environment?: EnvironmentInfo;
+  environment?: EnvironmentInfo | EnvironmentInfo[];
 }
 
 export interface ReportFileMetadata {
@@ -81,7 +84,7 @@ export interface PlaywrightPulseReport {
   run: RunMetadata;
   results: DetailedTestResult[];
   metadata: ReportFileMetadata;
-  environment?: EnvironmentInfo; // Can also be at the root as per some report structures
+  environment?: EnvironmentInfo | EnvironmentInfo[];
 }
 
 export interface HistoricalTrend {
@@ -90,6 +93,7 @@ export interface HistoricalTrend {
   passed: number;
   failed: number;
   skipped: number;
+  flaky?: number; // Added flaky count (optional for backward compatibility)
   duration: number;
   flakinessRate?: number;
   workerCount?: number; // Added workerCount

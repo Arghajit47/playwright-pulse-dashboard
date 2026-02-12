@@ -1,3 +1,2 @@
-import React from 'react';
-export declare function FailureCategorizationView(): React.JSX.Element;
+export declare function FailureCategorizationView(): import("react").JSX.Element;
 //# sourceMappingURL=FailureCategorizationView.d.ts.map
