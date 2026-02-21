@@ -1,6 +1,6 @@
 {
   "name": "pulse-dashboard",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "private": false,
   "type": "module",
   "description": "A Next.js Dashboard application for real-time monitoring and historical analysis of Playwright test executions, based on playwright-pulse-report. This component provides the UI for visualizing Playwright test results and can be run as a standalone CLI tool.",
@@ -67,16 +67,15 @@
     "postinstall": "echo \"Pulse Dashboard is an extensive visualization of playwright-pulse-report, kindly run the 'npm install @arghajit/playwright-pulse-report@latest' to install pulse-report package and follow the readme file. If already installed please ignore, happy reporting!\""
   },
   "dependencies": {
-    "@arghajit/playwright-pulse-report": "^0.3.2",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-avatar": "^1.1.3",
-    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
     "@radix-ui/react-label": "^2.1.2",
     "@radix-ui/react-menubar": "^1.1.6",
-    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-progress": "^1.1.2",
     "@radix-ui/react-radio-group": "^1.2.3",
     "@radix-ui/react-scroll-area": "^1.2.3",
@@ -86,14 +85,14 @@
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-switch": "^1.1.3",
     "@radix-ui/react-tabs": "^1.1.3",
-    "@radix-ui/react-toast": "^1.2.6",
-    "@radix-ui/react-tooltip": "^1.1.8",
+    "@radix-ui/react-toast": "^1.2.15",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "@types/node": "^20",
     "@types/recharts": "^1.8.29",
     "ansi-to-html": "^0.7.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.475.0",
+    "lucide-react": "^0.563.0",
     "mime-types": "^3.0.1",
     "next": ">=15.0.0",
     "react": ">=18.0.0",
@@ -102,11 +101,13 @@
     "tailwind-merge": "^3.0.1"
   },
   "peerDependencies": {
+    "@arghajit/playwright-pulse-report": ">=0.3.2",
     "next": ">=15.0.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "@arghajit/playwright-pulse-report": ">=0.3.2",
     "@types/mime-types": "^3.0.1",
     "autoprefixer": "^10.4.19",
     "postcss": "^8",
@@ -116,5 +117,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "overrides": {
+    "minimatch": "^10.2.2",
+    "@isaacs/brace-expansion": "^5.0.1"
   }
 }
