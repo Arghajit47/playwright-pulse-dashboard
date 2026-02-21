@@ -1090,6 +1090,33 @@
           display: none !important;
         }
       }
+
+      /* Pulsating dot animation */
+      .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #ef4444;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 12px;
+        box-shadow: 0 0 0 rgba(239, 68, 68, 0.7);
+        animation: pulse-red 2s infinite;
+      }
+
+      @keyframes pulse-red {
+        0% {
+          transform: scale(0.95);
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        }
+        70% {
+          transform: scale(1);
+          box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+        }
+        100% {
+          transform: scale(0.95);
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+      }
     </style>
   </head>
   <body>
@@ -1143,6 +1170,15 @@
             </li>
             <li><a href="#test-details-page">Test Details Page</a></li>
             <li><a href="#changelogs">Changelogs</a></li>
+            <li>
+              <a
+                href="https://playwright-pulse-dashboard.netlify.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="pulse-dot"></span>Live Web
+              </a>
+            </li>
           </ul>
         </nav>
       </aside>
@@ -2400,12 +2436,17 @@
         sidebarNav.addEventListener("click", (event) => {
           const link = event.target.closest("a");
           if (link) {
-            event.preventDefault();
             const hash = link.getAttribute("href");
-            if (window.location.hash !== hash) {
-              history.pushState(null, "", hash);
-              loadContent(hash);
+
+            // Only prevent default for internal hash links
+            if (hash && hash.startsWith("#")) {
+              event.preventDefault();
+              if (window.location.hash !== hash) {
+                history.pushState(null, "", hash);
+                loadContent(hash);
+              }
             }
+
             if (body.classList.contains("sidebar-open")) {
               toggleSidebar();
             }

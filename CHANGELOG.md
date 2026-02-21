@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **Security Vulnerabilities**: Resolved multiple package vulnerabilities to enhance application security.
 - **Dependency Updates**: Updated all dependencies to their latest versions for improved security and feature support.
+- **Live Web**: Added "live web" link to the Documentation.
 
 ## [1.2.7] - 2026-02-13
 
