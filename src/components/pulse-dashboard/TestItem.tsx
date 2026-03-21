@@ -111,7 +111,7 @@ export function TestItem({ test }: TestItemProps) {
     : 0;
 
   return (
-    <div className="border-b border-border last:border-b-0 py-3 hover:bg-muted/20 transition-colors duration-200 px-4 rounded-lg mb-2 shadow-md bg-card hover:shadow-lg">
+    <div className="border-b border-border last:border-b-0 py-3 hover:bg-muted/20 transition-colors duration-200 px-4 rounded-2xl mb-2 shadow-md bg-card hover:shadow-lg">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <StatusIcon status={test.status} />
@@ -130,7 +130,7 @@ export function TestItem({ test }: TestItemProps) {
               <Badge
                 key={`tag-${index}`}
                 variant="outline"
-                className="text-xs px-2 py-0.5 rounded-md border"
+                className="text-xs px-2 py-0.5 rounded-xl border"
                 style={{ backgroundColor: "#808080", color: "#fff" }}
               >
                 {tag}
@@ -139,7 +139,7 @@ export function TestItem({ test }: TestItemProps) {
           {retryCount > 0 && (
             <Badge
               variant="outline"
-              className="retry-badge text-xs px-2 py-0.5 rounded-md border"
+              className="retry-badge text-xs px-2 py-0.5 rounded-xl border"
               style={{ backgroundColor: "#ff9800", color: "#fff", borderColor: "#f57c00" }}
             >
               Retry Count: {retryCount}
@@ -148,7 +148,7 @@ export function TestItem({ test }: TestItemProps) {
           {severityAnnotation && (
             <Badge
               variant="outline"
-              className="capitalize text-xs px-2 py-0.5 rounded-md border-0"
+              className="capitalize text-xs px-2 py-0.5 rounded-xl border-0"
               style={getSeverityBadgeStyle(severityAnnotation)}
             >
               {severityAnnotation}
@@ -168,16 +168,16 @@ export function TestItem({ test }: TestItemProps) {
       {hasDetailsInAccordion && (
         <Accordion type="single" collapsible className="w-full mt-2">
           <AccordionItem value="details" className="border-none">
-            <AccordionTrigger className="text-xs py-1 px-1 hover:no-underline text-muted-foreground justify-start hover:bg-accent/10 rounded-md [&[data-state=open]>svg]:ml-2">
+            <AccordionTrigger className="text-xs py-1 px-1 hover:no-underline text-muted-foreground justify-start hover:bg-accent/10 rounded-xl [&[data-state=open]>svg]:ml-2">
               Quick Look
             </AccordionTrigger>
-            <AccordionContent className="pt-2 pl-2 pr-2 pb-1 bg-muted/30 rounded-lg">
+            <AccordionContent className="pt-2 pl-2 pr-2 pb-1 bg-muted/30 rounded-2xl">
               {test.errorMessage && (
                 <div className="mb-3">
                   <h4 className="font-semibold text-xs text-destructive mb-1">
                     Error:
                   </h4>
-                  <pre className="bg-destructive/10 text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">
+                  <pre className="bg-destructive/10 text-xs p-2 rounded-xl whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">
                     <span
                       dangerouslySetInnerHTML={{
                         __html: ansiToHtml(test.errorMessage),
@@ -201,7 +201,7 @@ export function TestItem({ test }: TestItemProps) {
                           href={imageSrc}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="relative aspect-video rounded-md overflow-hidden group border hover:border-primary shadow-sm"
+                          className="relative aspect-video rounded-xl overflow-hidden group border hover:border-primary shadow-sm"
                         >
                           <Image
                             src={imageSrc}

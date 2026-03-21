@@ -88,7 +88,7 @@ export function TestStepItemRecursive({
       {step.errorMessage && (
         <div className="pl-6 mt-1">
           <p className="text-xs font-semibold text-destructive mb-0.5">Error:</p>
-          <pre className="bg-destructive/10 text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code">
+          <pre className="bg-destructive/10 text-xs p-2 rounded-xl whitespace-pre-wrap break-all font-code">
             <span dangerouslySetInnerHTML={{ __html: ansiToHtml(step.errorMessage) }} />
           </pre>
         </div>
@@ -100,7 +100,7 @@ export function TestStepItemRecursive({
     return (
       <Accordion type="single" collapsible className="w-full py-1">
         <AccordionItem value={`step-${step.id}`} className="border-none">
-          <AccordionTrigger className="p-1 hover:no-underline hover:bg-muted/50 rounded-md text-left [&[data-state=open]>svg]:rotate-90">
+          <AccordionTrigger className="p-1 hover:no-underline hover:bg-muted/50 rounded-xl text-left [&[data-state=open]>svg]:rotate-90">
             {stepContent}
           </AccordionTrigger>
           <AccordionContent className="pt-0 pb-0">
@@ -120,6 +120,6 @@ export function TestStepItemRecursive({
   }
 
   return (
-    <div className="py-2 px-1 hover:bg-muted/50 rounded-md">{stepContent}</div>
+    <div className="py-2 px-1 hover:bg-muted/50 rounded-xl">{stepContent}</div>
   );
 }

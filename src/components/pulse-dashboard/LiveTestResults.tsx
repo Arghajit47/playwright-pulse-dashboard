@@ -260,6 +260,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
 
   if (loading) {
     return (
+      <div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
       <Card className="shadow-xl">
         <CardHeader>
           <Skeleton className="h-6 w-48" />
@@ -276,7 +277,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
             <Skeleton className="h-10 w-full" />
           </div>
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="space-y-2 p-2 border rounded-lg shadow-md">
+            <div key={i} className="space-y-2 p-2 border rounded-2xl shadow-md">
               <Skeleton className="h-5 w-1/3" />
               <Skeleton className="h-8 w-full" />
               <Skeleton className="h-8 w-full" />
@@ -284,21 +285,25 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
           ))}
         </CardContent>
       </Card>
+      </div>
     );
   }
 
   if (error) {
     return (
+      <div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
       <Alert variant="destructive" className="mt-4 shadow-md">
         <Terminal className="h-4 w-4" />
         <AlertTitle>Error Fetching Test Results</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
+      </div>
     );
   }
 
   if (!report || !report.results || report.results.length === 0) {
     return (
+      <div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
       <Card className="shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -318,7 +323,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
           </div>
         </CardHeader>
         <CardContent>
-          <Alert className="shadow-sm rounded-lg">
+          <Alert className="shadow-sm rounded-2xl">
             <Info className="h-4 w-4" />
             <AlertTitle>No Test Data</AlertTitle>
             <AlertDescription>
@@ -329,10 +334,12 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
           </Alert>
         </CardContent>
       </Card>
+      </div>
     );
   }
 
   return (
+    <div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
     <Card className="shadow-xl">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -352,7 +359,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
           onClick={handleExportCsv}
           variant="outline"
           size="sm"
-          className="ml-auto rounded-md shadow-md"
+          className="ml-auto rounded-xl shadow-md"
         >
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           Export as CSV
@@ -376,11 +383,11 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
               >
                 <SelectTrigger
                   id="status-filter"
-                  className="w-full bg-background shadow-inner rounded-md"
+                  className="w-full bg-background shadow-inner rounded-xl"
                 >
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
-                <SelectContent className="rounded-md">
+                <SelectContent className="rounded-xl">
                   {testStatuses.map((status) => (
                     <SelectItem
                       key={status}
@@ -408,7 +415,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setSearchTerm(e.target.value)
                 }
-                className="w-full bg-background shadow-inner rounded-md"
+                className="w-full bg-background shadow-inner rounded-xl"
               />
             </div>
             <div className="space-y-1.5">
@@ -419,7 +426,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full bg-background shadow-inner justify-between rounded-md"
+                    className="w-full bg-background shadow-inner justify-between rounded-xl"
                   >
                     {selectedTags.length > 0
                       ? `Tags (${selectedTags.length})`
@@ -428,7 +435,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="w-[var(--radix-popover-trigger-width)] p-0 rounded-md"
+                  className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl"
                   align="start"
                 >
                   <div className="p-2 border-b">
@@ -441,7 +448,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                           <Label
                             key={tag}
                             htmlFor={`tag-${tag}`}
-                            className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-accent/10 cursor-pointer"
+                            className="flex items-center space-x-2 p-1.5 rounded-xl hover:bg-accent/10 cursor-pointer"
                           >
                             <Checkbox
                               id={`tag-${tag}`}
@@ -455,7 +462,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                                     : prev.filter((t) => t !== tag)
                                 );
                               }}
-                              className="rounded-sm"
+                              className="rounded-xl"
                             />
                             <span>{tag}</span>
                           </Label>
@@ -494,11 +501,11 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
               >
                 <SelectTrigger
                   id="browser-filter"
-                  className="w-full bg-background shadow-inner rounded-md"
+                  className="w-full bg-background shadow-inner rounded-xl"
                 >
                   <SelectValue placeholder="Select browser" />
                 </SelectTrigger>
-                <SelectContent className="rounded-md">
+                <SelectContent className="rounded-xl">
                   {allBrowsers.map((browser) => (
                     <SelectItem
                       key={browser}
@@ -521,11 +528,11 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
               <Select value={selectedSuite} onValueChange={setSelectedSuite}>
                 <SelectTrigger
                   id="suite-filter"
-                  className="w-full bg-background shadow-inner rounded-md"
+                  className="w-full bg-background shadow-inner rounded-xl"
                 >
                   <SelectValue placeholder="Select test suite" />
                 </SelectTrigger>
-                <SelectContent className="rounded-md">
+                <SelectContent className="rounded-xl">
                   {allSuites.map((suite) => (
                     <SelectItem
                       key={suite}
@@ -549,7 +556,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
                 onCheckedChange={(checked: boolean | "indeterminate") =>
                   setShowRetriesOnly(Boolean(checked))
                 }
-                className="rounded-sm"
+                className="rounded-xl"
               />
               <Label
                 htmlFor="retries-filter"
@@ -565,7 +572,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
               <Button
                 variant="ghost"
                 onClick={handleClearAllFilters}
-                className="text-sm rounded-md"
+                className="text-sm rounded-xl"
               >
                 <FilterX className="mr-2 h-4 w-4" />
                 Clear All Filters
@@ -726,5 +733,6 @@ export function LiveTestResults({ report, loading, error, initialFilter }: LiveT
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
