@@ -97,7 +97,7 @@ const renderEnvironmentGrid = (envInfo, keyPrefix = "") => {
             const fullValue = typeof value === "object" && value !== null
                 ? JSON.stringify(value, null, 2)
                 : String(value);
-            return (<div key={`${keyPrefix}${key}`} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 group/item">
+            return (<div key={`${keyPrefix}${key}`} className="flex items-center space-x-2 p-2 rounded-2xl hover:bg-muted/50 transition-all duration-200 group/item">
             <div className="flex-shrink-0">{getIcon(key)}</div>
             <div className="flex-grow min-w-0">
               <p className="text-xs font-medium text-muted-foreground truncate">

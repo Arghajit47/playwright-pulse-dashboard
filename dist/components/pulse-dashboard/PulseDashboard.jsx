@@ -176,7 +176,7 @@ export function PulseDashboard() {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <div className="container mx-auto p-6 md:p-8 space-y-6 min-h-screen flex flex-col rounded-xl shadow-lg bg-background">
+        <div className="container mx-auto p-6 md:p-8 space-y-6 min-h-screen flex flex-col rounded-[2rem] shadow-lg bg-background">
           <header className="mb-0">
             <h1 className="text-3xl font-bold font-headline text-primary tracking-tight">
               {activeMenuItem?.label || "Pulse Dashboard"}
@@ -201,7 +201,6 @@ export function PulseDashboard() {
 
           <footer style={{
             padding: "0.5rem",
-            boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.05)",
             textAlign: "center",
             fontFamily: "'Segoe UI', system-ui, sans-serif",
             marginTop: "auto", // Ensures footer is at the bottom

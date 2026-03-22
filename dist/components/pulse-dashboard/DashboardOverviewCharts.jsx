@@ -39,7 +39,7 @@ const LazyChartWrapper = ({ children, placeholderHeight = '300px' }) => {
         };
     }, []);
     return (<div ref={ref} style={{ minHeight: !isVisible ? placeholderHeight : undefined }}>
-      {isVisible ? children : <Skeleton className="w-full rounded-lg" style={{ height: placeholderHeight }}/>}
+      {isVisible ? children : <Skeleton className="w-full rounded-2xl" style={{ height: placeholderHeight }}/>}
     </div>);
 };
 const COLORS = {
@@ -88,7 +88,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         if (displayTitle === "undefined") {
             displayTitle = "Details";
         }
-        return (<div className="bg-card p-3 border border-border rounded-md shadow-lg">
+        return (<div className="bg-card p-3 border border-border rounded-xl shadow-lg">
         <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={displayTitle}>
           {displayTitle}
         </p>
@@ -273,11 +273,11 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
           {[...Array(5)].map((_, i) => (<Card key={i} className="shadow-md rounded-xl">
               <CardHeader>
-                <Skeleton className="h-5 w-3/4 rounded-md"/>
-                <Skeleton className="h-4 w-1/2 mt-1 rounded-md"/>
+                <Skeleton className="h-5 w-3/4 rounded-xl"/>
+                <Skeleton className="h-4 w-1/2 mt-1 rounded-xl"/>
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-48 w-full rounded-lg"/>
+                <Skeleton className="h-48 w-full rounded-2xl"/>
               </CardContent>
             </Card>))}
         </div>
@@ -294,7 +294,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
             and worker utilization
           </p>
         </div>
-        <Alert variant="destructive" className="mt-6 rounded-lg shadow-lg">
+        <Alert variant="destructive" className="mt-6 rounded-2xl shadow-lg">
           <Terminal className="h-4 w-4"/>
           <AlertTitle>Error Loading Chart Data</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
@@ -312,7 +312,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
             and worker utilization
           </p>
         </div>
-        <Alert className="mt-6 rounded-lg shadow-lg">
+        <Alert className="mt-6 rounded-2xl shadow-lg">
           <Info className="h-4 w-4"/>
           <AlertTitle>No Data for Charts</AlertTitle>
           <AlertDescription>
@@ -445,7 +445,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
         percentage: ((browser.total / currentRun.results.length) * 100).toFixed(1),
     }));
     console.log("Browser Distribution Data:", browserDistributionData);
-    return (<div className="mt-6 space-y-6">
+    return (<div className="mt-6 space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
       <div className="mt-8 mb-6">
         <h3 className="text-xl font-bold text-foreground mb-2">
           Test Execution Analytics
@@ -468,7 +468,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <div className="text-center p-4 bg-muted/50 rounded-2xl">
                 <div className="text-3xl font-bold text-foreground">
                   {retryStats.testsWithRetries}
                 </div>
@@ -483,7 +483,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                   % of total
                 </p>
               </div>
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <div className="text-center p-4 bg-muted/50 rounded-2xl">
                 <div className="text-3xl font-bold text-foreground">
                   {retryStats.totalRetries}
                 </div>
@@ -491,7 +491,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                   Total Retries
                 </p>
               </div>
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <div className="text-center p-4 bg-muted/50 rounded-2xl">
                 <div className="text-3xl font-bold text-foreground">
                   {retryStats.maxRetries}
                 </div>
@@ -512,7 +512,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                       </div>
                       <ScrollArea className="max-h-[200px] overflow-y-auto p-2">
                         <ul className="space-y-1">
-                          {retryStats.maxRetryTests.map((testName, i) => (<li key={i} className="text-xs text-muted-foreground break-words leading-tight bg-card/50 p-1.5 rounded-md border border-transparent hover:border-border transition-colors text-left">
+                          {retryStats.maxRetryTests.map((testName, i) => (<li key={i} className="text-xs text-muted-foreground break-words leading-tight bg-card/50 p-1.5 rounded-xl border border-transparent hover:border-border transition-colors text-left">
                               {testName.replace(">", "•")}
                             </li>))}
                         </ul>
@@ -565,7 +565,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
-              {browserDistributionData.length > 0 ? (browserDistributionData.slice(0, 5).map((browser, index) => (<div key={browser.name} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 transition-all duration-200 group/item">
+              {browserDistributionData.length > 0 ? (browserDistributionData.slice(0, 5).map((browser, index) => (<div key={browser.name} className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-muted/50 transition-all duration-200 group/item">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <BrowserIcon browserName={browser.name} className="flex-shrink-0"/>
                       <span className="text-sm font-medium text-foreground truncate">
@@ -657,7 +657,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                     <RechartsRechartsTooltip content={({ active, payload, label, }) => {
                 if (active && payload && payload.length) {
                     const data = payload[0].payload;
-                    return (<div className="bg-card p-3 border border-border rounded-md shadow-lg">
+                    return (<div className="bg-card p-3 border border-border rounded-xl shadow-lg">
                               <p className="label text-sm font-semibold text-foreground truncate max-w-xs" title={data.fullTestName}>
                                 {formatTestNameForChart(data.fullTestName)}
                               </p>
@@ -831,7 +831,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                     if (active && payload && payload.length) {
                         const data = payload[0]
                             .payload;
-                        return (<div className="bg-background p-3 border border-border rounded-md shadow-lg max-w-sm">
+                        return (<div className="bg-background p-3 border border-border rounded-xl shadow-lg max-w-sm">
                                     <p className="label text-sm font-semibold text-foreground truncate" title={data.name}>
                                       {formatTestNameForChart(data.name)}
                                     </p>
@@ -893,7 +893,7 @@ export function DashboardOverviewCharts({ currentRun, loading, error }) {
                     </div>
                   </div>
                 </LazyChartWrapper>))}
-            </div>) : (<div className="flex flex-col items-center justify-center h-[200px] text-center p-4 rounded-lg bg-muted/60">
+            </div>) : (<div className="flex flex-col items-center justify-center h-[200px] text-center p-4 rounded-2xl bg-muted/60">
               <Info className="h-8 w-8 text-muted-foreground mb-3"/>
               <p className="font-semibold text-foreground">No Matching Data</p>
               <p className="text-muted-foreground text-sm mt-1">

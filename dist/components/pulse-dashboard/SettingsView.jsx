@@ -47,7 +47,7 @@ export function SettingsView() {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-card/70 shadow-sm">
+          <div className="flex items-center justify-between p-4 border rounded-2xl bg-card/70 shadow-sm">
             <Label htmlFor="theme-toggle" className="text-base font-medium text-foreground">
               Theme
             </Label>
@@ -61,7 +61,7 @@ export function SettingsView() {
           <p className="text-sm text-muted-foreground mt-4 text-center text-base font-medium text-foreground">
             Your theme preference is saved in your browser.
           </p>
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-card/70 shadow-sm">
+          <div className="flex items-center justify-between p-4 border rounded-2xl bg-card/70 shadow-sm">
             <span>Learn more from Documentation Website: </span>
             <a className="text-l font-headline text-primary underline hover:text-primary-dark transition-colors" href="https://arghajit47.github.io/playwright-pulse-dashboard/" target="_blank" rel="noopener noreferrer">
               Pulse Dashboard
