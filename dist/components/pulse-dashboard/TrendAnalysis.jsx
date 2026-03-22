@@ -20,7 +20,7 @@ const DurationTooltip = ({ active, payload, }) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
         const dateStr = new Date(data.dateRaw).toLocaleString();
-        return (<div className="bg-[#0a0a0aeb] p-3 rounded-md shadow-2xl border border-white/10 text-white min-w-[180px] backdrop-blur-sm">
+        return (<div className="bg-[#0a0a0aeb] p-3 rounded-xl shadow-2xl border border-white/10 text-white min-w-[180px] backdrop-blur-sm">
         <p className="font-bold text-sm mb-0.5">Run {new Date(data.dateRaw).getTime()}</p>
         <p className="text-[11px] text-gray-400 mb-2">Date: {dateStr}</p>
         <div className="flex items-center gap-1.5 text-[13px] mb-1">
@@ -148,15 +148,15 @@ const TrendAnalysisComponent = ({ trends, loading, error, currentResults, }) => 
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-8 p-6">
-          {[...Array(3)].map((_, i) => (<div key={i} className="bg-muted/30 p-4 rounded-lg shadow-inner">
-              <Skeleton className="h-6 w-1/3 mb-4 rounded-md bg-muted/50"/>
-              <Skeleton className="h-64 w-full rounded-md bg-muted/50"/>
+          {[...Array(3)].map((_, i) => (<div key={i} className="bg-muted/30 p-4 rounded-2xl shadow-inner">
+              <Skeleton className="h-6 w-1/3 mb-4 rounded-xl bg-muted/50"/>
+              <Skeleton className="h-64 w-full rounded-xl bg-muted/50"/>
             </div>))}
         </CardContent>
       </Card>);
     }
     if (error) {
-        return (<Alert variant="destructive" className="mt-4 shadow-md rounded-lg">
+        return (<Alert variant="destructive" className="mt-4 shadow-md rounded-2xl">
         <Terminal className="h-4 w-4"/>
         <AlertTitle>Error Fetching Historical Trends</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
@@ -171,7 +171,7 @@ const TrendAnalysisComponent = ({ trends, loading, error, currentResults, }) => 
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <Alert className="rounded-lg border-primary/30 bg-primary/5 text-primary">
+          <Alert className="rounded-2xl border-primary/30 bg-primary/5 text-primary">
             <Info className="h-5 w-5 text-primary/80"/>
             <AlertTitle className="font-semibold">
               No Historical Data
@@ -199,7 +199,7 @@ const TrendAnalysisComponent = ({ trends, loading, error, currentResults, }) => 
               Test Outcomes Over Time
             </h4>
           </div>
-          <div ref={outcomesChartRef} className="w-full h-[350px] bg-muted/30 p-4 rounded-lg shadow-inner">
+          <div ref={outcomesChartRef} className="w-full h-[350px] bg-muted/30 p-4 rounded-2xl shadow-inner">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={formattedTrends} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
@@ -225,7 +225,7 @@ const TrendAnalysisComponent = ({ trends, loading, error, currentResults, }) => 
               Test Duration Over Time
             </h4>
           </div>
-          <div ref={durationChartRef} className="w-full h-[350px] bg-muted/30 p-4 rounded-lg shadow-inner">
+          <div ref={durationChartRef} className="w-full h-[350px] bg-muted/30 p-4 rounded-2xl shadow-inner">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={formattedTrends} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                 <defs>
@@ -251,7 +251,7 @@ const TrendAnalysisComponent = ({ trends, loading, error, currentResults, }) => 
                 Test Describe Duration
               </h4>
             </div>
-            <div ref={describeDurationChartRef} className="w-full h-[400px] bg-muted/30 p-4 rounded-lg shadow-inner">
+            <div ref={describeDurationChartRef} className="w-full h-[400px] bg-muted/30 p-4 rounded-2xl shadow-inner">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={describeDurationsData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
@@ -286,7 +286,7 @@ const TrendAnalysisComponent = ({ trends, loading, error, currentResults, }) => 
                 Severity Distribution
               </h4>
             </div>
-            <div ref={severityDistributionChartRef} className="w-full h-[400px] bg-muted/30 p-4 rounded-lg shadow-inner">
+            <div ref={severityDistributionChartRef} className="w-full h-[400px] bg-muted/30 p-4 rounded-2xl shadow-inner">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={severityDistributionData.categories.map((category, idx) => {
                 const dataPoint = { severity: category };
@@ -337,7 +337,7 @@ const TrendAnalysisComponent = ({ trends, loading, error, currentResults, }) => 
                 Count Over Time
               </h4>
             </div>
-            <div ref={workerCountChartRef} className="w-full h-[350px] bg-muted/30 p-4 rounded-lg shadow-inner">
+            <div ref={workerCountChartRef} className="w-full h-[350px] bg-muted/30 p-4 rounded-2xl shadow-inner">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={formattedTrends.filter((t) => typeof t.workerCount === "number")} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>

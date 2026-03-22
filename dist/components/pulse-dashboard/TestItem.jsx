@@ -85,7 +85,7 @@ export function TestItem({ test }) {
     const retryCount = test.retryHistory
         ? test.retryHistory.filter((r) => r.status !== 'passed' && r.status !== 'skipped').length
         : 0;
-    return (<div className="border-b border-border last:border-b-0 py-3 hover:bg-muted/20 transition-colors duration-200 px-4 rounded-lg mb-2 shadow-md bg-card hover:shadow-lg">
+    return (<div className="border-b border-border last:border-b-0 py-3 hover:bg-muted/20 transition-colors duration-200 px-4 rounded-2xl mb-2 shadow-md bg-card hover:shadow-lg">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <StatusIcon status={test.status}/>
@@ -96,13 +96,13 @@ export function TestItem({ test }) {
         <div className="flex items-center space-x-2 ml-2 flex-shrink-0 flex-wrap gap-1">
           {test.tags &&
             test.tags.length > 0 &&
-            test.tags.map((tag, index) => (<Badge key={`tag-${index}`} variant="outline" className="text-xs px-2 py-0.5 rounded-md border" style={{ backgroundColor: "#808080", color: "#fff" }}>
+            test.tags.map((tag, index) => (<Badge key={`tag-${index}`} variant="outline" className="text-xs px-2 py-0.5 rounded-xl border" style={{ backgroundColor: "#808080", color: "#fff" }}>
                 {tag}
               </Badge>))}
-          {retryCount > 0 && (<Badge variant="outline" className="retry-badge text-xs px-2 py-0.5 rounded-md border" style={{ backgroundColor: "#ff9800", color: "#fff", borderColor: "#f57c00" }}>
+          {retryCount > 0 && (<Badge variant="outline" className="retry-badge text-xs px-2 py-0.5 rounded-xl border" style={{ backgroundColor: "#ff9800", color: "#fff", borderColor: "#f57c00" }}>
               Retry Count: {retryCount}
             </Badge>)}
-          {severityAnnotation && (<Badge variant="outline" className="capitalize text-xs px-2 py-0.5 rounded-md border-0" style={getSeverityBadgeStyle(severityAnnotation)}>
+          {severityAnnotation && (<Badge variant="outline" className="capitalize text-xs px-2 py-0.5 rounded-xl border-0" style={getSeverityBadgeStyle(severityAnnotation)}>
               {severityAnnotation}
             </Badge>)}
           <span className="text-sm text-muted-foreground w-20 text-right">
@@ -115,15 +115,15 @@ export function TestItem({ test }) {
       </div>
       {hasDetailsInAccordion && (<Accordion type="single" collapsible className="w-full mt-2">
           <AccordionItem value="details" className="border-none">
-            <AccordionTrigger className="text-xs py-1 px-1 hover:no-underline text-muted-foreground justify-start hover:bg-accent/10 rounded-md [&[data-state=open]>svg]:ml-2">
+            <AccordionTrigger className="text-xs py-1 px-1 hover:no-underline text-muted-foreground justify-start hover:bg-accent/10 rounded-xl [&[data-state=open]>svg]:ml-2">
               Quick Look
             </AccordionTrigger>
-            <AccordionContent className="pt-2 pl-2 pr-2 pb-1 bg-muted/30 rounded-lg">
+            <AccordionContent className="pt-2 pl-2 pr-2 pb-1 bg-muted/30 rounded-2xl">
               {test.errorMessage && (<div className="mb-3">
                   <h4 className="font-semibold text-xs text-destructive mb-1">
                     Error:
                   </h4>
-                  <pre className="bg-destructive/10 text-xs p-2 rounded-md whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">
+                  <pre className="bg-destructive/10 text-xs p-2 rounded-xl whitespace-pre-wrap break-all font-code max-h-20 overflow-y-auto">
                     <span dangerouslySetInnerHTML={{
                     __html: ansiToHtml(test.errorMessage),
                 }}/>
@@ -138,7 +138,7 @@ export function TestItem({ test }) {
                     const imageSrc = getUtilAssetPath(attachment.path);
                     if (imageSrc === "#")
                         return null;
-                    return (<a key={`img-thumb-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-md overflow-hidden group border hover:border-primary shadow-sm">
+                    return (<a key={`img-thumb-${index}`} href={imageSrc} target="_blank" rel="noopener noreferrer" className="relative aspect-video rounded-xl overflow-hidden group border hover:border-primary shadow-sm">
                           <Image src={imageSrc} alt={attachment.name} fill={true} style={{ objectFit: "cover" }} className="group-hover:scale-105 transition-transform duration-300" data-ai-hint={attachment["data-ai-hint"]}/>
                           <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <Eye className="h-6 w-6 text-white"/>

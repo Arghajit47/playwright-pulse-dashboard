@@ -111,7 +111,7 @@ export function FailureCategorizationView() {
         };
     }, [currentRun]);
     if (loadingCurrent) {
-        return (<div className="space-y-6">
+        return (<div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
         {[...Array(3)].map((_, i) => (<Card key={i} className="shadow-lg">
             <CardHeader>
               <Skeleton className="h-7 w-1/2 mb-2"/>
@@ -161,7 +161,7 @@ export function FailureCategorizationView() {
         </AlertDescription>
       </Alert>);
     }
-    return (<div className="space-y-6">
+    return (<div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Card className="shadow-lg hover:shadow-2xl transition-all duration-300 rounded-xl border-0 bg-gradient-to-br from-destructive/10 via-card to-card/95">
@@ -251,7 +251,7 @@ export function FailureCategorizationView() {
                 </div>
               </div>
               {group.categoryName === OTHER_ERRORS_CATEGORY &&
-                    firstExampleError && (<div className="mt-3 p-3 rounded-lg bg-muted/50 border border-border/30">
+                    firstExampleError && (<div className="mt-3 p-3 rounded-2xl bg-muted/50 border border-border/30">
                     <p className="text-xs font-medium text-muted-foreground mb-1">
                       Example error snippet:
                     </p>
@@ -263,7 +263,7 @@ export function FailureCategorizationView() {
             </CardHeader>
             <CardContent className="pt-4">
               {group.tests.length > 0 ? (<Accordion type="multiple" className="w-full space-y-3">
-                  {group.tests.map((test, testIndex) => (<AccordionItem value={`${group.categoryName}-${test.id}-${testIndex}`} key={`${group.categoryName}-${test.id}-${testIndex}`} className="border border-border/50 rounded-lg bg-card hover:bg-muted/30 transition-all duration-200 hover:shadow-md overflow-hidden">
+                  {group.tests.map((test, testIndex) => (<AccordionItem value={`${group.categoryName}-${test.id}-${testIndex}`} key={`${group.categoryName}-${test.id}-${testIndex}`} className="border border-border/50 rounded-2xl bg-card hover:bg-muted/30 transition-all duration-200 hover:shadow-md overflow-hidden">
                       <AccordionTrigger className="px-4 py-3 text-left hover:no-underline group/trigger">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <div className="h-2 w-2 rounded-full bg-destructive flex-shrink-0"/>
@@ -290,7 +290,7 @@ export function FailureCategorizationView() {
                                 Error Message:
                               </h5>
                             </div>
-                            <ScrollArea className="max-h-40 w-full rounded-lg border border-border/30">
+                            <ScrollArea className="max-h-40 w-full rounded-2xl border border-border/30">
                               <pre className="text-xs whitespace-pre-wrap break-words font-mono bg-muted/50 p-3">
                                 <span dangerouslySetInnerHTML={{
                             __html: ansiToHtml(test.errorMessage ||

@@ -161,7 +161,7 @@ const renderEnvironmentGrid = (envInfo: EnvironmentInfo, keyPrefix = "") => {
         return (
           <div
             key={`${keyPrefix}${key}`}
-            className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 group/item"
+            className="flex items-center space-x-2 p-2 rounded-2xl hover:bg-muted/50 transition-all duration-200 group/item"
           >
             <div className="flex-shrink-0">{getIcon(key)}</div>
             <div className="flex-grow min-w-0">

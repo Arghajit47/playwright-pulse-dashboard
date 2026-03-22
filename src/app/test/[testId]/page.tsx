@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 
 export default async function TestDetailsPage({ params }: { params: Promise<{ testId: string }> }) {
   const { testId } = await params;
-  return <TestDetailsClientPage testId={testId} />;
+  const decodedTestId = decodeURIComponent(testId);
+  return <TestDetailsClientPage testId={decodedTestId} />;
 }
 

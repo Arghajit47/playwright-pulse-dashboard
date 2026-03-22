@@ -28,11 +28,11 @@ const DynamicDashboardOverviewCharts = dynamic(
         {[...Array(6)].map((_, i) => ( // Assuming 6 chart skeletons, matches loader in DashboardOverviewCharts
           <Card key={`loader-chart-${i}`} className="shadow-lg rounded-xl">
             <CardHeader>
-              <Skeleton className="h-5 w-3/4 rounded-md" />
-              <Skeleton className="h-4 w-1/2 mt-1 rounded-md" />
+              <Skeleton className="h-5 w-3/4 rounded-xl" />
+              <Skeleton className="h-4 w-1/2 mt-1 rounded-xl" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-48 w-full rounded-lg" />
+              <Skeleton className="h-48 w-full rounded-2xl" />
             </CardContent>
           </Card>
         ))}
@@ -92,11 +92,11 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
             {[...Array(6)].map((_, i) => (
                 <Card key={`skeleton-chart-main-${i}`} className="shadow-lg rounded-xl">
                     <CardHeader>
-                        <Skeleton className="h-5 w-3/4 rounded-md" />
-                        <Skeleton className="h-4 w-1/2 mt-1 rounded-md" />
+                        <Skeleton className="h-5 w-3/4 rounded-xl" />
+                        <Skeleton className="h-4 w-1/2 mt-1 rounded-xl" />
                     </CardHeader>
                     <CardContent>
-                        <Skeleton className="h-48 w-full rounded-lg" />
+                        <Skeleton className="h-48 w-full rounded-2xl" />
                     </CardContent>
                 </Card>
             ))}
@@ -171,7 +171,7 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }: Su
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
         {metrics.map(metric => (
           <Card 
             key={metric.title} 
