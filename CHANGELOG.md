@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.8] - 2026-02-22
+## [1.2.8] - 2026-03-22
 
 ### Added
 - **Live Web**: Added "live web" link to the Documentation.
