@@ -113,7 +113,7 @@ const HistoryTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as TestRunHistoryData;
     return (
-      <div className="bg-card p-3 border border-border rounded-md shadow-lg">
+      <div className="bg-card p-3 border border-border rounded-xl shadow-lg">
         <p className="label text-sm font-semibold text-foreground">{`Date: ${new Date(
           data.date
         ).toLocaleString()}`}</p>
@@ -242,7 +242,7 @@ function getAttachmentNameFromPath(
 
 function StepsTabContent({ test }: { test: DetailedTestResult }) {
   return (
-    <div className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner">
+    <div className="mt-4 p-1 md:p-4 border rounded-2xl bg-card shadow-inner">
       <h3 className="text-lg font-semibold text-foreground mb-3 px-3 md:px-0">
         Test Execution Steps
       </h3>
@@ -251,7 +251,7 @@ function StepsTabContent({ test }: { test: DetailedTestResult }) {
           <h4 className="font-semibold text-md text-destructive mb-1">
             Overall Test Error:
           </h4>
-          <pre className="bg-destructive/10 text-sm p-4 rounded-lg whitespace-pre-wrap break-all font-code overflow-x-auto">
+          <pre className="bg-destructive/10 text-sm p-4 rounded-2xl whitespace-pre-wrap break-all font-code overflow-x-auto">
             <span
               dangerouslySetInnerHTML={{
                 __html: ansiToHtml(test.errorMessage),
@@ -349,13 +349,13 @@ function StepsTabContent({ test }: { test: DetailedTestResult }) {
 
 function LogsTabContent({ test }: { test: DetailedTestResult }) {
   return (
-    <div className="mt-4 p-4 border rounded-lg bg-card space-y-6 shadow-inner">
+    <div className="mt-4 p-4 border rounded-2xl bg-card space-y-6 shadow-inner">
       <div>
         <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
           <Terminal className="h-5 w-5 mr-2 text-primary" />
           Console Logs / Standard Output
         </h3>
-        <ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm">
+        <ScrollArea className="h-48 w-full rounded-2xl border p-3 bg-muted/30 shadow-sm">
           <pre className="text-sm whitespace-pre-wrap break-words font-code">
             <span
               dangerouslySetInnerHTML={{
@@ -376,7 +376,7 @@ function LogsTabContent({ test }: { test: DetailedTestResult }) {
           <AlertCircle className="h-5 w-5 mr-2 text-destructive" />
           Error Messages / Standard Error
         </h3>
-        <ScrollArea className="h-48 w-full rounded-lg border bg-destructive/5 shadow-sm">
+        <ScrollArea className="h-48 w-full rounded-2xl border bg-destructive/5 shadow-sm">
           <pre className="text-sm p-3 whitespace-pre-wrap break-all font-code">
             <span
               dangerouslySetInnerHTML={{
@@ -395,7 +395,7 @@ function LogsTabContent({ test }: { test: DetailedTestResult }) {
             <FileCode className="h-5 w-5 mr-2 text-primary" />
             Test Case Snippet
           </h3>
-          <ScrollArea className="h-48 w-full rounded-lg border p-3 bg-muted/30 shadow-sm">
+          <ScrollArea className="h-48 w-full rounded-2xl border p-3 bg-muted/30 shadow-sm">
             <pre className="text-sm whitespace-pre-wrap break-words font-code">
               <span
                 dangerouslySetInnerHTML={{
@@ -502,10 +502,10 @@ function AttachmentsTabContent({ test }: { test: DetailedTestResult }) {
   );
 
   return (
-    <div className="mt-4 p-1 md:p-4 border rounded-lg bg-card shadow-inner">
+    <div className="mt-4 p-1 md:p-4 border rounded-2xl bg-card shadow-inner">
        <Tabs defaultValue="sub-screenshots" className="w-full">
-        <ScrollArea className="w-full whitespace-nowrap rounded-lg">
-          <TabsList className="inline-grid w-max grid-flow-col mb-4 rounded-lg">
+        <ScrollArea className="w-full whitespace-nowrap rounded-2xl">
+          <TabsList className="inline-grid w-max grid-flow-col mb-4 rounded-2xl">
             <TabsTrigger
               value="sub-screenshots"
               disabled={screenshotAttachments.length === 0}
@@ -577,7 +577,7 @@ function AttachmentsTabContent({ test }: { test: DetailedTestResult }) {
                     href={imageSrc}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="relative aspect-video rounded-lg overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg"
+                    className="relative aspect-video rounded-2xl overflow-hidden group border hover:border-primary transition-all shadow-md hover:shadow-lg"
                   >
                     <Image
                       src={imageSrc}
@@ -614,7 +614,7 @@ function AttachmentsTabContent({ test }: { test: DetailedTestResult }) {
               videoAttachments.map((attachment, index) => (
                 <div
                   key={`video-${index}`}
-                  className="p-4 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between"
+                  className="p-4 border rounded-2xl bg-muted/30 shadow-sm flex items-center justify-between"
                 >
                   <p
                     className="text-sm font-medium text-foreground truncate"
@@ -645,7 +645,7 @@ function AttachmentsTabContent({ test }: { test: DetailedTestResult }) {
                 </div>
               ))
             ) : (
-              <Alert className="rounded-lg">
+              <Alert className="rounded-2xl">
                 <Info className="h-4 w-4" />
                 <AlertTitle>No Videos Available</AlertTitle>
                 <AlertDescription>
@@ -662,7 +662,7 @@ function AttachmentsTabContent({ test }: { test: DetailedTestResult }) {
             Trace File
           </h3>
           {traceAttachment ? (
-            <div className="p-4 border rounded-lg bg-muted/30 space-y-3 shadow-sm">
+            <div className="p-4 border rounded-2xl bg-muted/30 space-y-3 shadow-sm">
               <a
                 href={getUtilAssetPath(traceAttachment.path)}
                 target="_blank"
@@ -676,13 +676,13 @@ function AttachmentsTabContent({ test }: { test: DetailedTestResult }) {
               <p className="text-xs text-muted-foreground">
                 Path: {traceAttachment.path}
               </p>
-              <Alert className="rounded-lg">
+              <Alert className="rounded-2xl">
                 <Info className="h-4 w-4" />
                 <AlertTitle>Using Trace Files</AlertTitle>
                 <AlertDescription>
                   Trace files (.zip) can be viewed using the Playwright
                   CLI:{" "}
-                  <code className="bg-muted px-1 py-0.5 rounded-sm">
+                  <code className="bg-muted px-1 py-0.5 rounded-xl">
                     npx playwright show-trace /path/to/your/trace.zip
                   </code>
                   . Or by uploading them to{" "}
@@ -699,7 +699,7 @@ function AttachmentsTabContent({ test }: { test: DetailedTestResult }) {
               </Alert>
             </div>
           ) : (
-            <Alert className="rounded-lg">
+            <Alert className="rounded-2xl">
               <Info className="h-4 w-4" />
               <AlertTitle>No Trace File Available</AlertTitle>
               <AlertDescription>
@@ -750,7 +750,7 @@ function AttachmentsTabContent({ test }: { test: DetailedTestResult }) {
                 tab.attachments.map((attachment, index) => (
                   <div
                     key={index}
-                    className="p-3 border rounded-lg bg-muted/30 shadow-sm flex items-center justify-between gap-4"
+                    className="p-3 border rounded-2xl bg-muted/30 shadow-sm flex items-center justify-between gap-4"
                   >
                     <div className="flex items-center gap-3 truncate">
                       <AttachmentIcon
@@ -791,7 +791,7 @@ function AttachmentsTabContent({ test }: { test: DetailedTestResult }) {
                   </div>
                 ))
               ) : (
-                <Alert className="rounded-lg">
+                <Alert className="rounded-2xl">
                   <Info className="h-4 w-4" />
                   <AlertTitle>No Files Available</AlertTitle>
                   <AlertDescription>
@@ -857,7 +857,7 @@ function AiSuggestionsTabContent({ test }: { test: DetailedTestResult }) {
   };
 
   return (
-    <div className="mt-4 p-4 border rounded-lg bg-card shadow-inner">
+    <div className="mt-4 p-4 border rounded-2xl bg-card shadow-inner">
       <div className="flex flex-col items-center justify-center text-center p-2 md:p-6">
         <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
           <Sparkles className="h-5 w-5 mr-2 text-primary" />
@@ -974,7 +974,7 @@ function AiSuggestionsTabContent({ test }: { test: DetailedTestResult }) {
                               <FileCode className="h-3 w-3 mr-1.5" />
                               Code Snippet:
                             </h5>
-                            <pre className="bg-muted text-sm p-3 rounded-md whitespace-pre-wrap font-code overflow-x-auto">
+                            <pre className="bg-muted text-sm p-3 rounded-xl whitespace-pre-wrap font-code overflow-x-auto">
                               <code>{fix.codeSnippet}</code>
                             </pre>
                           </div>
@@ -1152,15 +1152,15 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   if (loadingCurrent && !test) {
     return (
       <div className="container mx-auto py-8 space-y-6">
-        <Skeleton className="h-10 w-48 mb-4 rounded-md" />
-        <Card className="shadow-xl rounded-lg">
+        <Skeleton className="h-10 w-48 mb-4 rounded-xl" />
+        <Card className="shadow-xl rounded-2xl">
           <CardHeader>
-            <Skeleton className="h-8 w-3/4 mb-2 rounded-md" />
-            <Skeleton className="h-4 w-1/2 rounded-md" />
+            <Skeleton className="h-8 w-3/4 mb-2 rounded-xl" />
+            <Skeleton className="h-4 w-1/2 rounded-xl" />
           </CardHeader>
           <CardContent className="space-y-4">
-            <Skeleton className="h-10 w-1/3 mb-4 rounded-md" />
-            <Skeleton className="h-40 w-full rounded-md" />
+            <Skeleton className="h-10 w-1/3 mb-4 rounded-xl" />
+            <Skeleton className="h-40 w-full rounded-xl" />
           </CardContent>
         </Card>
       </div>
@@ -1170,14 +1170,14 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   if (errorCurrent && !test) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Alert variant="destructive" className="rounded-lg">
+        <Alert variant="destructive" className="rounded-2xl">
           <AlertTitle>Error loading test data</AlertTitle>
           <AlertDescription>{errorCurrent}</AlertDescription>
         </Alert>
         <Button
           onClick={() => router.push("/")}
           variant="outline"
-          className="mt-4 rounded-lg"
+          className="mt-4 rounded-2xl"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
@@ -1188,7 +1188,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
   if (!test) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-        <Alert className="rounded-lg">
+        <Alert className="rounded-2xl">
           <AlertTitle>Test Not Found</AlertTitle>
           <AlertDescription>
             The test with ID '{testId}' could not be found in the current
@@ -1218,7 +1218,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
       </Button>
 
-      <Card className="shadow-xl rounded-lg">
+      <Card className="shadow-xl rounded-2xl">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -1337,11 +1337,11 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 sideOffset={8}
                 className="bg-card/80 backdrop-blur-lg border border-border/50 rounded-xl shadow-2xl data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
               >
-                <SelectItem value="current" className="rounded-lg">
+                <SelectItem value="current" className="rounded-2xl">
                   Current Run
                 </SelectItem>
                 {loadingHistory && (
-                  <SelectItem value="loading" disabled className="rounded-lg">
+                  <SelectItem value="loading" disabled className="rounded-2xl">
                     Loading history...
                   </SelectItem>
                 )}
@@ -1351,7 +1351,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                     <SelectItem
                     key={run.date}
                     value={run.date}
-                    className="rounded-lg"
+                    className="rounded-2xl"
                   >
                     <div className="flex items-center gap-3">
                       <span
@@ -1386,25 +1386,54 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
           >
             <TabsList
               className={cn(
-                "grid w-full mb-4 rounded-lg",
+                "w-full h-auto mb-6 p-1.5 bg-muted/40 backdrop-blur-sm rounded-2xl border border-border/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_2px_5px_rgba(0,0,0,0.05)] grid gap-2",
                 isFailedTest
                   ? "grid-cols-2 md:grid-cols-5"
                   : "grid-cols-2 md:grid-cols-4"
               )}
             >
-              <TabsTrigger value="steps">
-                Execution Steps ({test.steps?.length || 0})
+              <TabsTrigger 
+                value="steps"
+                className="group relative flex items-center justify-center gap-1.5 sm:gap-2.5 rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm whitespace-normal text-center h-auto font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+              >
+                <span className="relative z-10 flex flex-col xl:flex-row items-center justify-center gap-1 xl:gap-2.5">
+                  Execution Steps ({test.steps?.length || 0})
+                </span>
               </TabsTrigger>
-              <TabsTrigger value="attachments">Attachments</TabsTrigger>
-              <TabsTrigger value="logs">
-                <FileText className="h-4 w-4 mr-2" />
-                Logs
+              <TabsTrigger 
+                value="attachments"
+                className="group relative flex items-center justify-center gap-1.5 sm:gap-2.5 rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm whitespace-normal text-center h-auto font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+              >
+                <span className="relative z-10 flex flex-col xl:flex-row items-center justify-center gap-1 xl:gap-2.5">
+                  Attachments
+                </span>
               </TabsTrigger>
-              <TabsTrigger value="history">Test Run History</TabsTrigger>
+              <TabsTrigger 
+                value="logs"
+                className="group relative flex items-center justify-center gap-1.5 sm:gap-2.5 rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm whitespace-normal text-center h-auto font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+              >
+                <span className="relative z-10 flex flex-col xl:flex-row items-center justify-center gap-1 xl:gap-2.5">
+                  <FileText className="h-4 w-4 xl:mr-2" />
+                  Logs
+                </span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="history"
+                className="group relative flex items-center justify-center gap-1.5 sm:gap-2.5 rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm whitespace-normal text-center h-auto font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+              >
+                <span className="relative z-10 flex flex-col xl:flex-row items-center justify-center gap-1 xl:gap-2.5">
+                  Test Run History
+                </span>
+              </TabsTrigger>
               {isFailedTest && (
-                <TabsTrigger value="ai-suggestions">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  AI Suggestions
+                <TabsTrigger 
+                  value="ai-suggestions"
+                  className="group relative flex items-center justify-center gap-1.5 sm:gap-2.5 rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm whitespace-normal text-center h-auto font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+                >
+                  <span className="relative z-10 flex flex-col xl:flex-row items-center justify-center gap-1 xl:gap-2.5 text-primary group-data-[state=active]:text-primary group-hover:text-primary transition-colors">
+                    <Sparkles className="h-4 w-4 xl:mr-2" />
+                    AI Suggestions
+                  </span>
                 </TabsTrigger>
               )}
             </TabsList>
@@ -1412,15 +1441,26 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <TabsContent value="steps">
               {retryCount > 0 ? (
                 <Tabs defaultValue="base-run" className="w-full">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="base-run" className="flex items-center gap-2">
+                  <TabsList className="mb-6 h-auto inline-flex p-1.5 bg-muted/40 backdrop-blur-sm rounded-2xl border border-border/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_2px_5px_rgba(0,0,0,0.05)] flex-wrap max-w-full gap-2">
+                    <TabsTrigger 
+                      value="base-run" 
+                      className="group relative flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+                    >
+                      <span className="relative z-10 flex items-center gap-2.5">
                         Base Run
-                        <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(test.status))} />
+                        <span className={cn("h-2.5 w-2.5 rounded-full ring-[3px] ring-background/60 shadow-sm transition-transform group-hover:scale-110 group-data-[state=active]:scale-125", getStatusColorClass(test.status))} />
+                      </span>
                     </TabsTrigger>
                     {test.retryHistory?.map((retry, index) => (
-                      <TabsTrigger key={index} value={`retry-${index}`} className="flex items-center gap-2">
-                        Retry {index + 1}
-                        <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(retry.status))} />
+                      <TabsTrigger 
+                        key={index} 
+                        value={`retry-${index}`} 
+                        className="group relative flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+                      >
+                        <span className="relative z-10 flex items-center gap-2.5">
+                          Retry {index + 1}
+                          <span className={cn("h-2.5 w-2.5 rounded-full ring-[3px] ring-background/60 shadow-sm transition-transform group-hover:scale-110 group-data-[state=active]:scale-125", getStatusColorClass(retry.status))} />
+                        </span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -1441,15 +1481,26 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <TabsContent value="attachments">
               {retryCount > 0 ? (
                 <Tabs defaultValue="base-run" className="w-full">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="base-run" className="flex items-center gap-2">
+                  <TabsList className="mb-6 h-auto inline-flex p-1.5 bg-muted/40 backdrop-blur-sm rounded-2xl border border-border/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_2px_5px_rgba(0,0,0,0.05)] flex-wrap max-w-full gap-2">
+                    <TabsTrigger 
+                      value="base-run" 
+                      className="group relative flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+                    >
+                      <span className="relative z-10 flex items-center gap-2.5">
                         Base Run
-                        <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(test.status))} />
+                        <span className={cn("h-2.5 w-2.5 rounded-full ring-[3px] ring-background/60 shadow-sm transition-transform group-hover:scale-110 group-data-[state=active]:scale-125", getStatusColorClass(test.status))} />
+                      </span>
                     </TabsTrigger>
                     {test.retryHistory?.map((retry, index) => (
-                      <TabsTrigger key={index} value={`retry-${index}`} className="flex items-center gap-2">
-                        Retry {index + 1}
-                        <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(retry.status))} />
+                      <TabsTrigger 
+                        key={index} 
+                        value={`retry-${index}`} 
+                        className="group relative flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+                      >
+                        <span className="relative z-10 flex items-center gap-2.5">
+                          Retry {index + 1}
+                          <span className={cn("h-2.5 w-2.5 rounded-full ring-[3px] ring-background/60 shadow-sm transition-transform group-hover:scale-110 group-data-[state=active]:scale-125", getStatusColorClass(retry.status))} />
+                        </span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -1470,15 +1521,26 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
             <TabsContent value="logs">
               {retryCount > 0 ? (
                 <Tabs defaultValue="base-run" className="w-full">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="base-run" className="flex items-center gap-2">
+                  <TabsList className="mb-6 h-auto inline-flex p-1.5 bg-muted/40 backdrop-blur-sm rounded-2xl border border-border/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_2px_5px_rgba(0,0,0,0.05)] flex-wrap max-w-full gap-2">
+                    <TabsTrigger 
+                      value="base-run" 
+                      className="group relative flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+                    >
+                      <span className="relative z-10 flex items-center gap-2.5">
                         Base Run
-                        <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(test.status))} />
+                        <span className={cn("h-2.5 w-2.5 rounded-full ring-[3px] ring-background/60 shadow-sm transition-transform group-hover:scale-110 group-data-[state=active]:scale-125", getStatusColorClass(test.status))} />
+                      </span>
                     </TabsTrigger>
                     {test.retryHistory?.map((retry, index) => (
-                      <TabsTrigger key={index} value={`retry-${index}`} className="flex items-center gap-2">
-                         Retry {index + 1}
-                         <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(retry.status))} />
+                      <TabsTrigger 
+                        key={index} 
+                        value={`retry-${index}`} 
+                        className="group relative flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+                      >
+                        <span className="relative z-10 flex items-center gap-2.5">
+                          Retry {index + 1}
+                          <span className={cn("h-2.5 w-2.5 rounded-full ring-[3px] ring-background/60 shadow-sm transition-transform group-hover:scale-110 group-data-[state=active]:scale-125", getStatusColorClass(retry.status))} />
+                        </span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -1498,7 +1560,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
 
             <TabsContent
               value="history"
-              className="mt-4 p-4 border rounded-lg bg-card shadow-inner"
+              className="mt-4 p-4 border rounded-2xl bg-card shadow-inner"
             >
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-semibold text-foreground flex items-center">
@@ -1508,12 +1570,12 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               </div>
               {loadingHistory && (
                 <div className="space-y-3">
-                  <Skeleton className="h-6 w-3/4 rounded-md" />
-                  <Skeleton className="h-64 w-full rounded-lg" />
+                  <Skeleton className="h-6 w-3/4 rounded-xl" />
+                  <Skeleton className="h-64 w-full rounded-2xl" />
                 </div>
               )}
               {errorHistory && !loadingHistory && (
-                <Alert variant="destructive" className="rounded-lg">
+                <Alert variant="destructive" className="rounded-2xl">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Error Loading Test History</AlertTitle>
                   <AlertDescription>{errorHistory}</AlertDescription>
@@ -1523,7 +1585,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
                 !errorHistory &&
                 historyFetched &&
                 testHistory.length === 0 && (
-                  <Alert className="rounded-lg">
+                  <Alert className="rounded-2xl">
                     <Info className="h-4 w-4" />
                     <AlertTitle>No Historical Data</AlertTitle>
                     <AlertDescription>
@@ -1535,7 +1597,7 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               {!loadingHistory && !errorHistory && testHistory.length > 0 && (
                 <div
                   ref={historyChartRef}
-                  className="w-full h-[300px] bg-card p-4 rounded-lg shadow-inner"
+                  className="w-full h-[300px] bg-card p-4 rounded-2xl shadow-inner"
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsLineChart
@@ -1587,15 +1649,26 @@ export function TestDetailsClientPage({ testId }: { testId: string }) {
               <TabsContent value="ai-suggestions">
                 {retryCount > 0 ? (
                   <Tabs defaultValue="base-run" className="w-full">
-                    <TabsList className="mb-4">
-                      <TabsTrigger value="base-run" className="flex items-center gap-2">
+                    <TabsList className="mb-6 h-auto inline-flex p-1.5 bg-muted/40 backdrop-blur-sm rounded-2xl border border-border/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_2px_5px_rgba(0,0,0,0.05)] flex-wrap max-w-full gap-2">
+                      <TabsTrigger 
+                        value="base-run" 
+                        className="group relative flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+                      >
+                        <span className="relative z-10 flex items-center gap-2.5">
                           Base Run
-                          <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(test.status))} />
+                          <span className={cn("h-2.5 w-2.5 rounded-full ring-[3px] ring-background/60 shadow-sm transition-transform group-hover:scale-110 group-data-[state=active]:scale-125", getStatusColorClass(test.status))} />
+                        </span>
                       </TabsTrigger>
                       {test.retryHistory?.map((retry, index) => (
-                        <TabsTrigger key={index} value={`retry-${index}`} className="flex items-center gap-2">
-                           Retry {index + 1}
-                           <span className={cn("h-2 w-2 rounded-full", getStatusColorClass(retry.status))} />
+                        <TabsTrigger 
+                          key={index} 
+                          value={`retry-${index}`} 
+                          className="group relative flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:bg-muted/60 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)] data-[state=active]:border data-[state=active]:border-border/40 border border-transparent overflow-hidden"
+                        >
+                          <span className="relative z-10 flex items-center gap-2.5">
+                            Retry {index + 1}
+                            <span className={cn("h-2.5 w-2.5 rounded-full ring-[3px] ring-background/60 shadow-sm transition-transform group-hover:scale-110 group-data-[state=active]:scale-125", getStatusColorClass(retry.status))} />
+                          </span>
                         </TabsTrigger>
                       ))}
                     </TabsList>

@@ -13,11 +13,11 @@ const DynamicDashboardOverviewCharts = dynamic(() => import('./DashboardOverview
         {[...Array(6)].map((_, i) => ( // Assuming 6 chart skeletons, matches loader in DashboardOverviewCharts
         <Card key={`loader-chart-${i}`} className="shadow-lg rounded-xl">
             <CardHeader>
-              <Skeleton className="h-5 w-3/4 rounded-md"/>
-              <Skeleton className="h-4 w-1/2 mt-1 rounded-md"/>
+              <Skeleton className="h-5 w-3/4 rounded-xl"/>
+              <Skeleton className="h-4 w-1/2 mt-1 rounded-xl"/>
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-48 w-full rounded-lg"/>
+              <Skeleton className="h-48 w-full rounded-2xl"/>
             </CardContent>
           </Card>))}
       </div>),
@@ -66,11 +66,11 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }) {
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
             {[...Array(6)].map((_, i) => (<Card key={`skeleton-chart-main-${i}`} className="shadow-lg rounded-xl">
                     <CardHeader>
-                        <Skeleton className="h-5 w-3/4 rounded-md"/>
-                        <Skeleton className="h-4 w-1/2 mt-1 rounded-md"/>
+                        <Skeleton className="h-5 w-3/4 rounded-xl"/>
+                        <Skeleton className="h-4 w-1/2 mt-1 rounded-xl"/>
                     </CardHeader>
                     <CardContent>
-                        <Skeleton className="h-48 w-full rounded-lg"/>
+                        <Skeleton className="h-48 w-full rounded-2xl"/>
                     </CardContent>
                 </Card>))}
         </div>
@@ -141,7 +141,7 @@ export function SummaryMetrics({ currentRun, loading, error, onMetricClick }) {
         return `${diffHours} hours ago`;
     };
     return (<>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
         {metrics.map(metric => (<Card key={metric.title} className={`relative overflow-hidden shadow-2xl hover:shadow-[0_20px_50px_rgba(8,_112,_184,_0.3)] transition-all duration-500 rounded-2xl border-0 bg-gradient-to-br from-card via-card to-card/80 backdrop-blur-sm group ${metric.filterKey && onMetricClick ? 'cursor-pointer hover:scale-[1.02]' : ''}`} onClick={() => handleCardClick(metric.filterKey)} tabIndex={metric.filterKey && onMetricClick ? 0 : -1} onKeyDown={(e) => {
                 if ((e.key === 'Enter' || e.key === ' ') && metric.filterKey && onMetricClick) {
                     handleCardClick(metric.filterKey);

@@ -108,7 +108,7 @@ export function PulseCommandView() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
       <Alert>
         <FileText className="h-4 w-4" />
         <AlertDescription>
@@ -138,7 +138,7 @@ export function PulseCommandView() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
+                    <div className="p-2 rounded-2xl bg-primary/10">
                       <Icon className="h-6 w-6 text-primary" />
                     </div>
                     <div>
@@ -152,7 +152,7 @@ export function PulseCommandView() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="bg-muted p-3 rounded-md font-mono text-sm">
+                  <div className="bg-muted p-3 rounded-xl font-mono text-sm">
                     <code>{cmd.command}</code>
                   </div>
 

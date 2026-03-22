@@ -216,7 +216,8 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
         });
     };
     if (loading) {
-        return (<Card className="shadow-xl">
+        return (<div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
+      <Card className="shadow-xl">
         <CardHeader>
           <Skeleton className="h-6 w-48"/>
           <Skeleton className="h-4 w-64 mt-1"/>
@@ -231,23 +232,27 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
             <Skeleton className="h-10 w-full"/> 
             <Skeleton className="h-10 w-full"/>
           </div>
-          {[...Array(3)].map((_, i) => (<div key={i} className="space-y-2 p-2 border rounded-lg shadow-md">
+          {[...Array(3)].map((_, i) => (<div key={i} className="space-y-2 p-2 border rounded-2xl shadow-md">
               <Skeleton className="h-5 w-1/3"/>
               <Skeleton className="h-8 w-full"/>
               <Skeleton className="h-8 w-full"/>
             </div>))}
         </CardContent>
-      </Card>);
+      </Card>
+      </div>);
     }
     if (error) {
-        return (<Alert variant="destructive" className="mt-4 shadow-md">
+        return (<div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
+      <Alert variant="destructive" className="mt-4 shadow-md">
         <Terminal className="h-4 w-4"/>
         <AlertTitle>Error Fetching Test Results</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
-      </Alert>);
+      </Alert>
+      </div>);
     }
     if (!report || !report.results || report.results.length === 0) {
-        return (<Card className="shadow-xl">
+        return (<div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
+      <Card className="shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-2xl font-headline text-primary">
@@ -262,7 +267,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
           </div>
         </CardHeader>
         <CardContent>
-          <Alert className="shadow-sm rounded-lg">
+          <Alert className="shadow-sm rounded-2xl">
             <Info className="h-4 w-4"/>
             <AlertTitle>No Test Data</AlertTitle>
             <AlertDescription>
@@ -272,9 +277,11 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
             </AlertDescription>
           </Alert>
         </CardContent>
-      </Card>);
+      </Card>
+      </div>);
     }
-    return (<Card className="shadow-xl">
+    return (<div className="space-y-6 p-6 lg:p-8 bg-muted/20 backdrop-blur-md border border-border/40 rounded-[2.5rem] shadow-inner">
+    <Card className="shadow-xl">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-2xl font-headline text-primary">
@@ -285,7 +292,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
               {new Date(report.metadata.generatedAt || report.run.timestamp).toLocaleString()}
             </CardDescription>)}
         </div>
-        <Button onClick={handleExportCsv} variant="outline" size="sm" className="ml-auto rounded-md shadow-md">
+        <Button onClick={handleExportCsv} variant="outline" size="sm" className="ml-auto rounded-xl shadow-md">
           <FileSpreadsheet className="mr-2 h-4 w-4"/>
           Export as CSV
         </Button>
@@ -298,10 +305,10 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
                 Filter by Status
               </Label>
               <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
-                <SelectTrigger id="status-filter" className="w-full bg-background shadow-inner rounded-md">
+                <SelectTrigger id="status-filter" className="w-full bg-background shadow-inner rounded-xl">
                   <SelectValue placeholder="Select status"/>
                 </SelectTrigger>
-                <SelectContent className="rounded-md">
+                <SelectContent className="rounded-xl">
                   {testStatuses.map((status) => (<SelectItem key={status} value={status} className="capitalize">
                       {status.charAt(0).toUpperCase() + status.slice(1)}
                     </SelectItem>))}
@@ -312,7 +319,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
               <Label htmlFor="search-filter" className="text-sm font-medium text-muted-foreground">
                 Search by Name/Suite
               </Label>
-              <Input id="search-filter" type="text" placeholder="Enter test or suite name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-background shadow-inner rounded-md"/>
+              <Input id="search-filter" type="text" placeholder="Enter test or suite name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-background shadow-inner rounded-xl"/>
             </div>
             <div className="space-y-1.5">
               <Label className="text-sm font-medium text-muted-foreground">
@@ -320,25 +327,25 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
               </Label>
               <Popover open={tagPopoverOpen} onOpenChange={setTagPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full bg-background shadow-inner justify-between rounded-md">
+                  <Button variant="outline" className="w-full bg-background shadow-inner justify-between rounded-xl">
                     {selectedTags.length > 0
             ? `Tags (${selectedTags.length})`
             : "Select Tags"}
                     <ChevronDown className="ml-2 h-4 w-4 opacity-50"/>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-md" align="start">
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl" align="start">
                   <div className="p-2 border-b">
                     <p className="text-sm font-medium">Filter by Tags</p>
                   </div>
                   <ScrollArea className="h-48">
                     <div className="p-2 space-y-1">
-                      {allTags.length > 0 ? (allTags.map((tag) => (<Label key={tag} htmlFor={`tag-${tag}`} className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-accent/10 cursor-pointer">
+                      {allTags.length > 0 ? (allTags.map((tag) => (<Label key={tag} htmlFor={`tag-${tag}`} className="flex items-center space-x-2 p-1.5 rounded-xl hover:bg-accent/10 cursor-pointer">
                             <Checkbox id={`tag-${tag}`} checked={selectedTags.includes(tag)} onCheckedChange={(checked) => {
                 setSelectedTags((prev) => checked === true
                     ? [...prev, tag]
                     : prev.filter((t) => t !== tag));
-            }} className="rounded-sm"/>
+            }} className="rounded-xl"/>
                             <span>{tag}</span>
                           </Label>))) : (<p className="text-xs text-muted-foreground p-2">
                           No tags available in this report.
@@ -358,10 +365,10 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
                 Filter by Browser
               </Label>
               <Select value={selectedBrowser} onValueChange={setSelectedBrowser}>
-                <SelectTrigger id="browser-filter" className="w-full bg-background shadow-inner rounded-md">
+                <SelectTrigger id="browser-filter" className="w-full bg-background shadow-inner rounded-xl">
                   <SelectValue placeholder="Select browser"/>
                 </SelectTrigger>
-                <SelectContent className="rounded-md">
+                <SelectContent className="rounded-xl">
                   {allBrowsers.map((browser) => (<SelectItem key={browser} value={browser} className="capitalize">
                       {browser === "all" ? "All Browsers" : browser}
                     </SelectItem>))}
@@ -373,10 +380,10 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
                 Filter by Test Suite
               </Label>
               <Select value={selectedSuite} onValueChange={setSelectedSuite}>
-                <SelectTrigger id="suite-filter" className="w-full bg-background shadow-inner rounded-md">
+                <SelectTrigger id="suite-filter" className="w-full bg-background shadow-inner rounded-xl">
                   <SelectValue placeholder="Select test suite"/>
                 </SelectTrigger>
-                <SelectContent className="rounded-md">
+                <SelectContent className="rounded-xl">
                   {allSuites.map((suite) => (<SelectItem key={suite} value={suite} className="capitalize truncate">
                       {suite === "all"
                 ? "All Suites"
@@ -388,7 +395,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
               </Select>
             </div>
             <div className="flex items-center space-x-2 pt-5">
-              <Checkbox id="retries-filter" checked={showRetriesOnly} onCheckedChange={(checked) => setShowRetriesOnly(Boolean(checked))} className="rounded-sm"/>
+              <Checkbox id="retries-filter" checked={showRetriesOnly} onCheckedChange={(checked) => setShowRetriesOnly(Boolean(checked))} className="rounded-xl"/>
               <Label htmlFor="retries-filter" className="text-sm font-medium text-muted-foreground cursor-pointer flex items-center">
                 <Repeat1 className="h-4 w-4 mr-1.5 text-muted-foreground"/>
                 Retries Only
@@ -396,7 +403,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
             </div>
           </div>
           {isAnyFilterActive && (<div className="mt-4 flex justify-end">
-              <Button variant="ghost" onClick={handleClearAllFilters} className="text-sm rounded-md">
+              <Button variant="ghost" onClick={handleClearAllFilters} className="text-sm rounded-xl">
                 <FilterX className="mr-2 h-4 w-4"/>
                 Clear All Filters
               </Button>
@@ -488,6 +495,7 @@ export function LiveTestResults({ report, loading, error, initialFilter }) {
             </p>
           </div>)}
       </CardContent>
-    </Card>);
+    </Card>
+    </div>);
 }
 //# sourceMappingURL=LiveTestResults.jsx.map
